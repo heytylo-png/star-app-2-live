@@ -11,6 +11,9 @@ import {
   titleFromPrompt,
 } from "./helix";
 
+/** Persist key stable across deploys — bump docs, not the key, when schema changes. */
+export const CHAT_STORE_KEY = "star-rai-chat";
+
 type ChatState = {
   threads: Thread[];
   activeId: string | null;
@@ -136,7 +139,7 @@ export const useChatStore = create<ChatState>()(
         })),
     }),
     {
-      name: "star-rai-chat",
+      name: CHAT_STORE_KEY,
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
       merge: (persisted, current) => {
@@ -144,10 +147,18 @@ export const useChatStore = create<ChatState>()(
         return {
           ...current,
           ...p,
-          defaultModel: typeof p.defaultModel === "string" && p.defaultModel ? p.defaultModel : DEFAULT_MODEL,
+          defaultModel:
+            typeof p.defaultModel === "string" && p.defaultModel && !p.defaultModel.startsWith("grok-")
+              ? p.defaultModel
+              : DEFAULT_MODEL,
           reasoning: isReasoningLevel(p.reasoning) ? p.reasoning : current.reasoning,
           voiceOn: typeof p.voiceOn === "boolean" ? p.voiceOn : current.voiceOn,
           hydrated: false,
+          threads: Array.isArray(p.threads)
+            ? (p.threads as Thread[]).map((th) =>
+                th?.model?.startsWith("grok-") ? { ...th, model: DEFAULT_MODEL } : th,
+              )
+            : current.threads,
         };
       },
       partialize: (state) => ({

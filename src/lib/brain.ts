@@ -20,6 +20,7 @@ type Intent =
   | "question"
   | "soft"
   | "remember"
+  | "recall"
   | "miss"
   | "bored"
   | "thanks"
@@ -86,6 +87,11 @@ const LINES: Record<Intent, string[]> = {
     "Okay. That's mine now. Handle with care.",
     "Remembered. Don't test whether I forget.",
   ],
+  recall: [
+    "You want the list? Fine. Pay attention.",
+    "I kept notes. Don't act shocked.",
+    "Memory drawer, open. Try not to blush.",
+  ],
   miss: [
     "Missed me? Obvious. I was busy being brilliant.",
     "Absence noted. Don't do that again without warning.",
@@ -114,6 +120,10 @@ const LINES: Record<Intent, string[]> = {
   ],
 };
 
+const NAME_STOP = new Set(
+  "the person talking you user rai star idol she he they someone anyone".split(" "),
+);
+
 let lastLine = "";
 
 function pickLine(intent: Intent, avoid?: string): string {
@@ -139,7 +149,37 @@ function nameFromFacts(facts: string[]): string | null {
       f.match(/(?:name is|i'm|i am|call me)\s+([A-Za-z][\w'-]{1,24})/i) ||
       f.match(/^([A-Za-z][\w'-]{1,24})\s+is (?:my|their|the) name/i) ||
       f.match(/their name is\s+([A-Za-z][\w'-]{1,24})/i);
-    if (m?.[1] && !/^(the|person|talking|you|user)$/i.test(m[1])) return m[1];
+    if (m?.[1] && !NAME_STOP.has(m[1].toLowerCase())) return m[1];
+  }
+  return null;
+}
+
+function likeFromFacts(facts: string[]): string | null {
+  for (const f of facts) {
+    const m =
+      f.match(/they like\s+(.+)/i) ||
+      f.match(/like[sd]?\s+(.+)/i) ||
+      f.match(/favorite\s+\w+:\s*(.+)/i);
+    if (m?.[1]) {
+      const v = m[1].replace(/\.$/, "").trim();
+      if (v.length >= 2) return v;
+    }
+  }
+  return null;
+}
+
+function cityFromFacts(facts: string[]): string | null {
+  for (const f of facts) {
+    const m = f.match(/(?:live in|from|based in)\s+(.+)/i);
+    if (m?.[1]) return m[1].replace(/\.$/, "").trim();
+  }
+  return null;
+}
+
+function jobFromFacts(facts: string[]): string | null {
+  for (const f of facts) {
+    const m = f.match(/(?:job[:\s]+|work(?:s)? (?:as|at)\s+)(.+)/i);
+    if (m?.[1]) return m[1].replace(/\.$/, "").trim();
   }
   return null;
 }
@@ -159,6 +199,17 @@ function lastAssistantLine(messages: BrainMessage[]): string {
     if (t) return t;
   }
   return lastLine;
+}
+
+function looksLikeDurableFact(lower: string): boolean {
+  return (
+    /(?:my name is|i(?:'m| am) called|call me )\b/.test(lower) ||
+    /(?:i live in|i(?:'m| am) from|based in)\b/.test(lower) ||
+    /(?:i work (?:as|at)|my job is|i(?:'m| am) an?\s+\w+)/.test(lower) ||
+    /\bi (?:like|love|enjoy)\b/.test(lower) ||
+    /my favorite\s+\w+\s+is\b/.test(lower) ||
+    /\bremember (?:that |this )?\b/.test(lower)
+  );
 }
 
 function detectIntent(lower: string, _recent: string[]): Intent {
@@ -194,10 +245,13 @@ function detectIntent(lower: string, _recent: string[]): Intent {
     return "thanks";
   }
   if (
-    /remember|don'?t forget|my name is|i(?:'m| am) called|call me |i live in|i work|i like |favorite/.test(
+    /what do you remember|what(?:'s| is) on (?:your |the )?memory|tell me what you know about me|what do you know about me|list (?:my |the )?facts|what have you (?:got|stored|saved)/.test(
       lower,
     )
   ) {
+    return "recall";
+  }
+  if (looksLikeDurableFact(lower)) {
     return "remember";
   }
   if (
@@ -241,6 +295,7 @@ function intentToAct(intent: Intent): { emotion: EmotionId; pose: PoseId } {
       return { emotion: "thinking", pose: "idle" };
     case "soft":
     case "remember":
+    case "recall":
       return { emotion: "shy", pose: "shy" };
     case "bored":
       return { emotion: "angry", pose: "turn-away" };
@@ -250,28 +305,69 @@ function intentToAct(intent: Intent): { emotion: EmotionId; pose: PoseId } {
   }
 }
 
-function extractMemCandidate(text: string, intent: Intent): string[] | undefined {
-  if (intent !== "remember" && !/my name is|i(?:'m| am) called|call me |remember that/i.test(text)) {
-    return undefined;
-  }
-  const cleaned = text.replace(/\s+/g, " ").trim().slice(0, 80);
+/** Pull durable facts from a user line even without the word "remember". */
+export function extractMemCandidate(text: string, intent?: Intent): string[] | undefined {
+  const out: string[] = [];
+  const cleaned = text.replace(/\s+/g, " ").trim();
   if (!cleaned) return undefined;
 
-  const name = text.match(/(?:my name is|i(?:'m| am) called|call me)\s+([A-Za-z][\w'-]{1,24})/i);
-  if (name?.[1]) return [`Their name is ${name[1]}`];
+  const name = cleaned.match(
+    /(?:my name is|i(?:'m| am) called|call me)\s+([A-Za-z][\w'-]{1,24})/i,
+  );
+  if (name?.[1] && !NAME_STOP.has(name[1].toLowerCase())) {
+    out.push(`Their name is ${name[1]}`);
+  }
 
-  const like = text.match(/i like ([^.!?,]{3,60})/i);
-  if (like?.[1]) return [`They like ${like[1].trim()}`];
+  const city = cleaned.match(
+    /(?:i live in|i(?:'m| am) from|based in)\s+([A-Za-z][\w .'-]{1,40}?)(?:[.!,]|$)/i,
+  );
+  if (city?.[1]) out.push(`They live in ${city[1].trim()}`);
 
-  const rememberThat = text.match(/remember (?:that )?(.{3,70})/i);
-  if (rememberThat?.[1]) return [rememberThat[1].replace(/\s+/g, " ").trim()];
+  const job = cleaned.match(
+    /(?:i work (?:as|at)|my job is)\s+([^.!?,]{2,50})|i(?:'m| am) an?\s+([A-Za-z][\w -]{2,40})/i,
+  );
+  if (job) {
+    const j = (job[1] || job[2] || "").trim();
+    if (j && !/^(idol|fan|idiot|mess)$/i.test(j)) out.push(`Their job: ${j}`);
+  }
 
-  return [cleaned];
+  const like = cleaned.match(/\bi (?:like|love|enjoy)\s+([^.!?,]{2,60})/i);
+  if (like?.[1] && !/^(you|talking to you|this|that)\b/i.test(like[1].trim())) {
+    out.push(`They like ${like[1].trim()}`);
+  }
+
+  const fav = cleaned.match(/my favorite\s+(\w+)\s+is\s+([^.!?,]{2,50})/i);
+  if (fav) out.push(`Favorite ${fav[1]}: ${fav[2].trim()}`);
+
+  if (intent === "remember" || /\bremember (?:that |this )?/i.test(cleaned)) {
+    const rememberThat = cleaned.match(/remember (?:that |this )?(.{3,70})/i);
+    if (rememberThat?.[1]) {
+      const fact = rememberThat[1].replace(/\s+/g, " ").trim();
+      // Skip if we already captured a structured version
+      const already = out.some((o) => o.toLowerCase().includes(fact.toLowerCase().slice(0, 12)));
+      if (!already && !/^(me|my name|this)$/i.test(fact)) out.push(fact);
+    }
+  }
+
+  // Deduplicate similar facts
+  const uniq: string[] = [];
+  for (const item of out) {
+    const key = item.toLowerCase();
+    if (uniq.some((u) => u.toLowerCase() === key || u.toLowerCase().includes(key) || key.includes(u.toLowerCase()))) {
+      continue;
+    }
+    uniq.push(item.slice(0, 80));
+  }
+  return uniq.length ? uniq.slice(0, 3) : undefined;
 }
 
-function personalize(line: string, name: string | null, intent: Intent): string {
-  if (!name) return line;
-  if (intent === "greet") {
+function personalize(
+  line: string,
+  name: string | null,
+  intent: Intent,
+  like: string | null,
+): string {
+  if (name && intent === "greet") {
     const bank = [
       `${name}. Took you long enough.`,
       `Hey, ${name}. Don't make a speech.`,
@@ -279,16 +375,33 @@ function personalize(line: string, name: string | null, intent: Intent): string 
     ];
     return bank[Math.floor(Math.random() * bank.length)]!;
   }
-  if (intent === "miss") {
+  if (name && intent === "miss") {
     const bank = [
       `${name}. Missed me? Obvious.`,
       `There you are, ${name}. Don't vanish like that.`,
     ];
     return bank[Math.floor(Math.random() * bank.length)]!;
   }
-  if (intent === "bye") {
+  if (name && intent === "bye") {
     const bank = [`Go on, ${name}. I'll still be here.`, `Bye, ${name}. Don't trip.`];
     return bank[Math.floor(Math.random() * bank.length)]!;
+  }
+  if (name && intent === "thanks") {
+    return `You're welcome, ${name}. Don't make it weird.`;
+  }
+  if (like && intent === "greet" && Math.random() < 0.45) {
+    const who = name ?? "You";
+    return `${who}. Still into ${like}? Hmph. Hi.`;
+  }
+  if (like && (intent === "generic" || intent === "soft") && Math.random() < 0.38) {
+    const bank = [
+      `Still into ${like}? Noted. ${line}`,
+      `Don't think I forgot ${like}. ${line}`,
+    ];
+    return bank[Math.floor(Math.random() * bank.length)]!;
+  }
+  if (name && intent === "generic" && Math.random() < 0.4) {
+    return `${name}. ${line}`;
   }
   return line;
 }
@@ -298,8 +411,9 @@ function craftFromFacts(
   facts: string[],
   name: string | null,
   avoid: string,
+  intent: Intent,
 ): BrainAct | null {
-  if (!facts.length) return null;
+  if (!facts.length && intent !== "recall") return null;
 
   if (/who am i|what(?:'s| is) my name|do you know (?:me|my name)|remember (?:me|my name)/.test(lower)) {
     if (name) {
@@ -314,17 +428,42 @@ function craftFromFacts(
     }
   }
 
-  if (/what do i like|my favorite|what did i tell you|what do you remember/.test(lower)) {
-    const nugget = facts.find((f) => /like|favor|prefer|love /i.test(f)) ?? facts[0];
-    if (nugget) {
-      const fact = nugget.replace(/^-\s*/, "");
-      const lines = [
-        `You told me: ${fact}. Don't act surprised.`,
-        `${fact}. I kept it. On purpose.`,
-      ].filter((l) => l !== avoid);
-      const line = lines[Math.floor(Math.random() * lines.length)] ?? fact;
+  if (
+    intent === "recall" ||
+    /what do i like|my favorite|what did i tell you|what do you remember|what do you know about me/.test(
+      lower,
+    )
+  ) {
+    if (!facts.length) {
+      const line = "Drawer's empty. Tell me something worth keeping first.";
       lastLine = line;
-      return { emotion: "shy", pose: "shy", line };
+      return { emotion: "thinking", pose: "idle", line };
+    }
+    const bits = facts.slice(0, 5).map((f) => f.replace(/^-\s*/, "").replace(/\.$/, ""));
+    let line: string;
+    if (bits.length === 1) {
+      line = `${bits[0]}. I kept it. On purpose.`;
+    } else if (bits.length === 2) {
+      line = `${bits[0]}; and ${bits[1]}. Don't act surprised.`;
+    } else {
+      const head = bits.slice(0, -1).join("; ");
+      line = `I kept a few things: ${head}; and ${bits[bits.length - 1]}. Don't make me recite the whole drawer.`;
+    }
+    if (line === avoid) line = `Fine — ${bits.join("; ")}. Happy?`;
+    lastLine = line;
+    return { emotion: "shy", pose: "shy", line };
+  }
+
+  if (/where do i (?:live|work)|what(?:'s| is) my (?:city|job|work)/.test(lower)) {
+    const city = cityFromFacts(facts);
+    const job = jobFromFacts(facts);
+    if (city || job) {
+      const parts = [city && `You live in ${city}`, job && `you work as ${job}`].filter(
+        Boolean,
+      ) as string[];
+      const line = `${parts.join("; ")}. I pay attention.`;
+      lastLine = line;
+      return { emotion: "thinking", pose: "idle", line };
     }
   }
 
@@ -338,18 +477,24 @@ function craftFromFacts(
 export function composeAct(messages: BrainMessage[], systemExtra?: string): BrainAct {
   const facts = parseFacts(systemExtra);
   const name = nameFromFacts(facts);
+  const like = likeFromFacts(facts);
   const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
   const lower = lastUser.toLowerCase();
   const recent = recentUserTexts(messages);
   const avoid = lastAssistantLine(messages);
 
-  const fromFacts = craftFromFacts(lower, facts, name, avoid);
-  if (fromFacts) return fromFacts;
-
   const intent = detectIntent(lower, recent);
+
+  const fromFacts = craftFromFacts(lower, facts, name, avoid, intent);
+  if (fromFacts) {
+    const memEarly = extractMemCandidate(lastUser, intent);
+    if (memEarly?.length) fromFacts.mem = memEarly;
+    return fromFacts;
+  }
+
   let { emotion, pose } = intentToAct(intent);
-  let line = pickLine(intent, avoid);
-  line = personalize(line, name, intent);
+  let line = pickLine(intent === "recall" ? "recall" : intent, avoid);
+  line = personalize(line, name, intent, like);
 
   // Soft apology after a scolding / bump
   if (

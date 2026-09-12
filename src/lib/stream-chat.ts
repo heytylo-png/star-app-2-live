@@ -8,7 +8,8 @@ export type StreamChatInput = {
   systemExtra?: string;
 };
 
-async function demoReply(
+/** Local composeAct brain when /api/chat is unavailable (GitHub Pages). */
+async function localReply(
   input: StreamChatInput,
   onDelta: (text: string) => void,
   signal?: AbortSignal,
@@ -37,7 +38,7 @@ export async function streamChat(
     });
 
     if (!res.ok || !res.body) {
-      await demoReply(input, onDelta, signal);
+      await localReply(input, onDelta, signal);
       return;
     }
 
@@ -72,11 +73,10 @@ export async function streamChat(
       }
     }
 
-    if (!got) await demoReply(input, onDelta, signal);
+    if (!got) await localReply(input, onDelta, signal);
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") throw err;
     if (err instanceof Error && err.name === "AbortError") throw err;
-    // Network / missing API → offline brain
-    await demoReply(input, onDelta, signal);
+    await localReply(input, onDelta, signal);
   }
 }
