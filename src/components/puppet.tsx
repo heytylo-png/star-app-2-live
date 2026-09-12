@@ -1,0 +1,257 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  allSpriteUrls,
+  layersFor,
+  type EmotionId,
+  type PoseId,
+  type SpriteLayer,
+} from "@/lib/rai";
+import { cn } from "@/lib/utils";
+
+type PuppetProps = {
+  pose: PoseId;
+  emotion: EmotionId;
+  talking: boolean;
+  amplitude: number;
+  className?: string;
+};
+
+type DisplayLayer = SpriteLayer & { z: number };
+
+const FADE_MS = 280;
+const LOOK_LERP = 6.5; // higher = snappier; frame-rate independent
+const LOOK_DISPLAY_LERP = 4.2;
+const AMP_LERP = 10;
+const DEADZONE = 0.04;
+
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
+function expApproach(current: number, target: number, rate: number, dt: number): number {
+  const k = 1 - Math.exp(-rate * dt);
+  return lerp(current, target, k);
+}
+
+/**
+ * Star Rai 2D puppet — idle life, look-at, mouth, mid-shot framing.
+ * Layers crossfade by stable id so pose changes never hard-pop.
+ */
+export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
+  const stageRef = useRef<HTMLDivElement>(null);
+  const pointerTarget = useRef(0);
+  const lookSmooth = useRef(0);
+  const lookForLayers = useRef(0);
+  const ampSmooth = useRef(0);
+  const ampTarget = useRef(amplitude);
+  const talkingRef = useRef(talking);
+  const lastTs = useRef(0);
+  const raf = useRef(0);
+  const reducedRef = useRef(false);
+
+  ampTarget.current = amplitude;
+  talkingRef.current = talking;
+
+  const [lookAngle, setLookAngle] = useState(0);
+  const [ampLive, setAmpLive] = useState(0);
+  const [display, setDisplay] = useState<DisplayLayer[]>([]);
+  const prevIds = useRef<Map<string, DisplayLayer>>(new Map());
+  const fadeTimers = useRef<Map<string, number>>(new Map());
+
+  // Preload every sprite in the Helix set.
+  useEffect(() => {
+    const urls = allSpriteUrls();
+    for (const src of urls) {
+      const img = new Image();
+      img.decoding = "async";
+      img.src = src;
+    }
+  }, []);
+
+  useEffect(() => {
+    const mq =
+      typeof window !== "undefined" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+    const sync = () => {
+      reducedRef.current = mq?.matches ?? false;
+    };
+    sync();
+    mq?.addEventListener("change", sync);
+    return () => mq?.removeEventListener("change", sync);
+  }, []);
+
+  // Pointer → look target (normalized -1..1), deadzone kills micro-jitter.
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+    const onMove = (e: PointerEvent) => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width <= 0) return;
+      let x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      if (Math.abs(x) < DEADZONE) x = 0;
+      else x = Math.sign(x) * ((Math.abs(x) - DEADZONE) / (1 - DEADZONE));
+      pointerTarget.current = Math.max(-1, Math.min(1, x));
+    };
+    const onLeave = () => {
+      pointerTarget.current = 0;
+    };
+    el.addEventListener("pointermove", onMove, { passive: true });
+    el.addEventListener("pointerleave", onLeave);
+    return () => {
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerleave", onLeave);
+    };
+  }, []);
+
+  // Idle life + look-at + amp smoothing — DOM transforms, minimal React.
+  useEffect(() => {
+    const tick = (now: number) => {
+      const dt = lastTs.current ? Math.min(0.05, (now - lastTs.current) / 1000) : 0.016;
+      lastTs.current = now;
+      const t = now / 1000;
+      const reduced = reducedRef.current;
+
+      lookSmooth.current = expApproach(
+        lookSmooth.current,
+        pointerTarget.current,
+        LOOK_LERP,
+        dt,
+      );
+      lookForLayers.current = expApproach(
+        lookForLayers.current,
+        lookSmooth.current,
+        LOOK_DISPLAY_LERP,
+        dt,
+      );
+
+      ampSmooth.current = expApproach(ampSmooth.current, ampTarget.current, AMP_LERP, dt);
+
+      // Publish look/amp to React at a gentler cadence (angle layers).
+      setLookAngle((prev) =>
+        Math.abs(prev - lookForLayers.current) > 0.012 ? lookForLayers.current : prev,
+      );
+      setAmpLive((prev) =>
+        Math.abs(prev - ampSmooth.current) > 0.02 ? ampSmooth.current : prev,
+      );
+
+      const sway = reduced ? 0 : Math.sin(t * 0.95) * 5.5 + Math.sin(t * 0.37) * 2.2;
+      const rock = reduced ? 0 : Math.sin(t * 0.55) * 1.15 + lookSmooth.current * -1.4;
+      const breathe = reduced ? 1 : 1 + Math.sin(t * 1.05) * 0.012 + Math.sin(t * 0.48) * 0.004;
+      const hair = reduced
+        ? 0
+        : Math.sin(t * 2.1) * 5.5 + Math.sin(t * 1.05) * 2.2 + lookSmooth.current * 3;
+      const talkBob =
+        reduced || !talkingRef.current ? 0 : Math.sin(t * 7.5) * ampSmooth.current * 1.8;
+
+      const node = stageRef.current?.querySelector<HTMLElement>("[data-rai-rig]");
+      const ahoge = stageRef.current?.querySelector<HTMLElement>("[data-rai-ahoge]");
+      if (node) {
+        const ax = lookSmooth.current;
+        node.style.transform = [
+          "perspective(1400px)",
+          `rotateY(${(-ax * 16).toFixed(2)}deg)`,
+          `translateY(${(sway + talkBob).toFixed(2)}px)`,
+          `rotateZ(${(rock + sway * 0.05).toFixed(2)}deg)`,
+          `scale(${breathe.toFixed(4)})`,
+        ].join(" ");
+      }
+      if (ahoge) {
+        ahoge.style.transform = `rotate(${hair.toFixed(2)}deg) scaleY(${(1 + Math.sin(t * 2.4) * 0.04).toFixed(3)})`;
+      }
+
+      raf.current = requestAnimationFrame(tick);
+    };
+    raf.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf.current);
+  }, []);
+
+  const desired = useMemo(
+    () => layersFor({ pose, emotion, talking, amplitude: ampLive, angle: lookAngle }),
+    [pose, emotion, talking, ampLive, lookAngle],
+  );
+
+  // Crossfade pool: keep outgoing layers at opacity 0 until fade completes.
+  useEffect(() => {
+    const next = new Map<string, DisplayLayer>();
+    desired.forEach((layer, i) => {
+      next.set(layer.id, { ...layer, z: layer.role === "talk" ? 20 + i : i });
+    });
+
+    const merged = new Map(prevIds.current);
+
+    for (const [id, layer] of next) {
+      const existingTimer = fadeTimers.current.get(id);
+      if (existingTimer) {
+        window.clearTimeout(existingTimer);
+        fadeTimers.current.delete(id);
+      }
+      merged.set(id, layer);
+    }
+
+    for (const [id, layer] of merged) {
+      if (!next.has(id) && layer.opacity > 0) {
+        merged.set(id, { ...layer, opacity: 0 });
+        const existingTimer = fadeTimers.current.get(id);
+        if (existingTimer) window.clearTimeout(existingTimer);
+        const timer = window.setTimeout(() => {
+          prevIds.current.delete(id);
+          fadeTimers.current.delete(id);
+          setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
+        }, FADE_MS + 40);
+        fadeTimers.current.set(id, timer);
+      }
+    }
+
+    prevIds.current = merged;
+    setDisplay(Array.from(merged.values()).sort((a, b) => a.z - b.z));
+  }, [desired]);
+
+  useEffect(() => {
+    return () => {
+      for (const t of fadeTimers.current.values()) window.clearTimeout(t);
+      fadeTimers.current.clear();
+    };
+  }, []);
+
+  return (
+    <div
+      ref={stageRef}
+      className={cn("relative h-full w-full overflow-hidden bg-stage", className)}
+      aria-hidden="true"
+    >
+      {/* White studio mid-shot backdrop */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_22%,#ffffff_0%,#f7f4ee_42%,#ebe6dc_78%,#e4ddd2_100%)]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-[#e8e2d8]/90 via-[#ebe6dc]/35 to-transparent" />
+
+      {/*
+        Framing: header clearance + bottom chrome room so feet/head aren't clipped.
+        Character owns the vertical stage between chrome bands.
+      */}
+      <div
+        data-rai-rig
+        className="absolute inset-x-0 top-[max(3.25rem,env(safe-area-inset-top))] bottom-[clamp(7.5rem,28vh,11rem)] origin-center will-change-transform sm:inset-x-[8%] md:inset-x-[14%] lg:inset-x-[18%]"
+        style={{ transformOrigin: "50% 38%" }}
+      >
+        {display.map((layer) => (
+          <img
+            key={layer.id}
+            src={layer.src}
+            alt=""
+            draggable={false}
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-contain object-[center_12%] select-none"
+            style={{
+              opacity: layer.opacity,
+              zIndex: layer.z,
+              transition: `opacity ${FADE_MS}ms var(--ease-smooth-out)`,
+            }}
+          />
+        ))}
+        {/* Ahoge / hair tip proxy — rotates over the crown */}
+        <span
+          data-rai-ahoge
+          className="pointer-events-none absolute top-[1%] left-[40%] h-[16%] w-[24%] origin-[48%_100%] will-change-transform"
+        />
+      </div>
+    </div>
+  );
+}
