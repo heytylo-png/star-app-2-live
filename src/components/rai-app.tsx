@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { useChatStore } from "@/lib/chat-store";
-import { EMOTION_LABEL, parseAct, streamLine, type EmotionId, type PoseId } from "@/lib/rai";
+import { EMOTION_LABEL, parseAct, streamActHints, streamLine, type EmotionId, type PoseId } from "@/lib/rai";
 import { useMemoryStore } from "@/lib/memory-store";
 import { newId, type ChatMessage } from "@/lib/helix";
 import { streamChat } from "@/lib/stream-chat";
@@ -130,6 +130,9 @@ function RaiReady() {
         },
         (delta) => {
           raw += delta;
+          const hints = streamActHints(raw);
+          if (hints.emotion) setEmotion(hints.emotion);
+          if (hints.pose) setPose(hints.pose);
           const live = streamLine(raw);
           if (live) {
             setCaption(live);

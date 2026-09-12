@@ -1,3 +1,5 @@
+import { actToJson, composeAct } from "@/lib/brain";
+
 export type StreamChatInput = {
   model: string;
   personality: string;
@@ -11,43 +13,8 @@ async function demoReply(
   onDelta: (text: string) => void,
   signal?: AbortSignal,
 ): Promise<void> {
-  const last = [...input.messages].reverse().find((m) => m.role === "user")?.content ?? "";
-  const lower = last.toLowerCase();
-  let emotion = "idle";
-  let pose = "idle";
-  let line = "Hmph. Fine — I'm still here. Say something worth answering.";
-
-  if (/bump|sorry|wasn't watching/.test(lower)) {
-    emotion = "angry";
-    pose = "idle";
-    line = "Watch where you're going. You're lucky I'm in a good mood… which I'm not.";
-  } else if (/who are you|supposed to be/.test(lower)) {
-    emotion = "thinking";
-    pose = "idle";
-    line = "Star Rai. Idol. Not your screensaver. Keep up.";
-  } else if (/hey|hello|hi\b|just got here/.test(lower)) {
-    emotion = "happy";
-    pose = "wave";
-    line = "Hey. Took you long enough.";
-  } else if (/remember|my name|like talking/.test(lower)) {
-    emotion = "shy";
-    pose = "shy";
-    line = "…Fine. I'll keep that. Don't make me regret it.";
-  } else if (/kiss|love|cute/.test(lower)) {
-    emotion = "flirty";
-    pose = "kiss";
-    line = "Don't get ideas. That was charity.";
-  } else if (last.trim()) {
-    emotion = "thinking";
-    pose = "idle";
-    line = "Offline demo — no API right now. I still heard you. Try again later for the real me.";
-  }
-
-  const mem =
-    /remember|my name|like talking/.test(lower) && last.trim()
-      ? `,"mem":[${JSON.stringify(last.replace(/\s+/g, " ").trim().slice(0, 80))}]`
-      : "";
-  const payload = `{"emotion":"${emotion}","pose":"${pose}","line":${JSON.stringify(line)}${mem}}`;
+  const act = composeAct(input.messages, input.systemExtra);
+  const payload = actToJson(act);
 
   for (const ch of payload) {
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
@@ -109,7 +76,7 @@ export async function streamChat(
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") throw err;
     if (err instanceof Error && err.name === "AbortError") throw err;
-    // Network / missing API → offline demo
+    // Network / missing API → offline brain
     await demoReply(input, onDelta, signal);
   }
 }
