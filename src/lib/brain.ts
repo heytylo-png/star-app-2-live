@@ -1,4 +1,5 @@
 import type { EmotionId, PoseId } from "@/lib/rai";
+import type { AffectionTier } from "@/lib/affection-store";
 
 export type BrainMessage = { role: "user" | "assistant"; content: string };
 
@@ -470,14 +471,76 @@ function craftFromFacts(
   return null;
 }
 
+function parseAffectionMeta(systemExtra?: string): {
+  tier: AffectionTier;
+  gapDays: number;
+  streak: number;
+} {
+  const tierMatch = systemExtra?.match(/Relationship:\s*(Stranger|Familiar|Close|Devoted)/i);
+  const gapMatch = systemExtra?.match(/away\s*~(\d+)\s*days/i);
+  const streakMatch = systemExtra?.match(/Talk streak:\s*(\d+)/i);
+  const label = (tierMatch?.[1] ?? "Stranger").toLowerCase() as AffectionTier;
+  const tier: AffectionTier =
+    label === "familiar" || label === "close" || label === "devoted" || label === "stranger"
+      ? label
+      : "stranger";
+  return {
+    tier,
+    gapDays: gapMatch ? Number(gapMatch[1]) : 0,
+    streak: streakMatch ? Number(streakMatch[1]) : 0,
+  };
+}
+
+function affectionColor(
+  line: string,
+  tier: AffectionTier,
+  gapDays: number,
+  name: string | null,
+  intent: Intent,
+): string {
+  // After a multi-day gap, softly note the quiet (once-ish via intent).
+  if (gapDays >= 2 && (intent === "greet" || intent === "miss" || intent === "generic")) {
+    const who = name ?? "You";
+    const bank =
+      tier === "devoted" || tier === "close"
+        ? [
+            `${who}. Quiet for a bit — I noticed. ${line}`,
+            `There you are. Don't vanish that long again. ${line}`,
+          ]
+        : [
+            `${who}. Took you a while. ${line}`,
+            `Absence noted. ${line}`,
+          ];
+    return bank[Math.floor(Math.random() * bank.length)]!;
+  }
+  if (tier === "devoted" && intent === "greet") {
+    const who = name ?? "You";
+    return `${who}. Good. Stay.`;
+  }
+  if (tier === "close" && intent === "soft") {
+    return line.includes("…") ? line : `…${line}`;
+  }
+  if (tier === "stranger" && (intent === "flirt" || intent === "soft")) {
+    // Keep distance
+    const bank = [
+      "We're not there yet. Try talking first.",
+      "Slow down. I barely know you.",
+    ];
+    return bank[Math.floor(Math.random() * bank.length)]!;
+  }
+  return line;
+}
+
 /**
  * Offline Star Rai brain for GitHub Pages (no server API).
  * Always stays in character; never mentions demo/offline/API.
+ * Optional systemExtra may include Relationship / Talk streak blocks from affection-store.
  */
 export function composeAct(messages: BrainMessage[], systemExtra?: string): BrainAct {
   const facts = parseFacts(systemExtra);
   const name = nameFromFacts(facts);
   const like = likeFromFacts(facts);
+  const { tier, gapDays } = parseAffectionMeta(systemExtra);
   const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
   const lower = lastUser.toLowerCase();
   const recent = recentUserTexts(messages);
@@ -485,16 +548,23 @@ export function composeAct(messages: BrainMessage[], systemExtra?: string): Brai
 
   const intent = detectIntent(lower, recent);
 
-  const fromFacts = craftFromFacts(lower, facts, name, avoid, intent);
+  // Gap-away greetings lean on miss energy
+  const effectiveIntent: Intent =
+    gapDays >= 2 && intent === "greet" ? "miss" : intent;
+
+  const fromFacts = craftFromFacts(lower, facts, name, avoid, effectiveIntent);
   if (fromFacts) {
     const memEarly = extractMemCandidate(lastUser, intent);
     if (memEarly?.length) fromFacts.mem = memEarly;
+    fromFacts.line = affectionColor(fromFacts.line, tier, gapDays, name, effectiveIntent);
+    lastLine = fromFacts.line;
     return fromFacts;
   }
 
-  let { emotion, pose } = intentToAct(intent);
-  let line = pickLine(intent === "recall" ? "recall" : intent, avoid);
-  line = personalize(line, name, intent, like);
+  let { emotion, pose } = intentToAct(effectiveIntent);
+  let line = pickLine(effectiveIntent === "recall" ? "recall" : effectiveIntent, avoid);
+  line = personalize(line, name, effectiveIntent, like);
+  line = affectionColor(line, tier, gapDays, name, effectiveIntent);
 
   // Soft apology after a scolding / bump
   if (
@@ -505,6 +575,15 @@ export function composeAct(messages: BrainMessage[], systemExtra?: string): Brai
     emotion = "shy";
     pose = "shy";
     line = pickLine("soft", avoid);
+  }
+
+  // Warmth bias by tier
+  if (tier === "devoted" && emotion === "idle" && effectiveIntent === "generic") {
+    emotion = "happy";
+  }
+  if (tier === "close" && effectiveIntent === "greet") {
+    emotion = "happy";
+    pose = "wave";
   }
 
   if (!lastUser.trim()) {
