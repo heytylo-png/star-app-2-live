@@ -23,7 +23,15 @@ import {
   useAffectionStore,
 } from "@/lib/affection-store";
 import { useChatStore } from "@/lib/chat-store";
-import { EMOTION_LABEL, parseAct, streamActHints, streamLine, type EmotionId, type PoseId } from "@/lib/rai";
+import {
+  EMOTION_LABEL,
+  parseAct,
+  poseResetDelayMs,
+  streamActHints,
+  streamLine,
+  type EmotionId,
+  type PoseId,
+} from "@/lib/rai";
 import { useMemoryStore } from "@/lib/memory-store";
 import { newId, type ChatMessage } from "@/lib/helix";
 import { streamChat } from "@/lib/stream-chat";
@@ -130,6 +138,8 @@ function RaiReady() {
   const talkingRef = useRef(false);
   const listenAfterSpeakRef = useRef(false);
   const bargeRecRef = useRef<Rec | null>(null);
+  /** When the last act pose/emotion landed — drives the hold timer. */
+  const actLandedAt = useRef(0);
 
   const thread = useMemo(
     () => threads.find((t) => t.id === activeId) ?? null,
@@ -181,12 +191,19 @@ function RaiReady() {
       setEmotion("thinking");
       return;
     }
+    const delay = poseResetDelayMs({
+      pose,
+      emotion,
+      talking: false,
+      actLandedAt: actLandedAt.current,
+    });
+    if (delay == null) return;
     const id = window.setTimeout(() => {
       setPose("idle");
       setEmotion("idle");
-    }, 1600);
+    }, delay);
     return () => window.clearTimeout(id);
-  }, [draft, sending, talking, holding, callListening]);
+  }, [draft, sending, talking, holding, callListening, pose, emotion]);
 
   function stopRec() {
     try {
@@ -373,7 +390,7 @@ function RaiReady() {
     setSending(true);
     setTalking(false);
     setEmotion("thinking");
-    setPose("idle");
+    // Keep the last act pose until the new one lands — no idle flash.
     setCaption("");
     setCallListening(false);
     stopRec();
@@ -412,6 +429,7 @@ function RaiReady() {
           const hints = streamActHints(raw);
           if (hints.emotion) setEmotion(hints.emotion);
           if (hints.pose) setPose(hints.pose);
+          if (hints.emotion || hints.pose) actLandedAt.current = Date.now();
           const live = streamLine(raw);
           if (live) {
             setCaption(live);
@@ -427,6 +445,7 @@ function RaiReady() {
       setCaption(line);
       setEmotion(act.emotion);
       setPose(act.pose);
+      actLandedAt.current = Date.now();
       if (act.memories.length) useMemoryStore.getState().addMany(act.memories);
 
       const shouldSpeak = voiceOnRef.current || callActiveRef.current;
@@ -464,6 +483,7 @@ function RaiReady() {
         store.patchMessage(threadId, assistant.id, { content: message, error: message });
         setCaption(message);
         setEmotion("sad");
+        actLandedAt.current = Date.now();
       }
     } finally {
       abortRef.current = null;

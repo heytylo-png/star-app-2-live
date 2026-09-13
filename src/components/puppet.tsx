@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   allSpriteUrls,
+  IDLE_BEAT_GAP_JITTER_MS,
+  IDLE_BEAT_GAP_MIN_MS,
+  IDLE_BEAT_HOLD_JITTER_MS,
+  IDLE_BEAT_HOLD_MIN_MS,
+  isDedicatedPose,
+  isExpressiveEmotion,
   layersFor,
   type EmotionId,
   type IdleBeat,
@@ -19,7 +25,8 @@ type PuppetProps = {
 
 type DisplayLayer = SpriteLayer & { z: number };
 
-const FADE_MS = 280;
+const FADE_MS = 340;
+const IDLE_BEAT_FADE_MS = 400;
 const LOOK_LERP = 6.5; // higher = snappier; frame-rate independent
 const LOOK_DISPLAY_LERP = 4.2;
 const AMP_LERP = 10;
@@ -39,6 +46,17 @@ function expApproach(current: number, target: number, rate: number, dt: number):
 /** Synthetic jaw so visemes cycle even when TTS amp is flat/near-zero. */
 function syntheticJaw(t: number): number {
   return 0.25 + 0.55 * Math.abs(Math.sin(t * 11)) * Math.abs(Math.sin(t * 3.3));
+}
+
+function isInstantLayer(layer: SpriteLayer): boolean {
+  return layer.id === "talk" || layer.role === "talk";
+}
+
+function fadeMsFor(layer: SpriteLayer): number {
+  if (isInstantLayer(layer)) return 0;
+  if (layer.id.startsWith("idle-beat")) return IDLE_BEAT_FADE_MS;
+  if (layer.id === "expo-talk") return 180;
+  return FADE_MS;
 }
 
 /**
@@ -74,14 +92,19 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const [display, setDisplay] = useState<DisplayLayer[]>([]);
   const prevIds = useRef<Map<string, DisplayLayer>>(new Map());
   const fadeTimers = useRef<Map<string, number>>(new Map());
+  const fadingIn = useRef<Set<string>>(new Set());
+  const fadeRaf = useRef(0);
 
-  // Preload every sprite (Helix + Expo talk pack).
+  // Preload + decode every sprite so pose swaps never flash a blank decode.
   useEffect(() => {
     const urls = allSpriteUrls();
     for (const src of urls) {
       const img = new Image();
       img.decoding = "async";
       img.src = src;
+      void img.decode().catch(() => {
+        /* still cached for a later paint */
+      });
     }
   }, []);
 
@@ -146,23 +169,25 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     };
   }, []);
 
-  // Idle variety: every 8–12s briefly flash Expo alt smile/grin when idle + not talking.
-  // Only near-front look-at is honored inside layersFor, so this won't fight side glances.
+  // Idle variety: longer dwell, never interrupt an expressive / talking pose.
+  // Near-front look-at is required inside layersFor so side glances stay alone.
   useEffect(() => {
     if (reducedRef.current) return;
     let cancelled = false;
     let waitTimer = 0;
     let holdTimer = 0;
 
+    const canIdleBeat = () =>
+      !talkingRef.current &&
+      !isDedicatedPose(poseRef.current) &&
+      !isExpressiveEmotion(emotionRef.current) &&
+      (emotionRef.current === "idle" || emotionRef.current === "happy");
+
     const schedule = () => {
-      const wait = 8000 + Math.random() * 4000;
+      const wait = IDLE_BEAT_GAP_MIN_MS + Math.random() * IDLE_BEAT_GAP_JITTER_MS;
       waitTimer = window.setTimeout(() => {
         if (cancelled) return;
-        const canBeat =
-          !talkingRef.current &&
-          poseRef.current === "idle" &&
-          (emotionRef.current === "idle" || emotionRef.current === "happy");
-        if (!canBeat) {
+        if (!canIdleBeat()) {
           schedule();
           return;
         }
@@ -172,7 +197,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
           if (cancelled) return;
           setIdleBeat("none");
           schedule();
-        }, 1100 + Math.random() * 700);
+        }, IDLE_BEAT_HOLD_MIN_MS + Math.random() * IDLE_BEAT_HOLD_JITTER_MS);
       }, wait);
     };
 
@@ -286,8 +311,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
 
   // Drop idle beat immediately when talking or a dedicated pose takes over.
   useEffect(() => {
-    if (talking || pose !== "idle") setIdleBeat("none");
-  }, [talking, pose]);
+    if (talking || isDedicatedPose(pose) || isExpressiveEmotion(emotion)) setIdleBeat("none");
+  }, [talking, pose, emotion]);
 
   const desired = useMemo(
     () =>
@@ -304,8 +329,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     [pose, emotion, talking, ampLive, lookAngle, talkPhase, blink, idleBeat],
   );
 
-  // Crossfade pool: keep outgoing layers at opacity 0 until fade completes.
-  // talk id stays stable for Helix flap; expo-talk (flag) remounts mouths via img key.
+  // Crossfade pool: incoming fades from 0, outgoing fades to 0, overlap both.
+  // talk id stays stable for Helix flap (instant opacity).
   useEffect(() => {
     const next = new Map<string, DisplayLayer>();
     desired.forEach((layer, i) => {
@@ -313,6 +338,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     });
 
     const merged = new Map(prevIds.current);
+    const incoming: Array<[string, DisplayLayer]> = [];
 
     for (const [id, layer] of next) {
       const existingTimer = fadeTimers.current.get(id);
@@ -320,11 +346,27 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
         window.clearTimeout(existingTimer);
         fadeTimers.current.delete(id);
       }
-      merged.set(id, layer);
+      const prev = merged.get(id);
+      if (!prev) {
+        if (isInstantLayer(layer)) {
+          merged.set(id, layer);
+        } else {
+          // Incoming on top at 0 so the outgoing PNG stays visible until the fade starts.
+          merged.set(id, { ...layer, opacity: 0, z: 10 + layer.z });
+          fadingIn.current.add(id);
+          incoming.push([id, layer]);
+        }
+      } else if (fadingIn.current.has(id)) {
+        // Keep the fade-in; don't snap to target when talkPhase retriggers.
+        merged.set(id, { ...layer, opacity: prev.opacity });
+      } else {
+        merged.set(id, layer);
+      }
     }
 
     for (const [id, layer] of merged) {
       if (!next.has(id) && layer.opacity > 0) {
+        fadingIn.current.delete(id);
         merged.set(id, { ...layer, opacity: 0 });
         const existingTimer = fadeTimers.current.get(id);
         if (existingTimer) window.clearTimeout(existingTimer);
@@ -332,19 +374,33 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
           prevIds.current.delete(id);
           fadeTimers.current.delete(id);
           setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
-        }, FADE_MS + 40);
+        }, fadeMsFor(layer) + 40);
         fadeTimers.current.set(id, timer);
       }
     }
 
     prevIds.current = merged;
     setDisplay(Array.from(merged.values()).sort((a, b) => a.z - b.z));
+
+    if (incoming.length) {
+      if (fadeRaf.current) window.clearTimeout(fadeRaf.current);
+      // Wait one paint at opacity 0 so CSS can interpolate 0 → target (not a hard cut in).
+      fadeRaf.current = window.setTimeout(() => {
+        for (const [id, layer] of incoming) {
+          if (!prevIds.current.has(id)) continue;
+          prevIds.current.set(id, layer);
+          fadingIn.current.delete(id);
+        }
+        setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
+      }, 48);
+    }
   }, [desired]);
 
   useEffect(() => {
     return () => {
       for (const t of fadeTimers.current.values()) window.clearTimeout(t);
       fadeTimers.current.clear();
+      if (fadeRaf.current) window.clearTimeout(fadeRaf.current);
     };
   }, []);
 
@@ -353,6 +409,10 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       ref={stageRef}
       className={cn("relative h-full w-full overflow-hidden bg-stage", className)}
       aria-hidden="true"
+      data-rai-pose={pose}
+      data-rai-emotion={emotion}
+      data-rai-talking={talking ? "1" : "0"}
+      data-rai-idle-beat={idleBeat}
     >
       {/* White studio mid-shot backdrop */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_22%,#ffffff_0%,#f7f4ee_42%,#ebe6dc_78%,#e4ddd2_100%)]" />
@@ -369,7 +429,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       >
         {display.map((layer) => (
           <img
-            key={`${layer.id}:${layer.src}`}
+            key={layer.id}
             src={layer.src}
             alt=""
             draggable={false}
@@ -378,13 +438,10 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
             style={{
               opacity: layer.opacity,
               zIndex: layer.z,
-              // Talk flap must track sin immediately; pose/mode changes still soft-crossfade.
-              transition:
-                layer.id === "talk" || layer.role === "talk"
-                  ? "none"
-                  : layer.id === "expo-talk"
-                    ? "opacity 180ms var(--ease-smooth-out)"
-                    : `opacity ${FADE_MS}ms var(--ease-smooth-out)`,
+              // Talk flap tracks sin immediately; pose / idle-beat ease across.
+              transition: isInstantLayer(layer)
+                ? "none"
+                : `opacity ${fadeMsFor(layer)}ms var(--ease-smooth-out)`,
             }}
           />
         ))}
