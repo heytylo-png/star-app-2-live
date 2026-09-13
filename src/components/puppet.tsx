@@ -34,8 +34,9 @@ function expApproach(current: number, target: number, rate: number, dt: number):
 }
 
 /**
- * Star Rai 2D puppet — idle life, look-at, mouth, mid-shot framing.
+ * Star Rai 2D puppet — idle life, look-at, amplitude visemes, mid-shot framing.
  * Layers crossfade by stable id so pose changes never hard-pop.
+ * Expo talk busts share id "expo-talk" so mouth frames hard-cut (snappy lips).
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -54,11 +55,12 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
 
   const [lookAngle, setLookAngle] = useState(0);
   const [ampLive, setAmpLive] = useState(0);
+  const [blink, setBlink] = useState<0 | 1 | 2>(0);
   const [display, setDisplay] = useState<DisplayLayer[]>([]);
   const prevIds = useRef<Map<string, DisplayLayer>>(new Map());
   const fadeTimers = useRef<Map<string, number>>(new Map());
 
-  // Preload every sprite in the Helix set.
+  // Preload every sprite (Helix + Expo talk pack).
   useEffect(() => {
     const urls = allSpriteUrls();
     for (const src of urls) {
@@ -77,6 +79,47 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     sync();
     mq?.addEventListener("change", sync);
     return () => mq?.removeEventListener("change", sync);
+  }, []);
+
+  // Occasional blink while talking on quiet visemes (Expo eyes busts).
+  useEffect(() => {
+    if (reducedRef.current) return;
+    let cancelled = false;
+    let sleepTimer = 0;
+    let stepTimer = 0;
+
+    const schedule = () => {
+      const wait = 2800 + Math.random() * 4200;
+      sleepTimer = window.setTimeout(() => {
+        if (cancelled) return;
+        if (!talkingRef.current || ampSmooth.current > 0.22) {
+          schedule();
+          return;
+        }
+        setBlink(1);
+        stepTimer = window.setTimeout(() => {
+          if (cancelled) return;
+          setBlink(2);
+          stepTimer = window.setTimeout(() => {
+            if (cancelled) return;
+            setBlink(1);
+            stepTimer = window.setTimeout(() => {
+              if (cancelled) return;
+              setBlink(0);
+              schedule();
+            }, 55);
+          }, 90);
+        }, 45);
+      }, wait);
+    };
+
+    schedule();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(sleepTimer);
+      window.clearTimeout(stepTimer);
+      setBlink(0);
+    };
   }, []);
 
   // Pointer → look target (normalized -1..1), deadzone kills micro-jitter.
@@ -165,11 +208,20 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   }, []);
 
   const desired = useMemo(
-    () => layersFor({ pose, emotion, talking, amplitude: ampLive, angle: lookAngle }),
-    [pose, emotion, talking, ampLive, lookAngle],
+    () =>
+      layersFor({
+        pose,
+        emotion,
+        talking,
+        amplitude: ampLive,
+        angle: lookAngle,
+        blink,
+      }),
+    [pose, emotion, talking, ampLive, lookAngle, blink],
   );
 
   // Crossfade pool: keep outgoing layers at opacity 0 until fade completes.
+  // expo-talk keeps a stable id so viseme src updates hard-cut (snappy mouth).
   useEffect(() => {
     const next = new Map<string, DisplayLayer>();
     desired.forEach((layer, i) => {
@@ -242,7 +294,11 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
             style={{
               opacity: layer.opacity,
               zIndex: layer.z,
-              transition: `opacity ${FADE_MS}ms var(--ease-smooth-out)`,
+              // Soft crossfade for pose/mode changes; expo-talk src swaps stay instant via stable key.
+              transition:
+                layer.id === "expo-talk"
+                  ? "opacity 180ms var(--ease-smooth-out)"
+                  : `opacity ${FADE_MS}ms var(--ease-smooth-out)`,
             }}
           />
         ))}

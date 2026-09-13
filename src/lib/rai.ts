@@ -19,14 +19,16 @@ export type ViewId = (typeof VIEWS)[number];
 /**
  * Drop-in PNG contract for Star Rai.
  *
- * Replace any file under /public/star-rai/ with your own art.
- * Keep the filenames. Recommended: 2:3, mid-shot, white studio,
- * character vertically centered, cel-shaded 2D illustration.
- *
+ * Helix set (look-at / dedicated poses):
  *   poses/{idle,shy,kiss,wave,hearts,turn-away}.png
  *   angles/{front,three-quarter,side,back}.png
- *   idle-talk.png          // same idle pose, mouth open
- *   extras: point-front, lean-front, scold-front, finger-front
+ *   idle-talk.png          // legacy; talk now uses Expo bust visemes
+ *
+ * Expo talk pack (public/rai/) — full bust portraits, same camera.
+ * NOT transparent mouth cutouts; do not stack on Helix bodies.
+ *   mouth_{closed_smile,speak,oh,grin,kiss}.png
+ *   face_eyes_{half,closed}.png
+ *   front_idle.png
  */
 const ASSET = (path: string) => {
   const base = import.meta.env.BASE_URL || "/";
@@ -49,7 +51,18 @@ export const SPRITES = {
     side: ASSET("star-rai/angles/side.png"),
     back: ASSET("star-rai/angles/back.png"),
   } satisfies Record<ViewId, string>,
+  /** @deprecated Prefer SPRITES.talkBust — kept for preload/fallback. */
   talk: ASSET("star-rai/idle-talk.png"),
+  talkBust: {
+    closed: ASSET("rai/mouth_closed_smile.png"),
+    speak: ASSET("rai/mouth_speak.png"),
+    oh: ASSET("rai/mouth_oh.png"),
+    grin: ASSET("rai/mouth_grin.png"),
+    kiss: ASSET("rai/mouth_kiss.png"),
+    eyesHalf: ASSET("rai/face_eyes_half.png"),
+    eyesClosed: ASSET("rai/face_eyes_closed.png"),
+    frontIdle: ASSET("rai/front_idle.png"),
+  },
   extras: {
     point: ASSET("star-rai/point-front.png"),
     lean: ASSET("star-rai/lean-front.png"),
@@ -58,12 +71,15 @@ export const SPRITES = {
   },
 } as const;
 
+export type TalkViseme = "closed" | "speak" | "oh" | "grin";
+
 /** Flat list of every sprite URL referenced by SPRITES — use for preload. */
 export function allSpriteUrls(): string[] {
   return [
     ...Object.values(SPRITES.poses),
     ...Object.values(SPRITES.angles),
     SPRITES.talk,
+    ...Object.values(SPRITES.talkBust),
     ...Object.values(SPRITES.extras),
   ];
 }
@@ -83,6 +99,8 @@ export type PuppetState = {
   talking: boolean;
   amplitude: number;
   angle: number;
+  /** 0 open, 1 half, 2 closed — Expo idle/talk blink only. */
+  blink?: 0 | 1 | 2;
 };
 
 function clamp01(n: number): number {
@@ -97,36 +115,60 @@ export function viewsForAngle(angle: number): { a: ViewId; b: ViewId; mix: numbe
   return { a: "side", b: "back", mix: clamp01((t - 0.58) / 0.42) };
 }
 
-/** Mouth open amount from TTS amplitude — body stays intact underneath. */
+/** Mouth open amount from TTS amplitude — used for viseme thresholds. */
 export function talkOpacity(amplitude: number, talking: boolean): number {
   if (!talking) return 0;
   const a = clamp01(amplitude);
-  // Soft knee: quiet breaths barely open, peaks stay readable.
   const shaped = a * a * (3 - 2 * a);
   return clamp01(0.18 + shaped * 0.82);
 }
 
-function body(src: string, opacity = 1): SpriteLayer {
-  return { id: `body:${src}`, src, opacity, role: "body" };
+/**
+ * Amplitude → Expo talk bust viseme.
+ * low → closed smile, mid → speak, high → oh (or grin when happy/flirty).
+ */
+export function talkViseme(amplitude: number, emotion: EmotionId): TalkViseme {
+  const a = clamp01(amplitude);
+  if (a < 0.14) return "closed";
+  if (a < 0.52) return "speak";
+  if (emotion === "happy" || emotion === "flirty") return "grin";
+  return "oh";
 }
 
-function talk(opacity: number): SpriteLayer {
-  return { id: "talk", src: SPRITES.talk, opacity, role: "talk" };
+function body(src: string, opacity = 1, id?: string): SpriteLayer {
+  return { id: id ?? `body:${src}`, src, opacity, role: "body" };
+}
+
+/** Expo talk bust as a stable-id body so viseme src swaps hard-cut; mode enter/exit still crossfades vs Helix. */
+function expoTalkBody(src: string): SpriteLayer {
+  return { id: "expo-talk", src, opacity: 1, role: "body" };
+}
+
+function talkBustSrc(viseme: TalkViseme): string {
+  switch (viseme) {
+    case "speak":
+      return SPRITES.talkBust.speak;
+    case "oh":
+      return SPRITES.talkBust.oh;
+    case "grin":
+      return SPRITES.talkBust.grin;
+    case "closed":
+    default:
+      return SPRITES.talkBust.closed;
+  }
 }
 
 /**
  * Pose state machine — swap files here when new PNGs land.
- * Always prefer keeping a full-opacity body under any talk overlay.
+ * Talking on idle uses Expo bust visemes (aligned pack), not Helix idle-talk overlay.
  */
 export function layersFor(state: PuppetState): SpriteLayer[] {
-  const { pose, emotion, talking, amplitude, angle } = state;
-  const mouth = talkOpacity(amplitude, talking);
+  const { pose, emotion, talking, amplitude, angle, blink = 0 } = state;
 
   // Dedicated Helix poses take the stage (crossfade handled by Puppet).
+  // Kiss / wave / hearts already imply mouth — never stack a talk bust.
   if (pose !== "idle") {
-    const layers = [body(SPRITES.poses[pose])];
-    // Kiss / wave / hearts already imply mouth; don't stack idle-talk.
-    return layers;
+    return [body(SPRITES.poses[pose])];
   }
 
   if (emotion === "thinking" && !talking) {
@@ -142,7 +184,7 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
   }
 
   if (talking && (emotion === "angry" || emotion === "surprised")) {
-    // Point pose while speaking — no talk overlay (different mouth art).
+    // Point pose while speaking — different mouth art; no Expo talk bust.
     return [body(SPRITES.extras.point)];
   }
 
@@ -150,18 +192,26 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     return [body(SPRITES.poses.shy)];
   }
 
+  // Idle + talking → Expo talk busts (same camera). Soft crossfade off Helix angles.
+  // Busts are full portraits — never stack on Helix or on front_idle (misaligned).
+  if (talking) {
+    const amp = clamp01(amplitude);
+    // Blink only on quiet frames so open mouths aren't replaced mid-phoneme.
+    if (blink === 2 && amp < 0.2) {
+      return [expoTalkBody(SPRITES.talkBust.eyesClosed)];
+    }
+    if (blink === 1 && amp < 0.2) {
+      return [expoTalkBody(SPRITES.talkBust.eyesHalf)];
+    }
+    return [expoTalkBody(talkBustSrc(talkViseme(amplitude, emotion)))];
+  }
+
+  // Idle presence — Helix look-at angles.
   const { a, b, mix } = viewsForAngle(angle);
-  const layers: SpriteLayer[] = [
+  return [
     body(SPRITES.angles[a], 1),
     body(SPRITES.angles[b], mix * 0.95),
   ];
-
-  if (mouth > 0.01) {
-    // Talk layer sits on top; body angles stay fully present underneath.
-    layers.push(talk(mouth));
-  }
-
-  return layers;
 }
 
 export const EMOTION_LABEL: Record<EmotionId, string> = {
