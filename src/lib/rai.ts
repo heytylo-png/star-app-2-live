@@ -71,7 +71,7 @@ export const SPRITES = {
   },
 } as const;
 
-export type TalkViseme = "closed" | "speak" | "oh" | "grin";
+export type TalkViseme = "closed" | "speak" | "oh" | "grin" | "kiss";
 
 /** Flat list of every sprite URL referenced by SPRITES — use for preload. */
 export function allSpriteUrls(): string[] {
@@ -126,10 +126,16 @@ export function talkOpacity(amplitude: number, talking: boolean): number {
 /**
  * Amplitude → Expo talk bust viseme.
  * low → closed smile, mid → speak, high → oh (or grin when happy/flirty).
+ * Kiss pose: kiss/grin mouths so blown-kiss intent still flaps.
  * Thresholds biased low so mid/high hit often even with modest jaw signal.
  */
-export function talkViseme(amplitude: number, emotion: EmotionId): TalkViseme {
+export function talkViseme(amplitude: number, emotion: EmotionId, pose: PoseId = "idle"): TalkViseme {
   const a = clamp01(amplitude);
+  if (pose === "kiss") {
+    if (a < 0.08) return "kiss";
+    if (a < 0.34) return "speak";
+    return "grin";
+  }
   if (a < 0.08) return "closed";
   if (a < 0.34) return "speak";
   if (emotion === "happy" || emotion === "flirty") return "grin";
@@ -153,6 +159,8 @@ function talkBustSrc(viseme: TalkViseme): string {
       return SPRITES.talkBust.oh;
     case "grin":
       return SPRITES.talkBust.grin;
+    case "kiss":
+      return SPRITES.talkBust.kiss;
     case "closed":
     default:
       return SPRITES.talkBust.closed;
@@ -161,41 +169,19 @@ function talkBustSrc(viseme: TalkViseme): string {
 
 /**
  * Pose state machine — swap files here when new PNGs land.
- * Talking on idle uses Expo bust visemes (aligned pack), not Helix idle-talk overlay.
+ * While talking, Expo bust visemes win over dedicated Helix poses (wave/hearts/kiss/shy)
+ * so greetings still flap the mouth. turn-away stays back (no face). Non-talking keeps
+ * dedicated pose art. Thinking wait uses Helix look-at (puppet sway) instead of frozen finger.
  */
 export function layersFor(state: PuppetState): SpriteLayer[] {
   const { pose, emotion, talking, amplitude, angle, blink = 0 } = state;
 
-  // Dedicated Helix poses take the stage (crossfade handled by Puppet).
-  // Kiss / wave / hearts already imply mouth — never stack a talk bust.
-  if (pose !== "idle") {
-    return [body(SPRITES.poses[pose])];
-  }
-
-  if (emotion === "thinking" && !talking) {
-    return [body(SPRITES.extras.finger)];
-  }
-
-  if (emotion === "angry" && !talking) {
-    return [body(SPRITES.extras.scold)];
-  }
-
-  if (emotion === "flirty" && !talking) {
-    return [body(SPRITES.extras.lean)];
-  }
-
-  if (talking && (emotion === "angry" || emotion === "surprised")) {
-    // Point pose while speaking — different mouth art; no Expo talk bust.
-    return [body(SPRITES.extras.point)];
-  }
-
-  if (emotion === "shy") {
-    return [body(SPRITES.poses.shy)];
-  }
-
-  // Idle + talking → Expo talk busts (same camera). Soft crossfade off Helix angles.
-  // Busts are full portraits — never stack on Helix or on front_idle (misaligned).
+  // Speaking → Expo talk busts (visemes + blink) even when brain set pose:wave/hearts/kiss.
+  // Exception: turn-away has no face — keep Helix back pose.
   if (talking) {
+    if (pose === "turn-away") {
+      return [body(SPRITES.poses["turn-away"])];
+    }
     // Blink overrides mouth briefly; amp no longer gates blink so eyes fire on schedule.
     if (blink === 2) {
       return [expoTalkBody(SPRITES.talkBust.eyesClosed)];
@@ -203,7 +189,34 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     if (blink === 1) {
       return [expoTalkBody(SPRITES.talkBust.eyesHalf)];
     }
-    return [expoTalkBody(talkBustSrc(talkViseme(amplitude, emotion)))];
+    return [expoTalkBody(talkBustSrc(talkViseme(amplitude, emotion, pose)))];
+  }
+
+  // Dedicated Helix poses when NOT talking (wave after speech ends is fine).
+  if (pose !== "idle") {
+    return [body(SPRITES.poses[pose])];
+  }
+
+  // Thinking wait: Helix look-at angles + puppet sway (not frozen finger/scold).
+  // Talking path above already leaves thinking art the instant TTS starts.
+  if (emotion === "thinking") {
+    const { a, b, mix } = viewsForAngle(angle);
+    return [
+      body(SPRITES.angles[a], 1),
+      body(SPRITES.angles[b], mix * 0.95),
+    ];
+  }
+
+  if (emotion === "angry") {
+    return [body(SPRITES.extras.scold)];
+  }
+
+  if (emotion === "flirty") {
+    return [body(SPRITES.extras.lean)];
+  }
+
+  if (emotion === "shy") {
+    return [body(SPRITES.poses.shy)];
   }
 
   // Idle presence — Helix look-at angles.
