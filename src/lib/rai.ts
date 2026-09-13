@@ -19,13 +19,13 @@ export type ViewId = (typeof VIEWS)[number];
 /**
  * Drop-in PNG contract for Star Rai.
  *
- * Helix set (look-at / dedicated poses):
+ * Helix set (look-at / dedicated poses / default talk):
  *   poses/{idle,shy,kiss,wave,hearts,turn-away}.png
  *   angles/{front,three-quarter,side,back}.png
- *   idle-talk.png          // legacy; talk now uses Expo bust visemes
+ *   idle-talk.png          // opaque full-frame mouth-open; opacity-flap over front
  *
- * Expo talk pack (public/rai/) — full bust portraits, same camera.
- * NOT transparent mouth cutouts; do not stack on Helix bodies.
+ * Expo talk pack (public/rai/) — gated behind USE_EXPO_TALK_BUST (default off).
+ * Different crop than Helix; caused SPEAKING zoom-jump when used as default.
  *   mouth_{closed_smile,speak,oh,grin,kiss}.png
  *   face_eyes_{half,closed}.png
  *   front_idle.png
@@ -51,7 +51,7 @@ export const SPRITES = {
     side: ASSET("star-rai/angles/side.png"),
     back: ASSET("star-rai/angles/back.png"),
   } satisfies Record<ViewId, string>,
-  /** @deprecated Prefer SPRITES.talkBust — kept for preload/fallback. */
+  /** Helix mouth-open frame — opacity-flapped over angles.front while speaking. */
   talk: ASSET("star-rai/idle-talk.png"),
   talkBust: {
     closed: ASSET("rai/mouth_closed_smile.png"),
@@ -93,13 +93,18 @@ export type SpriteLayer = {
   role: "body" | "talk";
 };
 
+/** When true, SPEAKING uses Expo bust visemes (zoomed crop). Default off — Helix framing. */
+export const USE_EXPO_TALK_BUST = false;
+
 export type PuppetState = {
   pose: PoseId;
   emotion: EmotionId;
   talking: boolean;
   amplitude: number;
   angle: number;
-  /** 0 open, 1 half, 2 closed — Expo idle/talk blink only. */
+  /** Seconds — drives Helix idle-talk opacity flap (sin phase). */
+  talkPhase?: number;
+  /** 0 open, 1 half, 2 closed — Expo talk blink only (ignored on Helix path). */
   blink?: 0 | 1 | 2;
 };
 
@@ -115,12 +120,25 @@ export function viewsForAngle(angle: number): { a: ViewId; b: ViewId; mix: numbe
   return { a: "side", b: "back", mix: clamp01((t - 0.58) / 0.42) };
 }
 
-/** Mouth open amount from TTS amplitude — used for viseme thresholds. */
+/** Mouth open amount from TTS amplitude — used for Expo viseme thresholds / mix. */
 export function talkOpacity(amplitude: number, talking: boolean): number {
   if (!talking) return 0;
   const a = clamp01(amplitude);
   const shaped = a * a * (3 - 2 * a);
   return clamp01(0.18 + shaped * 0.82);
+}
+
+/**
+ * Helix idle-talk opacity flap — time-driven so mouth visibly opens/closes
+ * several times per second even when TTS amp is flat. Mixed with amp.
+ * Formula: 0.2 + 0.75 * (0.5 + 0.5*sin(t*14)) × amp mix.
+ */
+export function talkFlapOpacity(talkPhase: number, amplitude: number, talking: boolean): number {
+  if (!talking) return 0;
+  const flap = 0.2 + 0.75 * (0.5 + 0.5 * Math.sin(talkPhase * 14));
+  const a = clamp01(amplitude);
+  // Keep pulse obvious; amp still nudges openness without freezing on grin.
+  return clamp01(flap * (0.4 + 0.6 * Math.max(a, 0.55)));
 }
 
 /**
@@ -167,29 +185,39 @@ function talkBustSrc(viseme: TalkViseme): string {
   }
 }
 
+function talkOverlay(opacity: number): SpriteLayer {
+  return { id: "talk", src: SPRITES.talk, opacity, role: "talk" };
+}
+
 /**
  * Pose state machine — swap files here when new PNGs land.
- * While talking, Expo bust visemes win over dedicated Helix poses (wave/hearts/kiss/shy)
- * so greetings still flap the mouth. turn-away stays back (no face). Non-talking keeps
- * dedicated pose art. Thinking wait uses Helix look-at (puppet sway) instead of frozen finger.
+ * Default SPEAKING: Helix angles.front + idle-talk opacity flap (same framing as idle).
+ * Expo bust path is opt-in via USE_EXPO_TALK_BUST. turn-away stays back (no face).
+ * After talking ends, dedicated act poses (wave/hearts/kiss/…) show as before.
+ * Thinking wait uses Helix look-at (puppet sway) instead of frozen finger.
  */
 export function layersFor(state: PuppetState): SpriteLayer[] {
-  const { pose, emotion, talking, amplitude, angle, blink = 0 } = state;
+  const { pose, emotion, talking, amplitude, angle, blink = 0, talkPhase = 0 } = state;
 
-  // Speaking → Expo talk busts (visemes + blink) even when brain set pose:wave/hearts/kiss.
-  // Exception: turn-away has no face — keep Helix back pose.
   if (talking) {
     if (pose === "turn-away") {
       return [body(SPRITES.poses["turn-away"])];
     }
-    // Blink overrides mouth briefly; amp no longer gates blink so eyes fire on schedule.
-    if (blink === 2) {
-      return [expoTalkBody(SPRITES.talkBust.eyesClosed)];
+
+    // Opt-in Expo busts (different crop — causes SPEAKING zoom-jump).
+    if (USE_EXPO_TALK_BUST) {
+      if (blink === 2) {
+        return [expoTalkBody(SPRITES.talkBust.eyesClosed)];
+      }
+      if (blink === 1) {
+        return [expoTalkBody(SPRITES.talkBust.eyesHalf)];
+      }
+      return [expoTalkBody(talkBustSrc(talkViseme(amplitude, emotion, pose)))];
     }
-    if (blink === 1) {
-      return [expoTalkBody(SPRITES.talkBust.eyesHalf)];
-    }
-    return [expoTalkBody(talkBustSrc(talkViseme(amplitude, emotion, pose)))];
+
+    // Helix-native talk: stable front framing + time-driven idle-talk flap.
+    const mouth = talkFlapOpacity(talkPhase, amplitude, true);
+    return [body(SPRITES.angles.front, 1), talkOverlay(mouth)];
   }
 
   // Dedicated Helix poses when NOT talking (wave after speech ends is fine).
@@ -198,7 +226,6 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
   }
 
   // Thinking wait: Helix look-at angles + puppet sway (not frozen finger/scold).
-  // Talking path above already leaves thinking art the instant TTS starts.
   if (emotion === "thinking") {
     const { a, b, mix } = viewsForAngle(angle);
     return [

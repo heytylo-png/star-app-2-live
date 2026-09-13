@@ -41,9 +41,9 @@ function syntheticJaw(t: number): number {
 }
 
 /**
- * Star Rai 2D puppet — idle life, look-at, amplitude visemes, mid-shot framing.
+ * Star Rai 2D puppet — idle life, look-at, Helix talk flap, mid-shot framing.
  * Layers crossfade by stable id so pose changes never hard-pop.
- * Expo talk busts share id "expo-talk"; img key includes src so mouth frames remount.
+ * While talking: Helix front + idle-talk opacity flap (talkPhase); Expo busts gated off.
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -63,6 +63,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
 
   const [lookAngle, setLookAngle] = useState(0);
   const [ampLive, setAmpLive] = useState(0);
+  const [talkPhase, setTalkPhase] = useState(0);
   const [blink, setBlink] = useState<0 | 1 | 2>(0);
   const [display, setDisplay] = useState<DisplayLayer[]>([]);
   const prevIds = useRef<Map<string, DisplayLayer>>(new Map());
@@ -98,7 +99,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     setAmpLive((prev) => Math.max(prev, kick));
   }, [talking]);
 
-  // Blink every ~1.8–3s while talking — no amp gate; ~150ms half→closed→half.
+  // Expo-only blink schedule (Helix path ignores blink — no eyes zoom swap).
   useEffect(() => {
     if (reducedRef.current) return;
     let cancelled = false;
@@ -195,11 +196,16 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       }
       jawLive.current = jaw;
 
-      // Publish look/amp to React at a gentler cadence (angle layers / visemes).
+      // Publish look/amp; while talking push talkPhase + amp every frame so mouth flap animates.
       setLookAngle((prev) =>
         Math.abs(prev - lookForLayers.current) > 0.012 ? lookForLayers.current : prev,
       );
-      setAmpLive((prev) => (Math.abs(prev - jaw) > 0.02 ? jaw : prev));
+      if (talkingRef.current) {
+        setTalkPhase(t);
+        setAmpLive(jaw);
+      } else {
+        setAmpLive((prev) => (Math.abs(prev - jaw) > 0.02 ? jaw : prev));
+      }
 
       const sway = reduced ? 0 : Math.sin(t * 0.95) * 5.5 + Math.sin(t * 0.37) * 2.2;
       const rock = reduced ? 0 : Math.sin(t * 0.55) * 1.15 + lookSmooth.current * -1.4;
@@ -240,13 +246,14 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
         talking,
         amplitude: ampLive,
         angle: lookAngle,
+        talkPhase,
         blink,
       }),
-    [pose, emotion, talking, ampLive, lookAngle, blink],
+    [pose, emotion, talking, ampLive, lookAngle, talkPhase, blink],
   );
 
   // Crossfade pool: keep outgoing layers at opacity 0 until fade completes.
-  // expo-talk keeps a stable id in the pool; React img key includes src for hard remount.
+  // talk id stays stable for Helix flap; expo-talk (flag) remounts mouths via img key.
   useEffect(() => {
     const next = new Map<string, DisplayLayer>();
     desired.forEach((layer, i) => {
@@ -319,11 +326,13 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
             style={{
               opacity: layer.opacity,
               zIndex: layer.z,
-              // Soft crossfade for pose/mode changes; expo-talk src swaps remount via key.
+              // Talk flap must track sin immediately; pose/mode changes still soft-crossfade.
               transition:
-                layer.id === "expo-talk"
-                  ? "opacity 180ms var(--ease-smooth-out)"
-                  : `opacity ${FADE_MS}ms var(--ease-smooth-out)`,
+                layer.id === "talk" || layer.role === "talk"
+                  ? "none"
+                  : layer.id === "expo-talk"
+                    ? "opacity 180ms var(--ease-smooth-out)"
+                    : `opacity ${FADE_MS}ms var(--ease-smooth-out)`,
             }}
           />
         ))}
