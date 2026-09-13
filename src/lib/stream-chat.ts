@@ -1,4 +1,5 @@
 import { actToJson, composeAct } from "@/lib/brain";
+import { getStoredXaiKey, streamGrok } from "@/lib/grok";
 
 export type StreamChatInput = {
   model: string;
@@ -8,7 +9,7 @@ export type StreamChatInput = {
   systemExtra?: string;
 };
 
-/** Local composeAct brain when /api/chat is unavailable (GitHub Pages). */
+/** Local composeAct brain when Grok /api/chat is unavailable (GitHub Pages). */
 async function localReply(
   input: StreamChatInput,
   onDelta: (text: string) => void,
@@ -24,11 +25,19 @@ async function localReply(
   }
 }
 
-export async function streamChat(
+function isAbort(err: unknown): boolean {
+  return (
+    (err instanceof DOMException && err.name === "AbortError") ||
+    (err instanceof Error && err.name === "AbortError")
+  );
+}
+
+/** Optional legacy Pages /api/chat probe (kept for future backends). */
+async function tryLocalApi(
   input: StreamChatInput,
   onDelta: (text: string) => void,
   signal?: AbortSignal,
-): Promise<void> {
+): Promise<boolean> {
   try {
     const res = await fetch(`${import.meta.env.BASE_URL}api/chat`, {
       method: "POST",
@@ -37,10 +46,7 @@ export async function streamChat(
       signal,
     });
 
-    if (!res.ok || !res.body) {
-      await localReply(input, onDelta, signal);
-      return;
-    }
+    if (!res.ok || !res.body) return false;
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -73,10 +79,41 @@ export async function streamChat(
       }
     }
 
-    if (!got) await localReply(input, onDelta, signal);
+    return got;
   } catch (err) {
-    if (err instanceof DOMException && err.name === "AbortError") throw err;
-    if (err instanceof Error && err.name === "AbortError") throw err;
-    await localReply(input, onDelta, signal);
+    if (isAbort(err)) throw err;
+    return false;
   }
+}
+
+export async function streamChat(
+  input: StreamChatInput,
+  onDelta: (text: string) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  // 1) Real Grok when the user pasted an xAI key (localStorage only).
+  if (getStoredXaiKey()) {
+    try {
+      await streamGrok(
+        { messages: input.messages, systemExtra: input.systemExtra },
+        onDelta,
+        signal,
+      );
+      return;
+    } catch (err) {
+      if (isAbort(err)) throw err;
+      // CORS, auth, model failure → silent offline brain. Never break character about API.
+    }
+  }
+
+  // 2) Optional future /api/chat backend
+  try {
+    const used = await tryLocalApi(input, onDelta, signal);
+    if (used) return;
+  } catch (err) {
+    if (isAbort(err)) throw err;
+  }
+
+  // 3) Offline composeAct — always works on Pages
+  await localReply(input, onDelta, signal);
 }

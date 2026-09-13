@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BookMarked, Mic, Send, Square, Volume2, VolumeX, X } from "lucide-react";
+import { BookMarked, Mic, Send, Settings, Square, Volume2, VolumeX, X } from "lucide-react";
 import { Puppet } from "@/components/puppet";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -9,6 +9,13 @@ import { EMOTION_LABEL, parseAct, streamActHints, streamLine, type EmotionId, ty
 import { useMemoryStore } from "@/lib/memory-store";
 import { newId, type ChatMessage } from "@/lib/helix";
 import { streamChat } from "@/lib/stream-chat";
+import {
+  getStoredXaiKey,
+  grokProxyConfigured,
+  hasXaiKey,
+  maskXaiKey,
+  setStoredXaiKey,
+} from "@/lib/grok";
 import { speak, stopVoice, unlockVoice } from "@/lib/voice";
 import { speakable } from "@/lib/companion";
 import { cn } from "@/lib/utils";
@@ -50,6 +57,11 @@ function RaiReady() {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [memoryOpen, setMemoryOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [xaiKeyDraft, setXaiKeyDraft] = useState("");
+  const [xaiSaved, setXaiSaved] = useState(() => hasXaiKey());
+  const [xaiMask, setXaiMask] = useState(() => maskXaiKey(getStoredXaiKey()));
+  const [keyJustSaved, setKeyJustSaved] = useState(false);
   const [caption, setCaption] = useState("");
   const [emotion, setEmotion] = useState<EmotionId>("idle");
   const [pose, setPose] = useState<PoseId>("idle");
@@ -342,11 +354,29 @@ function RaiReady() {
                 aria-hidden
               />
               {status}
+              <span className="text-subtle normal-case tracking-wide" title={xaiSaved ? "xAI Grok brain" : "Offline local brain"}>
+                · {xaiSaved ? "Grok" : "Local"}
+              </span>
             </p>
           </div>
           <span className="rounded-full bg-elevated px-3 py-1 text-xs tracking-wide text-muted shadow-[var(--shadow-border)]">
             {EMOTION_LABEL[emotion]}
           </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Settings"
+            onClick={() => {
+              setXaiKeyDraft("");
+              setKeyJustSaved(false);
+              setXaiSaved(hasXaiKey());
+              setXaiMask(maskXaiKey(getStoredXaiKey()));
+              setSettingsOpen(true);
+            }}
+          >
+            <Settings className="size-4" />
+          </Button>
           <Button
             type="button"
             variant="ghost"
@@ -497,6 +527,82 @@ function RaiReady() {
                 Clear all
               </button>
             ) : null}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <SheetContent side="right" className="w-[min(100%,22rem)] bg-bg p-0" aria-describedby={undefined}>
+          <div className="flex h-14 items-center justify-between border-b border-border px-4">
+            <SheetTitle className="font-display text-xl">Settings</SheetTitle>
+            <Button type="button" variant="ghost" size="icon-sm" aria-label="Close" onClick={() => setSettingsOpen(false)}>
+              <X className="size-4" />
+            </Button>
+          </div>
+          <div className="space-y-4 overflow-y-auto p-4">
+            <div>
+              <p className="text-sm font-medium">xAI API key</p>
+              <p className="mt-1 text-xs text-muted">
+                Paste a key from console.x.ai. Stored only in this browser (localStorage). Never shipped in the build.
+              </p>
+              <p className="mt-2 text-xs tracking-wide text-subtle uppercase">
+                {xaiSaved ? `Saved · ${xaiMask}` : "Not saved · Local brain"}
+                {grokProxyConfigured() ? " · proxy" : ""}
+              </p>
+              <input
+                type="password"
+                autoComplete="off"
+                spellCheck={false}
+                placeholder={xaiSaved ? "Enter new key to replace…" : "xai-…"}
+                value={xaiKeyDraft}
+                onChange={(e) => {
+                  setXaiKeyDraft(e.target.value);
+                  setKeyJustSaved(false);
+                }}
+                className="mt-3 h-10 w-full rounded-md bg-elevated px-3 text-sm shadow-[var(--shadow-border)] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={!xaiKeyDraft.trim()}
+                  onClick={() => {
+                    const next = xaiKeyDraft.trim();
+                    if (!next) return;
+                    setStoredXaiKey(next);
+                    setXaiSaved(true);
+                    setXaiMask(maskXaiKey(next));
+                    setXaiKeyDraft("");
+                    setKeyJustSaved(true);
+                  }}
+                >
+                  Save key
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={!xaiSaved}
+                  onClick={() => {
+                    setStoredXaiKey(null);
+                    setXaiSaved(false);
+                    setXaiMask("");
+                    setXaiKeyDraft("");
+                    setKeyJustSaved(false);
+                  }}
+                >
+                  Clear
+                </Button>
+              </div>
+              {keyJustSaved ? (
+                <p className="mt-2 text-xs text-muted">Saved as {xaiMask}. Brain mode: Grok.</p>
+              ) : null}
+            </div>
+            <div className="rounded-md bg-elevated px-3 py-2 text-xs text-muted shadow-[var(--shadow-border)]">
+              With a key, Star Rai calls xAI (<span className="text-fg">grok-4-latest</span> with fallbacks).
+              If the browser blocks CORS or the key fails, she stays on the local brain — no breaking character.
+              Optional proxy: set <code className="text-fg">VITE_GROK_PROXY_URL</code> (see README / worker).
+            </div>
           </div>
         </SheetContent>
       </Sheet>

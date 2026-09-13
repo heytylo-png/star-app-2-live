@@ -1,0 +1,7 @@
+name = "star-rai-grok-proxy"
+main = "src/index.ts"
+compatibility_date = "2024-09-01"
+
+[vars]
+# Optional comma-separated allowlist, e.g. "https://heytylo-png.github.io"
+ALLOWED_ORIGINS = "*"

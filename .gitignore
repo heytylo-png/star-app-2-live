@@ -3,3 +3,6 @@ dist
 dist-ssr
 *.local
 .DS_Store
+worker/node_modules
+.wrangler
+.dev.vars
