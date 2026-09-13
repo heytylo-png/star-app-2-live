@@ -1,4 +1,20 @@
-export const POSES = ["idle", "shy", "kiss", "wave", "hearts", "turn-away"] as const;
+export const POSES = [
+  "idle",
+  "shy",
+  "kiss",
+  "wave",
+  "hearts",
+  "turn-away",
+  "lean",
+  "scold",
+  "point",
+  "finger",
+  "hold",
+  "three_quarter",
+  "three_quarter_left",
+  "three_quarter_right",
+  "profile",
+] as const;
 export type PoseId = (typeof POSES)[number];
 
 export const EMOTIONS = [
@@ -16,19 +32,25 @@ export type EmotionId = (typeof EMOTIONS)[number];
 export const VIEWS = ["front", "threeQuarter", "side", "back"] as const;
 export type ViewId = (typeof VIEWS)[number];
 
+/** Brief idle beats (puppet timer) — do not fight look-at for long. */
+export type IdleBeat = "none" | "smile" | "grin";
+
 /**
  * Drop-in PNG contract for Star Rai.
  *
  * Helix set (look-at / dedicated poses / default talk):
- *   poses/{idle,shy,kiss,wave,hearts,turn-away}.png
- *   angles/{front,three-quarter,side,back}.png
- *   idle-talk.png          // opaque full-frame mouth-open; opacity-flap over front
+ *   star-rai/poses/{idle,shy,kiss,wave,hearts,turn-away}.png
+ *   star-rai/angles/{front,three-quarter,side,back}.png
+ *   star-rai/idle-talk.png
+ *   star-rai/{lean,scold,point,finger}-front.png
  *
- * Expo talk pack (public/rai/) — gated behind USE_EXPO_TALK_BUST (default off).
- * Different crop than Helix; caused SPEAKING zoom-jump when used as default.
- *   mouth_{closed_smile,speak,oh,grin,kiss}.png
- *   face_eyes_{half,closed}.png
- *   front_idle.png
+ * Expo pack (public/rai/) — hold / three_quarter / profile / alts + optional talk bust:
+ *   front_hold, three_quarter{,_left,_right}, side_profile, back_turn
+ *   _alt_idle_smile, _alt_grin_open, _alt_hearts_open, _alt_hearts_release
+ *   front_{idle,shy,kiss,wave,hearts} (alt bodies)
+ *   mouth_*, face_eyes_* (USE_EXPO_TALK_BUST only)
+ *
+ * See POSING.md for the drop-in guide.
  */
 const ASSET = (path: string) => {
   const base = import.meta.env.BASE_URL || "/";
@@ -44,6 +66,15 @@ export const SPRITES = {
     wave: ASSET("star-rai/poses/wave.png"),
     hearts: ASSET("star-rai/poses/hearts.png"),
     "turn-away": ASSET("star-rai/poses/turn-away.png"),
+    lean: ASSET("star-rai/lean-front.png"),
+    scold: ASSET("star-rai/scold-front.png"),
+    point: ASSET("star-rai/point-front.png"),
+    finger: ASSET("star-rai/finger-front.png"),
+    hold: ASSET("rai/front_hold.png"),
+    three_quarter: ASSET("rai/three_quarter.png"),
+    three_quarter_left: ASSET("rai/three_quarter_left.png"),
+    three_quarter_right: ASSET("rai/three_quarter_right.png"),
+    profile: ASSET("rai/side_profile.png"),
   } satisfies Record<PoseId, string>,
   angles: {
     front: ASSET("star-rai/angles/front.png"),
@@ -63,6 +94,20 @@ export const SPRITES = {
     eyesClosed: ASSET("rai/face_eyes_closed.png"),
     frontIdle: ASSET("rai/front_idle.png"),
   },
+  /** Expo alt idle / gesture beats (idle variety). */
+  alts: {
+    idleSmile: ASSET("rai/_alt_idle_smile.png"),
+    grinOpen: ASSET("rai/_alt_grin_open.png"),
+    heartsOpen: ASSET("rai/_alt_hearts_open.png"),
+    heartsRelease: ASSET("rai/_alt_hearts_release.png"),
+    frontIdle: ASSET("rai/front_idle.png"),
+    frontShy: ASSET("rai/front_shy.png"),
+    frontKiss: ASSET("rai/front_kiss.png"),
+    frontWave: ASSET("rai/front_wave.png"),
+    frontHearts: ASSET("rai/front_hearts.png"),
+    backTurn: ASSET("rai/back_turn.png"),
+  },
+  /** @deprecated Prefer SPRITES.poses — kept for any leftover refs. */
   extras: {
     point: ASSET("star-rai/point-front.png"),
     lean: ASSET("star-rai/lean-front.png"),
@@ -80,6 +125,7 @@ export function allSpriteUrls(): string[] {
     ...Object.values(SPRITES.angles),
     SPRITES.talk,
     ...Object.values(SPRITES.talkBust),
+    ...Object.values(SPRITES.alts),
     ...Object.values(SPRITES.extras),
   ];
 }
@@ -106,6 +152,8 @@ export type PuppetState = {
   talkPhase?: number;
   /** 0 open, 1 half, 2 closed — Expo talk blink only (ignored on Helix path). */
   blink?: 0 | 1 | 2;
+  /** Brief idle variety beat from puppet timer (smile/grin). */
+  idleBeat?: IdleBeat;
 };
 
 function clamp01(n: number): number {
@@ -189,15 +237,31 @@ function talkOverlay(opacity: number): SpriteLayer {
   return { id: "talk", src: SPRITES.talk, opacity, role: "talk" };
 }
 
+/** Look-at Helix angle stack (shared by idle / thinking). */
+function lookAtLayers(angle: number): SpriteLayer[] {
+  const { a, b, mix } = viewsForAngle(angle);
+  return [body(SPRITES.angles[a], 1), body(SPRITES.angles[b], mix * 0.95)];
+}
+
 /**
  * Pose state machine — swap files here when new PNGs land.
  * Default SPEAKING: Helix angles.front + idle-talk opacity flap (same framing as idle).
  * Expo bust path is opt-in via USE_EXPO_TALK_BUST. turn-away stays back (no face).
  * After talking ends, dedicated act poses (wave/hearts/kiss/…) show as before.
  * Thinking wait uses Helix look-at (puppet sway) instead of frozen finger.
+ * Idle variety: brief Expo alt smile/grin when idleBeat set (puppet timer).
  */
 export function layersFor(state: PuppetState): SpriteLayer[] {
-  const { pose, emotion, talking, amplitude, angle, blink = 0, talkPhase = 0 } = state;
+  const {
+    pose,
+    emotion,
+    talking,
+    amplitude,
+    angle,
+    blink = 0,
+    talkPhase = 0,
+    idleBeat = "none",
+  } = state;
 
   if (talking) {
     if (pose === "turn-away") {
@@ -220,38 +284,38 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     return [body(SPRITES.angles.front, 1), talkOverlay(mouth)];
   }
 
-  // Dedicated Helix poses when NOT talking (wave after speech ends is fine).
+  // Dedicated poses when NOT talking (wave after speech ends is fine).
   if (pose !== "idle") {
     return [body(SPRITES.poses[pose])];
   }
 
   // Thinking wait: Helix look-at angles + puppet sway (not frozen finger/scold).
   if (emotion === "thinking") {
-    const { a, b, mix } = viewsForAngle(angle);
-    return [
-      body(SPRITES.angles[a], 1),
-      body(SPRITES.angles[b], mix * 0.95),
-    ];
+    return lookAtLayers(angle);
   }
 
   if (emotion === "angry") {
-    return [body(SPRITES.extras.scold)];
+    return [body(SPRITES.poses.scold)];
   }
 
   if (emotion === "flirty") {
-    return [body(SPRITES.extras.lean)];
+    return [body(SPRITES.poses.lean)];
   }
 
   if (emotion === "shy") {
     return [body(SPRITES.poses.shy)];
   }
 
+  // Brief idle variety — only when look is near-front so we don't fight look-at.
+  if (idleBeat === "smile" && Math.abs(angle) < 0.22) {
+    return [body(SPRITES.alts.idleSmile, 1, "idle-beat")];
+  }
+  if (idleBeat === "grin" && Math.abs(angle) < 0.22) {
+    return [body(SPRITES.alts.grinOpen, 1, "idle-beat")];
+  }
+
   // Idle presence — Helix look-at angles.
-  const { a, b, mix } = viewsForAngle(angle);
-  return [
-    body(SPRITES.angles[a], 1),
-    body(SPRITES.angles[b], mix * 0.95),
-  ];
+  return lookAtLayers(angle);
 }
 
 export const EMOTION_LABEL: Record<EmotionId, string> = {
@@ -264,6 +328,40 @@ export const EMOTION_LABEL: Record<EmotionId, string> = {
   thinking: "Thinking",
   flirty: "Hmm",
 };
+
+/** Aliases model / offline brain may emit → canonical PoseId. */
+const POSE_ALIASES: Record<string, PoseId> = {
+  idle: "idle",
+  shy: "shy",
+  kiss: "kiss",
+  wave: "wave",
+  hearts: "hearts",
+  "turn-away": "turn-away",
+  turn_away: "turn-away",
+  turnaway: "turn-away",
+  lean: "lean",
+  scold: "scold",
+  point: "point",
+  finger: "finger",
+  hold: "hold",
+  three_quarter: "three_quarter",
+  "three-quarter": "three_quarter",
+  threequarter: "three_quarter",
+  three_quarter_left: "three_quarter_left",
+  "three-quarter-left": "three_quarter_left",
+  three_quarter_right: "three_quarter_right",
+  "three-quarter-right": "three_quarter_right",
+  profile: "profile",
+  side_profile: "profile",
+  "side-profile": "profile",
+  side: "profile",
+};
+
+export function normalizePose(value: unknown): PoseId | null {
+  if (typeof value !== "string") return null;
+  const key = value.trim().toLowerCase();
+  return POSE_ALIASES[key] ?? (isPose(key) ? key : null);
+}
 
 export function isPose(value: unknown): value is PoseId {
   return typeof value === "string" && (POSES as readonly string[]).includes(value);
@@ -281,12 +379,27 @@ export type Act = {
 };
 
 export function clampPose(value: unknown): PoseId {
-  return isPose(value) ? value : "idle";
+  return normalizePose(value) ?? "idle";
 }
 
 export function clampEmotion(value: unknown): EmotionId {
   return isEmotion(value) ? value : "idle";
 }
+
+/**
+ * Default emotion → pose mapping (Grok + offline brain guidance).
+ * Idle stays look-at; dedicated poses override when the act picks them.
+ */
+export const EMOTION_TO_POSE: Record<EmotionId, PoseId> = {
+  idle: "idle",
+  angry: "scold",
+  shy: "shy",
+  happy: "wave",
+  sad: "hold",
+  surprised: "finger",
+  thinking: "point",
+  flirty: "lean",
+};
 
 export function parseMemories(raw: string): { text: string; memories: string[] } {
   const memories: string[] = [];
@@ -302,7 +415,7 @@ export function parseAct(raw: string): Act {
   const { text, memories } = parseMemories(raw);
   const trimmed = text.trim();
 
-  const tag = trimmed.match(/^\[\[([a-z-]+)\|([a-z-]+)\]\]\s*/i);
+  const tag = trimmed.match(/^\[\[([a-z-]+)\|([a-z_-]+)\]\]\s*/i);
   if (tag) {
     return {
       emotion: clampEmotion(tag[1].toLowerCase()),
@@ -357,12 +470,13 @@ export function streamActHints(partial: string): { emotion?: EmotionId; pose?: P
   const { text } = parseMemories(partial);
   const out: { emotion?: EmotionId; pose?: PoseId } = {};
   const emotionMatch = text.match(/"emotion"\s*:\s*"([a-z-]+)"/i);
-  const poseMatch = text.match(/"pose"\s*:\s*"([a-z-]+)"/i);
+  const poseMatch = text.match(/"pose"\s*:\s*"([a-z_-]+)"/i);
   if (emotionMatch && isEmotion(emotionMatch[1].toLowerCase())) {
     out.emotion = emotionMatch[1].toLowerCase() as EmotionId;
   }
-  if (poseMatch && isPose(poseMatch[1].toLowerCase())) {
-    out.pose = poseMatch[1].toLowerCase() as PoseId;
+  if (poseMatch) {
+    const p = normalizePose(poseMatch[1].toLowerCase());
+    if (p) out.pose = p;
   }
   return out;
 }
@@ -380,15 +494,18 @@ Always reply with ONE JSON object and nothing else:
 {"emotion":"<id>","pose":"<id>","line":"<spoken words>"}
 
 emotion: idle | angry | shy | happy | sad | surprised | thinking | flirty
-pose: idle | shy | kiss | wave | hearts | turn-away
+pose: idle | shy | kiss | wave | hearts | turn-away | lean | scold | point | finger | hold | three_quarter | three_quarter_left | three_quarter_right | profile
 
-Map feeling to pose. Default idle.
+Map feeling to pose. Default idle (look-at).
 - greetings → wave + happy
-- flirt / compliment talk → kiss + flirty
-- scold / bump / waste time → angry (pose idle unless done with them)
-- shy / embarrassed / soft moments → shy
+- flirt / compliment talk → kiss or lean + flirty
+- scold / bump / waste time → scold + angry
+- shy / embarrassed / soft moments → shy or hold
 - praise / genuine warmth / thanks → hearts + happy
-- questions / identity → thinking
+- questions / identity → point or finger + thinking (or idle)
+- sad / comfort → hold + sad
+- surprise / caught → finger + surprised
+- three-quarter / profile → rare beat when "looking aside" or thoughtful distance
 - goodbye / done with them → turn-away
 - kiss is a blown kiss, never explicit
 

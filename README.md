@@ -90,6 +90,16 @@ Future env: `VITE_API_BASE` — leave unset for pure Pages. `VITE_GROK_PROXY_URL
 
 Do not rename keys without a migrator. Document schema bumps here.
 
+
+## Posing / PNGs
+
+See **[POSING.md](./POSING.md)** for the drop-in guide:
+
+- Directory layout (`public/star-rai/` Helix vs `public/rai/` Expo)
+- Filename → pose id map (including `lean`, `scold`, `point`, `finger`, `hold`, `three_quarter*`, `profile`)
+- 3-step add: drop file → wire `POSES` / `SPRITES` in `src/lib/rai.ts` → redeploy
+- Style tips (2:3 mid-shot, white studio, cel-shade) and Helix vs Expo differences
+
 ## Develop
 
 ```bash

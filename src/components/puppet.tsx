@@ -3,6 +3,7 @@ import {
   allSpriteUrls,
   layersFor,
   type EmotionId,
+  type IdleBeat,
   type PoseId,
   type SpriteLayer,
 } from "@/lib/rai";
@@ -53,6 +54,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const ampSmooth = useRef(0);
   const ampTarget = useRef(amplitude);
   const talkingRef = useRef(talking);
+  const poseRef = useRef(pose);
+  const emotionRef = useRef(emotion);
   const lastTs = useRef(0);
   const raf = useRef(0);
   const reducedRef = useRef(false);
@@ -60,11 +63,14 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
 
   ampTarget.current = amplitude;
   talkingRef.current = talking;
+  poseRef.current = pose;
+  emotionRef.current = emotion;
 
   const [lookAngle, setLookAngle] = useState(0);
   const [ampLive, setAmpLive] = useState(0);
   const [talkPhase, setTalkPhase] = useState(0);
   const [blink, setBlink] = useState<0 | 1 | 2>(0);
+  const [idleBeat, setIdleBeat] = useState<IdleBeat>("none");
   const [display, setDisplay] = useState<DisplayLayer[]>([]);
   const prevIds = useRef<Map<string, DisplayLayer>>(new Map());
   const fadeTimers = useRef<Map<string, number>>(new Map());
@@ -137,6 +143,45 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       window.clearTimeout(sleepTimer);
       window.clearTimeout(stepTimer);
       setBlink(0);
+    };
+  }, []);
+
+  // Idle variety: every 8–12s briefly flash Expo alt smile/grin when idle + not talking.
+  // Only near-front look-at is honored inside layersFor, so this won't fight side glances.
+  useEffect(() => {
+    if (reducedRef.current) return;
+    let cancelled = false;
+    let waitTimer = 0;
+    let holdTimer = 0;
+
+    const schedule = () => {
+      const wait = 8000 + Math.random() * 4000;
+      waitTimer = window.setTimeout(() => {
+        if (cancelled) return;
+        const canBeat =
+          !talkingRef.current &&
+          poseRef.current === "idle" &&
+          (emotionRef.current === "idle" || emotionRef.current === "happy");
+        if (!canBeat) {
+          schedule();
+          return;
+        }
+        const beat: IdleBeat = Math.random() < 0.72 ? "smile" : "grin";
+        setIdleBeat(beat);
+        holdTimer = window.setTimeout(() => {
+          if (cancelled) return;
+          setIdleBeat("none");
+          schedule();
+        }, 1100 + Math.random() * 700);
+      }, wait);
+    };
+
+    schedule();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(waitTimer);
+      window.clearTimeout(holdTimer);
+      setIdleBeat("none");
     };
   }, []);
 
@@ -238,6 +283,12 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     return () => cancelAnimationFrame(raf.current);
   }, []);
 
+
+  // Drop idle beat immediately when talking or a dedicated pose takes over.
+  useEffect(() => {
+    if (talking || pose !== "idle") setIdleBeat("none");
+  }, [talking, pose]);
+
   const desired = useMemo(
     () =>
       layersFor({
@@ -248,8 +299,9 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
         angle: lookAngle,
         talkPhase,
         blink,
+        idleBeat,
       }),
-    [pose, emotion, talking, ampLive, lookAngle, talkPhase, blink],
+    [pose, emotion, talking, ampLive, lookAngle, talkPhase, blink, idleBeat],
   );
 
   // Crossfade pool: keep outgoing layers at opacity 0 until fade completes.

@@ -279,22 +279,30 @@ function intentToAct(intent: Intent): { emotion: EmotionId; pose: PoseId } {
   switch (intent) {
     case "bump":
     case "scold":
-      return { emotion: "angry", pose: "idle" };
+      return { emotion: "angry", pose: "scold" };
     case "greet":
       return { emotion: "happy", pose: "wave" };
     case "bye":
       return { emotion: "idle", pose: "turn-away" };
     case "identity":
-      return { emotion: "thinking", pose: "idle" };
+      return { emotion: "thinking", pose: "point" };
     case "flirt":
-      return { emotion: "flirty", pose: "kiss" };
+      // Mix kiss / lean so flirty doesn't always blow a kiss
+      return Math.random() < 0.55
+        ? { emotion: "flirty", pose: "kiss" }
+        : { emotion: "flirty", pose: "lean" };
     case "praise":
     case "miss":
     case "thanks":
       return { emotion: "happy", pose: "hearts" };
     case "question":
-      return { emotion: "thinking", pose: "idle" };
+      return Math.random() < 0.5
+        ? { emotion: "thinking", pose: "point" }
+        : { emotion: "thinking", pose: "finger" };
     case "soft":
+      return Math.random() < 0.45
+        ? { emotion: "shy", pose: "hold" }
+        : { emotion: "shy", pose: "shy" };
     case "remember":
     case "recall":
       return { emotion: "shy", pose: "shy" };
@@ -302,6 +310,9 @@ function intentToAct(intent: Intent): { emotion: EmotionId; pose: PoseId } {
       return { emotion: "angry", pose: "turn-away" };
     case "generic":
     default:
+      // Rare idle beats via emotion-only path (finger/lean) — mostly look-at idle
+      if (Math.random() < 0.08) return { emotion: "surprised", pose: "finger" };
+      if (Math.random() < 0.06) return { emotion: "flirty", pose: "lean" };
       return { emotion: "idle", pose: "idle" };
   }
 }
