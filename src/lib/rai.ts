@@ -32,8 +32,53 @@ export type EmotionId = (typeof EMOTIONS)[number];
 export const VIEWS = ["front", "threeQuarter", "side", "back"] as const;
 export type ViewId = (typeof VIEWS)[number];
 
-/** Brief idle beats (puppet timer) — do not fight look-at for long. */
+/** Brief idle beats (puppet timer) — do not fight look-at or an active act pose. */
 export type IdleBeat = "none" | "smile" | "grin";
+
+/** Minimum time a non-idle act pose stays readable after it lands (ms). */
+export const POSE_HOLD_MIN_MS = 3400;
+/** Extra dwell after speech ends so the pose can be read (ms). */
+export const POSE_HOLD_AFTER_TALK_MS = 2800;
+/** Emotion-only (idle pose) reset after activity stops (ms). */
+export const EMOTION_HOLD_MS = 2200;
+
+/** Idle smile/grin: longer gap so beats don't chatter. */
+export const IDLE_BEAT_GAP_MIN_MS = 16000;
+export const IDLE_BEAT_GAP_JITTER_MS = 8000;
+/** Idle smile/grin dwell — long enough to read, then ease out. */
+export const IDLE_BEAT_HOLD_MIN_MS = 2800;
+export const IDLE_BEAT_HOLD_JITTER_MS = 1400;
+
+export function isDedicatedPose(pose: PoseId): boolean {
+  return pose !== "idle";
+}
+
+/** Emotions that pin a dedicated PNG even when pose is still idle. */
+export function isExpressiveEmotion(emotion: EmotionId): boolean {
+  return emotion === "angry" || emotion === "flirty" || emotion === "shy";
+}
+
+/**
+ * Delay before easing back to idle after an act. `null` = do not reset
+ * (still speaking). Dedicated poses hold at least POSE_HOLD_MIN_MS from
+ * landing, and at least POSE_HOLD_AFTER_TALK_MS after speech ends.
+ */
+export function poseResetDelayMs(opts: {
+  pose: PoseId;
+  emotion?: EmotionId;
+  talking: boolean;
+  actLandedAt: number;
+  now?: number;
+}): number | null {
+  if (opts.talking) return null;
+  const now = opts.now ?? Date.now();
+  const elapsed = Math.max(0, now - (opts.actLandedAt || now));
+  const holdPose = isDedicatedPose(opts.pose) || (opts.emotion ? isExpressiveEmotion(opts.emotion) : false);
+  if (holdPose) {
+    return Math.max(POSE_HOLD_MIN_MS - elapsed, POSE_HOLD_AFTER_TALK_MS);
+  }
+  return Math.max(EMOTION_HOLD_MS - elapsed, 800);
+}
 
 /**
  * Drop-in PNG contract for Star Rai.
@@ -53,7 +98,8 @@ export type IdleBeat = "none" | "smile" | "grin";
  * See POSING.md for the drop-in guide.
  */
 const ASSET = (path: string) => {
-  const base = import.meta.env.BASE_URL || "/";
+  const env = (import.meta as ImportMeta & { env?: { BASE_URL?: string } }).env;
+  const base = env?.BASE_URL || "/";
   const prefix = base.endsWith("/") ? base : `${base}/`;
   return `${prefix}${path.replace(/^\//, "")}`;
 };
@@ -247,9 +293,10 @@ function lookAtLayers(angle: number): SpriteLayer[] {
  * Pose state machine — swap files here when new PNGs land.
  * Default SPEAKING: Helix angles.front + idle-talk opacity flap (same framing as idle).
  * Expo bust path is opt-in via USE_EXPO_TALK_BUST. turn-away stays back (no face).
- * After talking ends, dedicated act poses (wave/hearts/kiss/…) show as before.
+ * Dedicated act poses hold through speech (don't snap to Helix front).
+ * Idle talking: Helix front + idle-talk flap. Expo busts stay gated off.
  * Thinking wait uses Helix look-at (puppet sway) instead of frozen finger.
- * Idle variety: brief Expo alt smile/grin when idleBeat set (puppet timer).
+ * Idle variety: Expo alt smile/grin when idleBeat set (puppet timer).
  */
 export function layersFor(state: PuppetState): SpriteLayer[] {
   const {
@@ -263,11 +310,13 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     idleBeat = "none",
   } = state;
 
-  if (talking) {
-    if (pose === "turn-away") {
-      return [body(SPRITES.poses["turn-away"])];
-    }
+  // Dedicated poses own the stage — hold the PNG while speaking.
+  // idle-talk flap is aligned to Helix front only, so skip it here.
+  if (isDedicatedPose(pose)) {
+    return [body(SPRITES.poses[pose])];
+  }
 
+  if (talking) {
     // Opt-in Expo busts (different crop — causes SPEAKING zoom-jump).
     if (USE_EXPO_TALK_BUST) {
       if (blink === 2) {
@@ -282,11 +331,6 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     // Helix-native talk: stable front framing + time-driven idle-talk flap.
     const mouth = talkFlapOpacity(talkPhase, amplitude, true);
     return [body(SPRITES.angles.front, 1), talkOverlay(mouth)];
-  }
-
-  // Dedicated poses when NOT talking (wave after speech ends is fine).
-  if (pose !== "idle") {
-    return [body(SPRITES.poses[pose])];
   }
 
   // Thinking wait: Helix look-at angles + puppet sway (not frozen finger/scold).
@@ -306,12 +350,12 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     return [body(SPRITES.poses.shy)];
   }
 
-  // Brief idle variety — only when look is near-front so we don't fight look-at.
+  // Idle variety — distinct ids so smile↔grin crossfade instead of remounting.
   if (idleBeat === "smile" && Math.abs(angle) < 0.22) {
-    return [body(SPRITES.alts.idleSmile, 1, "idle-beat")];
+    return [body(SPRITES.alts.idleSmile, 1, "idle-beat-smile")];
   }
   if (idleBeat === "grin" && Math.abs(angle) < 0.22) {
-    return [body(SPRITES.alts.grinOpen, 1, "idle-beat")];
+    return [body(SPRITES.alts.grinOpen, 1, "idle-beat-grin")];
   }
 
   // Idle presence — Helix look-at angles.

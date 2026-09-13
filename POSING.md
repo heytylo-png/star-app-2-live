@@ -114,4 +114,6 @@ Aliases accepted by `clampPose` / `normalizePose`: `turn_away`, `three-quarter`,
 
 ## Idle variety (no fight look-at)
 
-While `pose === idle`, not talking, and emotion is idle/happy, the puppet every **8–12s** may briefly show `_alt_idle_smile` or `_alt_grin_open` (~1–1.8s) **only when look angle is near front**. Side/back look-at is left alone. Rare `finger` / `lean` beats come from the offline brain via emotion, not the timer.
+While `pose === idle`, not talking, and emotion is idle/happy, the puppet every **16–24s** may show `_alt_idle_smile` or `_alt_grin_open` for **~2.8–4.2s** (opacity fade ~400ms) **only when look angle is near front**. Side/back look-at is left alone. Idle beats never interrupt a dedicated act pose or an expressive emotion (angry/flirty/shy). Rare `finger` / `lean` beats come from the offline brain via emotion, not the timer.
+
+**Act pose hold:** dedicated poses stay on screen at least **~3.4s** after they land (and **~2.8s after speech ends**, whichever is later). Talking does not snap a dedicated pose to Helix front — idle talking still uses Helix front + `idle-talk` flap.
