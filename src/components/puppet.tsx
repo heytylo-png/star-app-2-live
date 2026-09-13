@@ -351,7 +351,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
         if (isInstantLayer(layer)) {
           merged.set(id, layer);
         } else {
-          merged.set(id, { ...layer, opacity: 0 });
+          // Incoming on top at 0 so the outgoing PNG stays visible until the fade starts.
+          merged.set(id, { ...layer, opacity: 0, z: 10 + layer.z });
           fadingIn.current.add(id);
           incoming.push([id, layer]);
         }
@@ -382,17 +383,16 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     setDisplay(Array.from(merged.values()).sort((a, b) => a.z - b.z));
 
     if (incoming.length) {
-      if (fadeRaf.current) cancelAnimationFrame(fadeRaf.current);
-      fadeRaf.current = requestAnimationFrame(() => {
-        fadeRaf.current = requestAnimationFrame(() => {
-          for (const [id, layer] of incoming) {
-            if (!prevIds.current.has(id)) continue;
-            prevIds.current.set(id, layer);
-            fadingIn.current.delete(id);
-          }
-          setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
-        });
-      });
+      if (fadeRaf.current) window.clearTimeout(fadeRaf.current);
+      // Wait one paint at opacity 0 so CSS can interpolate 0 → target (not a hard cut in).
+      fadeRaf.current = window.setTimeout(() => {
+        for (const [id, layer] of incoming) {
+          if (!prevIds.current.has(id)) continue;
+          prevIds.current.set(id, layer);
+          fadingIn.current.delete(id);
+        }
+        setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
+      }, 48);
     }
   }, [desired]);
 
@@ -400,7 +400,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     return () => {
       for (const t of fadeTimers.current.values()) window.clearTimeout(t);
       fadeTimers.current.clear();
-      if (fadeRaf.current) cancelAnimationFrame(fadeRaf.current);
+      if (fadeRaf.current) window.clearTimeout(fadeRaf.current);
     };
   }, []);
 
