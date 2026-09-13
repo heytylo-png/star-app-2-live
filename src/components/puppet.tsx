@@ -23,6 +23,8 @@ const LOOK_LERP = 6.5; // higher = snappier; frame-rate independent
 const LOOK_DISPLAY_LERP = 4.2;
 const AMP_LERP = 10;
 const DEADZONE = 0.04;
+/** Immediate jaw kick when talk starts so first frames aren't stuck closed. */
+const TALK_AMP_KICK = 0.42;
 
 function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
@@ -33,10 +35,15 @@ function expApproach(current: number, target: number, rate: number, dt: number):
   return lerp(current, target, k);
 }
 
+/** Synthetic jaw so visemes cycle even when TTS amp is flat/near-zero. */
+function syntheticJaw(t: number): number {
+  return 0.25 + 0.55 * Math.abs(Math.sin(t * 11)) * Math.abs(Math.sin(t * 3.3));
+}
+
 /**
  * Star Rai 2D puppet — idle life, look-at, amplitude visemes, mid-shot framing.
  * Layers crossfade by stable id so pose changes never hard-pop.
- * Expo talk busts share id "expo-talk" so mouth frames hard-cut (snappy lips).
+ * Expo talk busts share id "expo-talk"; img key includes src so mouth frames remount.
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -49,6 +56,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const lastTs = useRef(0);
   const raf = useRef(0);
   const reducedRef = useRef(false);
+  const jawLive = useRef(0);
 
   ampTarget.current = amplitude;
   talkingRef.current = talking;
@@ -81,7 +89,16 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     return () => mq?.removeEventListener("change", sync);
   }, []);
 
-  // Occasional blink while talking on quiet visemes (Expo eyes busts).
+  // Kick ampLive as soon as talking starts so first frames aren't stuck closed.
+  useEffect(() => {
+    if (!talking) return;
+    const kick = Math.max(ampTarget.current, TALK_AMP_KICK);
+    ampSmooth.current = Math.max(ampSmooth.current, kick);
+    jawLive.current = Math.max(jawLive.current, kick);
+    setAmpLive((prev) => Math.max(prev, kick));
+  }, [talking]);
+
+  // Blink every ~1.8–3s while talking — no amp gate; ~150ms half→closed→half.
   useEffect(() => {
     if (reducedRef.current) return;
     let cancelled = false;
@@ -89,10 +106,10 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     let stepTimer = 0;
 
     const schedule = () => {
-      const wait = 2800 + Math.random() * 4200;
+      const wait = 1800 + Math.random() * 1200;
       sleepTimer = window.setTimeout(() => {
         if (cancelled) return;
-        if (!talkingRef.current || ampSmooth.current > 0.22) {
+        if (!talkingRef.current) {
           schedule();
           return;
         }
@@ -107,9 +124,9 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
               if (cancelled) return;
               setBlink(0);
               schedule();
-            }, 55);
-          }, 90);
-        }, 45);
+            }, 40);
+          }, 70);
+        }, 40);
       }, wait);
     };
 
@@ -168,13 +185,21 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
 
       ampSmooth.current = expApproach(ampSmooth.current, ampTarget.current, AMP_LERP, dt);
 
-      // Publish look/amp to React at a gentler cadence (angle layers).
+      // Mix real TTS amp with synthetic jaw so visemes cycle even when amp is flat.
+      let jaw = ampSmooth.current;
+      if (talkingRef.current && !reduced) {
+        const syn = syntheticJaw(t);
+        jaw = Math.max(ampSmooth.current, syn * 0.85);
+      } else if (!talkingRef.current) {
+        jaw = ampSmooth.current;
+      }
+      jawLive.current = jaw;
+
+      // Publish look/amp to React at a gentler cadence (angle layers / visemes).
       setLookAngle((prev) =>
         Math.abs(prev - lookForLayers.current) > 0.012 ? lookForLayers.current : prev,
       );
-      setAmpLive((prev) =>
-        Math.abs(prev - ampSmooth.current) > 0.02 ? ampSmooth.current : prev,
-      );
+      setAmpLive((prev) => (Math.abs(prev - jaw) > 0.02 ? jaw : prev));
 
       const sway = reduced ? 0 : Math.sin(t * 0.95) * 5.5 + Math.sin(t * 0.37) * 2.2;
       const rock = reduced ? 0 : Math.sin(t * 0.55) * 1.15 + lookSmooth.current * -1.4;
@@ -183,7 +208,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
         ? 0
         : Math.sin(t * 2.1) * 5.5 + Math.sin(t * 1.05) * 2.2 + lookSmooth.current * 3;
       const talkBob =
-        reduced || !talkingRef.current ? 0 : Math.sin(t * 7.5) * ampSmooth.current * 1.8;
+        reduced || !talkingRef.current ? 0 : Math.sin(t * 7.5) * jaw * 1.8;
 
       const node = stageRef.current?.querySelector<HTMLElement>("[data-rai-rig]");
       const ahoge = stageRef.current?.querySelector<HTMLElement>("[data-rai-ahoge]");
@@ -221,7 +246,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   );
 
   // Crossfade pool: keep outgoing layers at opacity 0 until fade completes.
-  // expo-talk keeps a stable id so viseme src updates hard-cut (snappy mouth).
+  // expo-talk keeps a stable id in the pool; React img key includes src for hard remount.
   useEffect(() => {
     const next = new Map<string, DisplayLayer>();
     desired.forEach((layer, i) => {
@@ -285,7 +310,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       >
         {display.map((layer) => (
           <img
-            key={layer.id}
+            key={`${layer.id}:${layer.src}`}
             src={layer.src}
             alt=""
             draggable={false}
@@ -294,7 +319,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
             style={{
               opacity: layer.opacity,
               zIndex: layer.z,
-              // Soft crossfade for pose/mode changes; expo-talk src swaps stay instant via stable key.
+              // Soft crossfade for pose/mode changes; expo-talk src swaps remount via key.
               transition:
                 layer.id === "expo-talk"
                   ? "opacity 180ms var(--ease-smooth-out)"

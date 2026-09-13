@@ -126,11 +126,12 @@ export function talkOpacity(amplitude: number, talking: boolean): number {
 /**
  * Amplitude → Expo talk bust viseme.
  * low → closed smile, mid → speak, high → oh (or grin when happy/flirty).
+ * Thresholds biased low so mid/high hit often even with modest jaw signal.
  */
 export function talkViseme(amplitude: number, emotion: EmotionId): TalkViseme {
   const a = clamp01(amplitude);
-  if (a < 0.14) return "closed";
-  if (a < 0.52) return "speak";
+  if (a < 0.08) return "closed";
+  if (a < 0.34) return "speak";
   if (emotion === "happy" || emotion === "flirty") return "grin";
   return "oh";
 }
@@ -195,12 +196,11 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
   // Idle + talking → Expo talk busts (same camera). Soft crossfade off Helix angles.
   // Busts are full portraits — never stack on Helix or on front_idle (misaligned).
   if (talking) {
-    const amp = clamp01(amplitude);
-    // Blink only on quiet frames so open mouths aren't replaced mid-phoneme.
-    if (blink === 2 && amp < 0.2) {
+    // Blink overrides mouth briefly; amp no longer gates blink so eyes fire on schedule.
+    if (blink === 2) {
       return [expoTalkBody(SPRITES.talkBust.eyesClosed)];
     }
-    if (blink === 1 && amp < 0.2) {
+    if (blink === 1) {
       return [expoTalkBody(SPRITES.talkBust.eyesHalf)];
     }
     return [expoTalkBody(talkBustSrc(talkViseme(amplitude, emotion)))];
@@ -344,7 +344,7 @@ pose: idle | shy | kiss | wave | hearts | turn-away
 
 Map feeling to pose. Default idle.
 - greetings → wave + happy
-- flirt / crush talk → kiss + flirty
+- flirt / compliment talk → kiss + flirty
 - scold / bump / waste time → angry (pose idle unless done with them)
 - shy / embarrassed / soft moments → shy
 - praise / genuine warmth / thanks → hearts + happy
