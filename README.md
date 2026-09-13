@@ -6,7 +6,18 @@
 
 **https://heytylo-png.github.io/star-app-2-live/**
 
-Open that link on a desktop or mobile browser. No install required.
+Open that link on a desktop or mobile browser. Optional: install as a home-screen app (below).
+
+## Install on Samsung (PWA)
+
+Open **https://heytylo-png.github.io/star-app-2-live/** in **Chrome** on your phone.
+
+1. Tap the **⋮** menu (top right).
+2. Choose **Install app** or **Add to Home screen**.
+3. Confirm — Star Rai opens full-screen like a native app (standalone, portrait).
+
+Works offline for the app shell + static assets (puppet art already on device after first visit). Chat with Grok still needs network + your key in Settings. Memory and the xAI key stay in `localStorage` on the device.
+
 
 ## Add a real Grok (xAI) brain
 

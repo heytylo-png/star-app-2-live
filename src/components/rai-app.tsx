@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BookMarked, Mic, Send, Settings, Square, Volume2, VolumeX, X } from "lucide-react";
+import { InstallHint } from "@/components/install-hint";
 import { Puppet } from "@/components/puppet";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -415,6 +416,7 @@ function RaiReady() {
         </div>
 
         <div className="pointer-events-auto bg-gradient-to-t from-bg via-bg/90 to-transparent px-4 pt-5 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <InstallHint />
           {empty ? (
             <div className="mx-auto mb-3 flex max-w-lg flex-wrap justify-center gap-1.5">
               {STARTERS.map((s) => (

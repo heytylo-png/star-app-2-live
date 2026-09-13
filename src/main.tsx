@@ -8,3 +8,11 @@ createRoot(document.getElementById("root")!).render(
     <RaiApp />
   </StrictMode>,
 );
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    void navigator.serviceWorker.register("/star-app-2-live/sw.js", {
+      scope: "/star-app-2-live/",
+    });
+  });
+}
