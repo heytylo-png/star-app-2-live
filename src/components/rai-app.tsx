@@ -913,14 +913,14 @@ function RaiReady() {
                 </span>
               ) : null}
             </p>
-          ) : empty ? (
+          ) : empty && !showSetup ? (
             <p className="mx-auto mb-2 max-w-sm text-center text-sm text-muted">
               Say hey — or tap the phone to call her.
             </p>
           ) : null}
         </div>
         ) : tab === "chart" ? (
-          <div className="pointer-events-auto flex min-h-0 flex-1 flex-col pt-1">
+          <div className="pointer-events-auto flex min-h-0 flex-1 flex-col justify-end pt-1">
             <ChartPanel
               userSun={slots.user_sun}
               birthDate={slots.user_birth_date}
@@ -929,7 +929,7 @@ function RaiReady() {
             />
           </div>
         ) : (
-          <div className="pointer-events-auto flex min-h-0 flex-1 flex-col pt-1">
+          <div className="pointer-events-auto flex min-h-0 flex-1 flex-col justify-end pt-1">
             <LifePanel
               life={slots.life}
               onSetTitle={(title) => void send(`I'm listening to ${title}`)}
@@ -967,7 +967,7 @@ function RaiReady() {
               }}
             />
           ) : null}
-          {!callActive ? (
+          {!callActive && !showSetup && slots.life?.on ? (
             <NowPlayingBar
               sessionOn={Boolean(slots.life?.on)}
               nowPlaying={slots.life?.now_playing}
@@ -976,7 +976,7 @@ function RaiReady() {
               onStop={() => void send("stop listening")}
             />
           ) : null}
-          {empty && !callActive ? (
+          {empty && !callActive && !showSetup ? (
             <div className="mx-auto mb-3 flex max-w-lg flex-wrap justify-center gap-1.5">
               {STARTERS.map((s) => (
                 <button

@@ -30,7 +30,7 @@ export function LifePanel({ life, onSetTitle, onStop }: LifePanelProps) {
       id="star-pane-life"
       role="tabpanel"
       aria-labelledby="star-tab-life"
-      className="mx-3 mb-1 min-h-0 flex-1 overflow-y-auto rounded-xl bg-elevated/92 px-4 py-3 shadow-[var(--shadow-border)] backdrop-blur-[2px] sm:mx-4"
+      className="mx-3 mb-1 mt-auto max-h-[min(32rem,68%)] min-h-0 overflow-y-auto rounded-xl bg-elevated/88 px-4 py-3 shadow-[var(--shadow-border)] backdrop-blur-[2px] sm:mx-4"
     >
       <p className="font-display text-xl leading-tight">Life</p>
       <p className="mt-0.5 text-xs text-muted">

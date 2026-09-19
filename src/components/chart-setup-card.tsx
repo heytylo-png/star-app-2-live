@@ -19,7 +19,7 @@ export function ChartSetupCard({ onSkip, onSave }: ChartSetupCardProps) {
   return (
     <form
       className={cn(
-        "mx-auto mb-3 w-full max-w-lg rounded-xl bg-elevated/92 px-4 py-3 shadow-[var(--shadow-border)] backdrop-blur-[2px]",
+        "mx-auto mb-2 w-full max-w-lg rounded-xl bg-elevated/88 px-4 py-2.5 shadow-[var(--shadow-border)] backdrop-blur-[2px]",
       )}
       onSubmit={(e) => {
         e.preventDefault();
@@ -29,7 +29,7 @@ export function ChartSetupCard({ onSkip, onSave }: ChartSetupCardProps) {
     >
       <p className="font-display text-lg leading-tight">Birthday, if you want</p>
       <p className="mt-0.5 text-xs text-muted">Date helps. Time and place are extra. Skip anytime.</p>
-      <div className="mt-3 grid grid-cols-2 gap-2">
+      <div className="mt-2 grid grid-cols-2 gap-2">
         <label className="col-span-2 text-xs text-muted sm:col-span-1">
           Date
           <input
