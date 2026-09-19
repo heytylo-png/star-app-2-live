@@ -17,7 +17,12 @@ CONDITIONAL
   chart_source=setup|chat. Never send user_rising. Never send her bio as slots.
   Daily CHART block (today_date, her_sun, user_sun, last_topic) is separate —
   appended only when Chart fires. See artifacts/star-chart-v1.txt.
-- Life slots — ONLY if a session is on: now_playing, mood_tag
+- Life slots — ONLY if a session is on: now_playing, session_on, daily_playlist
+  (4–8 titles; never recited; never announced in the morning),
+  mood_tag (bratty|smug|tired|soft). Playlist may stay in local memory after
+  stop; standing Life keys are omitted from the prompt when session is off.
+  Track-change LIFE block is separate — appended only when the track changes.
+  See artifacts/star-life-one-pager.txt.
 
 RULES
 - Do not invent name, city, role, or birthday.

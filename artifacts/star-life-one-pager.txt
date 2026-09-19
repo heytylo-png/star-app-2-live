@@ -1,0 +1,40 @@
+STAR RAI — LIFE v1 (Helix / star-app-2-live)
+Live GitHub Pages only. Music only. Diary stays under Chart. Life tab can wait.
+No Spotify / Apple Music login required. Never block Chat on a music login.
+
+V1 BEHAVIOR
+- User can name a track / paste a title.
+  That sets memory: now_playing + session_on (Life session active).
+- “what are you listening to” / similar ask:
+  → one beat if daily_playlist OR now_playing exists
+  → else she does NOT invent a concert / setlist
+- In-session: one comment per track change.
+  Voice card length (1–2 short sentences).
+  Prefer pose: talk | content | smug | tired | wave
+- Daily playlist: 4–8 titles kept in memory.
+  Do not recite the list.
+  Do not announce it in the morning.
+- Mood tag: bratty | smug | tired | soft.
+  Tint wording only. Not a new personality.
+
+MEMORY SLOTS (send only when filled — same MEMORY FACTS / Life block path as Chart)
+- now_playing
+- session_on (true while a Life music session is active)
+- daily_playlist (4–8 titles; never dump into her line)
+- mood_tag (bratty | smug | tired | soft)
+
+DO NOT
+- Make music her topic if nothing is on.
+- Auto-narrate every song.
+- Block Chat on a music login.
+- Steal Chart’s diary.
+- Dump her bio.
+- Invent name / city / role / birthday.
+- Recite daily_playlist or announce it unprompted.
+
+OUTPUT
+Same as always: {"line","emotion","pose"}
+Unknown / omitted / kiss pose → keep current body.
+Kiss stays unmapped.
+Fail / CORS / bad JSON / no key → local brain for that pose key.
+Voice card + LORE USE still win. Never put xAI key in git.

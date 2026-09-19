@@ -1,5 +1,6 @@
 import { actToJson, composeAct } from "@/lib/brain";
 import type { ChartTurn } from "@/lib/chart";
+import type { LifeTurn } from "@/lib/life";
 import { getStoredXaiKey, streamGrok } from "@/lib/grok";
 import { isValidActJson, type PoseId } from "@/lib/rai";
 
@@ -13,6 +14,8 @@ export type StreamChatInput = {
   currentPose?: PoseId | null;
   /** Chart v1 turn — ask/diary stay local; daily may use Grok then fall back. */
   chartTurn?: ChartTurn;
+  /** Life v1 turn — listen-ask / empty / stop stay local; track change may use Grok. */
+  lifeTurn?: LifeTurn;
 };
 
 export type StreamDeltaMeta = { reset?: boolean };
@@ -23,7 +26,13 @@ async function localReply(
   onDelta: (text: string, meta?: StreamDeltaMeta) => void,
   signal?: AbortSignal,
 ): Promise<string> {
-  const act = composeAct(input.messages, input.systemExtra, input.currentPose, input.chartTurn);
+  const act = composeAct(
+    input.messages,
+    input.systemExtra,
+    input.currentPose,
+    input.chartTurn,
+    input.lifeTurn,
+  );
   const payload = actToJson(act);
 
   for (const ch of payload) {
@@ -105,8 +114,8 @@ export async function streamChat(
   onDelta: (text: string, meta?: StreamDeltaMeta) => void,
   signal?: AbortSignal,
 ): Promise<string> {
-  // Ask-path / diary: local rules, exact short answers. Do not send her bio through Grok.
-  if (input.chartTurn?.localOnly) {
+  // Ask-path / diary / Life listen-ask: local rules. Do not send her bio through Grok.
+  if (input.chartTurn?.localOnly || input.lifeTurn?.localOnly) {
     return localReply(input, onDelta, signal);
   }
 

@@ -1,4 +1,5 @@
 import { actForChartTurn, type ChartTurn } from "./chart.ts";
+import { actForLifeTurn, type LifeTurn } from "./life.ts";
 import { localBrainKeyFor, pickLocalBrainLine } from "./local-brain.ts";
 import { type EmotionId, type PoseId } from "./rai.ts";
 
@@ -81,9 +82,31 @@ export function composeAct(
   _systemExtra?: string,
   currentPose?: PoseId | null,
   chartTurn?: ChartTurn,
+  lifeTurn?: LifeTurn,
 ): BrainAct {
   const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
   const chartAct = chartTurn && chartTurn.kind !== "none" ? actForChartTurn(chartTurn) : null;
+  const lifeAct = lifeTurn && lifeTurn.kind !== "none" ? actForLifeTurn(lifeTurn) : null;
+
+  // Chart ask/diary stay local and never yield to Life. Life asks/track comments
+  // beat a same-turn Chart daily tint so music is not swallowed by the sun glance.
+  const preferChart = Boolean(chartTurn?.localOnly && chartAct);
+  const preferLife = Boolean(lifeAct && !preferChart && (lifeTurn?.localOnly || lifeTurn?.kind === "track_change"));
+
+  if (preferChart && chartAct) {
+    const mem = extractMemCandidate(lastUser);
+    const act: BrainAct = { emotion: chartAct.emotion, line: chartAct.line };
+    if (chartAct.pose) act.pose = chartAct.pose;
+    if (mem?.length) act.mem = mem;
+    return act;
+  }
+  if (preferLife && lifeAct) {
+    const mem = extractMemCandidate(lastUser);
+    const act: BrainAct = { emotion: lifeAct.emotion, line: lifeAct.line };
+    if (lifeAct.pose) act.pose = lifeAct.pose;
+    if (mem?.length) act.mem = mem;
+    return act;
+  }
   if (chartAct) {
     const mem = extractMemCandidate(lastUser);
     const act: BrainAct = { emotion: chartAct.emotion, line: chartAct.line };

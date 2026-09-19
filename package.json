@@ -12,7 +12,7 @@
     "predev": "node scripts/sync-star-rai-artifacts.js",
     "prebuild": "node scripts/sync-star-rai-artifacts.js",
     "pretest": "node scripts/sync-star-rai-artifacts.js",
-    "test": "node --experimental-strip-types --test src/lib/rai-pose.test.ts src/lib/local-brain.test.ts src/lib/memory-slots.test.ts src/lib/chart.test.ts"
+    "test": "node --experimental-strip-types --test src/lib/rai-pose.test.ts src/lib/local-brain.test.ts src/lib/memory-slots.test.ts src/lib/chart.test.ts src/lib/life.test.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",

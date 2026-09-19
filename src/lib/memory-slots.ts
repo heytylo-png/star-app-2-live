@@ -6,19 +6,21 @@
  * require explicit user language (no default cameraman, no bio topics).
  */
 
+import {
+  applyLifePatch,
+  extractLifePatch,
+  formatLifeMemoryLines,
+  isLifeOnlyCommand,
+  type LifeSlots,
+} from "./life.ts";
 import { namedPoseFromText, type PoseId } from "./rai.ts";
+
+export type { LifeMoodTag, LifeSlots } from "./life.ts";
 
 export type ChartSlots = {
   date?: string;
   time?: string;
   place?: string;
-};
-
-export type LifeSlots = {
-  /** Session flag — life keys are omitted from the prompt unless this is true. */
-  on: boolean;
-  now_playing?: string;
-  mood_tag?: string;
 };
 
 export type ChartSource = "setup" | "chat";
@@ -76,9 +78,6 @@ const MONTH_DATE_RE =
 
 const TIME_RE = /\b((?:at\s+)?\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?)|\d{1,2}:\d{2})\b/i;
 
-const LIFE_STOP_RE =
-  /\b(stop (?:listening|playing)|not playing(?: anymore)?|session over|end (?:the )?session|life session off)\b/i;
-
 function clip(value: string, max: number): string {
   const t = value.replace(/\s+/g, " ").trim();
   if (t.length <= max) return t;
@@ -102,29 +101,10 @@ function compactChart(chart?: ChartSlots): ChartSlots | undefined {
   return next.date || next.time || next.place ? next : undefined;
 }
 
-function compactLife(life?: LifeSlots): LifeSlots | undefined {
-  if (!life) return undefined;
-  if (life.on === false) return undefined;
-  const now_playing = life.now_playing?.trim() ? clip(life.now_playing, 48) : undefined;
-  const mood_tag = life.mood_tag?.trim() ? clip(life.mood_tag, 24) : undefined;
-  if (!life.on && !now_playing && !mood_tag) return undefined;
-  if (!life.on) return undefined;
-  return { on: true, now_playing, mood_tag };
-}
-
 /** Merge a patch into current slots without inventing empty keys. */
 export function applySlotPatch(current: MemorySlotState, patch: MemorySlotState): MemorySlotState {
   const chart = compactChart({ ...current.chart, ...patch.chart });
-  let life: LifeSlots | undefined;
-  if (patch.life && patch.life.on === false) {
-    life = undefined;
-  } else {
-    life = compactLife({
-      on: patch.life?.on ?? current.life?.on ?? false,
-      now_playing: patch.life?.now_playing ?? current.life?.now_playing,
-      mood_tag: patch.life?.mood_tag ?? current.life?.mood_tag,
-    });
-  }
+  const life = patch.life !== undefined ? applyLifePatch(current.life, patch.life) : applyLifePatch(current.life);
 
   const next: MemorySlotState = { ...current };
   if (patch.name !== undefined) next.name = patch.name.trim() || undefined;
@@ -232,6 +212,7 @@ function isGreetingOnly(text: string): boolean {
 function compactTopic(text: string): string | undefined {
   let t = text.replace(/\s+/g, " ").trim();
   if (!t || isGreetingOnly(t)) return undefined;
+  if (isLifeOnlyCommand(t)) return undefined;
   const named = namedPoseFromText(t);
   // Bare pose commands are not topics. Mood lines like "I'm tired" still are.
   if (named !== null && t.split(/\s+/).length <= 4 && !extractMood(t)) return undefined;
@@ -266,44 +247,7 @@ function extractChart(text: string): ChartSlots | undefined {
 }
 
 function extractLife(text: string, current?: LifeSlots): LifeSlots | undefined {
-  const cleaned = text.replace(/\s+/g, " ").trim();
-  if (LIFE_STOP_RE.test(cleaned)) return { on: false };
-
-  const playing = cleaned.match(
-    /\b(?:now playing|i(?:'m| am) listening to|listening to)\s+(.+?)(?:[.!]|$)/i,
-  );
-  const watching = cleaned.match(/\b(?:i(?:'m| am) (?:watching|playing))\s+(.+?)(?:[.!]|$)/i);
-  const raw = playing?.[1] ?? watching?.[1];
-  let now_playing: string | undefined;
-  if (raw) {
-    const clipPlay = clip(cleanToken(raw), 48);
-    if (clipPlay && !/^(along|with you|it|this|that)$/i.test(clipPlay)) {
-      now_playing = clipPlay;
-    }
-  }
-
-  const sessionOn = Boolean(current?.on) || Boolean(now_playing);
-  let mood_tag: string | undefined;
-  if (sessionOn) {
-    const tag = cleaned.match(
-      /\b(?:mood(?: tag)?|vibe)\s*(?:is|:)?\s*([A-Za-z][\w-]{1,20})/i,
-    );
-    if (tag?.[1]) mood_tag = tag[1].toLowerCase();
-    else {
-      const mood = extractMood(cleaned);
-      if (mood && now_playing) mood_tag = mood;
-    }
-  }
-
-  if (!sessionOn) return undefined;
-  if (now_playing || mood_tag) {
-    return compactLife({
-      on: true,
-      now_playing: now_playing ?? current?.now_playing,
-      mood_tag: mood_tag ?? current?.mood_tag,
-    });
-  }
-  return undefined;
+  return extractLifePatch(text, current);
 }
 
 export function extractSlotsFromUserText(
@@ -334,7 +278,10 @@ export function extractSlotsFromUserText(
   if (life) patch.life = life;
 
   let lastChoice: string | undefined;
-  if (opts.lastChoice === false) lastChoice = "kiss";
+  // A named track is not a pose command — "Super Shy" contains "shy".
+  if (life?.now_playing) {
+    lastChoice = undefined;
+  } else if (opts.lastChoice === false) lastChoice = "kiss";
   else if (typeof opts.lastChoice === "string" && opts.lastChoice.trim()) {
     lastChoice = opts.lastChoice.trim();
   } else {
@@ -427,10 +374,8 @@ export function formatMemoryFacts(
   push("chart_source", slots.chart_source);
   // user_rising is never sent in v1.
 
-  const life = compactLife(slots.life);
-  if (life?.on) {
-    push("now_playing", life.now_playing);
-    push("mood_tag", life.mood_tag);
+  for (const row of formatLifeMemoryLines(slots.life)) {
+    lines.push(row);
   }
 
   if (!lines.length) return "";
