@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { extractNatalFromUserText } from "./chart";
 import {
   applySlotPatch,
   emptySlots,
@@ -79,9 +80,12 @@ export const useMemoryStore = create<MemoryState>()(
       remove: (id) => set((state) => ({ items: state.items.filter((item) => item.id !== id) })),
       clear: () => set({ items: [], slots: emptySlots() }),
       ingestUserTurn: (text, opts) => {
-        const patch = extractSlotsFromUserText(text, opts, get().slots);
-        if (!Object.keys(patch).length) return;
-        set((state) => ({ slots: applySlotPatch(state.slots, patch) }));
+        const current = get().slots;
+        const patch = extractSlotsFromUserText(text, opts, current);
+        const natal = extractNatalFromUserText(text, current);
+        const merged: MemorySlotState = { ...patch, ...natal };
+        if (!Object.keys(merged).length) return;
+        set((state) => ({ slots: applySlotPatch(state.slots, merged) }));
       },
       patchSlots: (patch) => set((state) => ({ slots: applySlotPatch(state.slots, patch) })),
       clearSlot: (key) =>

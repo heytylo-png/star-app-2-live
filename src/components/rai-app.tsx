@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { InstallHint } from "@/components/install-hint";
+import { ChartSetupCard } from "@/components/chart-setup-card";
 import { Puppet } from "@/components/puppet";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -36,6 +37,13 @@ import {
 } from "@/lib/rai";
 import { useMemoryStore } from "@/lib/memory-store";
 import { formatMemoryFacts } from "@/lib/memory-slots";
+import {
+  composeDiaryEntry,
+  localDateKey,
+  natalFromSetup,
+  resolveChartTurn,
+} from "@/lib/chart";
+import { useChartStore } from "@/lib/chart-store";
 import { newId, type ChatMessage } from "@/lib/helix";
 import { streamChat } from "@/lib/stream-chat";
 import {
@@ -98,6 +106,9 @@ export function RaiApp() {
     void Promise.resolve(useChatStore.persist.rehydrate()).finally(() => {
       useChatStore.getState().setHydrated(true);
     });
+    void Promise.resolve(useChartStore.persist.rehydrate()).finally(() => {
+      useChartStore.getState().setHydrated(true);
+    });
   }, []);
   return <RaiReady />;
 }
@@ -110,6 +121,9 @@ function RaiReady() {
   const setVoiceOn = useChatStore((s) => s.setVoiceOn);
   const memories = useMemoryStore((s) => s.items);
   const slots = useMemoryStore((s) => s.slots);
+  const chartHydrated = useChartStore((s) => s.hydrated);
+  const chartSetup = useChartStore((s) => s.setup);
+  const diaryByDay = useChartStore((s) => s.diaryByDay);
   const affectionScore = useAffectionStore((s) => s.score);
   const streakDays = useAffectionStore((s) => s.streakDays);
   const tier = useMemo(() => scoreToTier(affectionScore), [affectionScore]);
@@ -152,6 +166,9 @@ function RaiReady() {
   );
   const empty = !thread || thread.messages.length === 0;
   const lastAssistant = [...(thread?.messages ?? [])].reverse().find((m) => m.role === "assistant");
+  const showSetup = chartHydrated && chartSetup === "pending" && !slots.user_birth_date;
+  const todayKey = localDateKey();
+  const todayDiary = diaryByDay[todayKey];
 
   useEffect(() => {
     draftRef.current = draft;
@@ -410,10 +427,35 @@ function RaiReady() {
     const aff = useAffectionStore.getState();
     aff.touchDecay();
     const liveAff = useAffectionStore.getState();
-    const systemExtra = useMemoryStore.getState().memoryFactsBlock({
+    const mem = useMemoryStore.getState();
+    const chartStore = useChartStore.getState();
+    const lastUser =
+      [...current.messages].reverse().find((m) => m.role === "user")?.content ?? "";
+    const today = localDateKey();
+    const chartTurn = resolveChartTurn({
+      userText: lastUser,
+      chatOpen: true,
+      userSun: mem.slots.user_sun,
+      lastTopic: mem.slots.last_topic,
+      mood: mem.slots.mood,
+      alreadyFiredDate: chartStore.lastFiredDate,
+      askedBirthday: chartStore.askedBirthday,
+      existingDiary: chartStore.diaryFor(today),
+    });
+    if (chartTurn.kind === "daily" && chartTurn.dateKey) {
+      chartStore.markFired(chartTurn.dateKey);
+    }
+    if (chartTurn.kind === "ask_need_birthday") {
+      chartStore.markAskedBirthday();
+    }
+    if (chartTurn.kind === "diary" && chartTurn.diaryText && chartTurn.dateKey) {
+      chartStore.saveDiary(chartTurn.dateKey, chartTurn.diaryText);
+    }
+    const factsBlock = mem.memoryFactsBlock({
       streakDays: liveAff.streakDays,
       relationship: TIER_LABEL[scoreToTier(liveAff.score)],
     });
+    const systemExtra = [factsBlock, chartTurn.factsBlock].filter(Boolean).join("\n\n");
 
     let raw = "";
     let speakFinishedClean = false;
@@ -425,6 +467,7 @@ function RaiReady() {
           reasoning: "low",
           systemExtra,
           currentPose: poseRef.current,
+          chartTurn,
           messages: current.messages
             .filter((m) => m.role === "user" || m.role === "assistant")
             .map((m) => ({ role: m.role, content: m.content })),
@@ -456,6 +499,9 @@ function RaiReady() {
       if (act.pose) {
         setPose(act.pose);
         poseRef.current = act.pose;
+      } else if (chartTurn.kind === "daily" && chartTurn.tintPose) {
+        setPose(chartTurn.tintPose);
+        poseRef.current = chartTurn.tintPose;
       }
       actLandedAt.current = Date.now();
       if (act.memories.length) useMemoryStore.getState().addMany(act.memories);
@@ -828,6 +874,18 @@ function RaiReady() {
           ) : null}
 
           <InstallHint />
+          {showSetup ? (
+            <ChartSetupCard
+              onSkip={() => useChartStore.getState().markSetupSkipped()}
+              onSave={(fields) => {
+                const natal = natalFromSetup(fields);
+                if (natal.user_birth_date) {
+                  useMemoryStore.getState().patchSlots(natal);
+                  useChartStore.getState().markSetupDone();
+                }
+              }}
+            />
+          ) : null}
           {empty && !callActive ? (
             <div className="mx-auto mb-3 flex max-w-lg flex-wrap justify-center gap-1.5">
               {STARTERS.map((s) => (
@@ -926,6 +984,8 @@ function RaiReady() {
                 </pre>
                 <p className="mt-2 text-[0.65rem] leading-relaxed text-subtle">
                   Empty keys stay off the prompt. Streak/relationship come from the affection chip.
+                  Natal Chart v1 sends user_birth_date / user_sun / chart_source when filled — never
+                  user_rising, never her bio.
                 </p>
               </div>
             ) : (
@@ -934,6 +994,33 @@ function RaiReady() {
                 city, or birthday.
               </p>
             )}
+            <div className="mb-3 rounded-md bg-elevated px-3 py-2 shadow-[var(--shadow-border)]">
+              <p className="text-[0.65rem] tracking-wide text-subtle uppercase">Diary</p>
+              {todayDiary ? (
+                <p className="mt-1 text-sm leading-relaxed">{todayDiary}</p>
+              ) : (
+                <p className="mt-1 text-sm text-muted">On ask only. One page per local day. Not auto-posted to Chat.</p>
+              )}
+              <button
+                type="button"
+                className="mt-2 text-xs text-muted hover:text-fg"
+                onClick={() => {
+                  const dateKey = localDateKey();
+                  const existing = useChartStore.getState().diaryFor(dateKey);
+                  const text =
+                    existing ??
+                    composeDiaryEntry({
+                      todayDate: dateKey,
+                      lastTopic: useMemoryStore.getState().slots.last_topic,
+                      userSun: useMemoryStore.getState().slots.user_sun,
+                      mood: useMemoryStore.getState().slots.mood,
+                    });
+                  useChartStore.getState().saveDiary(dateKey, text);
+                }}
+              >
+                {todayDiary ? "Today's page is written" : "Write today's diary"}
+              </button>
+            </div>
             {memories.length === 0 ? (
               hasSlots ? null : (
                 <p className="text-sm text-muted">
@@ -1057,6 +1144,7 @@ function RaiReady() {
               With a key, Star Rai calls xAI (<span className="text-fg">grok-4-latest</span>).
               CORS or key issues fall back to the local brain — no breaking character.
               Phone icon starts Call mode (continuous listen → reply → speak).
+              Chart v1 uses this browser&apos;s timezone for once-per-day (fallback America/Chicago).
             </div>
           </div>
         </SheetContent>

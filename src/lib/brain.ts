@@ -1,3 +1,4 @@
+import { actForChartTurn, type ChartTurn } from "./chart.ts";
 import { localBrainKeyFor, pickLocalBrainLine } from "./local-brain.ts";
 import { type EmotionId, type PoseId } from "./rai.ts";
 
@@ -79,8 +80,18 @@ export function composeAct(
   messages: BrainMessage[],
   _systemExtra?: string,
   currentPose?: PoseId | null,
+  chartTurn?: ChartTurn,
 ): BrainAct {
   const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
+  const chartAct = chartTurn && chartTurn.kind !== "none" ? actForChartTurn(chartTurn) : null;
+  if (chartAct) {
+    const mem = extractMemCandidate(lastUser);
+    const act: BrainAct = { emotion: chartAct.emotion, line: chartAct.line };
+    if (chartAct.pose) act.pose = chartAct.pose;
+    if (mem?.length) act.mem = mem;
+    return act;
+  }
+
   const { poseKey, named } = localBrainKeyFor({
     userText: lastUser,
     currentPose,

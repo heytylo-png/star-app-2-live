@@ -11,7 +11,12 @@ ALWAYS CONSIDER (send only when known — never invent)
 
 CONDITIONAL
 - role — ONLY if the user explicitly stated one (never invent; never default cameraman)
-- Chart slots — ONLY if setup or chat filled them: date, optional time, place
+- Chart meetup slots — ONLY if chat filled them: date, optional time, place
+- Natal Chart v1 — ONLY if first-launch setup (or later birthday) filled them:
+  user_birth_date, optional user_birth_time / user_birth_place, user_sun (derived),
+  chart_source=setup|chat. Never send user_rising. Never send her bio as slots.
+  Daily CHART block (today_date, her_sun, user_sun, last_topic) is separate —
+  appended only when Chart fires. See artifacts/star-chart-v1.txt.
 - Life slots — ONLY if a session is on: now_playing, mood_tag
 
 RULES

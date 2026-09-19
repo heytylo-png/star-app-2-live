@@ -21,6 +21,8 @@ export type LifeSlots = {
   mood_tag?: string;
 };
 
+export type ChartSource = "setup" | "chat";
+
 export type MemorySlotState = {
   name?: string;
   mood?: string;
@@ -30,6 +32,12 @@ export type MemorySlotState = {
   role?: string;
   chart?: ChartSlots;
   life?: LifeSlots;
+  /** Natal Chart v1 — birthday / derived sun. Never user_rising. */
+  user_birth_date?: string;
+  user_birth_time?: string;
+  user_birth_place?: string;
+  user_sun?: string;
+  chart_source?: ChartSource;
 };
 
 export type AffectionSlotInput = {
@@ -128,6 +136,22 @@ export function applySlotPatch(current: MemorySlotState, patch: MemorySlotState)
   else next.chart = compactChart(current.chart);
   next.life = life;
 
+  if (patch.user_birth_date !== undefined) {
+    next.user_birth_date = patch.user_birth_date.trim() || undefined;
+  }
+  if (patch.user_birth_time !== undefined) {
+    next.user_birth_time = patch.user_birth_time.trim() || undefined;
+  }
+  if (patch.user_birth_place !== undefined) {
+    next.user_birth_place = patch.user_birth_place.trim() || undefined;
+  }
+  if (patch.user_sun !== undefined) {
+    next.user_sun = patch.user_sun.trim() || undefined;
+  }
+  if (patch.chart_source !== undefined) {
+    next.chart_source = patch.chart_source;
+  }
+
   if (!next.name) delete next.name;
   if (!next.mood) delete next.mood;
   if (!next.last_topic) delete next.last_topic;
@@ -135,6 +159,11 @@ export function applySlotPatch(current: MemorySlotState, patch: MemorySlotState)
   if (!next.role) delete next.role;
   if (!next.chart) delete next.chart;
   if (!next.life) delete next.life;
+  if (!next.user_birth_date) delete next.user_birth_date;
+  if (!next.user_birth_time) delete next.user_birth_time;
+  if (!next.user_birth_place) delete next.user_birth_place;
+  if (!next.user_sun) delete next.user_sun;
+  if (!next.chart_source) delete next.chart_source;
   return next;
 }
 
@@ -204,7 +233,8 @@ function compactTopic(text: string): string | undefined {
   let t = text.replace(/\s+/g, " ").trim();
   if (!t || isGreetingOnly(t)) return undefined;
   const named = namedPoseFromText(t);
-  if (named !== null && t.split(/\s+/).length <= 4) return undefined;
+  // Bare pose commands are not topics. Mood lines like "I'm tired" still are.
+  if (named !== null && t.split(/\s+/).length <= 4 && !extractMood(t)) return undefined;
   t = t.replace(/^(please )?remember (that |this )?/i, "");
   t = clip(t, 72);
   if (!t) return undefined;
@@ -389,6 +419,13 @@ export function formatMemoryFacts(
     push("time", chart.time);
     push("place", chart.place);
   }
+
+  push("user_birth_date", slots.user_birth_date);
+  push("user_birth_time", slots.user_birth_time);
+  push("user_birth_place", slots.user_birth_place);
+  push("user_sun", slots.user_sun);
+  push("chart_source", slots.chart_source);
+  // user_rising is never sent in v1.
 
   const life = compactLife(slots.life);
   if (life?.on) {

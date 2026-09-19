@@ -1,4 +1,5 @@
 import { actToJson, composeAct } from "@/lib/brain";
+import type { ChartTurn } from "@/lib/chart";
 import { getStoredXaiKey, streamGrok } from "@/lib/grok";
 import { isValidActJson, type PoseId } from "@/lib/rai";
 
@@ -10,6 +11,8 @@ export type StreamChatInput = {
   systemExtra?: string;
   /** Pose already on stage (after a local command swap). */
   currentPose?: PoseId | null;
+  /** Chart v1 turn — ask/diary stay local; daily may use Grok then fall back. */
+  chartTurn?: ChartTurn;
 };
 
 export type StreamDeltaMeta = { reset?: boolean };
@@ -20,7 +23,7 @@ async function localReply(
   onDelta: (text: string, meta?: StreamDeltaMeta) => void,
   signal?: AbortSignal,
 ): Promise<string> {
-  const act = composeAct(input.messages, input.systemExtra, input.currentPose);
+  const act = composeAct(input.messages, input.systemExtra, input.currentPose, input.chartTurn);
   const payload = actToJson(act);
 
   for (const ch of payload) {
@@ -102,6 +105,11 @@ export async function streamChat(
   onDelta: (text: string, meta?: StreamDeltaMeta) => void,
   signal?: AbortSignal,
 ): Promise<string> {
+  // Ask-path / diary: local rules, exact short answers. Do not send her bio through Grok.
+  if (input.chartTurn?.localOnly) {
+    return localReply(input, onDelta, signal);
+  }
+
   // 1) Real Grok when the user pasted an xAI key (localStorage only).
   if (getStoredXaiKey()) {
     try {
