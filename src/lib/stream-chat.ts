@@ -1,5 +1,6 @@
 import { actToJson, composeAct } from "@/lib/brain";
 import { getStoredXaiKey, streamGrok } from "@/lib/grok";
+import { isValidActJson, type PoseId } from "@/lib/rai";
 
 export type StreamChatInput = {
   model: string;
@@ -7,15 +8,19 @@ export type StreamChatInput = {
   reasoning: "low" | "medium" | "high" | "xhigh";
   messages: { role: "user" | "assistant"; content: string }[];
   systemExtra?: string;
+  /** Pose already on stage (after a local command swap). */
+  currentPose?: PoseId | null;
 };
 
-/** Local composeAct brain when Grok /api/chat is unavailable (GitHub Pages). */
+export type StreamDeltaMeta = { reset?: boolean };
+
+/** Local pose-keyed brain when Grok is unavailable (GitHub Pages). */
 async function localReply(
   input: StreamChatInput,
-  onDelta: (text: string) => void,
+  onDelta: (text: string, meta?: StreamDeltaMeta) => void,
   signal?: AbortSignal,
-): Promise<void> {
-  const act = composeAct(input.messages, input.systemExtra);
+): Promise<string> {
+  const act = composeAct(input.messages, input.systemExtra, input.currentPose);
   const payload = actToJson(act);
 
   for (const ch of payload) {
@@ -23,6 +28,7 @@ async function localReply(
     onDelta(ch);
     await new Promise((r) => setTimeout(r, 8));
   }
+  return payload;
 }
 
 function isAbort(err: unknown): boolean {
@@ -35,9 +41,9 @@ function isAbort(err: unknown): boolean {
 /** Optional legacy Pages /api/chat probe (kept for future backends). */
 async function tryLocalApi(
   input: StreamChatInput,
-  onDelta: (text: string) => void,
+  onDelta: (text: string, meta?: StreamDeltaMeta) => void,
   signal?: AbortSignal,
-): Promise<boolean> {
+): Promise<string | null> {
   try {
     const res = await fetch(`${import.meta.env.BASE_URL}api/chat`, {
       method: "POST",
@@ -46,12 +52,12 @@ async function tryLocalApi(
       signal,
     });
 
-    if (!res.ok || !res.body) return false;
+    if (!res.ok || !res.body) return null;
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
-    let got = false;
+    let got = "";
 
     while (true) {
       const { done, value } = await reader.read();
@@ -73,47 +79,57 @@ async function tryLocalApi(
         }
         if (json.error) throw new Error(json.error);
         if (typeof json.text === "string" && json.text) {
-          got = true;
+          got += json.text;
           onDelta(json.text);
         }
       }
     }
 
-    return got;
+    return got || null;
   } catch (err) {
     if (isAbort(err)) throw err;
-    return false;
+    return null;
   }
 }
 
+/**
+ * Grok when a key is present; otherwise (and on CORS / timeout / bad JSON /
+ * auth / no key) the pose-keyed local brain from artifacts/.
+ * Returns the authoritative act JSON for parseAct.
+ */
 export async function streamChat(
   input: StreamChatInput,
-  onDelta: (text: string) => void,
+  onDelta: (text: string, meta?: StreamDeltaMeta) => void,
   signal?: AbortSignal,
-): Promise<void> {
+): Promise<string> {
   // 1) Real Grok when the user pasted an xAI key (localStorage only).
   if (getStoredXaiKey()) {
     try {
+      let grokRaw = "";
       await streamGrok(
         { messages: input.messages, systemExtra: input.systemExtra },
-        onDelta,
+        (delta) => {
+          grokRaw += delta;
+          onDelta(delta);
+        },
         signal,
       );
-      return;
+      if (isValidActJson(grokRaw)) return grokRaw;
     } catch (err) {
       if (isAbort(err)) throw err;
-      // CORS, auth, model failure → silent offline brain. Never break character about API.
+      // CORS, timeout, auth, model failure → silent local brain. Never break character about API.
     }
   }
 
   // 2) Optional future /api/chat backend
   try {
     const used = await tryLocalApi(input, onDelta, signal);
-    if (used) return;
+    if (used && isValidActJson(used)) return used;
   } catch (err) {
     if (isAbort(err)) throw err;
   }
 
-  // 3) Offline composeAct — always works on Pages
-  await localReply(input, onDelta, signal);
+  // 3) Offline local-brain.txt — always works on Pages
+  onDelta("", { reset: true });
+  return localReply(input, onDelta, signal);
 }

@@ -1,0 +1,81 @@
+# Star Rai local brain — offline fallback keyed by pose.
+# Used when Grok fails (no key / CORS / timeout / bad JSON).
+# Format: pose_key | emotion | line
+# Multiple rows per key; one is picked (avoid lastLine).
+# kiss is unmapped — never add a kiss key.
+# _default is used when the pose key has no rows.
+
+idle | bratty | Facing you. Front and center~
+idle | smug | Looking at you. Don't flinch :3
+
+talk | bratty | Talking. Keep up~
+talk | smug | Mouth's moving. You listening :3
+
+peace | bratty | Peace. Cute, I know~
+peace | smug | V-sign. Don't waste it :3
+
+middle_finger | bratty | This one's for you. Mean it~
+middle_finger | smug | Finger up. You earned it :3
+
+point | bratty | Pointing at you. Yeah, you~
+point | smug | Finger out. Don't look away :3
+
+wink | bratty | Wink. Catch it~
+wink | smug | One eye. You're welcome :3
+
+laugh | hype | Laughing. You did that~
+laugh | bratty | Ha. Okay that was funny :3
+
+think | bratty | Thinking. Give me a second~
+think | tired | Thinking face. Wait for it~
+
+pout | bratty | Pouting. You caused this~
+pout | smug | Lip out. Fix it :3
+
+tired | tired | Tired. Still here though~
+tired | bratty | Low energy. Don't test me :3
+
+smug | smug | Smug. I know I look good~
+smug | bratty | This face. You're welcome :3
+
+wave | bratty | Waving. You catching this~
+wave | hype | Hey. Hand's up :3
+
+hold | bratty | Hands out. Come here~
+hold | smug | Hold pose. Don't rush me :3
+
+embarrassed | shy | Embarrassed. Don't stare~
+embarrassed | bratty | Awkward. You saw that :3
+
+scold | bratty | Scolding you. Deserve it~
+scold | smug | Mad face. Try again :3
+
+shy | shy | Shy. Don't look too hard~
+shy | bratty | Looking away a little :3
+
+sad | tired | Sad beat. Don't make it worse~
+sad | shy | Down. Stay anyway :3
+
+surprise | hype | Surprise. You got me~
+surprise | bratty | Wait what. Say that again :3
+
+content | soft | Content. This is fine~
+content | bratty | Soft. Don't ruin it :3
+
+hearts | hype | Hearts. Don't get cocky~
+hearts | shy | Soft for one second :3
+
+turn | bratty | Turning. Over-shoulder~
+turn | glance | Spun. Catch the look back :3
+
+profile | bratty | Side profile. Chin up a hair~
+profile | glance | Looking away. Cute from this side :3
+
+three_quarter_left | bratty | Turned a little. Frame the bow~
+three_quarter_left | glance | 3/4 locked. Hold still :3
+
+three_quarter_right | bratty | Other side. Catch this angle~
+three_quarter_right | glance | Flipped. Other three-quarter :3
+
+_default | bratty | Say that again — with the real detail~
+_default | smug | Yeah? Don't drop it~
