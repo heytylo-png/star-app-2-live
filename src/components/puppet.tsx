@@ -60,9 +60,9 @@ function fadeMsFor(layer: SpriteLayer): number {
 }
 
 /**
- * Star Rai 2D puppet — idle life, look-at, Helix talk flap, mid-shot framing.
+ * Star Rai 2D puppet — idle life, look-at, official talk sheet, mid-shot framing.
  * Layers crossfade by stable id so pose changes never hard-pop.
- * While talking: Helix front + idle-talk opacity flap (talkPhase); Expo busts gated off.
+ * Dedicated poses hold through speech; idle talking uses rai/talk.png.
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -181,7 +181,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       !talkingRef.current &&
       !isDedicatedPose(poseRef.current) &&
       !isExpressiveEmotion(emotionRef.current) &&
-      (emotionRef.current === "idle" || emotionRef.current === "happy");
+      (emotionRef.current === "bratty" || emotionRef.current === "hype");
 
     const schedule = () => {
       const wait = IDLE_BEAT_GAP_MIN_MS + Math.random() * IDLE_BEAT_GAP_JITTER_MS;

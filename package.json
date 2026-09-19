@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node --experimental-strip-types --test src/lib/rai-pose.test.ts"
+    "test": "node --experimental-strip-types --test src/lib/rai-pose.test.ts src/lib/brain.test.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",

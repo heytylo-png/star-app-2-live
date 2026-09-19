@@ -1,4 +1,4 @@
-import type { EmotionId, PoseId } from "@/lib/rai";
+import { poseFromUserText, type EmotionId, type PoseId } from "./rai.ts";
 import type { AffectionTier } from "@/lib/affection-store";
 
 export type BrainMessage = { role: "user" | "assistant"; content: string };
@@ -74,7 +74,7 @@ const LINES: Record<Intent, string[]> = {
     "Give me a second. I actually think before I talk.",
     "Hmm. Ask cleaner next time — but fine, I'm on it.",
     "Interesting question. Don't expect a soft answer.",
-    "You're putting me on the spot. Cute. Thinking.",
+    "You're putting me on the spot. Cute.~",
   ],
   soft: [
     "…Don't look at me like that.",
@@ -117,7 +117,7 @@ const LINES: Record<Intent, string[]> = {
     "Okay. Keep going — I'm listening, not impressed yet.",
     "That's your opener? Bold. Continue.",
     "Noted. Now say the part that actually matters.",
-    "I'm right here. Use the airtime.",
+    "Still here. Use the airtime :3",
   ],
 };
 
@@ -224,7 +224,7 @@ function detectIntent(lower: string, _recent: string[]): Intent {
     return "identity";
   }
   if (
-    /kiss|love you|cute|pretty|beautiful|hot|date|flirt|crush|blow me a kiss|come closer/.test(lower)
+    /love you|cute|pretty|beautiful|hot|date|flirt|crush|come closer|wink at me/.test(lower)
   ) {
     return "flirt";
   }
@@ -279,41 +279,40 @@ function intentToAct(intent: Intent): { emotion: EmotionId; pose: PoseId } {
   switch (intent) {
     case "bump":
     case "scold":
-      return { emotion: "angry", pose: "scold" };
+      return { emotion: "bratty", pose: "scold" };
     case "greet":
-      return { emotion: "happy", pose: "wave" };
+      return { emotion: "hype", pose: "wave" };
     case "bye":
-      return { emotion: "idle", pose: "turn-away" };
+      return { emotion: "bratty", pose: "turn" };
     case "identity":
-      return { emotion: "thinking", pose: "point" };
+      return { emotion: "glance", pose: "think" };
     case "flirt":
-      // Mix kiss / lean so flirty doesn't always blow a kiss
-      return Math.random() < 0.55
-        ? { emotion: "flirty", pose: "kiss" }
-        : { emotion: "flirty", pose: "lean" };
+      return Math.random() < 0.5
+        ? { emotion: "smug", pose: "wink" }
+        : { emotion: "smug", pose: "hearts" };
     case "praise":
     case "miss":
     case "thanks":
-      return { emotion: "happy", pose: "hearts" };
+      return { emotion: "soft", pose: "hearts" };
     case "question":
       return Math.random() < 0.5
-        ? { emotion: "thinking", pose: "point" }
-        : { emotion: "thinking", pose: "finger" };
+        ? { emotion: "glance", pose: "think" }
+        : { emotion: "smug", pose: "pout" };
     case "soft":
       return Math.random() < 0.45
-        ? { emotion: "shy", pose: "hold" }
+        ? { emotion: "soft", pose: "hold" }
         : { emotion: "shy", pose: "shy" };
     case "remember":
     case "recall":
       return { emotion: "shy", pose: "shy" };
     case "bored":
-      return { emotion: "angry", pose: "turn-away" };
+      return { emotion: "tired", pose: "tired" };
     case "generic":
     default:
-      // Rare idle beats via emotion-only path (finger/lean) — mostly look-at idle
-      if (Math.random() < 0.08) return { emotion: "surprised", pose: "finger" };
-      if (Math.random() < 0.06) return { emotion: "flirty", pose: "lean" };
-      return { emotion: "idle", pose: "idle" };
+      if (Math.random() < 0.08) return { emotion: "hype", pose: "peace" };
+      if (Math.random() < 0.06) return { emotion: "smug", pose: "smug" };
+      if (Math.random() < 0.08) return { emotion: "bratty", pose: "talk" };
+      return { emotion: "bratty", pose: "idle" };
   }
 }
 
@@ -436,7 +435,7 @@ function craftFromFacts(
       ].filter((l) => l !== avoid);
       const line = lines[Math.floor(Math.random() * lines.length)] ?? `${name}. Obviously.`;
       lastLine = line;
-      return { emotion: "thinking", pose: "idle", line };
+      return { emotion: "glance", pose: "think", line };
     }
   }
 
@@ -449,7 +448,7 @@ function craftFromFacts(
     if (!facts.length) {
       const line = "Drawer's empty. Tell me something worth keeping first.";
       lastLine = line;
-      return { emotion: "thinking", pose: "idle", line };
+      return { emotion: "glance", pose: "think", line };
     }
     const bits = facts.slice(0, 5).map((f) => f.replace(/^-\s*/, "").replace(/\.$/, ""));
     let line: string;
@@ -475,7 +474,7 @@ function craftFromFacts(
       ) as string[];
       const line = `${parts.join("; ")}. I pay attention.`;
       lastLine = line;
-      return { emotion: "thinking", pose: "idle", line };
+      return { emotion: "glance", pose: "think", line };
     }
   }
 
@@ -542,6 +541,40 @@ function affectionColor(
   return line;
 }
 
+function poseCommandLine(pose: PoseId, avoid: string): string {
+  const bank: Record<PoseId, string[]> = {
+    idle: ["This is just me. Don't stare too hard~", "Idle. Thrilled, I know."],
+    talk: ["Yeah, I'm talking. Keep up :3", "Mouth's moving. Ears on, please."],
+    peace: ["Peace. Try not to ruin it~", "Two fingers. You're welcome."],
+    middle_finger: ["This one's for you. Specifically.", "Read it. Slow."],
+    wink: ["Caught that? Good.", "One wink. Don't make it a thing~"],
+    laugh: ["Ha. You're lucky that was cute.", "Okay that one got me :3"],
+    think: ["Give me a second. I actually think.", "Working it. Don't rush me~"],
+    pout: ["Don't look at me like that.", "This face is your fault."],
+    tired: ["I'm running on fumes. Still prettier than you~", "Low battery. Talk slower."],
+    smug: ["Yeah. I know.", "That look? Earned."],
+    wave: ["Hey. Hand's up. Notice me or don't.", "Wave. Took you long enough."],
+    hold: ["…Fine. Closer.", "Don't announce it. Just stay."],
+    embarrassed: ["Don't look. I mean it.", "Ugh. Forget you saw that."],
+    scold: ["Absolutely not. Fix that.", "I don't do excuses."],
+    shy: ["…Don't look at me like that.", "Quiet. You're doing too much."],
+    sad: ["Not in the mood to fake it.", "Yeah. That's the face. Don't poke it."],
+    surprise: ["Wait— what.", "You actually got me. Once."],
+    content: ["This is fine. Don't jinx it~", "Quiet's good. Stay in it."],
+    hearts: ["Don't get used to this.", "Charity. Heart's still mine."],
+    turn: ["We're done for now.", "Not looking. On purpose."],
+    profile: ["Side's better anyway.", "Don't need to face you for this."],
+    three_quarter_left: ["Glancing. That's all you get.", "Not full-on. Deal with it."],
+    three_quarter_right: ["Other side. Keep up.", "I'm not square to you. On purpose."],
+  };
+  const lines = bank[pose] ?? bank.idle;
+  const filtered = avoid ? lines.filter((l) => l !== avoid) : lines;
+  const pool = filtered.length ? filtered : lines;
+  const line = pool[Math.floor(Math.random() * pool.length)] ?? lines[0]!;
+  lastLine = line;
+  return line;
+}
+
 /**
  * Offline Star Rai brain for GitHub Pages (no server API).
  * Always stays in character; never mentions demo/offline/API.
@@ -589,18 +622,33 @@ export function composeAct(messages: BrainMessage[], systemExtra?: string): Brai
   }
 
   // Warmth bias by tier
-  if (tier === "devoted" && emotion === "idle" && effectiveIntent === "generic") {
-    emotion = "happy";
+  if (tier === "devoted" && emotion === "bratty" && effectiveIntent === "generic") {
+    emotion = "soft";
   }
   if (tier === "close" && effectiveIntent === "greet") {
-    emotion = "happy";
+    emotion = "hype";
     pose = "wave";
   }
 
   if (!lastUser.trim()) {
-    emotion = "idle";
+    emotion = "bratty";
     pose = "idle";
     line = pickLine("generic", avoid);
+  }
+
+  const named = poseFromUserText(lastUser);
+  if (named) {
+    pose = named;
+    if (named === "idle") emotion = "bratty";
+    else if (named === "tired") emotion = "tired";
+    else if (named === "shy" || named === "embarrassed") emotion = "shy";
+    else if (named === "hold" || named === "sad" || named === "content") emotion = "soft";
+    else if (named === "laugh" || named === "peace" || named === "wave" || named === "hearts") emotion = "hype";
+    else if (named === "think" || named === "profile" || named === "three_quarter_left" || named === "three_quarter_right") {
+      emotion = "glance";
+    } else if (named === "scold" || named === "middle_finger") emotion = "bratty";
+    else emotion = "smug";
+    line = poseCommandLine(named, avoid);
   }
 
   const mem = extractMemCandidate(lastUser, intent);

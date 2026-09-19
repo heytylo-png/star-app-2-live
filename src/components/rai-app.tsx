@@ -26,6 +26,7 @@ import { useChatStore } from "@/lib/chat-store";
 import {
   EMOTION_LABEL,
   parseAct,
+  poseFromUserText,
   poseResetDelayMs,
   streamActHints,
   streamLine,
@@ -119,7 +120,7 @@ function RaiReady() {
   const [xaiMask, setXaiMask] = useState(() => maskXaiKey(getStoredXaiKey()));
   const [keyJustSaved, setKeyJustSaved] = useState(false);
   const [caption, setCaption] = useState("");
-  const [emotion, setEmotion] = useState<EmotionId>("idle");
+  const [emotion, setEmotion] = useState<EmotionId>("bratty");
   const [pose, setPose] = useState<PoseId>("idle");
   const [talking, setTalking] = useState(false);
   const [holding, setHolding] = useState(false);
@@ -184,11 +185,11 @@ function RaiReady() {
   useEffect(() => {
     if (sending || talking || callListening) return;
     if (holding) {
-      setEmotion("thinking");
+      setEmotion("glance");
       return;
     }
     if (draft.trim()) {
-      setEmotion("thinking");
+      setEmotion("glance");
       return;
     }
     const delay = poseResetDelayMs({
@@ -200,7 +201,7 @@ function RaiReady() {
     if (delay == null) return;
     const id = window.setTimeout(() => {
       setPose("idle");
-      setEmotion("idle");
+      setEmotion("bratty");
     }, delay);
     return () => window.clearTimeout(id);
   }, [draft, sending, talking, holding, callListening, pose, emotion]);
@@ -301,7 +302,7 @@ function RaiReady() {
     setCallSupported(true);
     setCallListening(true);
     setHolding(false);
-    setEmotion("thinking");
+    setEmotion("glance");
     setCaption("Listening…");
     try {
       rec.start();
@@ -389,7 +390,7 @@ function RaiReady() {
     store.appendMessage(threadId, assistant);
     setSending(true);
     setTalking(false);
-    setEmotion("thinking");
+    setEmotion("glance");
     // Keep the last act pose until the new one lands — no idle flash.
     setCaption("");
     setCallListening(false);
@@ -444,7 +445,7 @@ function RaiReady() {
       store.patchMessage(threadId, assistant.id, { content: line });
       setCaption(line);
       setEmotion(act.emotion);
-      setPose(act.pose);
+      if (act.pose) setPose(act.pose);
       actLandedAt.current = Date.now();
       if (act.memories.length) useMemoryStore.getState().addMany(act.memories);
 
@@ -482,7 +483,8 @@ function RaiReady() {
         const message = err instanceof Error ? err.message : "She went quiet.";
         store.patchMessage(threadId, assistant.id, { content: message, error: message });
         setCaption(message);
-        setEmotion("sad");
+        setEmotion("tired");
+        setPose("sad");
         actLandedAt.current = Date.now();
       }
     } finally {
@@ -512,6 +514,12 @@ function RaiReady() {
     if (!content || sendingRef.current) return;
     unlockVoice();
     listenAfterSpeakRef.current = callActiveRef.current;
+
+    const named = poseFromUserText(content);
+    if (named) {
+      setPose(named);
+      actLandedAt.current = Date.now();
+    }
 
     const memBefore = useMemoryStore.getState().items.length;
     // Pre-nudge from text; memory bump refined after act if mem added
@@ -627,7 +635,7 @@ function RaiReady() {
     recRef.current = rec;
     setPttSupported(true);
     setHolding(true);
-    setEmotion("thinking");
+    setEmotion("glance");
     setCaption("Listening…");
     try {
       rec.start();
