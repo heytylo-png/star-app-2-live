@@ -29,6 +29,8 @@ describe("memory slots contract", () => {
     assert.match(MEMORY_SLOTS_CONTRACT, /never default cameraman/);
     assert.match(MEMORY_SLOTS_CONTRACT, /Do not send empty slots/);
     assert.match(MEMORY_SLOTS_CONTRACT, /Lore bio stays in the voice card/);
+    assert.match(MEMORY_SLOTS_CONTRACT, /user_birth_date/);
+    assert.match(MEMORY_SLOTS_CONTRACT, /Never send user_rising/);
     assert.doesNotMatch(MEMORY_SLOTS_CONTRACT, /\bFukuoka\b/);
   });
 });
@@ -83,6 +85,22 @@ describe("formatMemoryFacts", () => {
     const block = formatMemoryFacts({ name: "Tylo", life: { on: true } });
     assert.match(block, /^name: Tylo$/m);
     assert.doesNotMatch(block, /now_playing|mood_tag/);
+  });
+
+  it("emits natal Chart v1 keys when filled and never rising or her bio", () => {
+    const block = formatMemoryFacts({
+      user_birth_date: "1994-04-12",
+      user_birth_time: "14:00",
+      user_birth_place: "Chicago",
+      user_sun: "Aries",
+      chart_source: "setup",
+    });
+    assert.match(block, /^user_birth_date: 1994-04-12$/m);
+    assert.match(block, /^user_birth_time: 14:00$/m);
+    assert.match(block, /^user_birth_place: Chicago$/m);
+    assert.match(block, /^user_sun: Aries$/m);
+    assert.match(block, /^chart_source: setup$/m);
+    assert.doesNotMatch(block, /user_rising|her_sun|Fukuoka|Libra/);
   });
 
   it("never emits her bio as topics", () => {

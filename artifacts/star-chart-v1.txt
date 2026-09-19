@@ -1,0 +1,69 @@
+STAR RAI — CHART v1 (Helix / star-app-2-live)
+Live GitHub Pages only. No natal wheel. No astrology API. Sun + date only.
+Chart tab can wait. Do not Expo-only this.
+
+HER CONSTANTS (code only — never dump into chat as a topic list)
+birth_date: 2000-09-29
+birth_time: 03:33
+birth_place: Fukuoka
+her_sun: Libra
+
+SETUP
+First-launch card fields: date / time / place / Skip.
+Skip → Chat. Never block the puppet.
+Filled → memory slots:
+  user_birth_date (required if not skipped)
+  user_birth_time (optional)
+  user_birth_place (optional)
+  chart_source=setup
+Derive user_sun from user_birth_date using the tropical table below. Do not re-ask.
+Time + place do NOT unlock rising in v1. Leave user_rising empty / omit.
+
+TROPICAL SUN TABLE (inclusive month-day ranges; year ignored)
+Capricorn  Dec 22 – Jan 19
+Aquarius   Jan 20 – Feb 18
+Pisces     Feb 19 – Mar 20
+Aries      Mar 21 – Apr 19
+Taurus     Apr 20 – May 20
+Gemini     May 21 – Jun 20
+Cancer     Jun 21 – Jul 22
+Leo        Jul 23 – Aug 22
+Virgo      Aug 23 – Sep 22
+Libra      Sep 23 – Oct 22
+Scorpio    Oct 23 – Nov 21
+Sagittarius Nov 22 – Dec 21
+
+DAILY
+Once per local day, only if Chat is already open.
+When Chart fires, add to the model request (system / memory facts):
+  today_date
+  her_sun=Libra
+  user_sun (if known)
+  last_topic (if known)
+She may tint one line only.
+If no user_sun: skip Chart unless last_topic is already day/mood OR they asked.
+If user_sun exists: at most one “you + me” glance. Not a compatibility essay.
+Never “your reading for today is.” Never list planets.
+Same local day: do not fire Chart again unless they asked.
+
+ASK PATH (local / prompt rules — short answers)
+sign → “Libra.” One tease. Back to them.
+birthday → “Sept 29.” Stop.
+where from → one city (Fukuoka or Osaka), not the whole arc.
+match / today with no date → “tell me your birthday if you want that.” One ask.
+
+DIARY
+On ask / command only. 3–5 short sentences. One per local day.
+Do not auto-push diary into Chat.
+
+LORE USE (voice card) still wins. Bio is not a topic.
+Voice card + output {"line","emotion","pose"} unchanged.
+Unknown / omitted / kiss pose → keep current body.
+Kiss stays unmapped.
+
+POSE TINT if Chart fired (prefer one of):
+content | think | smug | tired | talk | idle
+
+FAIL
+Fail / CORS / bad JSON / no key → local brain for that pose key.
+Never put xAI key in git.
