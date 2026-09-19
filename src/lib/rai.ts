@@ -722,4 +722,5 @@ OUTPUT
 Return only:
 {"line":"...","emotion":"bratty|smug|tired|shy|soft|hype|glance","pose":"<key or omit>"}
 
-line is required. pose omitted = keep current sheet. emotion omitted = bratty.`;
+line is required. pose omitted = keep current sheet. emotion omitted = bratty.
+`;
