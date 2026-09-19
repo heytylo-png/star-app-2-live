@@ -1,0 +1,31 @@
+STAR RAI — 3-TAB SHELL (Helix / star-app-2-live)
+Live GitHub Pages only. Spec for Chat · Chart · Life chrome.
+Launch on Chat. Not Expo-only.
+
+TABS
+1. Chat — puppet, thread, pose commands, music paste (already there).
+2. Chart — edit birth date / time / place, show user_sun if any, last diary.
+   No natal wheel. No auto-reading on open.
+3. Life — now_playing + Set/Stop, quiet daily list, mood tag.
+   No Spotify / Apple login.
+
+FIRST LAUNCH
+Setup stays a skippable overlay on Chat (date/time/place/Skip).
+Not a fourth tab. Never block the puppet.
+
+STATE
+Switching tabs does not reset memory or the current sheet.
+Life session can stay On in the background.
+Life comments still fire in Chat only (not as a Life-tab narration dump).
+
+DO NOT
+- Cover the puppet with chrome that hides her stage.
+- Move Grok into Chart (Grok stays on Chat replies).
+- Put diary on Life (diary stays Chart).
+- Require music login.
+- Add Expo-only implementation.
+
+UNCHANGED
+Voice card + {"line","emotion","pose"}. Kiss unmapped. Fail → local brain.
+Pose tint, Chart v1, Life v1 memory slots remain.
+No xAI key in git.

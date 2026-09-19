@@ -11,8 +11,11 @@ import {
   VolumeX,
   X,
 } from "lucide-react";
+import { AppTabs } from "@/components/app-tabs";
 import { InstallHint } from "@/components/install-hint";
+import { ChartPanel } from "@/components/chart-panel";
 import { ChartSetupCard } from "@/components/chart-setup-card";
+import { LifePanel } from "@/components/life-panel";
 import { NowPlayingBar } from "@/components/now-playing-bar";
 import { Puppet } from "@/components/puppet";
 import { Button } from "@/components/ui/button";
@@ -47,6 +50,7 @@ import {
 } from "@/lib/chart";
 import { useChartStore } from "@/lib/chart-store";
 import { parseTrackTitle, resolveLifeTurn, type LifeSlots } from "@/lib/life";
+import { chatOpenForTab, DEFAULT_SHELL_TAB, type ShellTab } from "@/lib/shell";
 import { newId, type ChatMessage } from "@/lib/helix";
 import { streamChat } from "@/lib/stream-chat";
 import {
@@ -131,6 +135,7 @@ function RaiReady() {
   const streakDays = useAffectionStore((s) => s.streakDays);
   const tier = useMemo(() => scoreToTier(affectionScore), [affectionScore]);
 
+  const [tab, setTab] = useState<ShellTab>(DEFAULT_SHELL_TAB);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [memoryOpen, setMemoryOpen] = useState(false);
@@ -160,6 +165,7 @@ function RaiReady() {
   const listenAfterSpeakRef = useRef(false);
   const bargeRecRef = useRef<Rec | null>(null);
   const poseRef = useRef<PoseId>("idle");
+  const tabRef = useRef<ShellTab>(DEFAULT_SHELL_TAB);
   /** When the last act pose/emotion landed — drives the hold timer. */
   const actLandedAt = useRef(0);
   /** Life slots before this turn's ingest — used to detect track changes. */
@@ -198,6 +204,10 @@ function RaiReady() {
   useEffect(() => {
     poseRef.current = pose;
   }, [pose]);
+
+  useEffect(() => {
+    tabRef.current = tab;
+  }, [tab]);
 
   useEffect(() => {
     useAffectionStore.getState().touchDecay();
@@ -439,7 +449,7 @@ function RaiReady() {
     const today = localDateKey();
     const chartTurn = resolveChartTurn({
       userText: lastUser,
-      chatOpen: true,
+      chatOpen: chatOpenForTab(tabRef.current),
       userSun: mem.slots.user_sun,
       lastTopic: mem.slots.last_topic,
       mood: mem.slots.mood,
@@ -881,7 +891,13 @@ function RaiReady() {
           </Button>
         </header>
 
-        <div className="flex min-h-0 flex-1 flex-col justify-end px-4 pb-1">
+        {tab === "chat" ? (
+        <div
+          id="star-pane-chat"
+          role="tabpanel"
+          aria-labelledby="star-tab-chat"
+          className="flex min-h-0 flex-1 flex-col justify-end px-4 pb-1"
+        >
           {caption || lastAssistant ? (
             <p
               className={cn(
@@ -897,14 +913,33 @@ function RaiReady() {
                 </span>
               ) : null}
             </p>
-          ) : empty ? (
+          ) : empty && !showSetup ? (
             <p className="mx-auto mb-2 max-w-sm text-center text-sm text-muted">
               Say hey — or tap the phone to call her.
             </p>
           ) : null}
         </div>
+        ) : tab === "chart" ? (
+          <div className="pointer-events-auto flex min-h-0 flex-1 flex-col justify-end pt-1">
+            <ChartPanel
+              userSun={slots.user_sun}
+              birthDate={slots.user_birth_date}
+              birthTime={slots.user_birth_time}
+              birthPlace={slots.user_birth_place}
+            />
+          </div>
+        ) : (
+          <div className="pointer-events-auto flex min-h-0 flex-1 flex-col justify-end pt-1">
+            <LifePanel
+              life={slots.life}
+              onSetTitle={(title) => void send(`I'm listening to ${title}`)}
+              onStop={() => void send("stop listening")}
+            />
+          </div>
+        )}
 
-        <div className="pointer-events-auto bg-gradient-to-t from-bg via-bg/90 to-transparent px-3 pt-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-4 sm:pt-5 sm:pb-[max(1rem,env(safe-area-inset-bottom))]">
+        {tab === "chat" ? (
+        <div className="pointer-events-auto bg-gradient-to-t from-bg via-bg/90 to-transparent px-3 pt-4 pb-2 sm:px-4 sm:pt-5">
           {callActive ? (
             <div className="mx-auto mb-3 flex max-w-lg items-center justify-between gap-2 rounded-full bg-elevated px-3 py-2 shadow-[var(--shadow-border)]">
               <p className="text-xs tracking-wide text-muted">
@@ -932,7 +967,7 @@ function RaiReady() {
               }}
             />
           ) : null}
-          {!callActive ? (
+          {!callActive && !showSetup && slots.life?.on ? (
             <NowPlayingBar
               sessionOn={Boolean(slots.life?.on)}
               nowPlaying={slots.life?.now_playing}
@@ -941,7 +976,7 @@ function RaiReady() {
               onStop={() => void send("stop listening")}
             />
           ) : null}
-          {empty && !callActive ? (
+          {empty && !callActive && !showSetup ? (
             <div className="mx-auto mb-3 flex max-w-lg flex-wrap justify-center gap-1.5">
               {STARTERS.map((s) => (
                 <button
@@ -1020,6 +1055,9 @@ function RaiReady() {
             </Button>
           </form>
         </div>
+        ) : null}
+
+        <AppTabs tab={tab} onChange={setTab} sessionOn={Boolean(slots.life?.on)} />
       </div>
 
       <Sheet open={memoryOpen} onOpenChange={setMemoryOpen}>
@@ -1212,8 +1250,9 @@ function RaiReady() {
               With a key, Star Rai calls xAI (<span className="text-fg">grok-4-latest</span>).
               CORS or key issues fall back to the local brain — no breaking character.
               Phone icon starts Call mode (continuous listen → reply → speak).
-              Chart v1 uses this browser&apos;s timezone for once-per-day (fallback America/Chicago).
-              Life v1 is music only — paste a title, no Spotify/Apple login. Never blocks Chat.
+              Tabs are Chat · Chart · Life — launch on Chat. Chart edits natal slots only (no
+              auto-reading). Life v1 is music only — paste a title, no Spotify/Apple login.
+              Session can stay on in the background; comments still land in Chat.
             </div>
           </div>
         </SheetContent>

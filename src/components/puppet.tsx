@@ -339,6 +339,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
 
     const merged = new Map(prevIds.current);
     const incoming: Array<[string, DisplayLayer]> = [];
+    const firstPaint = prevIds.current.size === 0;
 
     for (const [id, layer] of next) {
       const existingTimer = fadeTimers.current.get(id);
@@ -348,7 +349,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       }
       const prev = merged.get(id);
       if (!prev) {
-        if (isInstantLayer(layer)) {
+        if (isInstantLayer(layer) || firstPaint) {
+          // First paint snaps on — fading from empty left the stage blank.
           merged.set(id, layer);
         } else {
           // Incoming on top at 0 so the outgoing PNG stays visible until the fade starts.
@@ -424,7 +426,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       */}
       <div
         data-rai-rig
-        className="absolute inset-x-0 top-[max(3.25rem,env(safe-area-inset-top))] bottom-[clamp(7.5rem,28vh,11rem)] origin-center will-change-transform sm:inset-x-[8%] md:inset-x-[14%] lg:inset-x-[18%]"
+        className="absolute inset-x-0 top-[max(3.25rem,env(safe-area-inset-top))] bottom-[clamp(9rem,30vh,12.5rem)] origin-center will-change-transform sm:inset-x-[8%] md:inset-x-[14%] lg:inset-x-[18%]"
         style={{ transformOrigin: "50% 38%" }}
       >
         {display.map((layer) => (
