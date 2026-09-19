@@ -64,7 +64,13 @@ export function isDedicatedPose(pose: PoseId): boolean {
 
 /** Emotions that pin a dedicated PNG even when pose is still idle. */
 export function isExpressiveEmotion(emotion: EmotionId): boolean {
-  return emotion === "shy" || emotion === "smug" || emotion === "tired";
+  return (
+    emotion === "shy" ||
+    emotion === "smug" ||
+    emotion === "tired" ||
+    emotion === "soft" ||
+    emotion === "hype"
+  );
 }
 
 /**
@@ -359,6 +365,12 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
   if (emotion === "tired") {
     return [body(SPRITES.poses.tired)];
   }
+  if (emotion === "soft") {
+    return [body(SPRITES.poses.content)];
+  }
+  if (emotion === "hype") {
+    return [body(SPRITES.poses.peace)];
+  }
 
   return [body(SPRITES.poses.idle)];
 }
@@ -483,18 +495,107 @@ export function clampEmotion(value: unknown): EmotionId {
 }
 
 /**
- * Default emotion → pose mapping (offline brain guidance).
- * Idle stays the official idle sheet; dedicated poses override when the act picks them.
+ * Emotion → pose when the act omitted / unknown / kiss (pose tint).
+ * Idle is rest-only — bratty spoken lines use talk, not frown idle.
  */
 export const EMOTION_TO_POSE: Record<EmotionId, PoseId> = {
-  bratty: "idle",
+  bratty: "talk",
   smug: "smug",
   tired: "tired",
   shy: "shy",
-  soft: "hold",
-  hype: "laugh",
-  glance: "wink",
+  soft: "content",
+  hype: "peace",
+  glance: "think",
 };
+
+/** now_playing just set (omitted / unknown / kiss). */
+export const NOW_PLAYING_TINT_POSES = ["talk", "content", "smug"] as const satisfies readonly PoseId[];
+/** Chart beat (omitted / unknown / kiss). Idle is rest-only — not in this set. */
+export const CHART_BEAT_TINT_POSES = [
+  "content",
+  "think",
+  "smug",
+  "tired",
+  "talk",
+] as const satisfies readonly PoseId[];
+export const HYPE_TINT_POSES = ["peace", "wave"] as const satisfies readonly PoseId[];
+
+export type NowPlayingTintPose = (typeof NOW_PLAYING_TINT_POSES)[number];
+export type ChartBeatTintPose = (typeof CHART_BEAT_TINT_POSES)[number];
+
+function hashSeed(value: string): number {
+  let h = 0;
+  for (let i = 0; i < value.length; i++) h = (h * 31 + value.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+function pickTint<T>(list: readonly T[], seed: string): T {
+  return list[hashSeed(seed) % list.length]!;
+}
+
+/** True when the act did not land a dedicated live sheet (omit / kiss / idle). */
+export function needsPoseTint(pose: PoseId | null | undefined): boolean {
+  return pose == null || pose === "idle";
+}
+
+export function inferEmotionPose(emotion: EmotionId, seed = ""): PoseId {
+  if (emotion === "hype") return pickTint(HYPE_TINT_POSES, seed || "hype");
+  return EMOTION_TO_POSE[emotion];
+}
+
+export type ResolveSpokenPoseOpts = {
+  /** Local command path — wins even over a model key. `false` = kiss (unmapped). */
+  namedPose?: PoseId | false | null;
+  /** Live key from the model / local act. idle / null / kiss → infer. */
+  modelPose?: PoseId | null;
+  emotion: EmotionId;
+  spoken?: boolean;
+  nowPlayingJustSet?: boolean;
+  chartBeat?: boolean;
+  chartTintPose?: PoseId;
+  lifeTintPose?: PoseId;
+  seed?: string;
+  /** Dedicated current body is kept until tint inference applies. */
+  currentPose?: PoseId | null;
+};
+
+/**
+ * Pose for a spoken bubble.
+ *
+ * 1. User-named pose command wins (sheet already swapped).
+ * 2. Live model key (not idle / kiss) is used as-is.
+ * 3. Omitted / unknown / kiss / idle → context tint, else keep a dedicated
+ *    current body, else infer from emotion. Never leave frown idle under
+ *    a spoken line. Rest may still settle to idle after the hold timer.
+ */
+export function resolveSpokenPose(opts: ResolveSpokenPoseOpts): PoseId {
+  if (opts.namedPose) return opts.namedPose;
+
+  if (opts.modelPose && isDedicatedPose(opts.modelPose)) return opts.modelPose;
+
+  const seed = opts.seed?.trim() || opts.emotion;
+
+  if (opts.nowPlayingJustSet) {
+    if (opts.lifeTintPose && (NOW_PLAYING_TINT_POSES as readonly string[]).includes(opts.lifeTintPose)) {
+      return opts.lifeTintPose;
+    }
+    return pickTint(NOW_PLAYING_TINT_POSES, seed);
+  }
+
+  if (opts.chartBeat) {
+    if (opts.chartTintPose && (CHART_BEAT_TINT_POSES as readonly string[]).includes(opts.chartTintPose)) {
+      return opts.chartTintPose;
+    }
+    return pickTint(CHART_BEAT_TINT_POSES, seed);
+  }
+
+  if (opts.currentPose && isDedicatedPose(opts.currentPose)) {
+    return opts.currentPose;
+  }
+
+  if (opts.spoken === false) return "idle";
+  return inferEmotionPose(opts.emotion, seed);
+}
 
 export function parseMemories(raw: string): { text: string; memories: string[] } {
   const memories: string[] = [];

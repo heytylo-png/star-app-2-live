@@ -282,6 +282,25 @@ describe("Grok request composition — session on vs off", () => {
     assert.equal(act.pose, "talk");
   });
 
+  it("does not let Super Shy steal the track-change sheet", () => {
+    const act = composeAct(
+      [{ role: "user", content: "I'm listening to Super Shy." }],
+      "",
+      "idle",
+      undefined,
+      {
+        kind: "track_change",
+        localOnly: false,
+        nowPlaying: "Super Shy",
+        tintPose: "content",
+      },
+    );
+    assert.equal(act.pose, "content");
+    assert.notEqual(act.pose, "shy");
+    assert.notEqual(act.pose, "idle");
+    assert.match(act.line, /Super Shy/);
+  });
+
   it("Chart diary still wins over Life on the same user line", () => {
     const act = composeAct(
       [{ role: "user", content: "write your diary" }],

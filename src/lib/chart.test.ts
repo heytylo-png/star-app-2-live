@@ -138,6 +138,8 @@ describe("daily Chart fire", () => {
     assert.match(first.factsBlock!, /^user_sun: Aries$/m);
     assert.match(first.factsBlock!, /Tint one line only/);
     assert.ok(CHART_TINT_POSES.includes(first.tintPose!));
+    assert.equal((CHART_TINT_POSES as readonly string[]).includes("idle"), false);
+    assert.notEqual(first.tintPose, "idle");
 
     const second = resolveChartTurn({
       userText: "Still here.",
@@ -333,6 +335,17 @@ describe("Grok request composition", () => {
     assert.equal(isChartBannedLine(act.line), false);
 
     const kiss = composeAct([{ role: "user", content: "kiss" }], "", "wave");
-    assert.equal(kiss.pose, undefined);
+    assert.equal(kiss.pose, "wave");
+  });
+
+  it("tints the birthday ask off frown idle on that spoken bubble", () => {
+    const act = composeAct([{ role: "user", content: "when is your birthday" }], "", "idle", {
+      kind: "ask_birthday",
+      localOnly: true,
+      dateKey: "2026-09-19",
+    });
+    assert.equal(act.line, "Sept 29.");
+    assert.equal(act.pose, "talk");
+    assert.notEqual(act.pose, "idle");
   });
 });

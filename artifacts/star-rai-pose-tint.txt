@@ -1,0 +1,35 @@
+STAR RAI — POSE TINT (Helix / star-app-2-live)
+Live GitHub Pages only. Not Expo-only.
+No new sheets. Kiss stays unmapped.
+
+IDLE RULE
+Idle sheet (462 frown / current idle.png) is REST only.
+Do not leave angry idle under a playful or music line.
+After a spoken reply, do not snap to idle on that same bubble.
+
+PRIORITY
+1. User-named pose command still wins (sheet swaps first).
+2. If the model returns a live pose key, use it.
+3. If pose is omitted / unknown / kiss — infer:
+
+EMOTION → POSE (when omitted / unknown / kiss)
+bratty talking → talk
+smug → smug
+tired → tired
+shy → shy
+soft → content
+hype → peace or wave
+
+CONTEXT OVERRIDES (when omitted / unknown / kiss)
+now_playing just set → talk or content or smug
+Chart beat → content | think | smug | tired | talk
+
+TIMING
+After a spoken reply, show talk (or the inferred sheet) on THAT bubble.
+May settle to idle on the next rest, not on the line she just said.
+
+OUTPUT
+Still {"line","emotion","pose"}.
+Unknown / omitted / kiss → keep body until tint inference applies (never invent kiss sheet).
+Fail → local brain for that pose key (tint still applies to the spoken bubble).
+Voice card unchanged. No xAI key in git.

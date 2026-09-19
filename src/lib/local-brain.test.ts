@@ -68,19 +68,20 @@ describe("composeAct local-brain path", () => {
     assert.equal(localBrainKeyFor({ userText: "wink", currentPose: "idle" }).named, "wink");
   });
 
-  it("kiss no-ops pose and speaks from the current body key", () => {
+  it("kiss stays unmapped and keeps a dedicated current body", () => {
     resetLocalBrainLastLine();
     const act = composeAct([{ role: "user", content: "kiss" }], undefined, "wave");
-    assert.equal(act.pose, undefined);
+    assert.equal(act.pose, "wave");
     assert.match(act.line, /Waving|Hand's up/);
     assert.equal(localBrainKeyFor({ userText: "kiss", currentPose: "wave" }).named, false);
     assert.equal(localBrainKeyFor({ userText: "kiss", currentPose: "wave" }).keepCurrent, true);
   });
 
-  it("omits pose on generic chat so the current sheet stays", () => {
+  it("tints generic chat off frown idle onto the spoken bubble", () => {
     resetLocalBrainLastLine();
     const act = composeAct([{ role: "user", content: "Hey. Just got here." }], undefined, "idle");
-    assert.equal(act.pose, undefined);
+    assert.ok(act.pose === "talk" || act.pose === "smug");
+    assert.notEqual(act.pose, "idle");
     assert.match(act.line, /Facing you|Don't flinch/);
   });
 
@@ -96,6 +97,12 @@ describe("composeAct local-brain path", () => {
     const act = composeAct([{ role: "user", content: "point at me" }], undefined, "idle");
     assert.equal(act.pose, "point");
     assert.match(act.line, /Pointing at you|Finger out/);
+  });
+
+  it("user-named pose still wins on the local path", () => {
+    resetLocalBrainLastLine();
+    const act = composeAct([{ role: "user", content: "do a pout" }], undefined, "idle");
+    assert.equal(act.pose, "pout");
   });
 });
 
