@@ -140,6 +140,7 @@ function RaiReady() {
   const talkingRef = useRef(false);
   const listenAfterSpeakRef = useRef(false);
   const bargeRecRef = useRef<Rec | null>(null);
+  const poseRef = useRef<PoseId>("idle");
   /** When the last act pose/emotion landed — drives the hold timer. */
   const actLandedAt = useRef(0);
 
@@ -169,6 +170,10 @@ function RaiReady() {
   useEffect(() => {
     talkingRef.current = talking;
   }, [talking]);
+
+  useEffect(() => {
+    poseRef.current = pose;
+  }, [pose]);
 
   useEffect(() => {
     useAffectionStore.getState().touchDecay();
@@ -416,21 +421,26 @@ function RaiReady() {
     let raw = "";
     let speakFinishedClean = false;
     try {
-      await streamChat(
+      raw = await streamChat(
         {
           model: current.model,
           personality: "default",
           reasoning: "low",
           systemExtra,
+          currentPose: poseRef.current,
           messages: current.messages
             .filter((m) => m.role === "user" || m.role === "assistant")
             .map((m) => ({ role: m.role, content: m.content })),
         },
-        (delta) => {
+        (delta, meta) => {
+          if (meta?.reset) raw = "";
           raw += delta;
           const hints = streamActHints(raw);
           if (hints.emotion) setEmotion(hints.emotion);
-          if (hints.pose) setPose(hints.pose);
+          if (hints.pose) {
+            setPose(hints.pose);
+            poseRef.current = hints.pose;
+          }
           if (hints.emotion || hints.pose) actLandedAt.current = Date.now();
           const live = streamLine(raw);
           if (live) {
@@ -446,7 +456,10 @@ function RaiReady() {
       store.patchMessage(threadId, assistant.id, { content: line });
       setCaption(line);
       setEmotion(act.emotion);
-      if (act.pose) setPose(act.pose);
+      if (act.pose) {
+        setPose(act.pose);
+        poseRef.current = act.pose;
+      }
       actLandedAt.current = Date.now();
       if (act.memories.length) useMemoryStore.getState().addMany(act.memories);
 
@@ -526,6 +539,7 @@ function RaiReady() {
     const named = namedPoseFromText(content);
     if (named) {
       setPose(named);
+      poseRef.current = named;
       actLandedAt.current = Date.now();
     }
     store.appendMessage(active.id, {

@@ -90,7 +90,7 @@ Live chat keys use the **morning official pack** under `public/rai/`. Do not poi
 ## Add a new pose in 3 steps
 
 1. Drop the file into `public/rai/` (or `public/star-rai/` only for kept Helix extras).
-2. Wire it in `src/lib/rai.ts`: `POSES`, `LIVE_POSE_FILES` / `SPRITES.poses`, `POSE_ALIASES`. Mention it in `RAI_SYSTEM` only if Grok may pick it.
+2. Wire it in `src/lib/rai.ts`: `POSES`, `LIVE_POSE_FILES` / `SPRITES.poses`, `POSE_ALIASES`. Mention it in `artifacts/star-rai-voice-card.txt` only if Grok may pick it, then run `npm run sync:artifacts`. Add pose-keyed lines to `artifacts/star-rai-local-brain.txt` for the offline fallback.
 3. Redeploy (`npm run build`, push `main`, deploy `dist` to `gh-pages`). Hard-refresh the live app.
 
 ## Act pose hold (unchanged from PR #1)

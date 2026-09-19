@@ -9,6 +9,9 @@ const XAI_CHAT_URL = "https://api.x.ai/v1/chat/completions";
 /** Prefer newest alias, then stable flagship, then older chat models. */
 const MODEL_CANDIDATES = ["grok-4-latest", "grok-4.6", "grok-3", "grok-2"] as const;
 
+/** Client fetch timeout — CORS/hangs fall back to the local brain. */
+export const GROK_TIMEOUT_MS = 12_000;
+
 export type GrokMessage = { role: "system" | "user" | "assistant"; content: string };
 
 export function getStoredXaiKey(): string | null {
@@ -179,9 +182,33 @@ async function postChat(
   });
 }
 
+function throwIfTimedOut(err: unknown, user?: AbortSignal, timeout?: AbortSignal): void {
+  if (!isAbort(err)) return;
+  if (user?.aborted) throw err;
+  if (timeout?.aborted) throw new Error("XAI_TIMEOUT");
+}
+
+function combineSignals(user?: AbortSignal): { signal: AbortSignal; timeout: AbortSignal } {
+  const timeout = AbortSignal.timeout(GROK_TIMEOUT_MS);
+  if (!user) return { signal: timeout, timeout };
+  return { signal: AbortSignal.any([user, timeout]), timeout };
+}
+
+function classifyGrokCatch(err: unknown, user?: AbortSignal, timeout?: AbortSignal): never | void {
+  throwIfTimedOut(err, user, timeout);
+  if (isAbort(err)) throw err;
+  if (isCorsOrNetwork(err)) {
+    const e = new Error("XAI_CORS");
+    (e as Error & { cause?: unknown }).cause = err;
+    throw e;
+  }
+  if (err instanceof Error && err.message.startsWith("XAI_AUTH")) throw err;
+  if (err instanceof Error && err.message === "XAI_TIMEOUT") throw err;
+}
+
 /**
  * Call xAI chat completions. Streams SSE when possible; otherwise one-shot + chunked onDelta.
- * Throws on abort. Throws a tagged Error on CORS/network so callers can fall back.
+ * Throws on user abort. Throws tagged Error on CORS / timeout / network so callers can fall back.
  */
 export async function streamGrok(
   input: {
@@ -196,13 +223,15 @@ export async function streamGrok(
 
   const messages = buildMessages(input.messages, input.systemExtra);
   let lastErr: unknown = null;
+  const { signal: combined, timeout } = combineSignals(signal);
 
   for (const model of MODEL_CANDIDATES) {
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+    if (timeout.aborted) throw new Error("XAI_TIMEOUT");
 
     // Prefer streaming
     try {
-      const res = await postChat(model, messages, apiKey, true, signal);
+      const res = await postChat(model, messages, apiKey, true, combined);
       if (res.status === 404 || res.status === 400) {
         // Model not found / bad request — try next candidate
         lastErr = new Error(`model ${model} rejected (${res.status})`);
@@ -219,25 +248,20 @@ export async function streamGrok(
       }
 
       if (res.body) {
-        const got = await readSseStream(res.body, onDelta, signal);
+        const got = await readSseStream(res.body, onDelta, combined);
         if (got) return;
       }
 
       // Empty stream — fall through to one-shot with same model
     } catch (err) {
-      if (isAbort(err)) throw err;
-      if (isCorsOrNetwork(err)) {
-        const e = new Error("XAI_CORS");
-        (e as Error & { cause?: unknown }).cause = err;
-        throw e;
-      }
+      classifyGrokCatch(err, signal, timeout);
       lastErr = err;
       // try next model / one-shot
     }
 
     // One-shot fallback for this model
     try {
-      const res = await postChat(model, messages, apiKey, false, signal);
+      const res = await postChat(model, messages, apiKey, false, combined);
       if (res.status === 404 || res.status === 400) {
         lastErr = new Error(`model ${model} rejected (${res.status})`);
         continue;
@@ -257,16 +281,10 @@ export async function streamGrok(
         lastErr = new Error("empty completion");
         continue;
       }
-      await feedChunks(content, onDelta, signal);
+      await feedChunks(content, onDelta, combined);
       return;
     } catch (err) {
-      if (isAbort(err)) throw err;
-      if (isCorsOrNetwork(err)) {
-        const e = new Error("XAI_CORS");
-        (e as Error & { cause?: unknown }).cause = err;
-        throw e;
-      }
-      if (err instanceof Error && err.message.startsWith("XAI_AUTH")) throw err;
+      classifyGrokCatch(err, signal, timeout);
       lastErr = err;
     }
   }

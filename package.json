@@ -8,7 +8,11 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node --experimental-strip-types --test src/lib/rai-pose.test.ts"
+    "sync:artifacts": "node scripts/sync-star-rai-artifacts.js",
+    "predev": "node scripts/sync-star-rai-artifacts.js",
+    "prebuild": "node scripts/sync-star-rai-artifacts.js",
+    "pretest": "node scripts/sync-star-rai-artifacts.js",
+    "test": "node --experimental-strip-types --test src/lib/rai-pose.test.ts src/lib/local-brain.test.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",

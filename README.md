@@ -25,7 +25,7 @@ Soft tier chip in the header: **Stranger → Familiar → Close → Devoted** (s
 
 - Nudges up on greetings, compliments, chats, shared memories; tiny day-streak bonus.
 - Decays slowly after unused days (lightweight).
-- Brain (`composeAct` + Grok `RAI_SYSTEM` extra) shifts tone slightly with tier and can mention she noticed a multi-day gap — still tsundere, never gacha-loud.
+- Brain (`RAI_SYSTEM` voice card + optional Grok) can mention a multi-day gap via the affection extra block. Offline fallback uses pose-keyed lines from `artifacts/star-rai-local-brain.txt` — still in character, never gacha-loud.
 - Optional streak shown as e.g. `Close · 3d`.
 
 ## Install on Samsung (PWA)
@@ -46,9 +46,9 @@ Works offline for the app shell + static assets (puppet art already on device af
 4. Header status shows **Grok** when a key is saved, **Local** otherwise.
 5. After save, the UI shows only the last 4 characters (`••••abcd`). Clear removes the key.
 
-When a key is present, the client calls `https://api.x.ai/v1/chat/completions` with model `grok-4-latest` (fallbacks: `grok-4.6`, `grok-3`, `grok-2`). System prompt = `RAI_SYSTEM` + memory facts + affection block. Replies must be JSON acts (`parseAct`). Streaming uses SSE when available; otherwise one-shot text is chunked into `onDelta` for mouth/caption UX.
+When a key is present, the client calls `https://api.x.ai/v1/chat/completions` with model `grok-4-latest` (fallbacks: `grok-4.6`, `grok-3`, `grok-2`). System prompt = baked voice card (`artifacts/star-rai-voice-card.txt` → `RAI_SYSTEM`) + memory facts + affection block. Replies must be JSON acts (`parseAct`). Streaming uses SSE when available; otherwise one-shot text is chunked into `onDelta` for mouth/caption UX.
 
-If there is no key, CORS failure, or API error → existing offline brain (`composeAct`). She never breaks character about APIs.
+If there is no key, CORS failure, timeout (~12s), bad JSON, or API error → pose-keyed local brain (`artifacts/star-rai-local-brain.txt`). She never breaks character about APIs. There is **no** Settings field for the voice card — only the xAI key (localStorage).
 
 ### CORS / optional proxy
 
@@ -65,7 +65,7 @@ The Worker forwards `POST /v1/chat/completions`, reads the key from `X-User-Key`
 | Feature | Behavior |
 | --- | --- |
 | Puppet / poses | Fully client-side (Helix talk flap) |
-| Chat brain | Local `composeAct` (tsundere idol lines + memory + affection); optional Grok when key present |
+| Chat brain | Local pose-keyed `artifacts/star-rai-local-brain.txt`; optional Grok (`grok-4-latest`) when key present |
 | Voice | Browser `SpeechSynthesis` (prefers female English when available) |
 | Hold-to-talk | Browser `SpeechRecognition` when present; otherwise type |
 | Call mode | Continuous listen→reply→speak + barge-in when SpeechRecognition present |
@@ -98,7 +98,7 @@ See **[POSING.md](./POSING.md)** for the drop-in guide:
 - Morning official pack under `public/rai/` (`*_official.png`, `idle.png`, `peace.png`, `middle_finger.png`, `heart_official.png`)
 - Live key → file table (`wave` → `wave_official.png`, `hold` → `hold_official.png`, `scold` → `scold_official.png`; `kiss` unmapped)
 - Kept as-today: `turn`, `profile`, `three_quarter_left`, `three_quarter_right`; Helix extra `point` → `point-front.png`
-- Voice card (`RAI_SYSTEM`) is the Grok/system prompt; offline `composeAct` is fallback only
+- Voice card (`artifacts/star-rai-voice-card.txt`) is baked into `RAI_SYSTEM` at sync/build (`scripts/sync-star-rai-artifacts.js`); offline fallback is `artifacts/star-rai-local-brain.txt` (pose-keyed lines). Do not edit `src/lib/generated/star-rai-artifacts.ts` by hand.
 
 ## Develop
 
