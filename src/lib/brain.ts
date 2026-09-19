@@ -1,7 +1,7 @@
 import { actForChartTurn, type ChartTurn } from "./chart.ts";
-import { actForLifeTurn, type LifeTurn } from "./life.ts";
+import { actForLifeTurn, parseTrackTitle, type LifeTurn } from "./life.ts";
 import { localBrainKeyFor, pickLocalBrainLine } from "./local-brain.ts";
-import { type EmotionId, type PoseId } from "./rai.ts";
+import { namedPoseFromText, resolveSpokenPose, type EmotionId, type PoseId } from "./rai.ts";
 
 export type BrainMessage = { role: "user" | "assistant"; content: string };
 
@@ -71,6 +71,30 @@ export function extractMemCandidate(text: string): string[] | undefined {
   return uniq.length ? uniq.slice(0, 3) : undefined;
 }
 
+function tintSpokenAct(
+  act: BrainAct,
+  ctx: {
+    namedPose?: PoseId | false | null;
+    currentPose?: PoseId | null;
+    chartTurn?: ChartTurn;
+    lifeTurn?: LifeTurn;
+  },
+): BrainAct {
+  const pose = resolveSpokenPose({
+    namedPose: ctx.namedPose,
+    modelPose: act.pose ?? null,
+    emotion: act.emotion,
+    spoken: true,
+    nowPlayingJustSet: ctx.lifeTurn?.kind === "track_change",
+    chartBeat: ctx.chartTurn?.kind === "daily",
+    chartTintPose: ctx.chartTurn?.tintPose,
+    lifeTintPose: ctx.lifeTurn?.tintPose,
+    seed: act.line,
+    currentPose: ctx.currentPose,
+  });
+  return { ...act, pose };
+}
+
 /**
  * Offline Star Rai brain for GitHub Pages (no server API).
  * Lines come from artifacts/star-rai-local-brain.txt, keyed by the current
@@ -85,6 +109,9 @@ export function composeAct(
   lifeTurn?: LifeTurn,
 ): BrainAct {
   const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
+  const lifeTitle = parseTrackTitle(lastUser);
+  const named = lifeTitle ? null : namedPoseFromText(lastUser);
+  const tintCtx = { namedPose: named, currentPose, chartTurn, lifeTurn };
   const chartAct = chartTurn && chartTurn.kind !== "none" ? actForChartTurn(chartTurn) : null;
   const lifeAct = lifeTurn && lifeTurn.kind !== "none" ? actForLifeTurn(lifeTurn) : null;
 
@@ -98,24 +125,24 @@ export function composeAct(
     const act: BrainAct = { emotion: chartAct.emotion, line: chartAct.line };
     if (chartAct.pose) act.pose = chartAct.pose;
     if (mem?.length) act.mem = mem;
-    return act;
+    return tintSpokenAct(act, tintCtx);
   }
   if (preferLife && lifeAct) {
     const mem = extractMemCandidate(lastUser);
     const act: BrainAct = { emotion: lifeAct.emotion, line: lifeAct.line };
     if (lifeAct.pose) act.pose = lifeAct.pose;
     if (mem?.length) act.mem = mem;
-    return act;
+    return tintSpokenAct(act, tintCtx);
   }
   if (chartAct) {
     const mem = extractMemCandidate(lastUser);
     const act: BrainAct = { emotion: chartAct.emotion, line: chartAct.line };
     if (chartAct.pose) act.pose = chartAct.pose;
     if (mem?.length) act.mem = mem;
-    return act;
+    return tintSpokenAct(act, tintCtx);
   }
 
-  const { poseKey, named } = localBrainKeyFor({
+  const { poseKey, named: keyed } = localBrainKeyFor({
     userText: lastUser,
     currentPose,
   });
@@ -123,10 +150,10 @@ export function composeAct(
   const mem = extractMemCandidate(lastUser);
 
   const act: BrainAct = { emotion: row.emotion, line: row.line };
-  // Named pose commands already swapped the sheet; echo the key. Kiss / omitted → keep body.
-  if (named) act.pose = named;
+  // Named pose commands already swapped the sheet; echo the key. Kiss / omitted → tint.
+  if (keyed) act.pose = keyed;
   if (mem?.length) act.mem = mem;
-  return act;
+  return tintSpokenAct(act, { ...tintCtx, namedPose: keyed });
 }
 
 export function actToJson(act: BrainAct): string {

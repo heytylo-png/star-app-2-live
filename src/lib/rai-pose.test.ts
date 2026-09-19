@@ -4,21 +4,28 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
+  CHART_BEAT_TINT_POSES,
   DEFAULT_EMOTION,
   EMOTION_HOLD_MS,
+  EMOTION_TO_POSE,
   LIVE_POSE_FILES,
+  NOW_PLAYING_TINT_POSES,
   POSE_HOLD_AFTER_TALK_MS,
   POSE_HOLD_MIN_MS,
   RAI_SYSTEM,
   SPRITES,
   clampEmotion,
+  inferEmotionPose,
   isDedicatedPose,
   layersFor,
   namedPoseFromText,
+  needsPoseTint,
   normalizePose,
   parseAct,
   poseResetDelayMs,
+  resolveSpokenPose,
 } from "./rai.ts";
+import { POSE_TINT_SOURCE } from "./generated/star-rai-artifacts.ts";
 
 const publicRoot = join(dirname(fileURLToPath(import.meta.url)), "../../public");
 
@@ -51,7 +58,7 @@ describe("poseResetDelayMs", () => {
     assert.ok((delay ?? 0) >= 2500);
   });
 
-  it("holds emotion-mapped poses (shy/smug/tired) even when pose is idle", () => {
+  it("holds emotion-mapped poses (shy/smug/tired/soft/hype) even when pose is idle", () => {
     const delay = poseResetDelayMs({
       pose: "idle",
       emotion: "shy",
@@ -60,6 +67,16 @@ describe("poseResetDelayMs", () => {
       now: 5_000,
     });
     assert.equal(delay, POSE_HOLD_MIN_MS);
+    assert.equal(
+      poseResetDelayMs({
+        pose: "idle",
+        emotion: "soft",
+        talking: false,
+        actLandedAt: 5_000,
+        now: 5_000,
+      }),
+      POSE_HOLD_MIN_MS,
+    );
   });
 
   it("uses a shorter hold for idle presence", () => {
@@ -232,8 +249,13 @@ describe("layersFor talking vs pose hold", () => {
   });
 
   it("resolves idle to official idle.png", () => {
-    const layers = layersFor({ ...base, pose: "idle", talking: false });
+    const layers = layersFor({ ...base, pose: "idle", emotion: "bratty", talking: false });
     assert.match(layers[0]!.src, /rai\/idle\.png/);
+  });
+
+  it("pins soft/hype off frown idle even when pose is still idle", () => {
+    assert.match(layersFor({ ...base, pose: "idle", emotion: "soft", talking: false })[0]!.src, /content_official/);
+    assert.match(layersFor({ ...base, pose: "idle", emotion: "hype", talking: false })[0]!.src, /peace\.png/);
   });
 
   it("does not let idleBeat replace a dedicated pose", () => {
@@ -265,5 +287,120 @@ describe("voice card prompt", () => {
   it("matches artifacts/star-rai-voice-card.txt character-for-character", () => {
     const card = readFileSync(join(publicRoot, "../artifacts/star-rai-voice-card.txt"), "utf8");
     assert.equal(RAI_SYSTEM, card);
+  });
+});
+
+describe("pose tint", () => {
+  it("matches artifacts/star-rai-pose-tint.txt character-for-character", () => {
+    const disk = readFileSync(join(publicRoot, "../artifacts/star-rai-pose-tint.txt"), "utf8");
+    assert.equal(POSE_TINT_SOURCE, disk);
+    assert.match(POSE_TINT_SOURCE, /STAR RAI — POSE TINT/);
+    assert.match(POSE_TINT_SOURCE, /Idle sheet/);
+    assert.match(POSE_TINT_SOURCE, /never invent kiss sheet/);
+  });
+
+  it("maps omitted emotion onto a dedicated sheet — never frown idle", () => {
+    assert.equal(EMOTION_TO_POSE.bratty, "talk");
+    assert.equal(EMOTION_TO_POSE.soft, "content");
+    assert.ok(EMOTION_TO_POSE.hype === "peace" || EMOTION_TO_POSE.hype === "wave");
+    assert.equal(needsPoseTint(null), true);
+    assert.equal(needsPoseTint("idle"), true);
+    assert.equal(needsPoseTint("wink"), false);
+    assert.ok(["peace", "wave"].includes(inferEmotionPose("hype", "seed-a")));
+  });
+
+  it("lets a user-named pose win over model and context", () => {
+    assert.equal(
+      resolveSpokenPose({
+        namedPose: "wink",
+        modelPose: "talk",
+        emotion: "bratty",
+        spoken: true,
+        nowPlayingJustSet: true,
+        chartBeat: true,
+        currentPose: "idle",
+      }),
+      "wink",
+    );
+  });
+
+  it("uses a live model key when pose is not idle", () => {
+    assert.equal(
+      resolveSpokenPose({
+        namedPose: null,
+        modelPose: "scold",
+        emotion: "bratty",
+        spoken: true,
+        currentPose: "idle",
+      }),
+      "scold",
+    );
+  });
+
+  it("infers bratty talking / soft / smug when pose is omitted", () => {
+    assert.equal(
+      resolveSpokenPose({ namedPose: null, modelPose: null, emotion: "bratty", spoken: true, currentPose: "idle" }),
+      "talk",
+    );
+    assert.equal(
+      resolveSpokenPose({ namedPose: null, modelPose: null, emotion: "soft", spoken: true, currentPose: "idle" }),
+      "content",
+    );
+    assert.equal(
+      resolveSpokenPose({ namedPose: false, modelPose: null, emotion: "smug", spoken: true, currentPose: "idle" }),
+      "smug",
+    );
+  });
+
+  it("keeps a dedicated current body for kiss / omit until context tint applies", () => {
+    assert.equal(
+      resolveSpokenPose({
+        namedPose: false,
+        modelPose: null,
+        emotion: "bratty",
+        spoken: true,
+        currentPose: "wave",
+      }),
+      "wave",
+    );
+  });
+
+  it("tints now_playing-just-set and Chart beat off idle", () => {
+    const music = resolveSpokenPose({
+      namedPose: null,
+      modelPose: null,
+      emotion: "bratty",
+      spoken: true,
+      nowPlayingJustSet: true,
+      lifeTintPose: "talk",
+      currentPose: "idle",
+    });
+    assert.ok((NOW_PLAYING_TINT_POSES as readonly string[]).includes(music));
+    assert.notEqual(music, "idle");
+
+    const chart = resolveSpokenPose({
+      namedPose: null,
+      modelPose: "idle",
+      emotion: "tired",
+      spoken: true,
+      chartBeat: true,
+      chartTintPose: "think",
+      currentPose: "idle",
+    });
+    assert.equal(chart, "think");
+    assert.ok((CHART_BEAT_TINT_POSES as readonly string[]).includes(chart));
+    assert.equal((CHART_BEAT_TINT_POSES as readonly string[]).includes("idle"), false);
+  });
+
+  it("does not snap a spoken bratty line back to idle", () => {
+    const pose = resolveSpokenPose({
+      namedPose: null,
+      modelPose: "idle",
+      emotion: "bratty",
+      spoken: true,
+      currentPose: "idle",
+    });
+    assert.equal(pose, "talk");
+    assert.notEqual(pose, "idle");
   });
 });

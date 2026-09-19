@@ -29,7 +29,6 @@ export const CHART_TINT_POSES = [
   "smug",
   "tired",
   "talk",
-  "idle",
 ] as const satisfies readonly PoseId[];
 
 export type ChartTintPose = (typeof CHART_TINT_POSES)[number];

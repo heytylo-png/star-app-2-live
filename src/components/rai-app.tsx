@@ -31,6 +31,7 @@ import {
   namedPoseFromText,
   parseAct,
   poseResetDelayMs,
+  resolveSpokenPose,
   streamActHints,
   streamLine,
   type EmotionId,
@@ -496,13 +497,27 @@ function RaiReady() {
           if (meta?.reset) raw = "";
           raw += delta;
           const hints = streamActHints(raw);
-          if (hints.emotion) setEmotion(hints.emotion);
-          if (hints.pose) {
-            setPose(hints.pose);
-            poseRef.current = hints.pose;
-          }
-          if (hints.emotion || hints.pose) actLandedAt.current = Date.now();
           const live = streamLine(raw);
+          if (hints.emotion || hints.pose) {
+            if (hints.emotion) setEmotion(hints.emotion);
+            const lifeTitle = parseTrackTitle(lastUser);
+            const named = lifeTitle ? null : namedPoseFromText(lastUser);
+            const next = resolveSpokenPose({
+              namedPose: named,
+              modelPose: hints.pose ?? null,
+              emotion: hints.emotion ?? DEFAULT_EMOTION,
+              spoken: true,
+              nowPlayingJustSet: lifeTurn.kind === "track_change",
+              chartBeat: chartTurn.kind === "daily",
+              chartTintPose: chartTurn.tintPose,
+              lifeTintPose: lifeTurn.tintPose,
+              seed: live || lastUser,
+              currentPose: poseRef.current,
+            });
+            setPose(next);
+            poseRef.current = next;
+            actLandedAt.current = Date.now();
+          }
           if (live) {
             setCaption(live);
             store.patchMessage(threadId, assistant.id, { content: live });
@@ -516,16 +531,22 @@ function RaiReady() {
       store.patchMessage(threadId, assistant.id, { content: line });
       setCaption(line);
       setEmotion(act.emotion);
-      if (act.pose) {
-        setPose(act.pose);
-        poseRef.current = act.pose;
-      } else if (lifeTurn.kind !== "none" && lifeTurn.tintPose) {
-        setPose(lifeTurn.tintPose);
-        poseRef.current = lifeTurn.tintPose;
-      } else if (chartTurn.kind === "daily" && chartTurn.tintPose) {
-        setPose(chartTurn.tintPose);
-        poseRef.current = chartTurn.tintPose;
-      }
+      const lifeTitle = parseTrackTitle(lastUser);
+      const named = lifeTitle ? null : namedPoseFromText(lastUser);
+      const next = resolveSpokenPose({
+        namedPose: named,
+        modelPose: act.pose,
+        emotion: act.emotion,
+        spoken: Boolean(line),
+        nowPlayingJustSet: lifeTurn.kind === "track_change",
+        chartBeat: chartTurn.kind === "daily",
+        chartTintPose: chartTurn.tintPose,
+        lifeTintPose: lifeTurn.tintPose,
+        seed: line,
+        currentPose: poseRef.current,
+      });
+      setPose(next);
+      poseRef.current = next;
       actLandedAt.current = Date.now();
       if (act.memories.length) useMemoryStore.getState().addMany(act.memories);
 
