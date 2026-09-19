@@ -9,6 +9,7 @@ type NowPlayingBarProps = {
   moodTag?: string;
   onSetTitle: (title: string) => void;
   onStop: () => void;
+  className?: string;
 };
 
 /**
@@ -21,6 +22,7 @@ export function NowPlayingBar({
   moodTag,
   onSetTitle,
   onStop,
+  className,
 }: NowPlayingBarProps) {
   const [title, setTitle] = useState("");
 
@@ -28,6 +30,7 @@ export function NowPlayingBar({
     <div
       className={cn(
         "mx-auto mb-2 w-full max-w-lg rounded-xl bg-elevated/92 px-3 py-2 shadow-[var(--shadow-border)] backdrop-blur-[2px]",
+        className,
       )}
     >
       {sessionOn && nowPlaying ? (

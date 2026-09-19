@@ -424,7 +424,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       */}
       <div
         data-rai-rig
-        className="absolute inset-x-0 top-[max(3.25rem,env(safe-area-inset-top))] bottom-[clamp(7.5rem,28vh,11rem)] origin-center will-change-transform sm:inset-x-[8%] md:inset-x-[14%] lg:inset-x-[18%]"
+        className="absolute inset-x-0 top-[max(3.25rem,env(safe-area-inset-top))] bottom-[clamp(10.25rem,34vh,14.5rem)] origin-center will-change-transform sm:inset-x-[8%] md:inset-x-[14%] lg:inset-x-[18%]"
         style={{ transformOrigin: "50% 38%" }}
       >
         {display.map((layer) => (
