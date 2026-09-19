@@ -278,7 +278,10 @@ export function extractSlotsFromUserText(
   if (life) patch.life = life;
 
   let lastChoice: string | undefined;
-  if (opts.lastChoice === false) lastChoice = "kiss";
+  // A named track is not a pose command — "Super Shy" contains "shy".
+  if (life?.now_playing) {
+    lastChoice = undefined;
+  } else if (opts.lastChoice === false) lastChoice = "kiss";
   else if (typeof opts.lastChoice === "string" && opts.lastChoice.trim()) {
     lastChoice = opts.lastChoice.trim();
   } else {

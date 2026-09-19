@@ -45,7 +45,7 @@ import {
   resolveChartTurn,
 } from "@/lib/chart";
 import { useChartStore } from "@/lib/chart-store";
-import { resolveLifeTurn, type LifeSlots } from "@/lib/life";
+import { parseTrackTitle, resolveLifeTurn, type LifeSlots } from "@/lib/life";
 import { newId, type ChatMessage } from "@/lib/helix";
 import { streamChat } from "@/lib/stream-chat";
 import {
@@ -602,7 +602,8 @@ function RaiReady() {
     const store = useChatStore.getState();
     let active = store.threads.find((t) => t.id === store.activeId) ?? null;
     if (!active) active = store.createThread({ prompt: content, model: defaultModel });
-    const named = namedPoseFromText(content);
+    const lifeTitle = parseTrackTitle(content);
+    const named = lifeTitle ? null : namedPoseFromText(content);
     if (named) {
       setPose(named);
       poseRef.current = named;
@@ -610,7 +611,7 @@ function RaiReady() {
     }
     lifeBeforeRef.current = useMemoryStore.getState().slots.life;
     useMemoryStore.getState().ingestUserTurn(content, {
-      lastChoice: named === false ? "kiss" : named || undefined,
+      lastChoice: lifeTitle ? undefined : named === false ? "kiss" : named || undefined,
     });
     store.appendMessage(active.id, {
       id: newId(),

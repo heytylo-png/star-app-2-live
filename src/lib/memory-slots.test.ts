@@ -174,6 +174,12 @@ describe("extractSlotsFromUserText", () => {
     assert.equal(off.life?.on, false);
   });
 
+  it("does not treat Super Shy as a shy pose command", () => {
+    const patch = extractSlotsFromUserText("I'm listening to Super Shy.");
+    assert.equal(patch.life?.now_playing, "Super Shy");
+    assert.equal(patch.last_choice, undefined);
+  });
+
   it("updates last_choice from a pose command without dumping it as last_topic", () => {
     const patch = extractSlotsFromUserText("wave", { lastChoice: "wave" });
     assert.equal(patch.last_choice, "wave");
