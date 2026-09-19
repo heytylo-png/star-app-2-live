@@ -1,11 +1,12 @@
-import type { EmotionId, PoseId } from "@/lib/rai";
+import { namedPoseFromText, type EmotionId, type PoseId } from "@/lib/rai";
 import type { AffectionTier } from "@/lib/affection-store";
 
 export type BrainMessage = { role: "user" | "assistant"; content: string };
 
 export type BrainAct = {
   emotion: EmotionId;
-  pose: PoseId;
+  /** omit = keep the current sheet (kiss / unmapped named pose). */
+  pose?: PoseId | null;
   line: string;
   mem?: string[];
 };
@@ -104,6 +105,7 @@ const LINES: Record<Intent, string[]> = {
     "Is that all? Raise the bar.",
     "Yawn. Try a real sentence.",
     "I'm an idol, not a waiting room. Say something.",
+    "Still here. Use the airtime.",
   ],
   thanks: [
     "You're welcome. Don't make it weird.",
@@ -117,7 +119,7 @@ const LINES: Record<Intent, string[]> = {
     "Okay. Keep going — I'm listening, not impressed yet.",
     "That's your opener? Bold. Continue.",
     "Noted. Now say the part that actually matters.",
-    "I'm right here. Use the airtime.",
+    "Still here. Use the airtime.",
   ],
 };
 
@@ -279,41 +281,39 @@ function intentToAct(intent: Intent): { emotion: EmotionId; pose: PoseId } {
   switch (intent) {
     case "bump":
     case "scold":
-      return { emotion: "angry", pose: "scold" };
+      return { emotion: "bratty", pose: "scold" };
     case "greet":
-      return { emotion: "happy", pose: "wave" };
+      return { emotion: "hype", pose: "wave" };
     case "bye":
-      return { emotion: "idle", pose: "turn-away" };
+      return { emotion: "bratty", pose: "turn" };
     case "identity":
-      return { emotion: "thinking", pose: "point" };
+      return { emotion: "glance", pose: "think" };
     case "flirt":
-      // Mix kiss / lean so flirty doesn't always blow a kiss
       return Math.random() < 0.55
-        ? { emotion: "flirty", pose: "kiss" }
-        : { emotion: "flirty", pose: "lean" };
+        ? { emotion: "smug", pose: "wink" }
+        : { emotion: "smug", pose: "hearts" };
     case "praise":
     case "miss":
     case "thanks":
-      return { emotion: "happy", pose: "hearts" };
+      return { emotion: "hype", pose: "hearts" };
     case "question":
       return Math.random() < 0.5
-        ? { emotion: "thinking", pose: "point" }
-        : { emotion: "thinking", pose: "finger" };
+        ? { emotion: "glance", pose: "think" }
+        : { emotion: "glance", pose: "point" };
     case "soft":
       return Math.random() < 0.45
-        ? { emotion: "shy", pose: "hold" }
+        ? { emotion: "soft", pose: "hold" }
         : { emotion: "shy", pose: "shy" };
     case "remember":
     case "recall":
       return { emotion: "shy", pose: "shy" };
     case "bored":
-      return { emotion: "angry", pose: "turn-away" };
+      return { emotion: "tired", pose: "pout" };
     case "generic":
     default:
-      // Rare idle beats via emotion-only path (finger/lean) — mostly look-at idle
-      if (Math.random() < 0.08) return { emotion: "surprised", pose: "finger" };
-      if (Math.random() < 0.06) return { emotion: "flirty", pose: "lean" };
-      return { emotion: "idle", pose: "idle" };
+      if (Math.random() < 0.08) return { emotion: "glance", pose: "surprise" };
+      if (Math.random() < 0.06) return { emotion: "smug", pose: "wink" };
+      return { emotion: "bratty", pose: "idle" };
   }
 }
 
@@ -436,7 +436,7 @@ function craftFromFacts(
       ].filter((l) => l !== avoid);
       const line = lines[Math.floor(Math.random() * lines.length)] ?? `${name}. Obviously.`;
       lastLine = line;
-      return { emotion: "thinking", pose: "idle", line };
+      return { emotion: "glance", pose: "idle", line };
     }
   }
 
@@ -449,7 +449,7 @@ function craftFromFacts(
     if (!facts.length) {
       const line = "Drawer's empty. Tell me something worth keeping first.";
       lastLine = line;
-      return { emotion: "thinking", pose: "idle", line };
+      return { emotion: "glance", pose: "idle", line };
     }
     const bits = facts.slice(0, 5).map((f) => f.replace(/^-\s*/, "").replace(/\.$/, ""));
     let line: string;
@@ -475,7 +475,7 @@ function craftFromFacts(
       ) as string[];
       const line = `${parts.join("; ")}. I pay attention.`;
       lastLine = line;
-      return { emotion: "thinking", pose: "idle", line };
+      return { emotion: "glance", pose: "idle", line };
     }
   }
 
@@ -563,8 +563,10 @@ export function composeAct(messages: BrainMessage[], systemExtra?: string): Brai
   const effectiveIntent: Intent =
     gapDays >= 2 && intent === "greet" ? "miss" : intent;
 
+  const named = namedPoseFromText(lastUser);
+
   const fromFacts = craftFromFacts(lower, facts, name, avoid, effectiveIntent);
-  if (fromFacts) {
+  if (fromFacts && named == null) {
     const memEarly = extractMemCandidate(lastUser, intent);
     if (memEarly?.length) fromFacts.mem = memEarly;
     fromFacts.line = affectionColor(fromFacts.line, tier, gapDays, name, effectiveIntent);
@@ -572,7 +574,7 @@ export function composeAct(messages: BrainMessage[], systemExtra?: string): Brai
     return fromFacts;
   }
 
-  let { emotion, pose } = intentToAct(effectiveIntent);
+  let { emotion, pose }: { emotion: EmotionId; pose: PoseId | null } = intentToAct(effectiveIntent);
   let line = pickLine(effectiveIntent === "recall" ? "recall" : effectiveIntent, avoid);
   line = personalize(line, name, effectiveIntent, like);
   line = affectionColor(line, tier, gapDays, name, effectiveIntent);
@@ -589,22 +591,44 @@ export function composeAct(messages: BrainMessage[], systemExtra?: string): Brai
   }
 
   // Warmth bias by tier
-  if (tier === "devoted" && emotion === "idle" && effectiveIntent === "generic") {
-    emotion = "happy";
+  if (tier === "devoted" && emotion === "bratty" && effectiveIntent === "generic") {
+    emotion = "hype";
   }
   if (tier === "close" && effectiveIntent === "greet") {
-    emotion = "happy";
+    emotion = "hype";
     pose = "wave";
   }
 
   if (!lastUser.trim()) {
-    emotion = "idle";
+    emotion = "bratty";
     pose = "idle";
     line = pickLine("generic", avoid);
   }
 
+  if (named === false) {
+    pose = null;
+    line = "Cute try. That's not a pose I do.";
+    emotion = "smug";
+  } else if (named) {
+    pose = named;
+    const bank = [
+      "Like this? Don't stare too hard.",
+      "Fine. This pose. You're welcome.",
+      "There. Happy now?",
+    ];
+    const filtered = bank.filter((l) => l !== avoid);
+    line = (filtered.length ? filtered : bank)[Math.floor(Math.random() * (filtered.length || bank.length))]!;
+    if (named === "scold") emotion = "bratty";
+    else if (named === "shy" || named === "embarrassed") emotion = "shy";
+    else if (named === "tired") emotion = "tired";
+    else if (named === "smug" || named === "wink") emotion = "smug";
+    else if (named === "laugh" || named === "wave" || named === "hearts" || named === "peace") emotion = "hype";
+    else if (named === "hold" || named === "sad") emotion = "soft";
+  }
+
   const mem = extractMemCandidate(lastUser, intent);
-  const act: BrainAct = { emotion, pose, line };
+  const act: BrainAct = { emotion, line };
+  if (pose) act.pose = pose;
   if (mem?.length) act.mem = mem;
   lastLine = line;
   return act;
@@ -613,9 +637,9 @@ export function composeAct(messages: BrainMessage[], systemExtra?: string): Brai
 export function actToJson(act: BrainAct): string {
   const body: Record<string, unknown> = {
     emotion: act.emotion,
-    pose: act.pose,
     line: act.line,
   };
+  if (act.pose) body.pose = act.pose;
   if (act.mem?.length) body.mem = act.mem;
   return JSON.stringify(body);
 }

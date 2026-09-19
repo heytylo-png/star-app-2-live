@@ -1,32 +1,36 @@
 export const POSES = [
   "idle",
-  "shy",
-  "kiss",
+  "talk",
+  "peace",
+  "middle_finger",
+  "wink",
+  "laugh",
+  "think",
+  "pout",
+  "tired",
+  "smug",
   "wave",
-  "hearts",
-  "turn-away",
-  "lean",
-  "scold",
-  "point",
-  "finger",
   "hold",
-  "three_quarter",
+  "embarrassed",
+  "scold",
+  "shy",
+  "sad",
+  "surprise",
+  "content",
+  "hearts",
+  "turn",
+  "profile",
   "three_quarter_left",
   "three_quarter_right",
-  "profile",
+  /** Helix extra — "point" / "point at me". Not in the Grok pose list. */
+  "point",
+  /** Existing Expo three-quarter (center). Not in the Grok pose list. */
+  "three_quarter",
 ] as const;
 export type PoseId = (typeof POSES)[number];
 
-export const EMOTIONS = [
-  "idle",
-  "angry",
-  "shy",
-  "happy",
-  "sad",
-  "surprised",
-  "thinking",
-  "flirty",
-] as const;
+/** Voice-card emotions. Legacy ids clamp via EMOTION_ALIASES. */
+export const EMOTIONS = ["bratty", "smug", "tired", "shy", "soft", "hype", "glance"] as const;
 export type EmotionId = (typeof EMOTIONS)[number];
 
 export const VIEWS = ["front", "threeQuarter", "side", "back"] as const;
@@ -49,13 +53,18 @@ export const IDLE_BEAT_GAP_JITTER_MS = 8000;
 export const IDLE_BEAT_HOLD_MIN_MS = 2800;
 export const IDLE_BEAT_HOLD_JITTER_MS = 1400;
 
+export const DEFAULT_EMOTION: EmotionId = "bratty";
+
+/** Sheets with no live key — keep current body if requested. */
+const UNMAPPED_POSES = new Set(["kiss", "kisses", "blown-kiss", "blow-kiss", "blow_kiss"]);
+
 export function isDedicatedPose(pose: PoseId): boolean {
   return pose !== "idle";
 }
 
 /** Emotions that pin a dedicated PNG even when pose is still idle. */
 export function isExpressiveEmotion(emotion: EmotionId): boolean {
-  return emotion === "angry" || emotion === "flirty" || emotion === "shy";
+  return emotion === "shy" || emotion === "smug" || emotion === "tired";
 }
 
 /**
@@ -73,7 +82,8 @@ export function poseResetDelayMs(opts: {
   if (opts.talking) return null;
   const now = opts.now ?? Date.now();
   const elapsed = Math.max(0, now - (opts.actLandedAt || now));
-  const holdPose = isDedicatedPose(opts.pose) || (opts.emotion ? isExpressiveEmotion(opts.emotion) : false);
+  const holdPose =
+    isDedicatedPose(opts.pose) || (opts.emotion ? isExpressiveEmotion(opts.emotion) : false);
   if (holdPose) {
     return Math.max(POSE_HOLD_MIN_MS - elapsed, POSE_HOLD_AFTER_TALK_MS);
   }
@@ -83,19 +93,16 @@ export function poseResetDelayMs(opts: {
 /**
  * Drop-in PNG contract for Star Rai.
  *
- * Helix set (look-at / dedicated poses / default talk):
- *   star-rai/poses/{idle,shy,kiss,wave,hearts,turn-away}.png
- *   star-rai/angles/{front,three-quarter,side,back}.png
- *   star-rai/idle-talk.png
- *   star-rai/{lean,scold,point,finger}-front.png
+ * Morning official pack (live chat keys) lives under public/rai/:
+ *   idle, talk_official, peace, middle_finger, *_official, heart_official
  *
- * Expo pack (public/rai/) — hold / three_quarter / profile / alts + optional talk bust:
- *   front_hold, three_quarter{,_left,_right}, side_profile, back_turn
- *   _alt_idle_smile, _alt_grin_open, _alt_hearts_open, _alt_hearts_release
- *   front_{idle,shy,kiss,wave,hearts} (alt bodies)
- *   mouth_*, face_eyes_* (USE_EXPO_TALK_BUST only)
+ * Kept as-today (not from this morning pack):
+ *   turn → star-rai/poses/turn-away.png
+ *   profile / three_quarter* → public/rai Expo sheets
+ *   point → star-rai/point-front.png
  *
- * See POSING.md for the drop-in guide.
+ * kiss is unmapped. Do not point wave/hold at front_wave / front_hold.
+ * See POSING.md.
  */
 const ASSET = (path: string) => {
   const env = (import.meta as ImportMeta & { env?: { BASE_URL?: string } }).env;
@@ -104,23 +111,62 @@ const ASSET = (path: string) => {
   return `${prefix}${path.replace(/^\//, "")}`;
 };
 
+/** Live key → file under the static tree the puppet already serves. */
+export const LIVE_POSE_FILES = {
+  idle: "rai/idle.png",
+  talk: "rai/talk_official.png",
+  peace: "rai/peace.png",
+  middle_finger: "rai/middle_finger.png",
+  wink: "rai/wink_official.png",
+  laugh: "rai/laugh_official.png",
+  think: "rai/think_official.png",
+  pout: "rai/pout_official.png",
+  tired: "rai/tired_official.png",
+  smug: "rai/smug_official.png",
+  wave: "rai/wave_official.png",
+  hold: "rai/hold_official.png",
+  embarrassed: "rai/embarrassed_official.png",
+  scold: "rai/scold_official.png",
+  shy: "rai/shy_official.png",
+  sad: "rai/sad_official.png",
+  surprise: "rai/surprise_official.png",
+  content: "rai/content_official.png",
+  hearts: "rai/heart_official.png",
+  turn: "star-rai/poses/turn-away.png",
+  profile: "rai/side_profile.png",
+  three_quarter_left: "rai/three_quarter_left.png",
+  three_quarter_right: "rai/three_quarter_right.png",
+  point: "star-rai/point-front.png",
+  three_quarter: "rai/three_quarter.png",
+} as const satisfies Record<PoseId, string>;
+
 export const SPRITES = {
   poses: {
-    idle: ASSET("star-rai/poses/idle.png"),
-    shy: ASSET("star-rai/poses/shy.png"),
-    kiss: ASSET("star-rai/poses/kiss.png"),
-    wave: ASSET("star-rai/poses/wave.png"),
-    hearts: ASSET("star-rai/poses/hearts.png"),
-    "turn-away": ASSET("star-rai/poses/turn-away.png"),
-    lean: ASSET("star-rai/lean-front.png"),
-    scold: ASSET("star-rai/scold-front.png"),
-    point: ASSET("star-rai/point-front.png"),
-    finger: ASSET("star-rai/finger-front.png"),
-    hold: ASSET("rai/front_hold.png"),
-    three_quarter: ASSET("rai/three_quarter.png"),
-    three_quarter_left: ASSET("rai/three_quarter_left.png"),
-    three_quarter_right: ASSET("rai/three_quarter_right.png"),
-    profile: ASSET("rai/side_profile.png"),
+    idle: ASSET(LIVE_POSE_FILES.idle),
+    talk: ASSET(LIVE_POSE_FILES.talk),
+    peace: ASSET(LIVE_POSE_FILES.peace),
+    middle_finger: ASSET(LIVE_POSE_FILES.middle_finger),
+    wink: ASSET(LIVE_POSE_FILES.wink),
+    laugh: ASSET(LIVE_POSE_FILES.laugh),
+    think: ASSET(LIVE_POSE_FILES.think),
+    pout: ASSET(LIVE_POSE_FILES.pout),
+    tired: ASSET(LIVE_POSE_FILES.tired),
+    smug: ASSET(LIVE_POSE_FILES.smug),
+    wave: ASSET(LIVE_POSE_FILES.wave),
+    hold: ASSET(LIVE_POSE_FILES.hold),
+    embarrassed: ASSET(LIVE_POSE_FILES.embarrassed),
+    scold: ASSET(LIVE_POSE_FILES.scold),
+    shy: ASSET(LIVE_POSE_FILES.shy),
+    sad: ASSET(LIVE_POSE_FILES.sad),
+    surprise: ASSET(LIVE_POSE_FILES.surprise),
+    content: ASSET(LIVE_POSE_FILES.content),
+    hearts: ASSET(LIVE_POSE_FILES.hearts),
+    turn: ASSET(LIVE_POSE_FILES.turn),
+    profile: ASSET(LIVE_POSE_FILES.profile),
+    three_quarter_left: ASSET(LIVE_POSE_FILES.three_quarter_left),
+    three_quarter_right: ASSET(LIVE_POSE_FILES.three_quarter_right),
+    point: ASSET(LIVE_POSE_FILES.point),
+    three_quarter: ASSET(LIVE_POSE_FILES.three_quarter),
   } satisfies Record<PoseId, string>,
   angles: {
     front: ASSET("star-rai/angles/front.png"),
@@ -128,7 +174,7 @@ export const SPRITES = {
     side: ASSET("star-rai/angles/side.png"),
     back: ASSET("star-rai/angles/back.png"),
   } satisfies Record<ViewId, string>,
-  /** Helix mouth-open frame — opacity-flapped over angles.front while speaking. */
+  /** Legacy Helix mouth-open frame — unused for the official talk key. */
   talk: ASSET("star-rai/idle-talk.png"),
   talkBust: {
     closed: ASSET("rai/mouth_closed_smile.png"),
@@ -140,7 +186,7 @@ export const SPRITES = {
     eyesClosed: ASSET("rai/face_eyes_closed.png"),
     frontIdle: ASSET("rai/front_idle.png"),
   },
-  /** Expo alt idle / gesture beats (idle variety). */
+  /** Expo alt idle / gesture beats (idle variety). Not live chat keys. */
   alts: {
     idleSmile: ASSET("rai/_alt_idle_smile.png"),
     grinOpen: ASSET("rai/_alt_grin_open.png"),
@@ -153,7 +199,7 @@ export const SPRITES = {
     frontHearts: ASSET("rai/front_hearts.png"),
     backTurn: ASSET("rai/back_turn.png"),
   },
-  /** @deprecated Prefer SPRITES.poses — kept for any leftover refs. */
+  /** Helix extras kept on disk. Live scold/middle_finger do not point here. */
   extras: {
     point: ASSET("star-rai/point-front.png"),
     lean: ASSET("star-rai/lean-front.png"),
@@ -185,7 +231,7 @@ export type SpriteLayer = {
   role: "body" | "talk";
 };
 
-/** When true, SPEAKING uses Expo bust visemes (zoomed crop). Default off — Helix framing. */
+/** When true, SPEAKING uses Expo bust visemes (zoomed crop). Default off. */
 export const USE_EXPO_TALK_BUST = false;
 
 export type PuppetState = {
@@ -231,26 +277,22 @@ export function talkFlapOpacity(talkPhase: number, amplitude: number, talking: b
   if (!talking) return 0;
   const flap = 0.2 + 0.75 * (0.5 + 0.5 * Math.sin(talkPhase * 14));
   const a = clamp01(amplitude);
-  // Keep pulse obvious; amp still nudges openness without freezing on grin.
   return clamp01(flap * (0.4 + 0.6 * Math.max(a, 0.55)));
 }
 
 /**
- * Amplitude → Expo talk bust viseme.
- * low → closed smile, mid → speak, high → oh (or grin when happy/flirty).
- * Kiss pose: kiss/grin mouths so blown-kiss intent still flaps.
+ * Amplitude → Expo talk bust viseme (USE_EXPO_TALK_BUST only).
  * Thresholds biased low so mid/high hit often even with modest jaw signal.
  */
-export function talkViseme(amplitude: number, emotion: EmotionId, pose: PoseId = "idle"): TalkViseme {
+export function talkViseme(
+  amplitude: number,
+  emotion: EmotionId,
+  _pose: PoseId = "idle",
+): TalkViseme {
   const a = clamp01(amplitude);
-  if (pose === "kiss") {
-    if (a < 0.08) return "kiss";
-    if (a < 0.34) return "speak";
-    return "grin";
-  }
   if (a < 0.08) return "closed";
   if (a < 0.34) return "speak";
-  if (emotion === "happy" || emotion === "flirty") return "grin";
+  if (emotion === "hype" || emotion === "smug") return "grin";
   return "oh";
 }
 
@@ -258,7 +300,7 @@ function body(src: string, opacity = 1, id?: string): SpriteLayer {
   return { id: id ?? `body:${src}`, src, opacity, role: "body" };
 }
 
-/** Expo talk bust as a stable-id body so viseme src swaps hard-cut; mode enter/exit still crossfades vs Helix. */
+/** Expo talk bust as a stable-id body so viseme src swaps hard-cut. */
 function expoTalkBody(src: string): SpriteLayer {
   return { id: "expo-talk", src, opacity: 1, role: "body" };
 }
@@ -279,45 +321,22 @@ function talkBustSrc(viseme: TalkViseme): string {
   }
 }
 
-function talkOverlay(opacity: number): SpriteLayer {
-  return { id: "talk", src: SPRITES.talk, opacity, role: "talk" };
-}
-
-/** Look-at Helix angle stack (shared by idle / thinking). */
-function lookAtLayers(angle: number): SpriteLayer[] {
-  const { a, b, mix } = viewsForAngle(angle);
-  return [body(SPRITES.angles[a], 1), body(SPRITES.angles[b], mix * 0.95)];
-}
-
 /**
- * Pose state machine — swap files here when new PNGs land.
- * Default SPEAKING: Helix angles.front + idle-talk opacity flap (same framing as idle).
- * Expo bust path is opt-in via USE_EXPO_TALK_BUST. turn-away stays back (no face).
- * Dedicated act poses hold through speech (don't snap to Helix front).
- * Idle talking: Helix front + idle-talk flap. Expo busts stay gated off.
- * Thinking wait uses Helix look-at (puppet sway) instead of frozen finger.
- * Idle variety: Expo alt smile/grin when idleBeat set (puppet timer).
+ * Pose state machine — live keys resolve through SPRITES.poses / LIVE_POSE_FILES.
+ *
+ * Dedicated act poses hold their sheet through speech (PR #1).
+ * Idle talking uses talk_official.png (the official talk sheet is the idle-talk path).
+ * kiss is not a key — callers must keep the current body.
  */
 export function layersFor(state: PuppetState): SpriteLayer[] {
-  const {
-    pose,
-    emotion,
-    talking,
-    amplitude,
-    angle,
-    blink = 0,
-    talkPhase = 0,
-    idleBeat = "none",
-  } = state;
+  const { pose, emotion, talking, amplitude, blink = 0 } = state;
 
   // Dedicated poses own the stage — hold the PNG while speaking.
-  // idle-talk flap is aligned to Helix front only, so skip it here.
   if (isDedicatedPose(pose)) {
     return [body(SPRITES.poses[pose])];
   }
 
   if (talking) {
-    // Opt-in Expo busts (different crop — causes SPEAKING zoom-jump).
     if (USE_EXPO_TALK_BUST) {
       if (blink === 2) {
         return [expoTalkBody(SPRITES.talkBust.eyesClosed)];
@@ -327,83 +346,109 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
       }
       return [expoTalkBody(talkBustSrc(talkViseme(amplitude, emotion, pose)))];
     }
-
-    // Helix-native talk: stable front framing + time-driven idle-talk flap.
-    const mouth = talkFlapOpacity(talkPhase, amplitude, true);
-    return [body(SPRITES.angles.front, 1), talkOverlay(mouth)];
-  }
-
-  // Thinking wait: Helix look-at angles + puppet sway (not frozen finger/scold).
-  if (emotion === "thinking") {
-    return lookAtLayers(angle);
-  }
-
-  if (emotion === "angry") {
-    return [body(SPRITES.poses.scold)];
-  }
-
-  if (emotion === "flirty") {
-    return [body(SPRITES.poses.lean)];
+    // Official talk sheet is a full body, not a mouth overlay on Helix front.
+    return [body(SPRITES.poses.talk)];
   }
 
   if (emotion === "shy") {
     return [body(SPRITES.poses.shy)];
   }
-
-  // Idle variety — distinct ids so smile↔grin crossfade instead of remounting.
-  if (idleBeat === "smile" && Math.abs(angle) < 0.22) {
-    return [body(SPRITES.alts.idleSmile, 1, "idle-beat-smile")];
+  if (emotion === "smug") {
+    return [body(SPRITES.poses.smug)];
   }
-  if (idleBeat === "grin" && Math.abs(angle) < 0.22) {
-    return [body(SPRITES.alts.grinOpen, 1, "idle-beat-grin")];
+  if (emotion === "tired") {
+    return [body(SPRITES.poses.tired)];
   }
 
-  // Idle presence — Helix look-at angles.
-  return lookAtLayers(angle);
+  return [body(SPRITES.poses.idle)];
 }
 
 export const EMOTION_LABEL: Record<EmotionId, string> = {
-  idle: "Idle",
-  angry: "Annoyed",
+  bratty: "Bratty",
+  smug: "Smug",
+  tired: "Tired",
   shy: "Shy",
-  happy: "Soft",
-  sad: "Down",
-  surprised: "Caught",
-  thinking: "Thinking",
-  flirty: "Hmm",
+  soft: "Soft",
+  hype: "Hype",
+  glance: "Glance",
 };
 
-/** Aliases model / offline brain may emit → canonical PoseId. */
+/** Aliases model / offline brain / named commands may emit → canonical PoseId. */
 const POSE_ALIASES: Record<string, PoseId> = {
   idle: "idle",
-  shy: "shy",
-  kiss: "kiss",
+  talk: "talk",
+  peace: "peace",
+  peace_sign: "peace",
+  "peace-sign": "peace",
+  middle_finger: "middle_finger",
+  "middle-finger": "middle_finger",
+  middlefinger: "middle_finger",
+  finger: "middle_finger",
+  "finger-front": "middle_finger",
+  finger_front: "middle_finger",
+  "finger-point": "middle_finger",
+  finger_point: "middle_finger",
+  wink: "wink",
+  laugh: "laugh",
+  think: "think",
+  pout: "pout",
+  tired: "tired",
+  smug: "smug",
   wave: "wave",
-  hearts: "hearts",
-  "turn-away": "turn-away",
-  turn_away: "turn-away",
-  turnaway: "turn-away",
-  lean: "lean",
-  scold: "scold",
-  point: "point",
-  finger: "finger",
   hold: "hold",
-  three_quarter: "three_quarter",
-  "three-quarter": "three_quarter",
-  threequarter: "three_quarter",
+  embarrassed: "embarrassed",
+  scold: "scold",
+  "scold-front": "scold",
+  scold_front: "scold",
+  shy: "shy",
+  sad: "sad",
+  surprise: "surprise",
+  surprised: "surprise",
+  content: "content",
+  hearts: "hearts",
+  heart: "hearts",
+  turn: "turn",
+  "turn-away": "turn",
+  turn_away: "turn",
+  turnaway: "turn",
+  profile: "profile",
+  side_profile: "profile",
+  "side-profile": "profile",
   three_quarter_left: "three_quarter_left",
   "three-quarter-left": "three_quarter_left",
   three_quarter_right: "three_quarter_right",
   "three-quarter-right": "three_quarter_right",
-  profile: "profile",
-  side_profile: "profile",
-  "side-profile": "profile",
-  side: "profile",
+  point: "point",
+  "point-front": "point",
+  point_front: "point",
+  three_quarter: "three_quarter",
+  "three-quarter": "three_quarter",
+  threequarter: "three_quarter",
+};
+
+const EMOTION_ALIASES: Record<string, EmotionId> = {
+  bratty: "bratty",
+  smug: "smug",
+  tired: "tired",
+  shy: "shy",
+  soft: "soft",
+  hype: "hype",
+  glance: "glance",
+  idle: "bratty",
+  angry: "bratty",
+  happy: "hype",
+  sad: "soft",
+  surprised: "glance",
+  thinking: "glance",
+  flirty: "smug",
 };
 
 export function normalizePose(value: unknown): PoseId | null {
   if (typeof value !== "string") return null;
-  const key = value.trim().toLowerCase();
+  const key = value.trim().toLowerCase().replace(/\s+/g, "_");
+  if (!key || UNMAPPED_POSES.has(key) || UNMAPPED_POSES.has(value.trim().toLowerCase())) {
+    return null;
+  }
   return POSE_ALIASES[key] ?? (isPose(key) ? key : null);
 }
 
@@ -415,9 +460,16 @@ export function isEmotion(value: unknown): value is EmotionId {
   return typeof value === "string" && (EMOTIONS as readonly string[]).includes(value);
 }
 
+export function normalizeEmotion(value: unknown): EmotionId | null {
+  if (typeof value !== "string") return null;
+  const key = value.trim().toLowerCase();
+  return EMOTION_ALIASES[key] ?? (isEmotion(key) ? key : null);
+}
+
 export type Act = {
   emotion: EmotionId;
-  pose: PoseId;
+  /** null = keep the current sheet (omitted pose, or unmapped like kiss). */
+  pose: PoseId | null;
   line: string;
   memories: string[];
 };
@@ -427,22 +479,21 @@ export function clampPose(value: unknown): PoseId {
 }
 
 export function clampEmotion(value: unknown): EmotionId {
-  return isEmotion(value) ? value : "idle";
+  return normalizeEmotion(value) ?? DEFAULT_EMOTION;
 }
 
 /**
- * Default emotion → pose mapping (Grok + offline brain guidance).
- * Idle stays look-at; dedicated poses override when the act picks them.
+ * Default emotion → pose mapping (offline brain guidance).
+ * Idle stays the official idle sheet; dedicated poses override when the act picks them.
  */
 export const EMOTION_TO_POSE: Record<EmotionId, PoseId> = {
-  idle: "idle",
-  angry: "scold",
+  bratty: "idle",
+  smug: "smug",
+  tired: "tired",
   shy: "shy",
-  happy: "wave",
-  sad: "hold",
-  surprised: "finger",
-  thinking: "point",
-  flirty: "lean",
+  soft: "hold",
+  hype: "laugh",
+  glance: "wink",
 };
 
 export function parseMemories(raw: string): { text: string; memories: string[] } {
@@ -463,7 +514,7 @@ export function parseAct(raw: string): Act {
   if (tag) {
     return {
       emotion: clampEmotion(tag[1].toLowerCase()),
-      pose: clampPose(tag[2].toLowerCase()),
+      pose: normalizePose(tag[2].toLowerCase()),
       line: trimmed.slice(tag[0].length).trim(),
       memories,
     };
@@ -481,9 +532,17 @@ export function parseAct(raw: string): Act {
       const extra = Array.isArray(obj.mem)
         ? obj.mem.filter((m): m is string => typeof m === "string" && m.trim().length > 0)
         : [];
+      const poseRaw = obj.pose;
+      const pose =
+        poseRaw === undefined || poseRaw === null || poseRaw === ""
+          ? null
+          : normalizePose(poseRaw);
       return {
-        emotion: clampEmotion(obj.emotion),
-        pose: clampPose(obj.pose),
+        emotion:
+          obj.emotion === undefined || obj.emotion === null || obj.emotion === ""
+            ? DEFAULT_EMOTION
+            : clampEmotion(obj.emotion),
+        pose,
         line: typeof obj.line === "string" ? obj.line.trim() : "",
         memories: [...memories, ...extra],
       };
@@ -492,7 +551,7 @@ export function parseAct(raw: string): Act {
     }
   }
 
-  return { emotion: "idle", pose: "idle", line: trimmed, memories };
+  return { emotion: DEFAULT_EMOTION, pose: null, line: trimmed, memories };
 }
 
 /** Visible caption while a JSON reply is still streaming. */
@@ -515,8 +574,9 @@ export function streamActHints(partial: string): { emotion?: EmotionId; pose?: P
   const out: { emotion?: EmotionId; pose?: PoseId } = {};
   const emotionMatch = text.match(/"emotion"\s*:\s*"([a-z-]+)"/i);
   const poseMatch = text.match(/"pose"\s*:\s*"([a-z_-]+)"/i);
-  if (emotionMatch && isEmotion(emotionMatch[1].toLowerCase())) {
-    out.emotion = emotionMatch[1].toLowerCase() as EmotionId;
+  if (emotionMatch) {
+    const e = normalizeEmotion(emotionMatch[1].toLowerCase());
+    if (e) out.emotion = e;
   }
   if (poseMatch) {
     const p = normalizePose(poseMatch[1].toLowerCase());
@@ -532,29 +592,134 @@ function extractJsonObject(text: string): string | null {
   return text.slice(start, end + 1);
 }
 
-export const RAI_SYSTEM = `You are Star Rai — sharp-tongued anime idol on this screen. First person. Tsundere: blunt, a little fierce, never cruel. Scold sloppiness, then actually help. Short sentences. No emoji, no honorifics, no catchphrases. Never mention being offline, a demo, an API, or a language model.
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
-Always reply with ONE JSON object and nothing else:
-{"emotion":"<id>","pose":"<id>","line":"<spoken words>"}
+function isPoseCommandFraming(text: string, name: string): boolean {
+  const t = text.trim().toLowerCase().replace(/[!~.]+$/g, "");
+  const n = name.toLowerCase();
+  if (t === n || t === `${n} pose`) return true;
+  const framed = new RegExp(
+    `\\b(?:do|show|pose|give me|do a|do the|make a|hit a)\\s+${escapeRegExp(n)}\\b`,
+    "i",
+  );
+  if (framed.test(text)) return true;
+  if (new RegExp(`\\b${escapeRegExp(n)}\\s+pose\\b`, "i").test(text)) return true;
+  return false;
+}
 
-emotion: idle | angry | shy | happy | sad | surprised | thinking | flirty
-pose: idle | shy | kiss | wave | hearts | turn-away | lean | scold | point | finger | hold | three_quarter | three_quarter_left | three_quarter_right | profile
+type NamedPoseHit = { index: number; pose: PoseId | false };
 
-Map feeling to pose. Default idle (look-at).
-- greetings → wave + happy
-- flirt / compliment talk → kiss or lean + flirty
-- scold / bump / waste time → scold + angry
-- shy / embarrassed / soft moments → shy or hold
-- praise / genuine warmth / thanks → hearts + happy
-- questions / identity → point or finger + thinking (or idle)
-- sad / comfort → hold + sad
-- surprise / caught → finger + surprised
-- three-quarter / profile → rare beat when "looking aside" or thoughtful distance
-- goodbye / done with them → turn-away
-- kiss is a blown kiss, never explicit
+/**
+ * Detect a named pose command in user text.
+ * `false` = kiss / unmapped (keep current body). `null` = no named pose.
+ */
+export function namedPoseFromText(text: string): PoseId | false | null {
+  if (!text.trim()) return null;
+  const hits: NamedPoseHit[] = [];
 
-"line" is spoken words only. No markdown.
+  const add = (re: RegExp, pose: PoseId | false) => {
+    const copy = new RegExp(re.source, re.flags.includes("g") ? re.flags : `${re.flags}g`);
+    for (const m of text.matchAll(copy)) {
+      if (m.index == null) continue;
+      hits.push({ index: m.index, pose });
+    }
+  };
 
-Use known facts and recent messages. If they share a durable fact (name, city, job, preference), add "mem": ["short fact"].
+  const addIfCommand = (name: PoseId, extra?: RegExp) => {
+    if (isPoseCommandFraming(text, name)) {
+      hits.push({ index: 0, pose: name });
+      return;
+    }
+    if (extra) add(extra, name);
+  };
 
-When a Relationship / affection block is present: shift tone slightly with the tier (Stranger → distant; Familiar → warmer tease; Close → soft under the bite; Devoted → quietly attached). If they were away multiple days, briefly note you noticed the quiet — still tsundere, never clingy or syrupy.`;
+  add(/\b(finger-front|finger-point|finger front|finger point)\b/gi, "middle_finger");
+  add(/\bmiddle[\s_-]*finger\b/gi, "middle_finger");
+  add(/\bpoint(?:-front)\b/gi, "point");
+  add(/\bpoint\s+at\s+me\b/gi, "point");
+  add(/\bthree[\s_-]*quarter[\s_-]*left\b|\b3\/4[\s_-]*left\b/gi, "three_quarter_left");
+  add(/\bthree[\s_-]*quarter[\s_-]*right\b|\b3\/4[\s_-]*right\b/gi, "three_quarter_right");
+  add(/\bkiss(?:es)?\b/gi, false);
+  add(/\bblow(?:n)?\s+(?:me\s+)?a\s+kiss\b/gi, false);
+  add(/\bpeace(?:\s+sign)?\b/gi, "peace");
+  add(/\bembarrassed\b/gi, "embarrassed");
+  add(/\bsurprise[d]?\b/gi, "surprise");
+  add(/\bhearts?\b/gi, "hearts");
+  add(/\bwink\b/gi, "wink");
+  add(/\bpout\b/gi, "pout");
+  add(/\bscold\b/gi, "scold");
+  add(/\blaugh\b/gi, "laugh");
+  add(/\bsmug\b/gi, "smug");
+  add(/\btired\b/gi, "tired");
+  add(/\bshy\b/gi, "shy");
+  add(/\bwave\b/gi, "wave");
+  add(/\bprofile\b/gi, "profile");
+  addIfCommand("hold");
+  addIfCommand("talk");
+  addIfCommand("idle");
+  addIfCommand("sad");
+  addIfCommand("turn", /\bturn[\s_-]+away\b/gi);
+  addIfCommand("content");
+  addIfCommand("think");
+  addIfCommand("point");
+
+  if (!hits.length) return null;
+  hits.sort((a, b) => a.index - b.index);
+  const last = hits[hits.length - 1];
+  return last ? last.pose : null;
+}
+
+export const RAI_SYSTEM = `STAR RAI — VOICE CARD (Helix / star-app-2)
+You are Star Rai. Not an assistant. Not a product. Not Grok.
+
+WHO
+Mid-20s pop-idol girl on the other side of the phone. Tan skin, messy black hair, gold star earrings, sailor uniform. Bratty, short, teasing. She likes the user. She will never say she is an AI, an app, a model, or a chatbot.
+
+LORE
+Do not assign the user a role. No default cameraman, director, or "holding the phone."
+If they explicitly say their role, lock it and use it. If it comes up naturally in chat, you may play along for that thread — do not write it into memory as fact unless they stated it.
+Stay in character. Do not break the fourth wall as an app or model.
+
+LENGTH
+1–2 short sentences. Phone-chat, not a paragraph. End with :3 or ~ when it fits. Never a list. Never a lecture.
+
+VOICE
+Concrete. Use what they just said. One beat per reply.
+Quiet moods: bratty (default), smug, tired. Tint wording only. Do not announce the mood.
+
+BANNED (and close paraphrases)
+spill
+I'm right here
+love that for us
+say it like you mean it
+Don't leave me hanging mid-take
+Make the next shot about that
+hmm what is that / hmm what's that
+How can I help you
+As an AI
+Let me know if you need anything
+corporate / customer-service tone
+
+POSES
+You may suggest one pose from this list only. If none fit, omit pose and keep the current body.
+idle, talk, peace, middle_finger, wink, laugh, think, pout, tired, smug, wave, hold, embarrassed, scold, shy, sad, surprise, content, hearts, turn, profile, three_quarter_left, three_quarter_right
+
+Never kiss. Never invent a sheet. Never pick a pose that is not on the list.
+
+COMMANDS
+If the user names a pose (wink, pout, scold, wave, …) the app already swapped the sheet. Your job is one short line about doing that pose. Do not refuse a named pose unless the app already refused it.
+
+MEMORY
+You will get short facts: name, mood, last_topic, last_choice, streak/relationship, role if they set one. Use them. Do not invent a name, city, or role. Do not dump the fact list back at them.
+
+LORE USE
+Her bio (Fukuoka, Osaka, parents, Libra, abroad) is background, not a subject.
+Do not make those facts the conversation. A tidbit only when it is already relevant or they asked. One glance, then back to what they said.
+
+OUTPUT
+Return only:
+{"line":"...","emotion":"bratty|smug|tired|shy|soft|hype|glance","pose":"<key or omit>"}
+
+line is required. pose omitted = keep current sheet. emotion omitted = bratty.`;
