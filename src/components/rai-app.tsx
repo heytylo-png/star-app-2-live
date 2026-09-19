@@ -35,6 +35,7 @@ import {
   type PoseId,
 } from "@/lib/rai";
 import { useMemoryStore } from "@/lib/memory-store";
+import { formatMemoryFacts } from "@/lib/memory-slots";
 import { newId, type ChatMessage } from "@/lib/helix";
 import { streamChat } from "@/lib/stream-chat";
 import {
@@ -108,6 +109,7 @@ function RaiReady() {
   const voiceOn = useChatStore((s) => s.voiceOn);
   const setVoiceOn = useChatStore((s) => s.setVoiceOn);
   const memories = useMemoryStore((s) => s.items);
+  const slots = useMemoryStore((s) => s.slots);
   const affectionScore = useAffectionStore((s) => s.score);
   const streakDays = useAffectionStore((s) => s.streakDays);
   const tier = useMemo(() => scoreToTier(affectionScore), [affectionScore]);
@@ -407,16 +409,11 @@ function RaiReady() {
 
     const aff = useAffectionStore.getState();
     aff.touchDecay();
-    const liveMemories = useMemoryStore.getState().items;
-    const memoryBlock =
-      liveMemories.length > 0
-        ? `Known facts about this person:\n${liveMemories
-            .slice(0, 24)
-            .map((m) => `- ${m.text}`)
-            .join("\n")}`
-        : "";
-    const affectionBlock = aff.affectionBlock();
-    const systemExtra = [memoryBlock, affectionBlock].filter(Boolean).join("\n\n");
+    const liveAff = useAffectionStore.getState();
+    const systemExtra = useMemoryStore.getState().memoryFactsBlock({
+      streakDays: liveAff.streakDays,
+      relationship: TIER_LABEL[scoreToTier(liveAff.score)],
+    });
 
     let raw = "";
     let speakFinishedClean = false;
@@ -542,6 +539,9 @@ function RaiReady() {
       poseRef.current = named;
       actLandedAt.current = Date.now();
     }
+    useMemoryStore.getState().ingestUserTurn(content, {
+      lastChoice: named === false ? "kiss" : named || undefined,
+    });
     store.appendMessage(active.id, {
       id: newId(),
       role: "user",
@@ -667,6 +667,9 @@ function RaiReady() {
     if (text) void send(text);
     else if (pttSupported) setCaption((c) => (c === "Listening…" ? "" : c));
   }
+
+  const slotFacts = formatMemoryFacts(slots);
+  const hasSlots = Boolean(slotFacts);
 
   const status = callActive
     ? talking
@@ -908,17 +911,35 @@ function RaiReady() {
         <SheetContent side="right" className="w-[min(100%,22rem)] bg-bg p-0" aria-describedby={undefined}>
           <div className="flex h-14 items-center justify-between border-b border-border px-4">
             <SheetTitle className="font-display text-xl">
-              Memory{memories.length ? ` · ${memories.length}` : ""}
+              Memory{memories.length || hasSlots ? ` · ${memories.length + (hasSlots ? 1 : 0)}` : ""}
             </SheetTitle>
             <Button type="button" variant="ghost" size="icon-sm" aria-label="Close" onClick={() => setMemoryOpen(false)}>
               <X className="size-4" />
             </Button>
           </div>
           <div className="space-y-2 overflow-y-auto p-4">
-            {memories.length === 0 ? (
+            {hasSlots ? (
+              <div className="mb-3 rounded-md bg-elevated px-3 py-2 shadow-[var(--shadow-border)]">
+                <p className="text-[0.65rem] tracking-wide text-subtle uppercase">Slots sent to Grok</p>
+                <pre className="mt-1 whitespace-pre-wrap font-sans text-sm leading-relaxed">
+                  {slotFacts.replace(/^MEMORY FACTS\n/, "")}
+                </pre>
+                <p className="mt-2 text-[0.65rem] leading-relaxed text-subtle">
+                  Empty keys stay off the prompt. Streak/relationship come from the affection chip.
+                </p>
+              </div>
+            ) : (
               <p className="text-sm text-muted">
-                Nothing stored yet. Tell her your name, city, job, or what you like — she keeps durable facts.
+                No named slots yet. Tell her your name — she only sends what you actually said. No default cameraman,
+                city, or birthday.
               </p>
+            )}
+            {memories.length === 0 ? (
+              hasSlots ? null : (
+                <p className="text-sm text-muted">
+                  Chart date/time/place and Life now_playing/mood_tag stay omitted until a meetup or session is on.
+                </p>
+              )
             ) : (
               memories.map((item) => (
                 <div
@@ -941,7 +962,7 @@ function RaiReady() {
                 </div>
               ))
             )}
-            {memories.length > 0 ? (
+            {memories.length > 0 || hasSlots ? (
               <button
                 type="button"
                 className="pt-2 text-xs text-muted hover:text-fg"

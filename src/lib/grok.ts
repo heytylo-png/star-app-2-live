@@ -1,5 +1,6 @@
 /** Client-side xAI Grok brain. Key lives in localStorage only — never bake secrets into the build. */
 
+import { composeGrokSystem } from "@/lib/memory-slots";
 import { RAI_SYSTEM } from "@/lib/rai";
 
 export const XAI_KEY_STORAGE = "star-rai-xai-key";
@@ -62,11 +63,9 @@ function buildMessages(
   messages: { role: "user" | "assistant"; content: string }[],
   systemExtra?: string,
 ): GrokMessage[] {
-  const system = systemExtra?.trim()
-    ? `${RAI_SYSTEM}\n\n${systemExtra.trim()}`
-    : RAI_SYSTEM;
+  // Voice card (RAI_SYSTEM) + filled MEMORY FACTS only — never empty slots.
   return [
-    { role: "system", content: system },
+    { role: "system", content: composeGrokSystem(RAI_SYSTEM, systemExtra) },
     ...messages.map((m) => ({ role: m.role, content: m.content })),
   ];
 }

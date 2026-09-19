@@ -25,7 +25,7 @@ Soft tier chip in the header: **Stranger → Familiar → Close → Devoted** (s
 
 - Nudges up on greetings, compliments, chats, shared memories; tiny day-streak bonus.
 - Decays slowly after unused days (lightweight).
-- Brain (`RAI_SYSTEM` voice card + optional Grok) can mention a multi-day gap via the affection extra block. Offline fallback uses pose-keyed lines from `artifacts/star-rai-local-brain.txt` — still in character, never gacha-loud.
+- Brain (`RAI_SYSTEM` voice card + grok-4-latest MEMORY FACTS slots) can use streak/relationship when those slots are filled. Offline fallback uses pose-keyed lines from `artifacts/star-rai-local-brain.txt` — still in character, never gacha-loud.
 - Optional streak shown as e.g. `Close · 3d`.
 
 ## Install on Samsung (PWA)
@@ -46,7 +46,25 @@ Works offline for the app shell + static assets (puppet art already on device af
 4. Header status shows **Grok** when a key is saved, **Local** otherwise.
 5. After save, the UI shows only the last 4 characters (`••••abcd`). Clear removes the key.
 
-When a key is present, the client calls `https://api.x.ai/v1/chat/completions` with model `grok-4-latest` (fallbacks: `grok-4.6`, `grok-3`, `grok-2`). System prompt = baked voice card (`artifacts/star-rai-voice-card.txt` → `RAI_SYSTEM`) + memory facts + affection block. Replies must be JSON acts (`parseAct`). Streaming uses SSE when available; otherwise one-shot text is chunked into `onDelta` for mouth/caption UX.
+When a key is present, the client calls `https://api.x.ai/v1/chat/completions` with model `grok-4-latest` (fallbacks: `grok-4.6`, `grok-3`, `grok-2`). System prompt = baked voice card (`artifacts/star-rai-voice-card.txt` → `RAI_SYSTEM`) plus a compact **MEMORY FACTS** block (`artifacts/star-rai-memory-slots.txt`) of **filled slots only**:
+
+```
+MEMORY FACTS
+name: Tylo
+mood: tired
+last_topic: talking at night
+last_choice: wave
+streak: 3 days
+relationship: Close
+role: photographer
+date: saturday
+time: 7pm
+place: Shibuya
+now_playing: lo-fi
+mood_tag: cozy
+```
+
+Empty keys are omitted. `role` is sent only if they stated one (never a default cameraman). Chart (`date` / optional `time` / `place`) and Life (`now_playing` / `mood_tag`) are omitted unless a meetup or session actually filled them. Her lore bio stays in the voice card under LORE USE — it is not a topic list. The model must not dump the slot list into `line`. Replies are JSON acts (`parseAct`). Streaming uses SSE when available; otherwise one-shot text is chunked into `onDelta` for mouth/caption UX.
 
 If there is no key, CORS failure, timeout (~12s), bad JSON, or API error → pose-keyed local brain (`artifacts/star-rai-local-brain.txt`). She never breaks character about APIs. There is **no** Settings field for the voice card — only the xAI key (localStorage).
 
@@ -70,7 +88,7 @@ The Worker forwards `POST /v1/chat/completions`, reads the key from `X-User-Key`
 | Hold-to-talk | Browser `SpeechRecognition` when present; otherwise type |
 | Call mode | Continuous listen→reply→speak + barge-in when SpeechRecognition present |
 | Affection | `localStorage` (`star-rai-affection`) — tier chip + tone |
-| Memory | `localStorage` (`star-rai-memory`) — name, likes, city, job |
+| Memory | `localStorage` (`star-rai-memory`) — compact slots + optional freeform notes |
 | Chat threads | `localStorage` (`star-rai-chat`) |
 | xAI key | `localStorage` (`star-rai-xai-key`) — browser only |
 
@@ -83,7 +101,7 @@ Future env: `VITE_API_BASE` — leave unset for pure Pages. `VITE_GROK_PROXY_URL
 
 ## Persist keys (stable)
 
-- `star-rai-memory` — memory facts (schema v1)
+- `star-rai-memory` — memory facts + compact slots (schema v2)
 - `star-rai-chat` — threads + `voiceOn`
 - `star-rai-xai-key` — optional xAI API key (never commit)
 - `star-rai-affection` — affection score, last talk day, streak (schema v1)
@@ -98,7 +116,7 @@ See **[POSING.md](./POSING.md)** for the drop-in guide:
 - Morning official pack under `public/rai/` (`*_official.png`, `idle.png`, `peace.png`, `middle_finger.png`, `heart_official.png`)
 - Live key → file table (`wave` → `wave_official.png`, `hold` → `hold_official.png`, `scold` → `scold_official.png`; `kiss` unmapped)
 - Kept as-today: `turn`, `profile`, `three_quarter_left`, `three_quarter_right`; Helix extra `point` → `point-front.png`
-- Voice card (`artifacts/star-rai-voice-card.txt`) is baked into `RAI_SYSTEM` at sync/build (`scripts/sync-star-rai-artifacts.js`); offline fallback is `artifacts/star-rai-local-brain.txt` (pose-keyed lines). Do not edit `src/lib/generated/star-rai-artifacts.ts` by hand.
+- Voice card (`artifacts/star-rai-voice-card.txt`) is baked into `RAI_SYSTEM` at sync/build (`scripts/sync-star-rai-artifacts.js`); offline fallback is `artifacts/star-rai-local-brain.txt` (pose-keyed lines); memory-slot contract is `artifacts/star-rai-memory-slots.txt` (appended after the voice card on grok-4-latest, filled keys only). Do not edit `src/lib/generated/star-rai-artifacts.ts` by hand.
 
 ## Develop
 

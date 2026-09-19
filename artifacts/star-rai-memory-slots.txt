@@ -1,0 +1,27 @@
+STAR RAI — MEMORY SLOTS (Helix / star-app-2-live)
+Contract for facts appended to the grok-4-latest system prompt (after the voice card).
+Not a topic list. Not her bio. Lore bio stays in the voice card under LORE USE only.
+
+ALWAYS CONSIDER (send only when known — never invent)
+- name
+- mood
+- last_topic
+- last_choice
+- streak / relationship
+
+CONDITIONAL
+- role — ONLY if the user explicitly stated one (never invent; never default cameraman)
+- Chart slots — ONLY if setup or chat filled them: date, optional time, place
+- Life slots — ONLY if a session is on: now_playing, mood_tag
+
+RULES
+- Do not invent name, city, role, or birthday.
+- Do not dump this slot list into her spoken line.
+- Do not send empty slots.
+- Do not send her bio facts as conversation topics.
+- Pose commands may update last pose locally; they do not invent memory.
+
+OUTPUT (model)
+Return only: {"line":"...","emotion":"bratty|smug|tired|shy|soft|hype|glance","pose":"<key or omit>"}
+Unknown / omitted / kiss pose → keep current body.
+Fail / CORS / bad JSON / no key → local brain for that pose key.
