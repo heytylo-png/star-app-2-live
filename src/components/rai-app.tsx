@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { InstallHint } from "@/components/install-hint";
 import { ChartSetupCard } from "@/components/chart-setup-card";
+import { NowPlayingBar } from "@/components/now-playing-bar";
 import { Puppet } from "@/components/puppet";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -44,6 +45,7 @@ import {
   resolveChartTurn,
 } from "@/lib/chart";
 import { useChartStore } from "@/lib/chart-store";
+import { resolveLifeTurn, type LifeSlots } from "@/lib/life";
 import { newId, type ChatMessage } from "@/lib/helix";
 import { streamChat } from "@/lib/stream-chat";
 import {
@@ -159,6 +161,8 @@ function RaiReady() {
   const poseRef = useRef<PoseId>("idle");
   /** When the last act pose/emotion landed — drives the hold timer. */
   const actLandedAt = useRef(0);
+  /** Life slots before this turn's ingest — used to detect track changes. */
+  const lifeBeforeRef = useRef<LifeSlots | undefined>(undefined);
 
   const thread = useMemo(
     () => threads.find((t) => t.id === activeId) ?? null,
@@ -451,11 +455,26 @@ function RaiReady() {
     if (chartTurn.kind === "diary" && chartTurn.diaryText && chartTurn.dateKey) {
       chartStore.saveDiary(chartTurn.dateKey, chartTurn.diaryText);
     }
-    const factsBlock = mem.memoryFactsBlock({
+    const lifeAfter = mem.slots.life;
+    const lifeTurn = chartTurn.localOnly
+      ? { kind: "none" as const, localOnly: false }
+      : resolveLifeTurn({
+          userText: lastUser,
+          before: lifeBeforeRef.current,
+          after: lifeAfter,
+        });
+    if (lifeTurn.kind === "track_change" && lifeTurn.nowPlaying) {
+      useMemoryStore.getState().patchSlots({
+        life: { on: true, commented_track: lifeTurn.nowPlaying },
+      });
+    }
+    const factsBlock = useMemoryStore.getState().memoryFactsBlock({
       streakDays: liveAff.streakDays,
       relationship: TIER_LABEL[scoreToTier(liveAff.score)],
     });
-    const systemExtra = [factsBlock, chartTurn.factsBlock].filter(Boolean).join("\n\n");
+    const systemExtra = [factsBlock, chartTurn.factsBlock, lifeTurn.factsBlock]
+      .filter(Boolean)
+      .join("\n\n");
 
     let raw = "";
     let speakFinishedClean = false;
@@ -468,6 +487,7 @@ function RaiReady() {
           systemExtra,
           currentPose: poseRef.current,
           chartTurn,
+          lifeTurn,
           messages: current.messages
             .filter((m) => m.role === "user" || m.role === "assistant")
             .map((m) => ({ role: m.role, content: m.content })),
@@ -499,6 +519,9 @@ function RaiReady() {
       if (act.pose) {
         setPose(act.pose);
         poseRef.current = act.pose;
+      } else if (lifeTurn.kind !== "none" && lifeTurn.tintPose) {
+        setPose(lifeTurn.tintPose);
+        poseRef.current = lifeTurn.tintPose;
       } else if (chartTurn.kind === "daily" && chartTurn.tintPose) {
         setPose(chartTurn.tintPose);
         poseRef.current = chartTurn.tintPose;
@@ -585,6 +608,7 @@ function RaiReady() {
       poseRef.current = named;
       actLandedAt.current = Date.now();
     }
+    lifeBeforeRef.current = useMemoryStore.getState().slots.life;
     useMemoryStore.getState().ingestUserTurn(content, {
       lastChoice: named === false ? "kiss" : named || undefined,
     });
@@ -886,6 +910,15 @@ function RaiReady() {
               }}
             />
           ) : null}
+          {!callActive ? (
+            <NowPlayingBar
+              sessionOn={Boolean(slots.life?.on)}
+              nowPlaying={slots.life?.now_playing}
+              moodTag={slots.life?.mood_tag}
+              onSetTitle={(title) => void send(`I'm listening to ${title}`)}
+              onStop={() => void send("stop listening")}
+            />
+          ) : null}
           {empty && !callActive ? (
             <div className="mx-auto mb-3 flex max-w-lg flex-wrap justify-center gap-1.5">
               {STARTERS.map((s) => (
@@ -928,7 +961,9 @@ function RaiReady() {
                       : "On call…"
                   : holding
                     ? "Listening…"
-                    : "Say something"
+                    : slots.life?.on
+                      ? "Say something — or paste a title"
+                      : "Say something"
               }
               rows={1}
               disabled={callActive && (callListening || talking)}
@@ -985,7 +1020,8 @@ function RaiReady() {
                 <p className="mt-2 text-[0.65rem] leading-relaxed text-subtle">
                   Empty keys stay off the prompt. Streak/relationship come from the affection chip.
                   Natal Chart v1 sends user_birth_date / user_sun / chart_source when filled — never
-                  user_rising, never her bio.
+                  user_rising, never her bio. Life sends session_on / now_playing / daily_playlist /
+                  mood_tag only while a music session is on.
                 </p>
               </div>
             ) : (
@@ -994,6 +1030,15 @@ function RaiReady() {
                 city, or birthday.
               </p>
             )}
+            {slots.life?.daily_playlist?.length ? (
+              <div className="mb-3 rounded-md bg-elevated px-3 py-2 shadow-[var(--shadow-border)]">
+                <p className="text-[0.65rem] tracking-wide text-subtle uppercase">Daily playlist</p>
+                <p className="mt-1 text-sm leading-relaxed text-muted">
+                  {slots.life.daily_playlist.length} stored
+                  {slots.life.on ? "" : " · not sent (session off)"}. She does not recite this.
+                </p>
+              </div>
+            ) : null}
             <div className="mb-3 rounded-md bg-elevated px-3 py-2 shadow-[var(--shadow-border)]">
               <p className="text-[0.65rem] tracking-wide text-subtle uppercase">Diary</p>
               {todayDiary ? (
@@ -1024,7 +1069,8 @@ function RaiReady() {
             {memories.length === 0 ? (
               hasSlots ? null : (
                 <p className="text-sm text-muted">
-                  Chart date/time/place and Life now_playing/mood_tag stay omitted until a meetup or session is on.
+                  Chart date/time/place stay omitted until a meetup. Life keys stay off the
+                  prompt until a music session is on — no login.
                 </p>
               )
             ) : (
@@ -1145,6 +1191,7 @@ function RaiReady() {
               CORS or key issues fall back to the local brain — no breaking character.
               Phone icon starts Call mode (continuous listen → reply → speak).
               Chart v1 uses this browser&apos;s timezone for once-per-day (fallback America/Chicago).
+              Life v1 is music only — paste a title, no Spotify/Apple login. Never blocks Chat.
             </div>
           </div>
         </SheetContent>

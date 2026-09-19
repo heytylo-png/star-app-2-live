@@ -31,6 +31,9 @@ describe("memory slots contract", () => {
     assert.match(MEMORY_SLOTS_CONTRACT, /Lore bio stays in the voice card/);
     assert.match(MEMORY_SLOTS_CONTRACT, /user_birth_date/);
     assert.match(MEMORY_SLOTS_CONTRACT, /Never send user_rising/);
+    assert.match(MEMORY_SLOTS_CONTRACT, /session_on/);
+    assert.match(MEMORY_SLOTS_CONTRACT, /daily_playlist/);
+    assert.match(MEMORY_SLOTS_CONTRACT, /star-life-one-pager/);
     assert.doesNotMatch(MEMORY_SLOTS_CONTRACT, /\bFukuoka\b/);
   });
 });
@@ -59,7 +62,7 @@ describe("formatMemoryFacts", () => {
       last_topic: "night talking",
       last_choice: "wave",
       chart: { date: "saturday", time: "7pm", place: "Shibuya" },
-      life: { on: true, now_playing: "lo-fi", mood_tag: "cozy" },
+      life: { on: true, now_playing: "lo-fi", mood_tag: "smug" },
     };
     const block = formatMemoryFacts(slots, { streakDays: 3, relationship: "Close" });
     assert.match(block, /^last_topic: night talking$/m);
@@ -69,8 +72,9 @@ describe("formatMemoryFacts", () => {
     assert.match(block, /^date: saturday$/m);
     assert.match(block, /^time: 7pm$/m);
     assert.match(block, /^place: Shibuya$/m);
+    assert.match(block, /^session_on: true$/m);
     assert.match(block, /^now_playing: lo-fi$/m);
-    assert.match(block, /^mood_tag: cozy$/m);
+    assert.match(block, /^mood_tag: smug$/m);
   });
 
   it("omits chart when empty and life when the session is off", () => {
@@ -81,10 +85,23 @@ describe("formatMemoryFacts", () => {
     assert.equal(block, "");
   });
 
-  it("omits life keys when the session is on but both fields are empty", () => {
+  it("omits now_playing/playlist when the session is on but those fields are empty", () => {
     const block = formatMemoryFacts({ name: "Tylo", life: { on: true } });
     assert.match(block, /^name: Tylo$/m);
-    assert.doesNotMatch(block, /now_playing|mood_tag/);
+    assert.match(block, /^session_on: true$/m);
+    assert.doesNotMatch(block, /now_playing|mood_tag|daily_playlist/);
+  });
+
+  it("omits standing Life keys when session is off even if a playlist is stored", () => {
+    const block = formatMemoryFacts({
+      name: "Tylo",
+      life: {
+        on: false,
+        daily_playlist: ["Super Shy", "ETA", "Cool With You", "How Sweet"],
+      },
+    });
+    assert.match(block, /^name: Tylo$/m);
+    assert.doesNotMatch(block, /session_on|now_playing|daily_playlist|mood_tag/);
   });
 
   it("emits natal Chart v1 keys when filled and never rising or her bio", () => {
