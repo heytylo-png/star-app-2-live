@@ -1,119 +1,98 @@
 # Star Rai posing — drop-in PNG guide
 
-How to add new pose / idle art without breaking look-at or talk.
+How to add new pose art without breaking talk hold or crossfades.
 
 ## Directory layout
 
 ```
 public/
-  star-rai/                 # Helix pack (default idle / look-at / talk framing)
-    angles/
-      front.png
-      three-quarter.png
-      side.png
-      back.png
-    poses/
-      idle.png
-      shy.png
-      kiss.png
-      wave.png
-      hearts.png
-      turn-away.png
-    idle-talk.png           # mouth-open flap over angles.front while speaking
-    lean-front.png
-    scold-front.png
-    point-front.png
-    finger-front.png
-  rai/                      # Expo pack (extra poses, alts, optional talk bust)
-    front_hold.png
+  rai/                      # Morning official pack (live chat keys) + kept Expo extras
+    idle.png
+    talk_official.png
+    peace.png
+    middle_finger.png
+    wink_official.png
+    laugh_official.png
+    think_official.png
+    pout_official.png
+    tired_official.png
+    smug_official.png
+    wave_official.png       # NOT wave.png / front_wave.png
+    hold_official.png       # NOT front_hold.png
+    embarrassed_official.png
+    scold_official.png      # live scold key — scold-front.png stays on disk unused
+    shy_official.png
+    sad_official.png
+    surprise_official.png
+    content_official.png
+    heart_official.png
     three_quarter.png
     three_quarter_left.png
     three_quarter_right.png
     side_profile.png
-    back_turn.png
-    _alt_idle_smile.png
-    _alt_grin_open.png
-    _alt_hearts_open.png
-    _alt_hearts_release.png
-    front_idle.png          # alt bodies (optional)
-    front_shy.png
-    front_kiss.png
-    front_wave.png
-    front_hearts.png
-    mouth_*.png             # Expo talk bust (USE_EXPO_TALK_BUST only)
-    face_eyes_*.png
+  star-rai/                 # Kept Helix extras (not the live wave/hold/kiss keys)
+    poses/turn-away.png     # live `turn` key
+    point-front.png         # live `point` / "point at me"
+    finger-front.png        # on disk; live alias → middle_finger
+    scold-front.png         # on disk; live `scold` → scold_official.png
+    lean-front.png          # unused for live keys
+    poses/kiss.png          # unmapped
 ```
 
-Keep **Helix under `public/star-rai/`**. Put Expo / mid-shot extras under **`public/rai/`**.
+Live chat keys use the **morning official pack** under `public/rai/`. Do not point `wave` / `hold` at Expo `front_wave` / `front_hold` or the old Helix `wave.png`.
 
-## Size / style tips
+## Filename → pose id map (live keys)
 
-- **Aspect:** ~2:3 portrait mid-shot (chest-up / waist-up). Match existing Helix framing so crossfades don’t jump.
-- **Backdrop:** clean white / light studio — same as live stage radial wash.
-- **Shading:** soft cel-shade, consistent lighting from upper-front.
-- **Safe area:** leave headroom at top for ahoge sway; don’t crop feet/hands at the frame edge if the pose needs them.
-- **Opacity:** opaque character on transparent or white; talk flap (`idle-talk.png`) must align pixel-perfect with `angles/front.png`.
-- **Export:** PNG, sRGB, no heavy compression artifacts on hair edges.
-
-## Filename → pose id map
-
-| Pose id | File | Pack |
-| --- | --- | --- |
-| `idle` | `star-rai/poses/idle.png` (+ look-at angles) | Helix |
-| `shy` | `star-rai/poses/shy.png` | Helix |
-| `kiss` | `star-rai/poses/kiss.png` | Helix |
-| `wave` | `star-rai/poses/wave.png` | Helix |
-| `hearts` | `star-rai/poses/hearts.png` | Helix |
-| `turn-away` | `star-rai/poses/turn-away.png` | Helix |
-| `lean` | `star-rai/lean-front.png` | Helix |
-| `scold` | `star-rai/scold-front.png` | Helix |
-| `point` | `star-rai/point-front.png` | Helix |
-| `finger` | `star-rai/finger-front.png` | Helix |
-| `hold` | `rai/front_hold.png` | Expo |
-| `three_quarter` | `rai/three_quarter.png` | Expo |
-| `three_quarter_left` | `rai/three_quarter_left.png` | Expo |
-| `three_quarter_right` | `rai/three_quarter_right.png` | Expo |
-| `profile` | `rai/side_profile.png` | Expo |
-
-**Idle alts** (not act poses — puppet timer / `idleBeat`):
-
-| Beat | File |
+| Pose id | File |
 | --- | --- |
-| smile | `rai/_alt_idle_smile.png` |
-| grin | `rai/_alt_grin_open.png` |
+| `idle` | `rai/idle.png` |
+| `talk` | `rai/talk_official.png` |
+| `peace` | `rai/peace.png` |
+| `middle_finger` | `rai/middle_finger.png` |
+| `wink` | `rai/wink_official.png` |
+| `laugh` | `rai/laugh_official.png` |
+| `think` | `rai/think_official.png` |
+| `pout` | `rai/pout_official.png` |
+| `tired` | `rai/tired_official.png` |
+| `smug` | `rai/smug_official.png` |
+| `wave` | `rai/wave_official.png` |
+| `hold` | `rai/hold_official.png` |
+| `embarrassed` | `rai/embarrassed_official.png` |
+| `scold` | `rai/scold_official.png` |
+| `shy` | `rai/shy_official.png` |
+| `sad` | `rai/sad_official.png` |
+| `surprise` | `rai/surprise_official.png` |
+| `content` | `rai/content_official.png` |
+| `hearts` | `rai/heart_official.png` |
+| `turn` | `star-rai/poses/turn-away.png` (unchanged) |
+| `profile` | `rai/side_profile.png` (unchanged) |
+| `three_quarter_left` | `rai/three_quarter_left.png` (unchanged) |
+| `three_quarter_right` | `rai/three_quarter_right.png` (unchanged) |
 
-Aliases accepted by `clampPose` / `normalizePose`: `turn_away`, `three-quarter`, `side-profile`, etc.
+**Helix extra (not in the Grok pose list):** `point` → `star-rai/point-front.png`. Also `three_quarter` → `rai/three_quarter.png`.
+
+**Aliases** (`normalizePose` / named commands):
+
+- `finger-front` / `finger-point` / `finger` → `middle_finger` (file stays `star-rai/finger-front.png` on disk)
+- `point` / `point at me` / `point-front` → `point` (do not wipe `point-front.png`)
+- `scold-front` as a name → live `scold` (`scold_official.png`); `scold-front.png` stays on disk
+- `turn-away` → `turn`
+- `heart` → `hearts`
+
+**Unmapped:** `kiss` — no sheet, no command. Keep the current body if requested.
+
+## Talking
+
+- Live key `talk` uses `talk_official.png` (dedicated; holds ~3.4s / ~2.8s after speech like other non-idle poses).
+- Idle + speaking uses the same official talk sheet (full body, not Helix `idle-talk` overlay).
+- Other dedicated poses still hold their own PNG through speech (PR #1). No mouth overlay on those sheets.
 
 ## Add a new pose in 3 steps
 
-1. **Drop the file** into the right tree (`public/star-rai/…` for Helix-matched framing, `public/rai/` for Expo mid-shots).
-2. **Wire it in code** (`src/lib/rai.ts`):
-   - Add the id to `POSES`.
-   - Add `SPRITES.poses.<id> = ASSET("…")`.
-   - Optionally map aliases in `POSE_ALIASES`, mention it in `RAI_SYSTEM`, and teach `composeAct` / `intentToAct` in `brain.ts`.
-3. **Redeploy** (or tell Starai):
+1. Drop the file into `public/rai/` (or `public/star-rai/` only for kept Helix extras).
+2. Wire it in `src/lib/rai.ts`: `POSES`, `LIVE_POSE_FILES` / `SPRITES.poses`, `POSE_ALIASES`. Mention it in `RAI_SYSTEM` only if Grok may pick it.
+3. Redeploy (`npm run build`, push `main`, deploy `dist` to `gh-pages`). Hard-refresh the live app.
 
-   ```bash
-   npm run build
-   # push main + gh-pages (base `/star-app-2-live/`)
-   ```
+## Act pose hold (unchanged from PR #1)
 
-   After Pages updates, hard-refresh the live app so the new PNG is cached.
-
-## Helix vs Expo packs
-
-| | Helix (`star-rai/`) | Expo (`rai/`) |
-| --- | --- | --- |
-| Role | Default presence | Extra poses + idle alts |
-| Idle | Look-at blend of `angles/*` | Brief `_alt_*` smile/grin beats |
-| Talking | `angles/front` + `idle-talk` opacity flap | Mouth/eyes busts only if `USE_EXPO_TALK_BUST` |
-| Framing | Stable mid-shot (no zoom jump) | Slightly different crop — don’t mix as default talk |
-| Dedicated acts | shy / kiss / wave / hearts / turn-away / lean / scold / point / finger | hold / three_quarter* / profile |
-
-**Talk path stays Helix** (`USE_EXPO_TALK_BUST = false`). `turn-away` remains special (no face / no flap).
-
-## Idle variety (no fight look-at)
-
-While `pose === idle`, not talking, and emotion is idle/happy, the puppet every **16–24s** may show `_alt_idle_smile` or `_alt_grin_open` for **~2.8–4.2s** (opacity fade ~400ms) **only when look angle is near front**. Side/back look-at is left alone. Idle beats never interrupt a dedicated act pose or an expressive emotion (angry/flirty/shy). Rare `finger` / `lean` beats come from the offline brain via emotion, not the timer.
-
-**Act pose hold:** dedicated poses stay on screen at least **~3.4s** after they land (and **~2.8s after speech ends**, whichever is later). Talking does not snap a dedicated pose to Helix front — idle talking still uses Helix front + `idle-talk` flap.
+Dedicated poses stay on screen at least **~3.4s** after they land (and **~2.8s after speech ends**, whichever is later). Crossfade ~340ms. Talking does not snap a dedicated pose to idle/talk unless the pose is idle (then the talk sheet is the idle-talk path).

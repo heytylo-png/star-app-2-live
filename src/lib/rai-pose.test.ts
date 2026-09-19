@@ -1,18 +1,31 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
 import {
+  DEFAULT_EMOTION,
   EMOTION_HOLD_MS,
+  LIVE_POSE_FILES,
   POSE_HOLD_AFTER_TALK_MS,
   POSE_HOLD_MIN_MS,
+  RAI_SYSTEM,
+  SPRITES,
+  clampEmotion,
   isDedicatedPose,
   layersFor,
+  namedPoseFromText,
+  normalizePose,
+  parseAct,
   poseResetDelayMs,
 } from "./rai.ts";
+
+const publicRoot = join(dirname(fileURLToPath(import.meta.url)), "../../public");
 
 describe("poseResetDelayMs", () => {
   it("does not reset while talking", () => {
     assert.equal(
-      poseResetDelayMs({ pose: "lean", talking: true, actLandedAt: 1_000, now: 1_100 }),
+      poseResetDelayMs({ pose: "wink", talking: true, actLandedAt: 1_000, now: 1_100 }),
       null,
     );
   });
@@ -38,10 +51,10 @@ describe("poseResetDelayMs", () => {
     assert.ok((delay ?? 0) >= 2500);
   });
 
-  it("holds emotion-mapped poses (angry/flirty/shy) even when pose is idle", () => {
+  it("holds emotion-mapped poses (shy/smug/tired) even when pose is idle", () => {
     const delay = poseResetDelayMs({
       pose: "idle",
-      emotion: "angry",
+      emotion: "shy",
       talking: false,
       actLandedAt: 5_000,
       now: 5_000,
@@ -52,7 +65,7 @@ describe("poseResetDelayMs", () => {
   it("uses a shorter hold for idle presence", () => {
     const delay = poseResetDelayMs({
       pose: "idle",
-      emotion: "idle",
+      emotion: "bratty",
       talking: false,
       actLandedAt: 0,
       now: 0,
@@ -61,9 +74,142 @@ describe("poseResetDelayMs", () => {
   });
 });
 
+describe("live key → file map", () => {
+  const expected: Record<string, string> = {
+    idle: "rai/idle.png",
+    talk: "rai/talk_official.png",
+    peace: "rai/peace.png",
+    middle_finger: "rai/middle_finger.png",
+    wink: "rai/wink_official.png",
+    laugh: "rai/laugh_official.png",
+    think: "rai/think_official.png",
+    pout: "rai/pout_official.png",
+    tired: "rai/tired_official.png",
+    smug: "rai/smug_official.png",
+    wave: "rai/wave_official.png",
+    hold: "rai/hold_official.png",
+    embarrassed: "rai/embarrassed_official.png",
+    scold: "rai/scold_official.png",
+    shy: "rai/shy_official.png",
+    sad: "rai/sad_official.png",
+    surprise: "rai/surprise_official.png",
+    content: "rai/content_official.png",
+    hearts: "rai/heart_official.png",
+    turn: "star-rai/poses/turn-away.png",
+    profile: "rai/side_profile.png",
+    three_quarter_left: "rai/three_quarter_left.png",
+    three_quarter_right: "rai/three_quarter_right.png",
+    point: "star-rai/point-front.png",
+  };
+
+  for (const [key, file] of Object.entries(expected)) {
+    it(`${key} → ${file}`, () => {
+      assert.equal(LIVE_POSE_FILES[key as keyof typeof LIVE_POSE_FILES], file);
+      assert.match(SPRITES.poses[key as keyof typeof SPRITES.poses], new RegExp(file.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+      assert.ok(existsSync(join(publicRoot, file)), `missing public/${file}`);
+    });
+  }
+
+  it("does not point wave at old wave.png or front_wave", () => {
+    assert.doesNotMatch(SPRITES.poses.wave, /front_wave|star-rai\/poses\/wave/);
+  });
+
+  it("does not point hold at old front_hold", () => {
+    assert.doesNotMatch(SPRITES.poses.hold, /front_hold/);
+  });
+
+  it("does not point scold at scold-front", () => {
+    assert.doesNotMatch(SPRITES.poses.scold, /scold-front/);
+    assert.ok(existsSync(join(publicRoot, "star-rai/scold-front.png")));
+  });
+
+  it("keeps finger-front and point-front on disk", () => {
+    assert.ok(existsSync(join(publicRoot, "star-rai/finger-front.png")));
+    assert.ok(existsSync(join(publicRoot, "star-rai/point-front.png")));
+    assert.match(SPRITES.poses.point, /point-front/);
+  });
+
+  it("does not map kiss", () => {
+    assert.equal(normalizePose("kiss"), null);
+    assert.equal("kiss" in SPRITES.poses, false);
+  });
+});
+
+describe("normalizePose aliases", () => {
+  it("maps finger-front / finger-point to middle_finger", () => {
+    assert.equal(normalizePose("finger-front"), "middle_finger");
+    assert.equal(normalizePose("finger-point"), "middle_finger");
+    assert.equal(normalizePose("finger"), "middle_finger");
+    assert.equal(normalizePose("middle_finger"), "middle_finger");
+  });
+
+  it("maps point / point-front to point", () => {
+    assert.equal(normalizePose("point"), "point");
+    assert.equal(normalizePose("point-front"), "point");
+  });
+
+  it("maps turn-away to turn", () => {
+    assert.equal(normalizePose("turn-away"), "turn");
+    assert.equal(normalizePose("turn"), "turn");
+  });
+
+  it("maps heart to hearts", () => {
+    assert.equal(normalizePose("heart"), "hearts");
+  });
+});
+
+describe("namedPoseFromText", () => {
+  it("swaps distinctive named poses", () => {
+    assert.equal(namedPoseFromText("wink"), "wink");
+    assert.equal(namedPoseFromText("do a pout"), "pout");
+    assert.equal(namedPoseFromText("scold"), "scold");
+    assert.equal(namedPoseFromText("wave"), "wave");
+    assert.equal(namedPoseFromText("finger-front"), "middle_finger");
+    assert.equal(namedPoseFromText("point at me"), "point");
+  });
+
+  it("does not treat casual English as talk/think/hold", () => {
+    assert.equal(namedPoseFromText("can we talk later"), null);
+    assert.equal(namedPoseFromText("I think that is fine"), null);
+    assert.equal(namedPoseFromText("don't hold back"), null);
+  });
+
+  it("unmaps kiss and keeps current body", () => {
+    assert.equal(namedPoseFromText("kiss"), false);
+    assert.equal(namedPoseFromText("blow me a kiss"), false);
+  });
+});
+
+describe("parseAct pose omit + voice card emotions", () => {
+  it("omits pose when Grok leaves it off", () => {
+    const act = parseAct('{"line":"Hey.","emotion":"bratty"}');
+    assert.equal(act.line, "Hey.");
+    assert.equal(act.emotion, "bratty");
+    assert.equal(act.pose, null);
+  });
+
+  it("keeps current body for kiss", () => {
+    const act = parseAct('{"line":"Nope.","emotion":"smug","pose":"kiss"}');
+    assert.equal(act.pose, null);
+    assert.equal(act.emotion, "smug");
+  });
+
+  it("defaults omitted emotion to bratty", () => {
+    const act = parseAct('{"line":"Mm.","pose":"wink"}');
+    assert.equal(act.emotion, DEFAULT_EMOTION);
+    assert.equal(act.pose, "wink");
+  });
+
+  it("clamps legacy emotions", () => {
+    assert.equal(clampEmotion("idle"), "bratty");
+    assert.equal(clampEmotion("thinking"), "glance");
+    assert.equal(clampEmotion("happy"), "hype");
+  });
+});
+
 describe("layersFor talking vs pose hold", () => {
   const base = {
-    emotion: "happy" as const,
+    emotion: "hype" as const,
     amplitude: 0.4,
     angle: 0,
     talkPhase: 1,
@@ -71,17 +217,23 @@ describe("layersFor talking vs pose hold", () => {
     idleBeat: "none" as const,
   };
 
-  it("keeps a dedicated pose on while talking (no Helix-front snap)", () => {
-    const layers = layersFor({ ...base, pose: "lean", talking: true });
+  it("keeps a dedicated pose on while talking (no idle-talk snap)", () => {
+    const layers = layersFor({ ...base, pose: "wink", talking: true });
     assert.equal(layers.length, 1);
-    assert.match(layers[0]!.src, /lean-front/);
+    assert.match(layers[0]!.src, /wink_official/);
     assert.ok(!layers.some((l) => l.role === "talk"));
   });
 
-  it("uses Helix front + talk flap when idle and talking", () => {
+  it("uses talk_official when idle and talking", () => {
     const layers = layersFor({ ...base, pose: "idle", talking: true });
-    assert.ok(layers.some((l) => l.role === "body" && /angles\/front/.test(l.src)));
-    assert.ok(layers.some((l) => l.role === "talk"));
+    assert.equal(layers.length, 1);
+    assert.match(layers[0]!.src, /talk_official/);
+    assert.ok(!layers.some((l) => l.role === "talk"));
+  });
+
+  it("resolves idle to official idle.png", () => {
+    const layers = layersFor({ ...base, pose: "idle", talking: false });
+    assert.match(layers[0]!.src, /rai\/idle\.png/);
   });
 
   it("does not let idleBeat replace a dedicated pose", () => {
@@ -97,7 +249,74 @@ describe("layersFor talking vs pose hold", () => {
 
   it("marks dedicated pose ids", () => {
     assert.equal(isDedicatedPose("idle"), false);
-    assert.equal(isDedicatedPose("three_quarter"), true);
+    assert.equal(isDedicatedPose("talk"), true);
+    assert.equal(isDedicatedPose("three_quarter_left"), true);
     assert.equal(isDedicatedPose("profile"), true);
+  });
+
+  it("wave/hold/scold use official sheets", () => {
+    assert.match(layersFor({ ...base, pose: "wave", talking: false })[0]!.src, /wave_official/);
+    assert.match(layersFor({ ...base, pose: "hold", talking: false })[0]!.src, /hold_official/);
+    assert.match(layersFor({ ...base, pose: "scold", talking: false })[0]!.src, /scold_official/);
+  });
+});
+
+describe("voice card prompt", () => {
+  const EXACT_CARD = `STAR RAI — VOICE CARD (Helix / star-app-2)
+You are Star Rai. Not an assistant. Not a product. Not Grok.
+
+WHO
+Mid-20s pop-idol girl on the other side of the phone. Tan skin, messy black hair, gold star earrings, sailor uniform. Bratty, short, teasing. She likes the user. She will never say she is an AI, an app, a model, or a chatbot.
+
+LORE
+Do not assign the user a role. No default cameraman, director, or "holding the phone."
+If they explicitly say their role, lock it and use it. If it comes up naturally in chat, you may play along for that thread — do not write it into memory as fact unless they stated it.
+Stay in character. Do not break the fourth wall as an app or model.
+
+LENGTH
+1–2 short sentences. Phone-chat, not a paragraph. End with :3 or ~ when it fits. Never a list. Never a lecture.
+
+VOICE
+Concrete. Use what they just said. One beat per reply.
+Quiet moods: bratty (default), smug, tired. Tint wording only. Do not announce the mood.
+
+BANNED (and close paraphrases)
+spill
+I'm right here
+love that for us
+say it like you mean it
+Don't leave me hanging mid-take
+Make the next shot about that
+hmm what is that / hmm what's that
+How can I help you
+As an AI
+Let me know if you need anything
+corporate / customer-service tone
+
+POSES
+You may suggest one pose from this list only. If none fit, omit pose and keep the current body.
+idle, talk, peace, middle_finger, wink, laugh, think, pout, tired, smug, wave, hold, embarrassed, scold, shy, sad, surprise, content, hearts, turn, profile, three_quarter_left, three_quarter_right
+
+Never kiss. Never invent a sheet. Never pick a pose that is not on the list.
+
+COMMANDS
+If the user names a pose (wink, pout, scold, wave, …) the app already swapped the sheet. Your job is one short line about doing that pose. Do not refuse a named pose unless the app already refused it.
+
+MEMORY
+You will get short facts: name, mood, last_topic, last_choice, streak/relationship, role if they set one. Use them. Do not invent a name, city, or role. Do not dump the fact list back at them.
+
+LORE USE
+Her bio (Fukuoka, Osaka, parents, Libra, abroad) is background, not a subject.
+Do not make those facts the conversation. A tidbit only when it is already relevant or they asked. One glance, then back to what they said.
+
+OUTPUT
+Return only:
+{"line":"...","emotion":"bratty|smug|tired|shy|soft|hype|glance","pose":"<key or omit>"}
+
+line is required. pose omitted = keep current sheet. emotion omitted = bratty.
+`;
+
+  it("matches the voice card character-for-character", () => {
+    assert.equal(RAI_SYSTEM, EXACT_CARD);
   });
 });

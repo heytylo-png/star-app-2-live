@@ -95,10 +95,10 @@ Do not rename keys without a migrator. Document schema bumps here.
 
 See **[POSING.md](./POSING.md)** for the drop-in guide:
 
-- Directory layout (`public/star-rai/` Helix vs `public/rai/` Expo)
-- Filename → pose id map (including `lean`, `scold`, `point`, `finger`, `hold`, `three_quarter*`, `profile`)
-- 3-step add: drop file → wire `POSES` / `SPRITES` in `src/lib/rai.ts` → redeploy
-- Style tips (2:3 mid-shot, white studio, cel-shade) and Helix vs Expo differences
+- Morning official pack under `public/rai/` (`*_official.png`, `idle.png`, `peace.png`, `middle_finger.png`, `heart_official.png`)
+- Live key → file table (`wave` → `wave_official.png`, `hold` → `hold_official.png`, `scold` → `scold_official.png`; `kiss` unmapped)
+- Kept as-today: `turn`, `profile`, `three_quarter_left`, `three_quarter_right`; Helix extra `point` → `point-front.png`
+- Voice card (`RAI_SYSTEM`) is the Grok/system prompt; offline `composeAct` is fallback only
 
 ## Develop
 

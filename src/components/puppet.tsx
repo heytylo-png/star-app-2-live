@@ -181,7 +181,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       !talkingRef.current &&
       !isDedicatedPose(poseRef.current) &&
       !isExpressiveEmotion(emotionRef.current) &&
-      (emotionRef.current === "idle" || emotionRef.current === "happy");
+      (emotionRef.current === "bratty" || emotionRef.current === "hype");
 
     const schedule = () => {
       const wait = IDLE_BEAT_GAP_MIN_MS + Math.random() * IDLE_BEAT_GAP_JITTER_MS;
