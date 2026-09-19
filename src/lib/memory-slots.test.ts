@@ -172,6 +172,7 @@ describe("extractSlotsFromUserText", () => {
 
   it("records user mood when they state it — does not invent", () => {
     assert.equal(extractSlotsFromUserText("I'm tired.").mood, "tired");
+    assert.match(extractSlotsFromUserText("I'm tired.").last_topic ?? "", /tired/i);
     assert.equal(extractSlotsFromUserText("Hey.").mood, undefined);
   });
 });

@@ -233,7 +233,8 @@ function compactTopic(text: string): string | undefined {
   let t = text.replace(/\s+/g, " ").trim();
   if (!t || isGreetingOnly(t)) return undefined;
   const named = namedPoseFromText(t);
-  if (named !== null && t.split(/\s+/).length <= 4) return undefined;
+  // Bare pose commands are not topics. Mood lines like "I'm tired" still are.
+  if (named !== null && t.split(/\s+/).length <= 4 && !extractMood(t)) return undefined;
   t = t.replace(/^(please )?remember (that |this )?/i, "");
   t = clip(t, 72);
   if (!t) return undefined;
