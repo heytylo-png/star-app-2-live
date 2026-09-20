@@ -60,7 +60,7 @@ function fadeMsFor(layer: SpriteLayer): number {
 }
 
 /**
- * Star Rai 2D puppet — idle life, look-at, Helix talk flap, mid-shot framing.
+ * Star Rai 2D puppet — idle life, look-at, Helix talk flap, tight beige mid-shot.
  * Layers crossfade by stable id so pose changes never hard-pop.
  * While talking: Helix front + idle-talk opacity flap (talkPhase); Expo busts gated off.
  */
@@ -409,49 +409,44 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   return (
     <div
       ref={stageRef}
-      className={cn("relative h-full w-full overflow-hidden bg-stage", className)}
+      className={cn("rai-stage", className)}
       aria-hidden="true"
       data-rai-pose={pose}
       data-rai-emotion={emotion}
       data-rai-talking={talking ? "1" : "0"}
       data-rai-idle-beat={idleBeat}
     >
-      {/* White studio mid-shot backdrop */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_22%,#ffffff_0%,#f7f4ee_42%,#ebe6dc_78%,#e4ddd2_100%)]" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-[#e8e2d8]/90 via-[#ebe6dc]/35 to-transparent" />
+      {/* Beige stage plate — no white studio card. Tokens live in styles.css. */}
+      <div className="rai-stage-wash" />
+      <div className="rai-stage-floor" />
 
       {/*
-        Framing: header clearance + bottom chrome room so feet/head aren't clipped.
-        Character owns the vertical stage between chrome bands.
+        Blend wraps the 3D rig (not the other way around) so sheet white
+        multiplies onto the beige room. Idle-life transforms stay on [data-rai-rig].
       */}
-      <div
-        data-rai-rig
-        className="absolute inset-x-0 top-[max(3.25rem,env(safe-area-inset-top))] bottom-[clamp(9rem,30vh,12.5rem)] origin-center will-change-transform sm:inset-x-[8%] md:inset-x-[14%] lg:inset-x-[18%]"
-        style={{ transformOrigin: "50% 38%" }}
-      >
-        {display.map((layer) => (
-          <img
-            key={layer.id}
-            src={layer.src}
-            alt=""
-            draggable={false}
-            decoding="async"
-            className="absolute inset-0 h-full w-full object-contain object-[center_12%] select-none"
-            style={{
-              opacity: layer.opacity,
-              zIndex: layer.z,
-              // Talk flap tracks sin immediately; pose / idle-beat ease across.
-              transition: isInstantLayer(layer)
-                ? "none"
-                : `opacity ${fadeMsFor(layer)}ms var(--ease-smooth-out)`,
-            }}
-          />
-        ))}
-        {/* Ahoge / hair tip proxy — rotates over the crown */}
-        <span
-          data-rai-ahoge
-          className="pointer-events-none absolute top-[1%] left-[40%] h-[16%] w-[24%] origin-[48%_100%] will-change-transform"
-        />
+      <div className="rai-blend">
+        <div data-rai-rig className="rai-rig">
+          {display.map((layer) => (
+            <img
+              key={layer.id}
+              src={layer.src}
+              alt=""
+              draggable={false}
+              decoding="async"
+              className="rai-layer"
+              style={{
+                opacity: layer.opacity,
+                zIndex: layer.z,
+                // Talk flap tracks sin immediately; pose / idle-beat ease across.
+                transition: isInstantLayer(layer)
+                  ? "none"
+                  : `opacity ${fadeMsFor(layer)}ms var(--ease-smooth-out)`,
+              }}
+            />
+          ))}
+          {/* Ahoge / hair tip proxy — rotates over the crown */}
+          <span data-rai-ahoge className="rai-ahoge" />
+        </div>
       </div>
     </div>
   );

@@ -7,9 +7,9 @@
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   --color-bg: #efece6;
-  --color-stage: #f4f1eb;
-  --color-surface: #ffffffcc;
-  --color-elevated: #ffffff;
+  --color-stage: #efece6;
+  --color-surface: #f3efe7cc;
+  --color-elevated: #f3efe7;
   --color-fg: #1c1916;
   --color-muted: #6d675f;
   --color-subtle: #8a847a;
@@ -256,6 +256,126 @@
 body.chat-thread-resizing {
   cursor: ns-resize;
   user-select: none;
+}
+
+/*
+  Helix PNG stage — beige room, tight mid-shot, ahoge-safe zoom.
+  Shared tokens so a later 3D presence plate can sit in the same room
+  without a white studio card. Puppet JS still owns [data-rai-rig] motion.
+*/
+.rai-stage {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--color-bg);
+}
+
+.rai-stage-wash {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  /* Solid beige — a white hotspot would still read as a studio card after multiply. */
+  background: var(--color-stage);
+}
+
+.rai-stage-floor {
+  pointer-events: none;
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 38%;
+  background: linear-gradient(
+    to top,
+    color-mix(in oklab, var(--color-bg) 94%, transparent),
+    color-mix(in oklab, var(--color-stage) 28%, transparent),
+    transparent
+  );
+}
+
+.rai-rig {
+  position: absolute;
+  left: -4%;
+  right: -4%;
+  /* Header band + a little crown air so sway cannot clip the ahoge. */
+  top: max(2.45rem, calc(env(safe-area-inset-top) + 0.2rem));
+  /* Composer + tabs only — she continues into the compact Chat band. */
+  bottom: clamp(5.1rem, 15vh, 7.25rem);
+  transform-origin: 50% 28%;
+  will-change: transform;
+}
+
+@media (min-width: 640px) {
+  .rai-rig {
+    left: 0;
+    right: 0;
+  }
+}
+
+@media (min-width: 768px) {
+  .rai-rig {
+    left: 6%;
+    right: 6%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .rai-rig {
+    left: 10%;
+    right: 10%;
+  }
+}
+
+/* Outside the 3D rig: flatten the PNG stack, then multiply onto the beige plate.
+   Putting blend *inside* a perspective() parent left the white sheet intact. */
+.rai-blend {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: multiply;
+}
+
+.rai-layer {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: 50% 0%;
+  pointer-events: none;
+  user-select: none;
+  /*
+    Official pack is ~half-width on a white sheet with the ahoge at the top.
+    Zoom from the crown: crop side white + drop feet into Chat; never clip hair.
+  */
+  top: 3.25%;
+  transform: scale(1.42);
+  transform-origin: 50% 0%;
+}
+
+@media (max-width: 639px) {
+  .rai-layer {
+    top: 2.5%;
+    transform: scale(1.56);
+  }
+}
+
+@media (min-width: 640px) and (min-height: 900px) {
+  .rai-layer {
+    transform: scale(1.36);
+  }
+}
+
+.rai-ahoge {
+  pointer-events: none;
+  position: absolute;
+  top: 1%;
+  left: 40%;
+  height: 16%;
+  width: 24%;
+  transform-origin: 48% 100%;
+  will-change: transform;
 }
 
 .companion-stage {
