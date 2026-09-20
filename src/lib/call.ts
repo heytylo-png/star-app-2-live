@@ -70,3 +70,112 @@ export function hangUpCallState(before: CallHangUpSnapshot): CallHangUpSnapshot 
     pose: before.pose,
   };
 }
+
+/** Live Pages host — used in the unblock copy. */
+export const CALL_PAGES_HOST = "heytylo-png.github.io";
+
+export type CallMicNoticeKind =
+  | "denied"
+  | "unavailable"
+  | "no-speech-api"
+  | "insecure"
+  | "busy";
+
+export type CallMicNotice = {
+  kind: CallMicNoticeKind;
+  title: string;
+  body: string;
+};
+
+/** Android Chrome: site settings path when the prompt never appears (blocked). */
+export const MIC_UNBLOCK_STEPS = `Chrome menu or the lock icon → Site settings → Microphone → Allow for ${CALL_PAGES_HOST}`;
+
+export function callMicNotice(kind: CallMicNoticeKind): CallMicNotice {
+  if (kind === "no-speech-api") {
+    return {
+      kind,
+      title: "This browser can't listen",
+      body: "Call mode needs Chrome speech input (webkitSpeechRecognition). Type instead, or open this page in Chrome.",
+    };
+  }
+  if (kind === "insecure") {
+    return {
+      kind,
+      title: "Mic needs a secure page",
+      body: "Open the HTTPS GitHub Pages URL in Chrome, then tap the phone again.",
+    };
+  }
+  if (kind === "unavailable") {
+    return {
+      kind,
+      title: "Can't use the microphone",
+      body: `No mic, or another app has it. Close other recorders, then tap the phone again. If Chrome never asked: ${MIC_UNBLOCK_STEPS}.`,
+    };
+  }
+  if (kind === "busy") {
+    return {
+      kind,
+      title: "Mic busy",
+      body: "Something else is using the microphone. Hang up other calls, then tap the phone again.",
+    };
+  }
+  return {
+    kind: "denied",
+    title: "Microphone is blocked",
+    body: `Chrome didn't allow the mic (no prompt, or it was denied). ${MIC_UNBLOCK_STEPS}, then tap the phone again.`,
+  };
+}
+
+export function classifyGetUserMediaError(err: unknown): CallMicNoticeKind {
+  const name =
+    err && typeof err === "object" && "name" in err ? String((err as { name: string }).name) : "";
+  const message = err instanceof Error ? err.message : String(err ?? "");
+  if (name === "NotFoundError" || name === "DevicesNotFoundError") return "unavailable";
+  if (name === "NotReadableError" || name === "TrackStartError") return "busy";
+  if (name === "OverconstrainedError") return "unavailable";
+  if (name === "SecurityError") return "insecure";
+  if (name === "AbortError") return "busy";
+  if (name === "NotAllowedError" || name === "PermissionDeniedError") return "denied";
+  if (/not allowed|permission|denied|blocked/i.test(message)) return "denied";
+  return "denied";
+}
+
+/**
+ * SpeechRecognition error after a mic grant.
+ * Empty / no-speech / aborted → keep the listen loop. Permission errors surface.
+ */
+export function speechRecErrorAction(
+  error: string | undefined,
+  micGranted: boolean,
+): "restart" | "denied" | "ignore" {
+  const err = (error ?? "").toLowerCase();
+  if (err === "no-speech" || err === "aborted") return "restart";
+  if (err === "network") return "restart";
+  if (err === "audio-capture" && micGranted) return "restart";
+  if (err === "not-allowed" || err === "service-not-allowed") return "denied";
+  if (err === "audio-capture") return "denied";
+  if (!err) return "ignore";
+  return "restart";
+}
+
+export type CallGumFn = (constraints: MediaStreamConstraints) => Promise<MediaStream>;
+
+/**
+ * Start getUserMedia on the tap itself (no setTimeout / await before this call).
+ * Android Chrome shows the mic prompt for gUM, not for SpeechRecognition alone.
+ */
+export function beginCallMicRequest(getUserMedia: CallGumFn): Promise<MediaStream> {
+  return getUserMedia({ audio: true });
+}
+
+/** Stop every track. Safe to call twice. Never records. */
+export function stopMediaTracks(stream: { getTracks: () => { stop: () => void }[] } | null | undefined) {
+  if (!stream) return;
+  for (const track of stream.getTracks()) {
+    try {
+      track.stop();
+    } catch {
+      /* ignore */
+    }
+  }
+}

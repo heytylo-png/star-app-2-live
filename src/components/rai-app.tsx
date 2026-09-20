@@ -62,10 +62,16 @@ import {
 import { speak, stopVoice, unlockVoice } from "@/lib/voice";
 import { speakable } from "@/lib/companion";
 import {
+  beginCallMicRequest,
+  callMicNotice,
   callTranscriptAction,
+  classifyGetUserMediaError,
   shouldEndCallOnPageEvent,
   shouldSpeakCallLine,
+  speechRecErrorAction,
   spokenCallLine,
+  stopMediaTracks,
+  type CallMicNotice,
 } from "@/lib/call";
 import { cn } from "@/lib/utils";
 
@@ -158,6 +164,8 @@ function RaiReady() {
   const [callActive, setCallActive] = useState(false);
   const [callListening, setCallListening] = useState(false);
   const [callSupported, setCallSupported] = useState(true);
+  const [callStarting, setCallStarting] = useState(false);
+  const [callNotice, setCallNotice] = useState<CallMicNotice | null>(null);
   const [amp, setAmp] = useState(0);
 
   const abortRef = useRef<AbortController | null>(null);
@@ -170,6 +178,10 @@ function RaiReady() {
   const listenAfterSpeakRef = useRef(false);
   const bargeRecRef = useRef<Rec | null>(null);
   const hangUpRef = useRef<() => void>(() => {});
+  const micStreamRef = useRef<MediaStream | null>(null);
+  const callStartingRef = useRef(false);
+  const micGrantedRef = useRef(false);
+  const callStartGenRef = useRef(0);
   const poseRef = useRef<PoseId>("idle");
   const tabRef = useRef<ShellTab>(DEFAULT_SHELL_TAB);
   /** When the last act pose/emotion landed — drives the hold timer. */
@@ -239,10 +251,14 @@ function RaiReady() {
       window.removeEventListener("beforeunload", onBeforeUnload);
       window.removeEventListener("freeze", onFreeze);
       callActiveRef.current = false;
+      callStartingRef.current = false;
+      micGrantedRef.current = false;
       listenAfterSpeakRef.current = false;
       abortRef.current?.abort();
       stopVoice();
       stopRec();
+      stopMediaTracks(micStreamRef.current);
+      micStreamRef.current = null;
     };
   }, []);
 
@@ -295,6 +311,12 @@ function RaiReady() {
     bargeRecRef.current = null;
   }
 
+  function stopCallMic() {
+    stopMediaTracks(micStreamRef.current);
+    micStreamRef.current = null;
+    micGrantedRef.current = false;
+  }
+
   function toggleVoice() {
     unlockVoice();
     const next = !voiceOn;
@@ -342,12 +364,14 @@ function RaiReady() {
       const err = event.error ?? "";
       recRef.current = null;
       setCallListening(false);
-      // Restart quietly on no-speech / aborted while still on call
-      if (
-        callActiveRef.current &&
-        !sendingRef.current &&
-        (err === "no-speech" || err === "aborted" || err === "audio-capture")
-      ) {
+      const action = speechRecErrorAction(err, micGrantedRef.current);
+      if (action === "denied") {
+        setCallNotice(callMicNotice("denied"));
+        hangUpRef.current();
+        return;
+      }
+      // Empty / no-speech / aborted / capture-after-grant → keep listening.
+      if (action === "restart" && callActiveRef.current && !sendingRef.current) {
         window.setTimeout(() => {
           if (callActiveRef.current && !sendingRef.current && !talkingRef.current) {
             startCallListen();
@@ -383,8 +407,12 @@ function RaiReady() {
       rec.start();
     } catch {
       setCallListening(false);
-      setCaption("Mic busy — try again.");
       recRef.current = null;
+      if (!micGrantedRef.current) {
+        setCallNotice(callMicNotice("denied"));
+        hangUpRef.current();
+        return;
+      }
       window.setTimeout(() => {
         if (callActiveRef.current && !sendingRef.current) startCallListen();
       }, 700);
@@ -394,6 +422,7 @@ function RaiReady() {
   /** Barge-in listener while she speaks — first speech or speechstart stops TTS. */
   const startBargeListen = useCallback(() => {
     if (!callActiveRef.current) return;
+    if (!talkingRef.current) return;
     const SR = getSpeechRecognition();
     if (!SR) return;
     try {
@@ -712,10 +741,14 @@ function RaiReady() {
   }
 
   function hangUp() {
+    callStartGenRef.current += 1;
     callActiveRef.current = false;
+    callStartingRef.current = false;
     setCallActive(false);
+    setCallStarting(false);
     listenAfterSpeakRef.current = false;
     stop();
+    stopCallMic();
     // Thread / memory / sheet stay. Drop the listen placeholder so the last line shows.
     setCaption((c) => (c === "Listening…" ? "" : c));
   }
@@ -735,23 +768,71 @@ function RaiReady() {
   }
 
   function toggleCall() {
-    unlockVoice();
-    if (callActive) {
+    if (callActive || callStartingRef.current) {
       hangUp();
       return;
     }
+
+    setCallNotice(null);
+
     const SR = getSpeechRecognition();
     if (!SR) {
       setCallSupported(false);
-      setCaption("Call mode needs speech input on this browser — type instead.");
+      setCallNotice(callMicNotice("no-speech-api"));
       return;
     }
-    // Mute in chrome wins — do not force TTS on.
-    callActiveRef.current = true;
-    setCallActive(true);
+    if (typeof window !== "undefined" && window.isSecureContext === false) {
+      setCallNotice(callMicNotice("insecure"));
+      return;
+    }
+    const gum = navigator.mediaDevices?.getUserMedia?.bind(navigator.mediaDevices);
+    if (!gum) {
+      setCallNotice(callMicNotice("unavailable"));
+      return;
+    }
+
+    // Direct user-gesture path: start getUserMedia before any await.
+    // Android Chrome shows the mic prompt for gUM, not SpeechRecognition alone.
+    const startId = ++callStartGenRef.current;
+    let gumPromise: Promise<MediaStream>;
+    try {
+      gumPromise = beginCallMicRequest(gum);
+    } catch (err) {
+      setCallNotice(callMicNotice(classifyGetUserMediaError(err)));
+      return;
+    }
+    unlockVoice();
+
+    callStartingRef.current = true;
+    setCallStarting(true);
     setCallSupported(true);
-    listenAfterSpeakRef.current = true;
-    startCallListen();
+
+    void gumPromise
+      .then((stream) => {
+        callStartingRef.current = false;
+        setCallStarting(false);
+        if (startId !== callStartGenRef.current) {
+          stopMediaTracks(stream);
+          return;
+        }
+        micStreamRef.current = stream;
+        // Release the capture so SpeechRecognition can use the mic.
+        // Permission stays granted for this origin until they block it.
+        stopMediaTracks(stream);
+        micGrantedRef.current = true;
+        callActiveRef.current = true;
+        setCallActive(true);
+        listenAfterSpeakRef.current = true;
+        setCallNotice(null);
+        startCallListen();
+      })
+      .catch((err) => {
+        callStartingRef.current = false;
+        setCallStarting(false);
+        if (startId !== callStartGenRef.current) return;
+        stopCallMic();
+        setCallNotice(callMicNotice(classifyGetUserMediaError(err)));
+      });
   }
 
   function startPtt() {
@@ -813,7 +894,9 @@ function RaiReady() {
   const slotFacts = formatMemoryFacts(slots);
   const hasSlots = Boolean(slotFacts);
 
-  const status = callActive
+  const status = callStarting
+    ? "Allow mic"
+    : callActive
     ? talking
       ? "Speaking"
       : sending
@@ -853,6 +936,8 @@ function RaiReady() {
                   "inline-block size-1.5 rounded-full",
                   callActive && callListening
                     ? "bg-danger animate-pulse"
+                    : callStarting
+                      ? "bg-danger animate-pulse"
                     : holding
                       ? "bg-danger animate-pulse"
                       : talking
@@ -886,15 +971,21 @@ function RaiReady() {
           </span>
           <Button
             type="button"
-            variant={callActive ? "default" : "ghost"}
+            variant={callActive || callStarting ? "default" : "ghost"}
             size="icon-sm"
-            aria-label={callActive ? "Hang up" : "Start call"}
-            aria-pressed={callActive}
-            title={callSupported ? (callActive ? "Hang up" : "Call mode") : "Speech input unavailable"}
+            aria-label={callActive || callStarting ? "Hang up" : "Start call"}
+            aria-pressed={callActive || callStarting}
+            title={
+              !callSupported || callNotice?.kind === "no-speech-api"
+                ? "Speech input unavailable"
+                : callActive || callStarting
+                  ? "Hang up"
+                  : "Call mode"
+            }
             onClick={toggleCall}
-            className={cn(callActive && "ring-2 ring-ring")}
+            className={cn((callActive || callStarting) && "ring-2 ring-ring")}
           >
-            {callActive ? <PhoneOff className="size-4" /> : <Phone className="size-4" />}
+            {callActive || callStarting ? <PhoneOff className="size-4" /> : <Phone className="size-4" />}
           </Button>
           <Button
             type="button"
@@ -980,7 +1071,18 @@ function RaiReady() {
 
         {tab === "chat" ? (
         <div className="pointer-events-auto bg-gradient-to-t from-bg via-bg/90 to-transparent px-3 pt-4 pb-2 sm:px-4 sm:pt-5">
-          {callActive ? (
+          {callStarting ? (
+            <div className="mx-auto mb-3 flex max-w-lg items-center justify-between gap-2 rounded-full bg-elevated px-3 py-2 shadow-[var(--shadow-border)]">
+              <p className="text-xs tracking-wide text-muted">
+                <span className="font-medium text-fg">Allow microphone</span>
+                {" · Chrome should ask now"}
+              </p>
+              <Button type="button" size="sm" variant="secondary" onClick={hangUp}>
+                <PhoneOff className="size-3.5" />
+                Cancel
+              </Button>
+            </div>
+          ) : callActive ? (
             <div className="mx-auto mb-3 flex max-w-lg items-center justify-between gap-2 rounded-full bg-elevated px-3 py-2 shadow-[var(--shadow-border)]">
               <p className="text-xs tracking-wide text-muted">
                 <span className="font-medium text-fg">On call</span>
@@ -991,6 +1093,29 @@ function RaiReady() {
                 <PhoneOff className="size-3.5" />
                 Hang up
               </Button>
+            </div>
+          ) : null}
+
+          {callNotice ? (
+            <div
+              role="status"
+              className="mx-auto mb-3 max-w-lg rounded-xl bg-elevated px-3 py-2.5 text-sm shadow-[var(--shadow-border)]"
+            >
+              <div className="flex items-start gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-fg">{callNotice.title}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted">{callNotice.body}</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Dismiss"
+                  onClick={() => setCallNotice(null)}
+                >
+                  <X className="size-4" />
+                </Button>
+              </div>
             </div>
           ) : null}
 
@@ -1007,7 +1132,7 @@ function RaiReady() {
               }}
             />
           ) : null}
-          {empty && !callActive && !showSetup ? (
+          {empty && !callActive && !callStarting && !showSetup ? (
             <div className="mx-auto mb-3 flex max-w-lg flex-wrap justify-center gap-1.5">
               {STARTERS.map((s) => (
                 <button
@@ -1278,9 +1403,11 @@ function RaiReady() {
             <div className="rounded-md bg-elevated px-3 py-2.5 text-xs leading-relaxed text-muted shadow-[var(--shadow-border)]">
               With a key, Star Rai calls xAI (<span className="text-fg">grok-4-latest</span>).
               CORS or key issues fall back to the local brain — no breaking character.
-              Phone icon starts Call mode (listen → same Chat brain → speak the
-              line only). Tap again to hang up — thread stays. Mute in the header
-              still skips TTS. Mic audio is never stored.
+              Phone icon starts Call mode. Chrome on Android asks for the
+              microphone on that tap (getUserMedia). If the prompt never
+              appears, unblock it: site settings → Microphone → Allow for
+              heytylo-png.github.io. Tap again to hang up — thread stays.
+              Mute in the header still skips TTS. Mic audio is never stored.
               Tabs are Chat · Chart · Life — launch on Chat. Chart edits natal slots only (no
               auto-reading). Life v1 is music only — paste a title, no Spotify/Apple login.
               Session can stay on in the background; comments still land in Chat.

@@ -8,11 +8,17 @@ import { CALL_MODE_SOURCE, RAI_SYSTEM } from "./generated/star-rai-artifacts.ts"
 import { namedPoseFromText, resolveSpokenPose } from "./rai.ts";
 import {
   CALL_STORE_RECORDINGS,
+  beginCallMicRequest,
+  callMicNotice,
   callTranscriptAction,
+  classifyGetUserMediaError,
   hangUpCallState,
+  MIC_UNBLOCK_STEPS,
   shouldEndCallOnPageEvent,
   shouldSpeakCallLine,
+  speechRecErrorAction,
   spokenCallLine,
+  stopMediaTracks,
 } from "./call.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -108,6 +114,61 @@ describe("hangup + page leave", () => {
 
   it("never stores recordings", () => {
     assert.equal(CALL_STORE_RECORDINGS, false);
+  });
+});
+
+describe("Android Chrome mic permission", () => {
+  it("starts getUserMedia synchronously from the tap (no async gap)", () => {
+    let called = false;
+    const gum: Parameters<typeof beginCallMicRequest>[0] = (constraints) => {
+      called = true;
+      assert.deepEqual(constraints, { audio: true });
+      return Promise.resolve({ getTracks: () => [] } as unknown as MediaStream);
+    };
+    const pending = beginCallMicRequest(gum);
+    assert.equal(called, true);
+    assert.equal(typeof pending.then, "function");
+  });
+
+  it("classifies denied / blocked vs missing hardware", () => {
+    assert.equal(classifyGetUserMediaError({ name: "NotAllowedError" }), "denied");
+    assert.equal(classifyGetUserMediaError({ name: "PermissionDeniedError" }), "denied");
+    assert.equal(classifyGetUserMediaError({ name: "NotFoundError" }), "unavailable");
+    assert.equal(classifyGetUserMediaError({ name: "NotReadableError" }), "busy");
+    assert.equal(classifyGetUserMediaError({ name: "SecurityError" }), "insecure");
+  });
+
+  it("tells them how to unblock heytylo-png.github.io", () => {
+    const notice = callMicNotice("denied");
+    assert.match(notice.title, /blocked/i);
+    assert.match(notice.body, /heytylo-png\.github\.io/);
+    assert.match(notice.body, /Microphone/);
+    assert.match(MIC_UNBLOCK_STEPS, /Allow for heytylo-png\.github\.io/);
+    assert.match(callMicNotice("no-speech-api").body, /webkitSpeechRecognition|speech input/i);
+  });
+
+  it("keeps listening after empty / no-speech; surfaces not-allowed", () => {
+    assert.equal(speechRecErrorAction("no-speech", true), "restart");
+    assert.equal(speechRecErrorAction("aborted", true), "restart");
+    assert.equal(speechRecErrorAction("not-allowed", true), "denied");
+    assert.equal(speechRecErrorAction("service-not-allowed", false), "denied");
+    assert.equal(speechRecErrorAction("audio-capture", false), "denied");
+    assert.equal(speechRecErrorAction("audio-capture", true), "restart");
+  });
+
+  it("stops tracks without throwing", () => {
+    let stopped = 0;
+    stopMediaTracks({
+      getTracks: () => [
+        {
+          stop: () => {
+            stopped += 1;
+          },
+        },
+      ],
+    });
+    stopMediaTracks(null);
+    assert.equal(stopped, 1);
   });
 });
 
