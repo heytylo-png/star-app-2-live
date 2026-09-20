@@ -1,6 +1,6 @@
 # star-app-2-live
 
-**Live channel for Star Rai presence** — lean Vite + React SPA with the puppet (idle life, look-at, crossfades, Helix talk flap, framing), **optional xAI Grok brain**, offline `composeAct` fallback, browser TTS, Call mode, soft affection, and durable memory.
+**Live channel for Star Rai presence** — lean Vite + React SPA with the official PNG puppet (planted idle life, look-at lean, pose crossfades, talk-sheet mouth flap, long-shot framing), **optional xAI Grok brain**, offline `composeAct` fallback, browser TTS, Call mode, soft affection, and durable memory.
 
 ## Live URL
 
@@ -145,7 +145,7 @@ The Worker forwards `POST /v1/chat/completions`, reads the key from `X-User-Key`
 
 | Feature | Behavior |
 | --- | --- |
-| Puppet / poses | Fully client-side (Helix talk flap) |
+| Puppet / poses | Fully client-side PNG puppet (idle life + official talk flap) |
 | Chat brain | Local pose-keyed `artifacts/star-rai-local-brain.txt`; optional Grok (`grok-4-latest`) when key present |
 | Voice | Browser `SpeechSynthesis` (prefers female English when available) |
 | Hold-to-talk | Browser `SpeechRecognition` when present; otherwise type |
@@ -181,6 +181,15 @@ See **[POSING.md](./POSING.md)** for the drop-in guide:
 - Live key → file table (`wave` → `wave_official.png`, `hold` → `hold_official.png`, `scold` → `scold_official.png`; `kiss` unmapped)
 - Kept as-today: `turn`, `profile`, `three_quarter_left`, `three_quarter_right`; Helix extra `point` → `point-front.png`
 - Voice card (`artifacts/star-rai-voice-card.txt`) is baked into `RAI_SYSTEM` at sync/build (`scripts/sync-star-rai-artifacts.js`); offline fallback is `artifacts/star-rai-local-brain.txt` (pose-keyed lines); memory-slot contract is `artifacts/star-rai-memory-slots.txt` (appended after the voice card on grok-4-latest, filled keys only). Chart v1 SoT is `artifacts/star-chart-v1.txt`. Cheap sky SoT is `artifacts/star-rai-horoscope-cheap.txt` (client-side astronomy-engine). Call mode SoT is `artifacts/star-rai-call-mode.txt`. Clock / NOW SoT is `artifacts/star-rai-clock.txt`. Do not edit `src/lib/generated/star-rai-artifacts.ts` by hand.
+
+## Animation (PNG puppet)
+
+See **[ANIMATION.md](./ANIMATION.md)** for the shipping motion model:
+
+- Official PNG is the live body (idle breathe / sway, 380ms pose crossfades, talk flap on `idle` + `talk_official`)
+- Spine / DragonBones is track #2; Rive is track #3 — stubs only
+- 3D / Lab mesh is not Rai
+
 
 ## Develop
 

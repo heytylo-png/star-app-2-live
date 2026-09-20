@@ -46,6 +46,8 @@ export const POSE_HOLD_AFTER_TALK_MS = 2800;
 /** Emotion-only (idle pose) reset after activity stops (ms). */
 export const EMOTION_HOLD_MS = 2200;
 
+export { POSE_CROSSFADE_MS } from "./rai-motion.ts";
+
 /** Idle smile/grin: longer gap so beats don't chatter. */
 export const IDLE_BEAT_GAP_MIN_MS = 16000;
 export const IDLE_BEAT_GAP_JITTER_MS = 8000;
@@ -60,6 +62,15 @@ const UNMAPPED_POSES = new Set(["kiss", "kisses", "blown-kiss", "blow-kiss", "bl
 
 export function isDedicatedPose(pose: PoseId): boolean {
   return pose !== "idle";
+}
+
+/**
+ * Idle rest + the live `talk` key share the same official full-body frame,
+ * so speaking can flap `talk_official` over `idle` instead of a hard cut.
+ * Wave/scold/shy/… still hold their own sheet (no mouth overlay).
+ */
+export function isTalkPathPose(pose: PoseId): boolean {
+  return pose === "idle" || pose === "talk";
 }
 
 /** Emotions that pin a dedicated PNG even when pose is still idle. */
@@ -246,12 +257,14 @@ export type PuppetState = {
   talking: boolean;
   amplitude: number;
   angle: number;
-  /** Seconds — drives Helix idle-talk opacity flap (sin phase). */
+  /** Seconds — drives official talk-sheet opacity flap (sin phase). */
   talkPhase?: number;
-  /** 0 open, 1 half, 2 closed — Expo talk blink only (ignored on Helix path). */
+  /** 0 open, 1 half, 2 closed — Expo talk bust only (ignored on official PNG). */
   blink?: 0 | 1 | 2;
-  /** Brief idle variety beat from puppet timer (smile/grin). */
+  /** Brief idle variety beat from puppet timer (smile/grin). Official pack ignores Expo alts. */
   idleBeat?: IdleBeat;
+  /** Skip mouth flap; show a static talk sheet. */
+  reducedMotion?: boolean;
 };
 
 function clamp01(n: number): number {
@@ -275,15 +288,17 @@ export function talkOpacity(amplitude: number, talking: boolean): number {
 }
 
 /**
- * Helix idle-talk opacity flap — time-driven so mouth visibly opens/closes
- * several times per second even when TTS amp is flat. Mixed with amp.
- * Formula: 0.2 + 0.75 * (0.5 + 0.5*sin(t*14)) × amp mix.
+ * Official talk-sheet opacity flap — time-driven so the mouth opens/closes
+ * even when TTS amp is flat. Mixed with amp. Two oscillators (~1.8 Hz + ~1 Hz)
+ * so it does not strobe. Range roughly 0.12–0.95 while speaking.
  */
 export function talkFlapOpacity(talkPhase: number, amplitude: number, talking: boolean): number {
   if (!talking) return 0;
-  const flap = 0.2 + 0.75 * (0.5 + 0.5 * Math.sin(talkPhase * 14));
   const a = clamp01(amplitude);
-  return clamp01(flap * (0.4 + 0.6 * Math.max(a, 0.55)));
+  const osc = 0.5 + 0.5 * Math.sin(talkPhase * 11.5);
+  const osc2 = 0.5 + 0.5 * Math.sin(talkPhase * 6.7 + 0.8);
+  const flap = 0.12 + 0.88 * (osc * 0.72 + osc2 * 0.28);
+  return clamp01(flap * (0.35 + 0.65 * Math.max(a, 0.5)));
 }
 
 /**
@@ -304,6 +319,10 @@ export function talkViseme(
 
 function body(src: string, opacity = 1, id?: string): SpriteLayer {
   return { id: id ?? `body:${src}`, src, opacity, role: "body" };
+}
+
+function talkLayer(src: string, opacity: number): SpriteLayer {
+  return { id: "talk", src, opacity, role: "talk" };
 }
 
 /** Expo talk bust as a stable-id body so viseme src swaps hard-cut. */
@@ -330,15 +349,25 @@ function talkBustSrc(viseme: TalkViseme): string {
 /**
  * Pose state machine — live keys resolve through SPRITES.poses / LIVE_POSE_FILES.
  *
- * Dedicated act poses hold their sheet through speech (PR #1).
- * Idle talking uses talk_official.png (the official talk sheet is the idle-talk path).
+ * Dedicated act poses (except the talk key) hold their sheet through speech.
+ * Idle / talk + speaking: official idle body + talk_official mouth flap
+ * (same full-body frame). Expo mouth_* / face_eyes_* busts stay off — they
+ * are portrait crops and would fight the long-shot pack.
  * kiss is not a key — callers must keep the current body.
  */
 export function layersFor(state: PuppetState): SpriteLayer[] {
-  const { pose, emotion, talking, amplitude, blink = 0 } = state;
+  const {
+    pose,
+    emotion,
+    talking,
+    amplitude,
+    blink = 0,
+    talkPhase = 0,
+    reducedMotion = false,
+  } = state;
 
-  // Dedicated poses own the stage — hold the PNG while speaking.
-  if (isDedicatedPose(pose)) {
+  // Dedicated act poses own the stage — no bust/mouth overlay on wave/scold/…
+  if (isDedicatedPose(pose) && !isTalkPathPose(pose)) {
     return [body(SPRITES.poses[pose])];
   }
 
@@ -352,7 +381,14 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
       }
       return [expoTalkBody(talkBustSrc(talkViseme(amplitude, emotion, pose)))];
     }
-    // Official talk sheet is a full body, not a mouth overlay on Helix front.
+    if (reducedMotion) {
+      return [body(SPRITES.poses.talk)];
+    }
+    const flap = talkFlapOpacity(talkPhase, amplitude, true);
+    return [body(SPRITES.poses.idle), talkLayer(SPRITES.poses.talk, flap)];
+  }
+
+  if (pose === "talk") {
     return [body(SPRITES.poses.talk)];
   }
 

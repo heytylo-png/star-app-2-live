@@ -17,6 +17,7 @@ import {
   clampEmotion,
   inferEmotionPose,
   isDedicatedPose,
+  isTalkPathPose,
   layersFor,
   namedPoseFromText,
   needsPoseTint,
@@ -24,6 +25,8 @@ import {
   parseAct,
   poseResetDelayMs,
   resolveSpokenPose,
+  talkFlapOpacity,
+  USE_EXPO_TALK_BUST,
 } from "./rai.ts";
 import { POSE_TINT_SOURCE } from "./generated/star-rai-artifacts.ts";
 
@@ -241,11 +244,41 @@ describe("layersFor talking vs pose hold", () => {
     assert.ok(!layers.some((l) => l.role === "talk"));
   });
 
-  it("uses talk_official when idle and talking", () => {
-    const layers = layersFor({ ...base, pose: "idle", talking: true });
+  it("flaps talk_official over idle when idle or talk pose is speaking", () => {
+    const idle = layersFor({ ...base, pose: "idle", talking: true });
+    assert.equal(idle.length, 2);
+    assert.equal(idle[0]!.role, "body");
+    assert.match(idle[0]!.src, /rai\/idle\.png/);
+    assert.equal(idle[1]!.role, "talk");
+    assert.match(idle[1]!.src, /talk_official/);
+    assert.ok(idle[1]!.opacity > 0 && idle[1]!.opacity <= 1);
+
+    const talk = layersFor({ ...base, pose: "talk", talking: true });
+    assert.equal(talk.length, 2);
+    assert.match(talk[0]!.src, /rai\/idle\.png/);
+    assert.match(talk[1]!.src, /talk_official/);
+    assert.equal(talk[1]!.id, "talk");
+  });
+
+  it("holds talk_official after speech on the talk key", () => {
+    const layers = layersFor({ ...base, pose: "talk", talking: false });
     assert.equal(layers.length, 1);
     assert.match(layers[0]!.src, /talk_official/);
     assert.ok(!layers.some((l) => l.role === "talk"));
+  });
+
+  it("uses a static talk sheet when reduced-motion is on", () => {
+    const layers = layersFor({ ...base, pose: "idle", talking: true, reducedMotion: true });
+    assert.equal(layers.length, 1);
+    assert.match(layers[0]!.src, /talk_official/);
+  });
+
+  it("does not overlay Expo mouth or eye busts on the official pack", () => {
+    assert.equal(USE_EXPO_TALK_BUST, false);
+    const layers = layersFor({ ...base, pose: "idle", talking: true, blink: 2 });
+    const blob = layers.map((l) => l.src).join(" ");
+    assert.doesNotMatch(blob, /mouth_speak|mouth_oh|mouth_grin|face_eyes/);
+    assert.doesNotMatch(blob, /star-rai\/idle-talk/);
   });
 
   it("resolves idle to official idle.png", () => {
@@ -269,9 +302,25 @@ describe("layersFor talking vs pose hold", () => {
     assert.match(layers[0]!.src, /point-front/);
   });
 
-  it("marks dedicated pose ids", () => {
+  it("does not swap Expo alt smile/grin onto official idle", () => {
+    const layers = layersFor({
+      ...base,
+      pose: "idle",
+      emotion: "bratty",
+      talking: false,
+      idleBeat: "grin",
+    });
+    assert.equal(layers.length, 1);
+    assert.match(layers[0]!.src, /rai\/idle\.png/);
+    assert.doesNotMatch(layers[0]!.src, /_alt_/);
+  });
+
+  it("marks dedicated pose ids and the talk-flap path", () => {
     assert.equal(isDedicatedPose("idle"), false);
     assert.equal(isDedicatedPose("talk"), true);
+    assert.equal(isTalkPathPose("idle"), true);
+    assert.equal(isTalkPathPose("talk"), true);
+    assert.equal(isTalkPathPose("wave"), false);
     assert.equal(isDedicatedPose("three_quarter_left"), true);
     assert.equal(isDedicatedPose("profile"), true);
   });
@@ -280,6 +329,34 @@ describe("layersFor talking vs pose hold", () => {
     assert.match(layersFor({ ...base, pose: "wave", talking: false })[0]!.src, /wave_official/);
     assert.match(layersFor({ ...base, pose: "hold", talking: false })[0]!.src, /hold_official/);
     assert.match(layersFor({ ...base, pose: "scold", talking: false })[0]!.src, /scold_official/);
+  });
+
+  it("keeps scold, shy, and pout as distinct official sheets", () => {
+    const scold = layersFor({ ...base, pose: "scold", talking: false })[0]!.src;
+    const shy = layersFor({ ...base, pose: "shy", talking: false })[0]!.src;
+    const pout = layersFor({ ...base, pose: "pout", talking: false })[0]!.src;
+    assert.match(scold, /scold_official/);
+    assert.match(shy, /shy_official/);
+    assert.match(pout, /pout_official/);
+    assert.notEqual(scold, shy);
+    assert.notEqual(scold, pout);
+    assert.notEqual(shy, pout);
+  });
+
+  it("does not invent kiss on the talk path", () => {
+    const layers = layersFor({ ...base, pose: "idle", talking: true });
+    assert.ok(!layers.some((l) => /kiss/i.test(l.src)));
+  });
+});
+
+describe("talkFlapOpacity", () => {
+  it("is closed when not talking and open while speaking", () => {
+    assert.equal(talkFlapOpacity(1, 0.8, false), 0);
+    const a = talkFlapOpacity(0.2, 0.7, true);
+    const b = talkFlapOpacity(0.5, 0.7, true);
+    assert.ok(a > 0 && a <= 1);
+    assert.ok(b > 0 && b <= 1);
+    assert.notEqual(a, b);
   });
 });
 
