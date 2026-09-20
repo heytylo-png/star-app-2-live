@@ -2,7 +2,7 @@ import type { ReactNode, Ref } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Shared white-studio presence plate. PNG and 3D both sit on this so
+ * Shared beige Helix stage plate. PNG and Lab both sit on this so
  * toggling modes does not change the room.
  */
 export function StageShell({
@@ -17,11 +17,11 @@ export function StageShell({
   return (
     <div
       ref={stageRef}
-      className={cn("relative h-full w-full overflow-hidden bg-stage", className)}
+      className={cn("rai-stage", className)}
       aria-hidden="true"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_22%,#ffffff_0%,#f7f4ee_42%,#ebe6dc_78%,#e4ddd2_100%)]" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-[#e8e2d8]/90 via-[#ebe6dc]/35 to-transparent" />
+      <div className="rai-stage-wash" />
+      <div className="rai-stage-floor" />
       {children}
     </div>
   );
