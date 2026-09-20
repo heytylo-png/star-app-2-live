@@ -16,7 +16,6 @@ import { InstallHint } from "@/components/install-hint";
 import { ChartPanel } from "@/components/chart-panel";
 import { ChartSetupCard } from "@/components/chart-setup-card";
 import { LifePanel } from "@/components/life-panel";
-import { NowPlayingBar } from "@/components/now-playing-bar";
 import { Puppet } from "@/components/puppet";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -967,15 +966,6 @@ function RaiReady() {
               }}
             />
           ) : null}
-          {!callActive && !showSetup && slots.life?.on ? (
-            <NowPlayingBar
-              sessionOn={Boolean(slots.life?.on)}
-              nowPlaying={slots.life?.now_playing}
-              moodTag={slots.life?.mood_tag}
-              onSetTitle={(title) => void send(`I'm listening to ${title}`)}
-              onStop={() => void send("stop listening")}
-            />
-          ) : null}
           {empty && !callActive && !showSetup ? (
             <div className="mx-auto mb-3 flex max-w-lg flex-wrap justify-center gap-1.5">
               {STARTERS.map((s) => (
@@ -1018,9 +1008,7 @@ function RaiReady() {
                       : "On call…"
                   : holding
                     ? "Listening…"
-                    : slots.life?.on
-                      ? "Say something — or paste a title"
-                      : "Say something"
+                    : "Say something"
               }
               rows={1}
               disabled={callActive && (callListening || talking)}
