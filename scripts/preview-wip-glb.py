@@ -26,6 +26,8 @@ hide = {
     "mouthGrit",
     "mouthPout",
     "mouthShy",
+    "blushL",
+    "blushR",
     "blushShyL",
     "blushShyR",
     "handWaveR",
@@ -35,7 +37,7 @@ hide = {
     "smirkLift",
 }
 for obj in bpy.data.objects:
-    if obj.name in hide or obj.name.startswith("blushShy"):
+    if obj.name in hide or obj.name.startswith("blush"):
         obj.hide_render = True
         obj.hide_viewport = True
 
@@ -52,9 +54,9 @@ bpy.context.scene.collection.objects.link(cam)
 bpy.context.scene.camera = cam
 # three.js (0, 0.95, 3.15) lookAt (0, 0.92, 0) → Blender Z-up
 if mode == "face":
-    cam.location = (0.0, -0.95, 1.42)
-    target = Vector((0.0, 0.0, 1.4))
-    cam_data.lens = 55
+    cam.location = (0.0, -0.72, 1.34)
+    target = Vector((0.0, 0.0, 1.34))
+    cam_data.lens = 50
 else:
     cam.location = (0.0, -3.15, 0.95)
     target = Vector((0.0, 0.0, 0.92))

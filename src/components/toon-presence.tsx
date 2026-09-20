@@ -397,12 +397,12 @@ type WipFaceNodes = {
 };
 
 function lidBaseFor(face: WipFace): number {
-  if (face === "pout") return 0.34;
+  if (face === "pout") return 0.22;
   if (face === "grit") return 0.04;
-  if (face === "talkSmile") return 0.08;
-  if (face === "smirk") return 0.12;
-  if (face === "shy") return 0.2;
-  return 0.18;
+  if (face === "talkSmile") return 0.04;
+  if (face === "smirk") return 0.06;
+  if (face === "shy") return 0.12;
+  return 0.02;
 }
 
 function lookEyes(face: WipFace, irisL: Object3D | null, irisR: Object3D | null) {
@@ -411,7 +411,7 @@ function lookEyes(face: WipFace, irisL: Object3D | null, irisR: Object3D | null)
   for (const iris of [irisL, irisR]) {
     if (!iris) continue;
     iris.position.x = side;
-    iris.position.y = -0.0038 + down;
+    iris.position.y = -0.006 + down;
   }
 }
 
@@ -438,13 +438,11 @@ function applyWipFace(face: WipFace, amplitude: number, nodes: WipFaceNodes) {
   show(nodes.pout, face === "pout");
   show(nodes.blushShyL, face === "shy");
   show(nodes.blushShyR, face === "shy");
+  show(nodes.blushL, false);
+  show(nodes.blushR, false);
   if (nodes.talk && face === "talkSmile") {
     const a = Math.max(0, Math.min(1, amplitude));
     nodes.talk.scale.set(1.55, 0.42 + a * 0.5, 0.75);
-  }
-  const blush = face === "shy" ? 1.15 : face === "pout" ? 1.2 : 1;
-  for (const b of [nodes.blushL, nodes.blushR]) {
-    if (b) b.scale.set(1.02 * blush, 0.36 * blush, 0.26);
   }
   if (nodes.browL && nodes.browR) {
     const extra = face === "grit" ? 0.22 : face === "pout" ? 0.12 : face === "shy" ? -0.04 : 0;

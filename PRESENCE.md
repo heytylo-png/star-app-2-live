@@ -49,7 +49,7 @@ Ground truth: `public/rai/idle.png` + `artifacts/star-rai-canon/00-brief.txt`.
 `public/models/star-rai-wip.glb` — authored toon stand-in (`npm run build:wip-mesh`).
 
 - Humanoid groups: hips → spine → chest → neck → head, plus arms/legs.
-- Hair is layered tapered locks over a tiny scalp (not a beret / capsule cap). Idle rest is a hanging **A-pose** with the idle **glare**.
+- Hair is hanging layered cards (not a beret / capsule cap). Idle rest is a hanging **A-pose** with the idle **glare**.
 - Blink: `lidLeft` / `lidRight`. Talk: `mouthOpen` (idle frown hides while talking).
 - Mood slots: glare / talk smile / smirk / grit / pout / shy mouth + extra shy blush. Wave uses `handWaveR` (palm); scold uses `handPointR` (index). Kiss is not a slot.
 - Lab keeps the exported `MeshStandardMaterial` (toon gradient swap blanked the stage).
@@ -60,12 +60,13 @@ This is an honest low-poly WIP. It is meant to be **Star-shaped** (locks above),
 ### Remaining gaps
 
 - Still a low-poly toon, not a sculpted VRM. No cloth sim. Face slots are mesh visibility, not blendshapes. Fingers exist only as wave-palm / scold-point extras.
-- Hair is layered tapered locks over a tiny back-shifted scalp (not a beret cap or face-covering volume blob). Crown/temple can still flash scalp. Ahoge is a single hooked tube. Bangs read as clumps, not a painted fringe.
-- Eyes are larger almond planes with mesh iris/pupil, a dark lash line, and a thin blink lid. Idle is a half-lid glare. Not painted closeup fidelity. Face slots are still mesh visibility, not blendshapes.
+- Hair is hanging layered cards (not a helmet/bowl or noodle tubes). One hooked ahoge from the crown. Bangs sit on the forehead; crown can still flash scalp. Not a painted fringe.
+- Head is a shorter teen sphere with warm tan, glare brows, thin frown, gold star studs. Idle has **no** pink cheek circles (shy blush still exists as a hidden slot).
+- Eyes are large amber discs with pupil + highlight and a skin upper lid. They still read rounder/more open than the PNG half-lid almonds. Not closeup-painted.
 - Skirt hem is two vertex-color bands — they can read as one stripe at a distance. Shirt is lathe + placket, not tailored cloth.
-- Arms/hands are still primitive volumes. Star studs can hide behind side hair.
+- Arms/hands are still primitive volumes.
 - Kiss stays unmapped. Mood PNG art is live on the PNG body and checked in as Lab refs — it is **not** a merge of Lab to main.
-- Not ready to replace the live PNG body. **Do not merge. Do not deploy Lab to Pages as her.**
+- Identity is closer at thumbnail (tan, ahoge hook, studs, bangs, glare brows) but this is still a stand-in. **Do not merge. Do not deploy Lab to Pages as her.**
 
 ## Scaffolding (do not present as Rai)
 
