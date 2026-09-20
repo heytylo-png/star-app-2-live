@@ -381,7 +381,7 @@ describe("pose tint", () => {
     const chart = resolveSpokenPose({
       namedPose: null,
       modelPose: "idle",
-      emotion: "tired",
+      emotion: "bratty",
       spoken: true,
       chartBeat: true,
       chartTintPose: "think",
@@ -390,6 +390,75 @@ describe("pose tint", () => {
     assert.equal(chart, "think");
     assert.ok((CHART_BEAT_TINT_POSES as readonly string[]).includes(chart));
     assert.equal((CHART_BEAT_TINT_POSES as readonly string[]).includes("idle"), false);
+  });
+
+  it("maps tired onto the tired sheet — never grin / peace / wave", () => {
+    assert.equal(EMOTION_TO_POSE.tired, "tired");
+    assert.equal(
+      resolveSpokenPose({
+        namedPose: null,
+        modelPose: "talk",
+        emotion: "tired",
+        spoken: true,
+        currentPose: "idle",
+      }),
+      "tired",
+    );
+    assert.equal(
+      resolveSpokenPose({
+        namedPose: null,
+        modelPose: "peace",
+        emotion: "tired",
+        spoken: true,
+        currentPose: "wave",
+      }),
+      "tired",
+    );
+    assert.equal(
+      resolveSpokenPose({
+        namedPose: null,
+        modelPose: "wave",
+        emotion: "tired",
+        spoken: true,
+        nowPlayingJustSet: true,
+        chartBeat: true,
+        currentPose: "talk",
+      }),
+      "tired",
+    );
+    assert.match(
+      layersFor({
+        pose: "tired",
+        emotion: "tired",
+        talking: false,
+        amplitude: 0,
+        angle: 0,
+      })[0]!.src,
+      /tired_official/,
+    );
+    assert.match(
+      layersFor({
+        pose: "idle",
+        emotion: "tired",
+        talking: false,
+        amplitude: 0,
+        angle: 0,
+      })[0]!.src,
+      /tired_official/,
+    );
+  });
+
+  it("still lets a user-named pose win over tired tint", () => {
+    assert.equal(
+      resolveSpokenPose({
+        namedPose: "wave",
+        modelPose: "talk",
+        emotion: "tired",
+        spoken: true,
+        currentPose: "idle",
+      }),
+      "wave",
+    );
   });
 
   it("does not snap a spoken bratty line back to idle", () => {
