@@ -57,7 +57,7 @@ This is an honest low-poly WIP. It is meant to be **Star-shaped** (locks above),
 
 ### Remaining gaps
 
-- Primitive volumes, not a sculpted VRM. No fingers, no cloth sim, no blendshapes beyond lid/mouth.
+- Primitive volumes, not a sculpted VRM. No fingers, no cloth sim. Face slots are mesh visibility (glare / talk smile / smirk / grit / pout / shy), not sculpted blendshapes.
 - Hair is layered capsules, not individual locks. Ahoge is a tube hook.
 - No official 3/4 / side / back stills were checked in as separate art (turnaround notes in the brief).
 - Mood PNGs and a kiss pose are out of scope.
@@ -74,20 +74,21 @@ This is an honest low-poly WIP. It is meant to be **Star-shaped** (locks above),
 Helix keys stay the PNG contract (`POSING.md` / `src/lib/rai.ts`).
 Lab approximates what the WIP armature can act:
 
-| Key | Lab |
-| --- | --- |
-| `idle` / `talk` | Glare rest, breathe, sway, look-at, blink; mouth open while talking |
-| `think` | Hand near chin |
-| `shy` / `embarrassed` | Head down, arms in |
-| `wave` | Right arm up, forearm oscillation |
-| `hearts` | Hands toward chest |
-| `turn` | Yaw ~¾, not a 180° spin |
-| `profile` / `three_quarter*` | Body yaw only |
-| `point` / `scold` | Pointing arm |
-| `pout` | Crossed-ish arms + frown rest |
-| `tired` / `sad` / `surprise` / `smug` / `laugh` / `wink` / `content` | Face + light body |
-| emotions | `bratty`, `smug`, `tired`, `shy`, `soft`, `hype`, `glance` |
-| `kiss` | Unmapped (PNG and Lab) |
+**scold ≠ shy ≠ pout.** Never alias those three. **Kiss stays off** — do not sculpt, map, or render kiss / blow-kiss / heart-hands as a default.
+
+| Key | Body | Face |
+| --- | --- | --- |
+| `idle` | Arms down, feet parallel | Half-lidded amber glare, flat/slight frown |
+| `talk` | Same stance as idle | Open-mouth smile with teeth |
+| `wave` | R palm up at head height, L hand on hip | Small closed-mouth smirk |
+| `scold` | R index point, L on hip | Grit / shout, furrowed brows |
+| `pout` | **Crossed arms** | Narrowed glare frown — not shy |
+| `shy` | **Fidget hands at waist**, look down | Heavy blush, averted — not crossed arms |
+| `think` | Hand near chin | Glare rest |
+| `point` | Pointing arm only (not scold) | Glare rest |
+| `hearts` | Hands toward chest (not kiss / heart-hands default) | Glare rest |
+| `turn` / `profile` / `three_quarter*` | Body yaw only (~¾, not 180°) | Glare rest |
+| `kiss` | **Unmapped** | **Unmapped** |
 
 Hand-shape keys (`peace`, `middle_finger`, `hold`) still have no finger rig — Lab holds the body and does not swap in a booth VRM.
 

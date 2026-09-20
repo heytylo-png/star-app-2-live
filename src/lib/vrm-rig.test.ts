@@ -7,6 +7,7 @@ import {
   SCAFFOLD_VRM_FILE,
   WIP_GLB_FILE,
   rigFor,
+  wipFaceFor,
 } from "./vrm-rig.ts";
 
 const publicRoot = join(dirname(fileURLToPath(import.meta.url)), "../../public");
@@ -36,5 +37,33 @@ describe("rigFor A-pose rest", () => {
   it("raises the WIP wave from hanging arms, not T-pose extras", () => {
     const wave = rigFor("wave", "bratty", true);
     assert.ok((wave.rightUpperArm?.z ?? 0) < -1);
+  });
+
+  it("keeps scold, shy, and pout as three distinct WIP bodies", () => {
+    const scold = rigFor("scold", "bratty", true);
+    const shy = rigFor("shy", "bratty", true);
+    const pout = rigFor("pout", "bratty", true);
+    assert.notDeepEqual(scold, shy);
+    assert.notDeepEqual(scold, pout);
+    assert.notDeepEqual(shy, pout);
+    assert.ok((scold.rightUpperArm?.x ?? 0) < -1, "scold points");
+    assert.ok((scold.leftUpperArm?.z ?? 0) > 0.6, "scold left hand on hip");
+    assert.ok((pout.leftLowerArm?.y ?? 0) > 0.8, "pout crosses arms");
+    assert.ok((shy.leftLowerArm?.y ?? 0) < 0.6, "shy fidgets, does not cross");
+    assert.ok((shy.head?.x ?? 0) > 0.25, "shy looks down");
+  });
+
+  it("does not alias scold/shy/pout faces and never maps kiss", () => {
+    assert.equal(wipFaceFor("scold", false), "grit");
+    assert.equal(wipFaceFor("shy", false), "shy");
+    assert.equal(wipFaceFor("pout", false), "pout");
+    assert.equal(wipFaceFor("wave", false), "smirk");
+    assert.equal(wipFaceFor("talk", false), "talkSmile");
+    assert.equal(wipFaceFor("idle", false), "glare");
+    assert.equal(wipFaceFor("idle", true), "talkSmile");
+    assert.notEqual(wipFaceFor("scold", true), wipFaceFor("shy", true));
+    assert.notEqual(wipFaceFor("scold", true), wipFaceFor("pout", true));
+    assert.notEqual(wipFaceFor("shy", true), wipFaceFor("pout", true));
+    assert.equal(wipFaceFor("kiss" as never, false), "glare");
   });
 });

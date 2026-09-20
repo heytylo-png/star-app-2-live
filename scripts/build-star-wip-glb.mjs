@@ -245,21 +245,60 @@ function build() {
   eye("L", 0.034);
   eye("R", -0.034);
 
-  // flat / slight frown (idle lock)
-  mesh(new THREE.BoxGeometry(0.03, 0.004, 0.006), C.brow, "mouthIdle", head, [0, -0.012, 0.09], [0, 0, 0]);
+  // Idle glare mouth (flat / slight frown) — default rest
+  mesh(new THREE.BoxGeometry(0.03, 0.004, 0.006), C.brow, "mouthIdle", head, [0, -0.012, 0.09]);
   mesh(new THREE.BoxGeometry(0.01, 0.003, 0.005), C.brow, "mouthCornerL", head, [0.016, -0.015, 0.088], [0, 0, 0.45]);
   mesh(new THREE.BoxGeometry(0.01, 0.003, 0.005), C.brow, "mouthCornerR", head, [-0.016, -0.015, 0.088], [0, 0, -0.45]);
+
+  // Talk: open-mouth smile + teeth
   const mouthOpen = mesh(
-    new THREE.SphereGeometry(0.014, 12, 8),
+    new THREE.SphereGeometry(0.016, 12, 8),
     C.bow,
     "mouthOpen",
     head,
     [0, -0.02, 0.088],
     null,
-    [1.1, 0.15, 0.6],
+    [1.25, 0.22, 0.65],
   );
   mouthOpen.visible = false;
-  mouthOpen.userData.talk = true;
+  mesh(new THREE.BoxGeometry(0.022, 0.006, 0.004), C.tooth, "teethTalk", mouthOpen, [0, 0.006, 0.006]);
+
+  // Wave: small closed-mouth smirk (asymmetric)
+  const mouthSmirk = mesh(
+    new THREE.BoxGeometry(0.022, 0.004, 0.005),
+    C.brow,
+    "mouthSmirk",
+    head,
+    [0.006, -0.01, 0.091],
+    [0, 0, -0.28],
+  );
+  mouthSmirk.visible = false;
+  mesh(new THREE.BoxGeometry(0.01, 0.003, 0.004), C.brow, "smirkLift", mouthSmirk, [0.012, 0.004, 0]);
+
+  // Scold: grit / shout (wide open, not a smile)
+  const mouthGrit = mesh(
+    new THREE.SphereGeometry(0.015, 12, 8),
+    C.bow,
+    "mouthGrit",
+    head,
+    [0, -0.022, 0.086],
+    null,
+    [1.05, 0.55, 0.7],
+  );
+  mouthGrit.visible = false;
+  mesh(new THREE.BoxGeometry(0.018, 0.005, 0.004), C.tooth, "teethGrit", mouthGrit, [0, 0.007, 0.005]);
+
+  // Pout: pushed-out frown (not shy)
+  const mouthPout = mesh(
+    new THREE.SphereGeometry(0.012, 10, 8),
+    C.skinShadow,
+    "mouthPout",
+    head,
+    [0, -0.018, 0.094],
+    null,
+    [1.15, 0.55, 0.7],
+  );
+  mouthPout.visible = false;
 
   // gold STAR studs (not hoops / dangles)
   const starGeo = new THREE.ExtrudeGeometry(starShape(), { depth: 0.003, bevelEnabled: false });

@@ -26,8 +26,10 @@ import {
   RIG_BONES,
   WIP_GLB_FILE,
   ZERO,
+  wipFaceFor,
   type BoneEuler,
   type RigBoneName,
+  type WipFace,
 } from "@/lib/vrm-rig";
 import { PresenceFrame, StageShell } from "@/components/stage-shell";
 
@@ -186,6 +188,13 @@ function StarWip({
   const lidR = useRef<Object3D | null>(null);
   const mouthOpen = useRef<Object3D | null>(null);
   const mouthIdle = useRef<Object3D | null>(null);
+  const mouthSmirk = useRef<Object3D | null>(null);
+  const mouthGrit = useRef<Object3D | null>(null);
+  const mouthPout = useRef<Object3D | null>(null);
+  const blushL = useRef<Object3D | null>(null);
+  const blushR = useRef<Object3D | null>(null);
+  const browL = useRef<Object3D | null>(null);
+  const browR = useRef<Object3D | null>(null);
   const rootRef = useRef<Group>(null);
   const onReadyRef = useRef(onReady);
   const onFailRef = useRef(onFail);
@@ -231,6 +240,13 @@ function StarWip({
         lidR.current = root.getObjectByName("lidRight") ?? null;
         mouthOpen.current = root.getObjectByName("mouthOpen") ?? null;
         mouthIdle.current = root.getObjectByName("mouthIdle") ?? null;
+        mouthSmirk.current = root.getObjectByName("mouthSmirk") ?? null;
+        mouthGrit.current = root.getObjectByName("mouthGrit") ?? null;
+        mouthPout.current = root.getObjectByName("mouthPout") ?? null;
+        blushL.current = root.getObjectByName("blushL") ?? null;
+        blushR.current = root.getObjectByName("blushR") ?? null;
+        browL.current = root.getObjectByName("browL") ?? null;
+        browR.current = root.getObjectByName("browR") ?? null;
 
         vrmLike.current = root;
         setScene(root);
@@ -263,16 +279,23 @@ function StarWip({
       if (!lid) continue;
       lid.rotation.x = 0.15 + blink * 1.05;
     }
-    const mouth = mouthOpen.current;
-    const idleMouth = mouthIdle.current;
-    if (mouth) {
-      const talking = intent.talking || intent.pose === "talk";
-      const a = Math.max(0, Math.min(1, intent.amplitude));
-      const open = talking ? 0.15 + a * 0.95 : 0;
-      mouth.visible = open > 0.08;
-      mouth.scale.set(1.1, 0.15 + open * 0.9, 0.6);
-      if (idleMouth) idleMouth.visible = !mouth.visible;
-    }
+    applyWipFace(
+      wipFaceFor(intent.pose, intent.talking || intent.pose === "talk"),
+      intent.amplitude,
+      {
+        idle: mouthIdle.current,
+        talk: mouthOpen.current,
+        smirk: mouthSmirk.current,
+        grit: mouthGrit.current,
+        pout: mouthPout.current,
+        blushL: blushL.current,
+        blushR: blushR.current,
+        browL: browL.current,
+        browR: browR.current,
+        cornerL: vrmLike.current?.getObjectByName("mouthCornerL") ?? null,
+        cornerR: vrmLike.current?.getObjectByName("mouthCornerR") ?? null,
+      },
+    );
 
     const targetRig = rigFor(intent.pose, intent.emotion, true);
     const waveBoost = intent.pose === "wave" && !reduced ? Math.sin(now * 8.2) * 0.45 : 0;
@@ -318,6 +341,46 @@ function StarWip({
       <primitive object={scene} />
     </group>
   );
+}
+
+type WipFaceNodes = {
+  idle: Object3D | null;
+  talk: Object3D | null;
+  smirk: Object3D | null;
+  grit: Object3D | null;
+  pout: Object3D | null;
+  blushL: Object3D | null;
+  blushR: Object3D | null;
+  browL: Object3D | null;
+  browR: Object3D | null;
+  cornerL: Object3D | null;
+  cornerR: Object3D | null;
+};
+
+function applyWipFace(face: WipFace, amplitude: number, nodes: WipFaceNodes) {
+  const show = (node: Object3D | null, on: boolean) => {
+    if (node) node.visible = on;
+  };
+  show(nodes.idle, face === "glare" || face === "shy");
+  show(nodes.cornerL, face === "glare" || face === "shy" || face === "pout");
+  show(nodes.cornerR, face === "glare" || face === "shy" || face === "pout");
+  show(nodes.talk, face === "talkSmile");
+  show(nodes.smirk, face === "smirk");
+  show(nodes.grit, face === "grit");
+  show(nodes.pout, face === "pout");
+  if (nodes.talk && face === "talkSmile") {
+    const a = Math.max(0, Math.min(1, amplitude));
+    nodes.talk.scale.set(1.25, 0.22 + a * 0.7, 0.65);
+  }
+  const blush = face === "shy" ? 1.55 : 1;
+  for (const b of [nodes.blushL, nodes.blushR]) {
+    if (b) b.scale.set(1.2 * blush, 0.55 * blush, 0.4);
+  }
+  if (nodes.browL && nodes.browR) {
+    const extra = face === "grit" || face === "pout" ? 0.16 : 0;
+    nodes.browL.rotation.z = 0.22 + extra;
+    nodes.browR.rotation.z = -0.22 - extra;
+  }
 }
 
 function makeToonGradient(): DataTexture {

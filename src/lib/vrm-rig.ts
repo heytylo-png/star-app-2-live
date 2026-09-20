@@ -206,8 +206,16 @@ const EMOTION_RIG: Record<EmotionId, RigPose> = {
  * Arm extras for the authored WIP (A-pose rest, bones hang along -Y).
  * T-pose VRM values in POSE_RIG would fling these arms.
  */
+/** Left hand on hip — wave + scold only. Never reused for pout/shy. */
+const LEFT_ON_HIP: RigPose = {
+  leftUpperArm: { x: 0.55, y: -0.22, z: 0.88 },
+  leftLowerArm: { x: 0.32, y: 0.98, z: 0.18 },
+  leftHand: { x: 0.08, y: 0.06, z: 0.08 },
+};
+
 const WIP_POSE_RIG: Partial<Record<PoseId, RigPose>> = {
   wave: {
+    ...LEFT_ON_HIP,
     rightShoulder: { x: 0, y: 0.12, z: 0.22 },
     rightUpperArm: { x: -0.28, y: 0.32, z: -2.05 },
     rightLowerArm: { x: 0.12, y: -0.42, z: -0.12 },
@@ -223,11 +231,13 @@ const WIP_POSE_RIG: Partial<Record<PoseId, RigPose>> = {
     rightHand: { x: 0.12, y: -0.18, z: 0.2 },
   },
   scold: {
-    rightShoulder: { x: 0, y: 0.16, z: 0.08 },
-    rightUpperArm: { x: -1.28, y: 0.38, z: -0.28 },
-    rightLowerArm: { x: -0.08, y: -0.12, z: 0.04 },
-    rightHand: { x: 0.08, y: 0, z: 0.1 },
-    head: { x: -0.04, y: 0.08, z: 0 },
+    ...LEFT_ON_HIP,
+    rightShoulder: { x: 0, y: 0.2, z: 0.1 },
+    rightUpperArm: { x: -1.32, y: 0.42, z: -0.22 },
+    rightLowerArm: { x: -0.1, y: -0.08, z: 0.06 },
+    rightHand: { x: 0.1, y: 0, z: 0.12 },
+    head: { x: -0.08, y: 0.06, z: 0 },
+    neck: { x: -0.04, y: 0.03, z: 0 },
   },
   point: {
     rightShoulder: { x: 0, y: 0.16, z: 0.08 },
@@ -236,30 +246,38 @@ const WIP_POSE_RIG: Partial<Record<PoseId, RigPose>> = {
     rightHand: { x: 0.08, y: 0, z: 0.1 },
     head: { x: -0.04, y: 0.08, z: 0 },
   },
+  // Fidget hands at waist + look down. NOT crossed arms (that is pout).
   shy: {
-    head: { x: 0.28, y: 0.22, z: 0.04 },
-    neck: { x: 0.1, y: 0.08, z: 0 },
-    spine: { x: 0.08, y: 0.06, z: 0 },
-    leftUpperArm: { x: 0.22, y: 0.05, z: 0.38 },
-    rightUpperArm: { x: 0.22, y: -0.05, z: -0.38 },
-    leftHand: { x: 0, y: 0.12, z: 0.08 },
-    rightHand: { x: 0, y: -0.12, z: -0.08 },
+    head: { x: 0.32, y: 0.18, z: 0.05 },
+    neck: { x: 0.14, y: 0.1, z: 0 },
+    spine: { x: 0.1, y: 0.05, z: 0 },
+    leftUpperArm: { x: 0.18, y: 0.12, z: 0.22 },
+    rightUpperArm: { x: 0.18, y: -0.12, z: -0.22 },
+    leftLowerArm: { x: 0.28, y: 0.42, z: 0.12 },
+    rightLowerArm: { x: 0.28, y: -0.42, z: -0.12 },
+    leftHand: { x: 0.05, y: 0.2, z: 0.06 },
+    rightHand: { x: 0.05, y: -0.2, z: -0.06 },
   },
   embarrassed: {
-    head: { x: 0.28, y: 0.22, z: 0.04 },
-    neck: { x: 0.1, y: 0.08, z: 0 },
-    spine: { x: 0.08, y: 0.06, z: 0 },
-    leftUpperArm: { x: 0.22, y: 0.05, z: 0.38 },
-    rightUpperArm: { x: 0.22, y: -0.05, z: -0.38 },
+    head: { x: 0.3, y: 0.16, z: 0.04 },
+    neck: { x: 0.12, y: 0.08, z: 0 },
+    spine: { x: 0.08, y: 0.04, z: 0 },
+    leftUpperArm: { x: 0.16, y: 0.1, z: 0.2 },
+    rightUpperArm: { x: 0.16, y: -0.1, z: -0.2 },
+    leftLowerArm: { x: 0.24, y: 0.38, z: 0.1 },
+    rightLowerArm: { x: 0.24, y: -0.38, z: -0.1 },
   },
+  // Crossed arms + frown. NOT shy fidget.
   pout: {
-    head: { x: 0.1, y: 0.08, z: 0.03 },
-    neck: { x: 0.04, y: 0.04, z: 0 },
-    spine: { x: 0.05, y: 0, z: 0 },
-    leftUpperArm: { x: 0.35, y: 0.12, z: 0.55 },
-    rightUpperArm: { x: 0.35, y: -0.12, z: -0.55 },
-    leftLowerArm: { x: 0.25, y: 0.85, z: 0.15 },
-    rightLowerArm: { x: 0.25, y: -0.85, z: -0.15 },
+    head: { x: 0.06, y: -0.08, z: 0.02 },
+    neck: { x: 0.03, y: -0.04, z: 0 },
+    spine: { x: 0.04, y: 0, z: 0 },
+    leftUpperArm: { x: 0.42, y: 0.18, z: 0.62 },
+    rightUpperArm: { x: 0.48, y: -0.22, z: -0.58 },
+    leftLowerArm: { x: 0.22, y: 1.15, z: 0.22 },
+    rightLowerArm: { x: 0.28, y: -1.05, z: -0.18 },
+    leftHand: { x: 0.08, y: 0.15, z: 0.08 },
+    rightHand: { x: 0.08, y: -0.15, z: -0.08 },
   },
   hearts: {
     spine: { x: 0.06, y: 0, z: 0 },
@@ -271,6 +289,18 @@ const WIP_POSE_RIG: Partial<Record<PoseId, RigPose>> = {
     head: { x: -0.04, y: 0, z: 0 },
   },
 };
+
+/** Lab face slots. scold ≠ shy ≠ pout. Kiss is never a face. */
+export type WipFace = "glare" | "talkSmile" | "smirk" | "grit" | "pout" | "shy";
+
+export function wipFaceFor(pose: PoseId, talking: boolean): WipFace {
+  if (pose === "scold") return "grit";
+  if (pose === "pout") return "pout";
+  if (pose === "shy" || pose === "embarrassed") return "shy";
+  if (pose === "wave") return "smirk";
+  if (talking || pose === "talk") return "talkSmile";
+  return "glare";
+}
 
 export function rigFor(pose: PoseId, emotion: EmotionId, aPoseRest = false): RigPose {
   if (aPoseRest) {
