@@ -27,9 +27,11 @@ Do not copy Co-Star brand assets, fonts, copy, or copyrighted horoscope text.
 - Editorial, high-contrast, lots of air. Helix beige / ink. Not a busy natal wheel.
 - Top: one short daily theme / advice beat from ephemeris + Star Rai voice (local; not a Grok essay on open).
 - Optional Do / Don’t chips from the same facts (Star Rai voice, not Co-Star).
+- Dedicated HER DAY / Rai section: her natal sun (Libra; 2000-09-29 Fukuoka constants stay in code, never dumped as a topic list) plus today’s sun_sign / moon_sign / moon_phase, and 1–3 short first-person beats about HER day — distinct from the you+me glance.
+- Her-day copy: compose locally from sky + Star Rai voice immediately ($0 / offline-safe). Optional same Grok path with a Chart/her-day ask when Chart opens, once per local day. Fail soft → local. Never posts to Chat. No paid API.
 - user_sun / her_sun / today’s sky as clean labels, not a planet dump.
 - Birth date/time/place edit stays available but quieter (collapsed settings), not the first screen.
-- Opening Chart does not fire Grok / does not auto-post a reading to Chat.
+- Opening Chart does not auto-post a reading to Chat.
 - Do not break the Chat long-shot beige stage.
 
 OUT OF SCOPE THIS PASS

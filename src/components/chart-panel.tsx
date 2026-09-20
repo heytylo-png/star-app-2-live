@@ -1,11 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { composeDiaryEntry, HER_CHART, localDateKey, natalFromSetup } from "@/lib/chart";
-import { useChartStore } from "@/lib/chart-store";
+import { composeDiaryEntry, HER_CHART, localDateKey, localHerDay, natalFromSetup } from "@/lib/chart";
+import { storedToHerDay, useChartStore } from "@/lib/chart-store";
 import { clockTimeZone, readLocalNow } from "@/lib/clock";
+import { requestHerDayCopy } from "@/lib/her-day";
 import { useMemoryStore } from "@/lib/memory-store";
 import { birthDateInputValue, lastDiaryEntry } from "@/lib/shell";
-import { composeSkyDashboard, computeSkyFacts } from "@/lib/sky";
+import { composeSkyDashboard, computeSkyFacts, type HerDayCopy } from "@/lib/sky";
 import { cn } from "@/lib/utils";
 
 type ChartPanelProps = {
@@ -16,8 +17,10 @@ type ChartPanelProps = {
 };
 
 /**
- * Sparse Chart pane — daily theme, sky labels, quiet birth edit.
- * Layout inspiration only (not Co-Star brand/copy). No wheel. No Grok on open.
+ * Sparse Chart pane — daily theme, her-day section, sky labels, quiet birth edit.
+ * Layout inspiration only (not Co-Star brand/copy). No wheel.
+ * Opening Chart does not post to Chat. Her-day copy is local first; optional
+ * Grok Chart/her-day once per local day (fail soft).
  */
 export function ChartPanel({ userSun, birthDate, birthTime, birthPlace }: ChartPanelProps) {
   const diaryByDay = useChartStore((s) => s.diaryByDay);
@@ -28,20 +31,46 @@ export function ChartPanel({ userSun, birthDate, birthTime, birthPlace }: ChartP
   const [place, setPlace] = useState(birthPlace ?? "");
   const [saved, setSaved] = useState(false);
   const [birthOpen, setBirthOpen] = useState(false);
+  const [herDay, setHerDay] = useState<HerDayCopy | null>(null);
 
   const dash = useMemo(() => {
     const tz = clockTimeZone(timezone);
     const clock = readLocalNow(new Date(), tz);
     const todayDate = localDateKey(new Date(), tz);
     const sky = computeSkyFacts(new Date());
-    return composeSkyDashboard({
+    return {
       todayDate,
-      weekday: clock.weekday,
       sky,
-      userSun,
-      herSun: HER_CHART.her_sun,
-    });
+      view: composeSkyDashboard({
+        todayDate,
+        weekday: clock.weekday,
+        sky,
+        userSun,
+        herSun: HER_CHART.her_sun,
+      }),
+      localHer: localHerDay({ todayDate, sky }),
+    };
   }, [timezone, userSun]);
+
+  useEffect(() => {
+    const cached = useChartStore.getState().herDayFor(dash.todayDate);
+    if (cached) {
+      setHerDay(storedToHerDay(cached));
+      return;
+    }
+    setHerDay(dash.localHer);
+    let cancelled = false;
+    void requestHerDayCopy({ todayDate: dash.todayDate, sky: dash.sky }).then((copy) => {
+      if (cancelled) return;
+      useChartStore.getState().saveHerDay(dash.todayDate, copy);
+      setHerDay(copy);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [dash.todayDate, dash.localHer, dash.sky]);
+
+  const her = herDay ?? dash.localHer;
 
   return (
     <section
@@ -51,33 +80,46 @@ export function ChartPanel({ userSun, birthDate, birthTime, birthPlace }: ChartP
       className="mx-3 mb-1 mt-auto w-full max-w-lg max-h-[min(40rem,78%)] min-h-0 self-center overflow-y-auto rounded-xl bg-elevated/92 px-5 py-5 shadow-[var(--shadow-border)] backdrop-blur-[2px] sm:mx-auto"
     >
       <p className="text-[0.65rem] tracking-[0.22em] text-subtle uppercase">
-        {dash.weekday ? `${dash.weekday} · ${dash.dateLine}` : dash.dateLine}
+        {dash.view.weekday ? `${dash.view.weekday} · ${dash.view.dateLine}` : dash.view.dateLine}
       </p>
       <p className="font-display mt-3 max-w-[22rem] text-[1.65rem] leading-[1.15] text-fg italic sm:text-[1.85rem]">
-        {dash.theme}
+        {dash.view.theme}
       </p>
 
-      {dash.doLine || dash.dontLine ? (
+      {dash.view.doLine || dash.view.dontLine ? (
         <div className="mt-5 grid grid-cols-2 gap-3">
-          {dash.doLine ? (
+          {dash.view.doLine ? (
             <p className="min-w-0">
               <span className="block text-[0.65rem] tracking-[0.18em] text-subtle uppercase">Do</span>
-              <span className="mt-1 block text-sm leading-snug text-fg">{dash.doLine}</span>
+              <span className="mt-1 block text-sm leading-snug text-fg">{dash.view.doLine}</span>
             </p>
           ) : (
             <span />
           )}
-          {dash.dontLine ? (
+          {dash.view.dontLine ? (
             <p className="min-w-0">
               <span className="block text-[0.65rem] tracking-[0.18em] text-subtle uppercase">Don&apos;t</span>
-              <span className="mt-1 block text-sm leading-snug text-fg">{dash.dontLine}</span>
+              <span className="mt-1 block text-sm leading-snug text-fg">{dash.view.dontLine}</span>
             </p>
           ) : null}
         </div>
       ) : null}
 
+      <section aria-label="Star Rai's day" className="mt-6 border-t border-border pt-4">
+        <p className="text-[0.65rem] tracking-[0.18em] text-subtle uppercase">{her.heading}</p>
+        <p className="font-display mt-1 text-xl leading-tight text-fg">{her.natal}</p>
+        {her.skyLine ? <p className="mt-1 text-sm text-muted">{her.skyLine}</p> : null}
+        <div className="mt-3 space-y-1.5">
+          {her.beats.map((beat) => (
+            <p key={beat} className="max-w-[22rem] text-sm leading-snug text-fg">
+              {beat}
+            </p>
+          ))}
+        </div>
+      </section>
+
       <ul className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4">
-        {dash.labels.map((row) => (
+        {dash.view.labels.map((row) => (
           <li key={row.key} className="min-w-0">
             <p className="text-[0.65rem] tracking-[0.18em] text-subtle uppercase">{row.label}</p>
             <p className="font-display mt-0.5 text-xl leading-tight text-fg">{row.value}</p>

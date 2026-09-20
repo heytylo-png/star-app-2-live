@@ -17,8 +17,9 @@ CONDITIONAL
   chart_source=setup|chat. Never send user_rising. Never send her bio as slots.
   Daily CHART block (today_date, her_sun, user_sun, last_topic, plus cheap sky
   keys sun_sign_today / moon_sign_today / moon_phase when ephemeris works) is
-  separate — appended only when Chart fires. See artifacts/star-chart-v1.txt
-  and artifacts/star-rai-horoscope-cheap.txt.
+  separate — appended only when Chart fires. Chart pane her-day (ask: her-day)
+  is pane-only — not a standing slot, not a Chat auto-post.
+  See artifacts/star-chart-v1.txt and artifacts/star-rai-horoscope-cheap.txt.
 - Life slots — ONLY if a session is on: now_playing, session_on, daily_playlist
   (4–8 titles; never recited; never announced in the morning),
   mood_tag (bratty|smug|tired|soft). Playlist may stay in local memory after

@@ -60,6 +60,17 @@ export type SkyDashboard = {
   labels: SkyLabel[];
 };
 
+export type HerDaySource = "local" | "grok";
+
+/** Star Rai’s day on the Chart pane — natal + today’s sky, not the you+me glance. */
+export type HerDayCopy = {
+  heading: string;
+  natal: string;
+  skyLine?: string;
+  beats: string[];
+  source: HerDaySource;
+};
+
 function clip(value: string, max: number): string {
   const t = value.replace(/\s+/g, " ").trim();
   if (t.length <= max) return t;
@@ -204,6 +215,23 @@ const DONT_BANK = [
   "Don't turn today into a report.",
 ] as const;
 
+const HER_DAY_BANK = [
+  "That's my hour. Yours stays the glance.",
+  "Sky moved. I'm still air.",
+  "Don't make me recap the sky. This is mine.",
+  "Natal sits. Today isn't a speech.",
+  "Quiet on my side. Not a report.",
+  "Keep yours above. This beat is mine.",
+] as const;
+
+const HER_DAY_BIO_RE =
+  /\b(fukuoka|osaka|03:33|parents?|abroad|hometown)\b/i;
+
+const HER_DAY_PLANET_RE =
+  /\b(mercury|venus|mars|jupiter|saturn|uranus|neptune|pluto|ascendant|rising|houses?|transit|conjunction)\b/i;
+
+const HER_DAY_READING_RE = /your reading for today is/i;
+
 function themeFromFacts(input: {
   seed: string;
   sunSignToday?: string;
@@ -235,7 +263,7 @@ export type ComposeSkyDashboardInput = {
 
 /**
  * Sparse Chart-pane copy. Local Star Rai voice — not a Grok essay, not Co-Star.
- * Opening Chart must not fire Grok. Fail soft if sky is missing.
+ * Opening Chart must not auto-post a reading to Chat. Fail soft if sky is missing.
  */
 export function composeSkyDashboard(input: ComposeSkyDashboardInput): SkyDashboard {
   const herSun = input.herSun?.trim() || "Libra";
@@ -278,6 +306,134 @@ export function composeSkyDashboard(input: ComposeSkyDashboardInput): SkyDashboa
   }
 
   return dash;
+}
+
+export function herDaySkyLine(sky?: SkyFacts | null): string | undefined {
+  if (!sky) return undefined;
+  const parts: string[] = [];
+  if (sky.sunSignToday) parts.push(`${sky.sunSignToday} sun`);
+  if (sky.moonSignToday) parts.push(`${sky.moonSignToday} moon`);
+  if (sky.moonPhase) parts.push(sky.moonPhase);
+  return parts.length ? parts.join(" · ") : undefined;
+}
+
+function herBeatsFromFacts(input: {
+  seed: string;
+  herSun: string;
+  sunSignToday?: string;
+  moonSignToday?: string;
+  moonPhase?: string;
+}): string[] {
+  const herSun = input.herSun;
+  const sun = input.sunSignToday?.trim();
+  const moon = input.moonSignToday?.trim();
+  const phase = input.moonPhase?.trim();
+  const slot = hashString(input.seed) % 5;
+  const beats: string[] = [];
+
+  if (!sun && !moon && !phase) {
+    beats.push(`${herSun}. Sky's quiet on my side.`);
+    beats.push(pick(HER_DAY_BANK, `${input.seed}|quiet`));
+    return beats.map((b) => clip(b, 88));
+  }
+
+  if (sun && sun !== herSun) {
+    const leads = [
+      `${sun} over ${herSun} air. That's on me today.`,
+      `${herSun} natal. ${sun} overhead — I'm not writing an essay.`,
+      `${sun} sun on my hour. ${herSun} still sits.`,
+    ] as const;
+    beats.push(pick(leads, `${input.seed}|sun`));
+  } else if (sun) {
+    beats.push(`${herSun} under ${sun}. Same air. Keep it short.`);
+  } else {
+    beats.push(`${herSun}. That's natal. Today still sits.`);
+  }
+
+  if (moon && (slot <= 2 || beats.length < 2)) {
+    beats.push(`${moon} moon on my hour. Keep yours.`);
+  }
+  if (phase && (slot >= 2 || beats.length < 2) && beats.length < 3) {
+    beats.push(`${phase}. I'm not sprinting it.`);
+  }
+  if (beats.length < 2) {
+    beats.push(pick(HER_DAY_BANK, `${input.seed}|pad`));
+  }
+
+  return beats.slice(0, 3).map((b) => clip(b, 88));
+}
+
+/**
+ * 1–3 sparse first-person beats about Star Rai's day.
+ * Uses her_sun + today's sky only — never user_sun, never Fukuoka bio.
+ */
+export function composeHerDay(input: {
+  todayDate: string;
+  sky?: SkyFacts | null;
+  herSun?: string;
+  source?: HerDaySource;
+}): HerDayCopy {
+  const herSun = input.herSun?.trim() || "Libra";
+  const sky = input.sky ?? null;
+  const seed = [
+    input.todayDate,
+    herSun,
+    sky?.sunSignToday ?? "",
+    sky?.moonSignToday ?? "",
+    sky?.moonPhase ?? "",
+    "her-day",
+  ].join("|");
+  const beats = herBeatsFromFacts({
+    seed,
+    herSun,
+    sunSignToday: sky?.sunSignToday,
+    moonSignToday: sky?.moonSignToday,
+    moonPhase: sky?.moonPhase,
+  });
+  const copy: HerDayCopy = {
+    heading: "Her day",
+    natal: herSun,
+    beats,
+    source: input.source ?? "local",
+  };
+  const skyLine = herDaySkyLine(sky);
+  if (skyLine) copy.skyLine = skyLine;
+  return copy;
+}
+
+/** Split Grok/local prose into 1–3 Chart-safe beats. Null = fail soft. */
+export function sanitizeHerDayBeats(raw: string): string[] | null {
+  const trimmed = raw.replace(/\r/g, "").trim();
+  if (!trimmed) return null;
+  if (HER_DAY_READING_RE.test(trimmed)) return null;
+  if (HER_DAY_BIO_RE.test(trimmed)) return null;
+
+  const chunks = trimmed
+    .split(/\n+/)
+    .flatMap((row) => row.split(/(?<=[.!?])\s+/))
+    .map((s) => clip(s.replace(/\s+/g, " ").trim(), 88))
+    .filter((s) => s.length > 0)
+    .filter((s) => !HER_DAY_READING_RE.test(s) && !HER_DAY_BIO_RE.test(s) && !HER_DAY_PLANET_RE.test(s));
+
+  const beats = chunks.slice(0, 3);
+  if (!beats.length) return null;
+  return beats;
+}
+
+export function herDayFromBeats(
+  beats: string[],
+  input: { natal?: string; sky?: SkyFacts | null; source: HerDaySource },
+): HerDayCopy {
+  const natal = input.natal?.trim() || "Libra";
+  const copy: HerDayCopy = {
+    heading: "Her day",
+    natal,
+    beats: beats.slice(0, 3).map((b) => clip(b, 88)),
+    source: input.source,
+  };
+  const skyLine = herDaySkyLine(input.sky);
+  if (skyLine) copy.skyLine = skyLine;
+  return copy;
 }
 
 /** Filled sky keys only — appended under CHART when Chart fires. */

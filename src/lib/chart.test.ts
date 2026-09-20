@@ -13,6 +13,7 @@ import {
   detectChartIntent,
   extractNatalFromUserText,
   formatChartFactsBlock,
+  formatHerDayFactsBlock,
   isChartBannedLine,
   isDayOrMoodTopic,
   localDateKey,
@@ -336,6 +337,26 @@ describe("Grok request composition", () => {
 
     const kiss = composeAct([{ role: "user", content: "kiss" }], "", "wave");
     assert.equal(kiss.pose, "wave");
+  });
+
+  it("builds a Chart/her-day ask without user_sun or natal bio", () => {
+    const block = formatHerDayFactsBlock({
+      todayDate: "2026-09-19",
+      sky: {
+        sunSignToday: "Virgo",
+        moonSignToday: "Gemini",
+        moonPhase: "Waning Crescent",
+      },
+    });
+    assert.match(block, /^CHART$/m);
+    assert.match(block, /^ask: her-day$/m);
+    assert.match(block, /^today_date: 2026-09-19$/m);
+    assert.match(block, /^her_sun: Libra$/m);
+    assert.match(block, /^sun_sign_today: Virgo$/m);
+    assert.match(block, /HER day/);
+    assert.match(block, /1-3 short lines/);
+    const keysOnly = block.split("\n\n")[0] ?? "";
+    assert.doesNotMatch(keysOnly, /user_sun|last_topic|Fukuoka|Osaka|03:33|user_rising/);
   });
 
   it("tints the birthday ask off frown idle on that spoken bubble", () => {
