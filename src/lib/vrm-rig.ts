@@ -1,7 +1,10 @@
 import type { EmotionId, PoseId } from "@/lib/rai";
 import type { VRMHumanBoneName } from "@pixiv/three-vrm";
 
-export const STANDIN_VRM_FILE = "models/star-standin.vrm";
+/** Lab-only Star WIP. Not the shipping body. Not Sairi. */
+export const WIP_GLB_FILE = "models/star-rai-wip.glb";
+/** Non-Rai scaffold. Do not load this as Star. */
+export const SCAFFOLD_VRM_FILE = "models/scaffolding/sairi-ponytail.vrm";
 
 /** Extra Euler (radians, XYZ) added on top of a bone's rest pose. */
 export type BoneEuler = { x: number; y: number; z: number };
@@ -199,7 +202,83 @@ const EMOTION_RIG: Record<EmotionId, RigPose> = {
   },
 };
 
-export function rigFor(pose: PoseId, emotion: EmotionId): RigPose {
+/**
+ * Arm extras for the authored WIP (A-pose rest, bones hang along -Y).
+ * T-pose VRM values in POSE_RIG would fling these arms.
+ */
+const WIP_POSE_RIG: Partial<Record<PoseId, RigPose>> = {
+  wave: {
+    rightShoulder: { x: 0, y: 0.12, z: 0.22 },
+    rightUpperArm: { x: -0.28, y: 0.32, z: -2.05 },
+    rightLowerArm: { x: 0.12, y: -0.42, z: -0.12 },
+    rightHand: { x: 0.1, y: 0, z: 0.12 },
+    head: { x: 0, y: 0.12, z: 0.04 },
+  },
+  think: {
+    head: { x: 0.12, y: -0.22, z: 0.05 },
+    neck: { x: 0.06, y: -0.08, z: 0 },
+    rightShoulder: { x: 0, y: 0.18, z: 0.14 },
+    rightUpperArm: { x: -1.05, y: 0.5, z: -0.72 },
+    rightLowerArm: { x: 0.32, y: -1.55, z: 0.22 },
+    rightHand: { x: 0.12, y: -0.18, z: 0.2 },
+  },
+  scold: {
+    rightShoulder: { x: 0, y: 0.16, z: 0.08 },
+    rightUpperArm: { x: -1.28, y: 0.38, z: -0.28 },
+    rightLowerArm: { x: -0.08, y: -0.12, z: 0.04 },
+    rightHand: { x: 0.08, y: 0, z: 0.1 },
+    head: { x: -0.04, y: 0.08, z: 0 },
+  },
+  point: {
+    rightShoulder: { x: 0, y: 0.16, z: 0.08 },
+    rightUpperArm: { x: -1.28, y: 0.38, z: -0.28 },
+    rightLowerArm: { x: -0.08, y: -0.12, z: 0.04 },
+    rightHand: { x: 0.08, y: 0, z: 0.1 },
+    head: { x: -0.04, y: 0.08, z: 0 },
+  },
+  shy: {
+    head: { x: 0.28, y: 0.22, z: 0.04 },
+    neck: { x: 0.1, y: 0.08, z: 0 },
+    spine: { x: 0.08, y: 0.06, z: 0 },
+    leftUpperArm: { x: 0.22, y: 0.05, z: 0.38 },
+    rightUpperArm: { x: 0.22, y: -0.05, z: -0.38 },
+    leftHand: { x: 0, y: 0.12, z: 0.08 },
+    rightHand: { x: 0, y: -0.12, z: -0.08 },
+  },
+  embarrassed: {
+    head: { x: 0.28, y: 0.22, z: 0.04 },
+    neck: { x: 0.1, y: 0.08, z: 0 },
+    spine: { x: 0.08, y: 0.06, z: 0 },
+    leftUpperArm: { x: 0.22, y: 0.05, z: 0.38 },
+    rightUpperArm: { x: 0.22, y: -0.05, z: -0.38 },
+  },
+  pout: {
+    head: { x: 0.1, y: 0.08, z: 0.03 },
+    neck: { x: 0.04, y: 0.04, z: 0 },
+    spine: { x: 0.05, y: 0, z: 0 },
+    leftUpperArm: { x: 0.35, y: 0.12, z: 0.55 },
+    rightUpperArm: { x: 0.35, y: -0.12, z: -0.55 },
+    leftLowerArm: { x: 0.25, y: 0.85, z: 0.15 },
+    rightLowerArm: { x: 0.25, y: -0.85, z: -0.15 },
+  },
+  hearts: {
+    spine: { x: 0.06, y: 0, z: 0 },
+    chest: { x: 0.04, y: 0, z: 0 },
+    leftUpperArm: { x: 0.55, y: -0.12, z: 0.62 },
+    rightUpperArm: { x: 0.55, y: 0.12, z: -0.62 },
+    leftLowerArm: { x: 0.35, y: 1.05, z: 0.18 },
+    rightLowerArm: { x: 0.35, y: -1.05, z: -0.18 },
+    head: { x: -0.04, y: 0, z: 0 },
+  },
+};
+
+export function rigFor(pose: PoseId, emotion: EmotionId, aPoseRest = false): RigPose {
+  if (aPoseRest) {
+    if (pose !== "idle" && pose !== "talk") {
+      return { ...(WIP_POSE_RIG[pose] ?? POSE_RIG[pose] ?? {}) };
+    }
+    return { ...(EMOTION_RIG[emotion] ?? {}) };
+  }
   if (pose !== "idle" && pose !== "talk") {
     return { ...IDLE_A_POSE, ...(POSE_RIG[pose] ?? {}) };
   }

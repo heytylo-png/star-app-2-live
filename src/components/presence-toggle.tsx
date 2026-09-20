@@ -1,9 +1,9 @@
 import { usePresenceMode, type PresenceMode } from "@/lib/presence-mode";
 import { cn } from "@/lib/utils";
 
-const OPTIONS: { id: PresenceMode; label: string }[] = [
-  { id: "toon", label: "3D" },
-  { id: "png", label: "PNG" },
+const OPTIONS: { id: PresenceMode; label: string; title: string }[] = [
+  { id: "png", label: "PNG", title: "Official PNG puppet — shipping presence" },
+  { id: "lab", label: "Lab", title: "WIP 3D mesh preview — not shipping Rai" },
 ];
 
 export function PresenceToggle({ className }: { className?: string }) {
@@ -17,7 +17,7 @@ export function PresenceToggle({ className }: { className?: string }) {
         className,
       )}
       role="group"
-      aria-label="Presence mode"
+      aria-label="Presence. PNG is shipping. Lab is a WIP mesh, not Rai."
     >
       {OPTIONS.map((opt) => {
         const on = mode === opt.id;
@@ -26,6 +26,7 @@ export function PresenceToggle({ className }: { className?: string }) {
             key={opt.id}
             type="button"
             aria-pressed={on}
+            title={opt.title}
             onClick={() => setMode(opt.id)}
             className={cn(
               "h-7 min-w-9 rounded-full px-2.5 text-[11px] font-medium tracking-wide transition-colors duration-150",

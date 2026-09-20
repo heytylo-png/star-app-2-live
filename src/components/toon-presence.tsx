@@ -1,36 +1,30 @@
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
-  MToonMaterial,
-  MToonMaterialOutlineWidthMode,
-  VRMLoaderPlugin,
-  VRMUtils,
-  type VRM,
-  type VRMHumanBoneName,
-} from "@pixiv/three-vrm";
-import {
   Color,
+  DataTexture,
   Euler,
   Group,
+  MeshToonMaterial,
+  NearestFilter,
+  NoColorSpace,
   NoToneMapping,
   Object3D,
   PerspectiveCamera,
   Quaternion,
-  Vector3,
+  RedFormat,
   type Mesh,
 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import type { EmotionId, PoseId } from "@/lib/rai";
 import { publicUrl } from "@/lib/utils";
 import {
-  expressionsFor,
   expT,
   lerpEuler,
-  resolveExprName,
   rigFor,
   rootYawFor,
   RIG_BONES,
-  STANDIN_VRM_FILE,
+  WIP_GLB_FILE,
   ZERO,
   type BoneEuler,
   type RigBoneName,
@@ -119,7 +113,7 @@ export default function ToonPresence({
     <StageShell stageRef={stageRef} className={className}>
       <PresenceFrame>
         <Canvas
-          camera={{ position: [0.18, 0.92, 2.65], fov: 32, near: 0.1, far: 24 }}
+          camera={{ position: [0.18, 0.92, 2.55], fov: 32, near: 0.1, far: 24 }}
           dpr={[1, 1.75]}
           gl={{
             antialias: true,
@@ -134,10 +128,10 @@ export default function ToonPresence({
           }}
         >
           <PresenceCamera />
-          <hemisphereLight args={["#fff4e8", "#cfc8bc", 0.95]} />
-          <directionalLight position={[0.55, 2.3, 2.2]} intensity={1.08} color="#fff7ef" />
-          <directionalLight position={[-1.7, 0.9, 0.5]} intensity={0.22} color="#c4ceda" />
-          <StarVrm
+          <hemisphereLight args={["#fff4e8", "#cfc8bc", 1.05]} />
+          <directionalLight position={[0.55, 2.3, 2.2]} intensity={1.15} color="#fff7ef" />
+          <directionalLight position={[-1.7, 0.9, 0.5]} intensity={0.2} color="#c4ceda" />
+          <StarWip
             intentRef={intentRef}
             lookRef={lookRef}
             reducedRef={reducedRef}
@@ -148,7 +142,7 @@ export default function ToonPresence({
       </PresenceFrame>
       {!ready ? (
         <p className="pointer-events-none absolute inset-x-0 top-[42%] text-center text-xs tracking-widest text-muted uppercase">
-          Waking
+          Lab mesh
         </p>
       ) : null}
     </StageShell>
@@ -158,8 +152,8 @@ export default function ToonPresence({
 function PresenceCamera() {
   const camera = useThree((s) => s.camera);
   useLayoutEffect(() => {
-    camera.position.set(0.18, 0.92, 2.65);
-    camera.lookAt(0.02, 0.9, 0);
+    camera.position.set(0.16, 0.88, 2.45);
+    camera.lookAt(0.0, 0.86, 0);
     if (camera instanceof PerspectiveCamera) {
       camera.fov = 32;
       camera.updateProjectionMatrix();
@@ -168,7 +162,7 @@ function PresenceCamera() {
   return null;
 }
 
-function StarVrm({
+function StarWip({
   intentRef,
   lookRef,
   reducedRef,
@@ -181,60 +175,50 @@ function StarVrm({
   onReady: () => void;
   onFail: () => void;
 }) {
-  const threeScene = useThree((s) => s.scene);
-  const vrmRef = useRef<VRM | null>(null);
+  const vrmLike = useRef<Group | null>(null);
   const bonesRef = useRef<Map<RigBoneName, BoneState>>(new Map());
-  const lookTarget = useRef(new Object3D());
   const lookSmooth = useRef({ x: 0, y: 0 });
-  const yawSmooth = useRef(0.16);
+  const yawSmooth = useRef(0.12);
   const blinkRef = useRef({ t: 0, next: 2.2, value: 0 });
-  const namesRef = useRef<Set<string>>(new Set());
   const extraQuat = useRef(new Quaternion());
   const extraEuler = useRef(new Euler());
-  const headWorld = useRef(new Vector3());
+  const lidL = useRef<Object3D | null>(null);
+  const lidR = useRef<Object3D | null>(null);
+  const mouthOpen = useRef<Object3D | null>(null);
+  const mouthIdle = useRef<Object3D | null>(null);
   const rootRef = useRef<Group>(null);
   const onReadyRef = useRef(onReady);
   const onFailRef = useRef(onFail);
-  const [scene, setScene] = useState<VRM["scene"] | null>(null);
+  const [scene, setScene] = useState<Group | null>(null);
   onReadyRef.current = onReady;
   onFailRef.current = onFail;
 
   useEffect(() => {
-    const target = lookTarget.current;
-    threeScene.add(target);
-    return () => {
-      threeScene.remove(target);
-    };
-  }, [threeScene]);
-
-  useEffect(() => {
     let cancelled = false;
     const loader = new GLTFLoader();
-    loader.register((parser) => new VRMLoaderPlugin(parser));
-    const url = publicUrl(STANDIN_VRM_FILE);
+    const url = publicUrl(WIP_GLB_FILE);
 
     loader
       .loadAsync(url)
       .then((gltf) => {
-        const vrm = gltf.userData.vrm as VRM | undefined;
-        if (!vrm) throw new Error("VRM payload missing");
-        if (cancelled) {
-          VRMUtils.deepDispose(vrm.scene);
-          return;
-        }
-
-        VRMUtils.removeUnnecessaryVertices(gltf.scene);
-        VRMUtils.combineSkeletons(gltf.scene);
-        VRMUtils.rotateVRM0(vrm);
-        stylizeToon(vrm);
-
-        vrm.scene.traverse((obj) => {
+        if (cancelled) return;
+        const root = gltf.scene;
+        const gradient = makeToonGradient();
+        root.traverse((obj) => {
           obj.frustumCulled = false;
+          const mesh = obj as Mesh;
+          if (mesh.isMesh) {
+            const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+            mesh.material = mats.map((mat) => {
+              const color = "color" in mat && mat.color instanceof Color ? mat.color : new Color("#ccc");
+              return new MeshToonMaterial({ color: color.clone(), gradientMap: gradient });
+            });
+          }
         });
 
         const bones = new Map<RigBoneName, BoneState>();
         for (const name of RIG_BONES) {
-          const node = vrm.humanoid.getNormalizedBoneNode(name as VRMHumanBoneName);
+          const node = root.getObjectByName(name);
           if (!node) continue;
           bones.set(name, {
             node,
@@ -243,22 +227,13 @@ function StarVrm({
           });
         }
         bonesRef.current = bones;
+        lidL.current = root.getObjectByName("lidLeft") ?? null;
+        lidR.current = root.getObjectByName("lidRight") ?? null;
+        mouthOpen.current = root.getObjectByName("mouthOpen") ?? null;
+        mouthIdle.current = root.getObjectByName("mouthIdle") ?? null;
 
-        const names = new Set<string>();
-        const em = vrm.expressionManager;
-        if (em) {
-          for (const key of Object.keys(em.expressionMap)) names.add(key);
-        }
-        namesRef.current = names;
-
-        lookTarget.current.position.set(0.15, 1.35, 1.4);
-        if (vrm.lookAt) {
-          vrm.lookAt.target = lookTarget.current;
-          vrm.lookAt.autoUpdate = true;
-        }
-
-        vrmRef.current = vrm;
-        setScene(vrm.scene);
+        vrmLike.current = root;
+        setScene(root);
         onReadyRef.current();
       })
       .catch(() => {
@@ -267,15 +242,13 @@ function StarVrm({
 
     return () => {
       cancelled = true;
-      const vrm = vrmRef.current;
-      vrmRef.current = null;
-      if (vrm) VRMUtils.deepDispose(vrm.scene);
+      vrmLike.current = null;
     };
   }, []);
 
   useFrame((_, delta) => {
-    const vrm = vrmRef.current;
-    if (!vrm) return;
+    const root = vrmLike.current;
+    if (!root) return;
     const dt = Math.min(0.05, delta);
     const intent = intentRef.current;
     const reduced = reducedRef.current;
@@ -286,10 +259,23 @@ function StarVrm({
     lookSmooth.current.y += (look.y - lookSmooth.current.y) * expT(LOOK_LERP, dt);
 
     const blink = stepBlink(blinkRef.current, dt, reduced);
-    applyExpressions(vrm, namesRef.current, intent, blink);
+    for (const lid of [lidL.current, lidR.current]) {
+      if (!lid) continue;
+      lid.rotation.x = 0.15 + blink * 1.05;
+    }
+    const mouth = mouthOpen.current;
+    const idleMouth = mouthIdle.current;
+    if (mouth) {
+      const talking = intent.talking || intent.pose === "talk";
+      const a = Math.max(0, Math.min(1, intent.amplitude));
+      const open = talking ? 0.15 + a * 0.95 : 0;
+      mouth.visible = open > 0.08;
+      mouth.scale.set(1.1, 0.15 + open * 0.9, 0.6);
+      if (idleMouth) idleMouth.visible = !mouth.visible;
+    }
 
-    const targetRig = rigFor(intent.pose, intent.emotion);
-    const waveBoost = intent.pose === "wave" && !reduced ? Math.sin(now * 8.2) * 0.55 : 0;
+    const targetRig = rigFor(intent.pose, intent.emotion, true);
+    const waveBoost = intent.pose === "wave" && !reduced ? Math.sin(now * 8.2) * 0.45 : 0;
 
     for (const name of RIG_BONES) {
       const state = bonesRef.current.get(name);
@@ -314,32 +300,16 @@ function StarVrm({
 
     const yawGoal = rootYawFor(intent.pose);
     yawSmooth.current += (yawGoal - yawSmooth.current) * expT(4.2, dt);
-
-    const sway = reduced ? 0 : Math.sin(now * 0.55) * 0.035 + lookSmooth.current.x * -0.05;
-    const breatheY = reduced ? 0 : Math.sin(now * 1.05) * 0.016 + Math.sin(now * 0.48) * 0.005;
-    const talkBob = reduced || !intent.talking ? 0 : Math.sin(now * 7.5) * intent.amplitude * 0.012;
-
-    // Do not write vrm.scene.rotation — rotateVRM0 parks VRM 0.0 at y=π.
-    const root = rootRef.current;
-    if (root) {
-      root.rotation.y = yawSmooth.current;
-      root.rotation.z = sway;
-      root.position.y = breatheY + talkBob - 0.04;
-      const s = reduced ? 0.88 : 0.88 + Math.sin(now * 1.05) * 0.008;
-      root.scale.setScalar(s);
+    const sway = reduced ? 0 : Math.sin(now * 0.55) * 0.03 + lookSmooth.current.x * -0.04;
+    const breatheY = reduced ? 0 : Math.sin(now * 1.05) * 0.012;
+    const talkBob = reduced || !intent.talking ? 0 : Math.sin(now * 7.5) * intent.amplitude * 0.01;
+    const wrap = rootRef.current;
+    if (wrap) {
+      wrap.rotation.y = yawSmooth.current;
+      wrap.rotation.z = sway;
+      wrap.position.y = breatheY + talkBob;
+      wrap.scale.setScalar(reduced ? 1 : 1 + Math.sin(now * 1.05) * 0.006);
     }
-
-    const head = vrm.humanoid.getNormalizedBoneNode("head");
-    if (head) {
-      head.getWorldPosition(headWorld.current);
-      lookTarget.current.position.set(
-        headWorld.current.x + lookSmooth.current.x * 0.85,
-        headWorld.current.y - lookSmooth.current.y * 0.45,
-        headWorld.current.z + 1.15,
-      );
-    }
-
-    vrm.update(dt);
   });
 
   if (!scene) return null;
@@ -350,20 +320,20 @@ function StarVrm({
   );
 }
 
+function makeToonGradient(): DataTexture {
+  const data = new Uint8Array([90, 165, 255]);
+  const tex = new DataTexture(data, 3, 1, RedFormat);
+  tex.colorSpace = NoColorSpace;
+  tex.minFilter = NearestFilter;
+  tex.magFilter = NearestFilter;
+  tex.needsUpdate = true;
+  tex.generateMipmaps = false;
+  return tex;
+}
+
 function extraQuatFrom(e: BoneEuler, euler: Euler, quat: Quaternion): Quaternion {
   euler.set(e.x, e.y, e.z, "XYZ");
   return quat.setFromEuler(euler);
-}
-
-function applyExpressions(vrm: VRM, available: Set<string>, intent: Intent, blink: number) {
-  const em = vrm.expressionManager;
-  if (!em) return;
-  em.resetValues();
-  const weights = expressionsFor(intent.pose, intent.emotion, intent.talking, intent.amplitude, blink);
-  for (const [logical, value] of Object.entries(weights)) {
-    const name = resolveExprName(available, logical);
-    if (name) em.setValue(name, value);
-  }
 }
 
 function stepBlink(
@@ -380,38 +350,8 @@ function stepBlink(
     state.t = 0;
     state.next = 2.1 + Math.random() * 3.4;
   }
-  // 0–0.07 close, 0.07–0.16 open
   if (state.t < 0.07) state.value = state.t / 0.07;
   else if (state.t < 0.16) state.value = 1 - (state.t - 0.07) / 0.09;
   else state.value = 0;
   return state.value;
-}
-
-function stylizeToon(vrm: VRM) {
-  const outline = new Color("#2a1f18");
-  const materials = vrm.materials ?? collectMaterials(vrm);
-  for (const mat of materials) {
-    if (!(mat instanceof MToonMaterial)) continue;
-    mat.shadingToonyFactor = Math.max(mat.shadingToonyFactor, 0.93);
-    mat.giEqualizationFactor = Math.min(mat.giEqualizationFactor, 0.62);
-    if (mat.outlineWidthMode === MToonMaterialOutlineWidthMode.None) {
-      mat.outlineWidthMode = MToonMaterialOutlineWidthMode.ScreenCoordinates;
-      mat.outlineWidthFactor = 0.003;
-      mat.outlineColorFactor.copy(outline);
-      mat.outlineLightingMixFactor = 0.3;
-    } else {
-      mat.outlineWidthFactor = Math.max(mat.outlineWidthFactor, 0.0024);
-    }
-  }
-}
-
-function collectMaterials(vrm: VRM): Mesh["material"][] {
-  const out: Mesh["material"][] = [];
-  vrm.scene.traverse((obj) => {
-    const mesh = obj as Mesh;
-    if (!mesh.isMesh) return;
-    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-    out.push(...mats);
-  });
-  return out;
 }

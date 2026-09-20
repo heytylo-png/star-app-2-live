@@ -12,7 +12,8 @@
     "predev": "node scripts/sync-star-rai-artifacts.js",
     "prebuild": "node scripts/sync-star-rai-artifacts.js",
     "pretest": "node scripts/sync-star-rai-artifacts.js",
-    "test": "node --experimental-strip-types --test src/lib/rai-pose.test.ts src/lib/local-brain.test.ts src/lib/memory-slots.test.ts src/lib/chart.test.ts src/lib/life.test.ts src/lib/shell.test.ts src/lib/call.test.ts src/lib/chat-thread-height.test.ts src/lib/punch-white.test.ts src/lib/stage-menu.test.ts src/lib/rai-shot.test.ts"
+    "build:wip-mesh": "node scripts/build-star-wip-glb.mjs",
+    "test": "node --experimental-strip-types --test src/lib/rai-pose.test.ts src/lib/local-brain.test.ts src/lib/memory-slots.test.ts src/lib/chart.test.ts src/lib/life.test.ts src/lib/shell.test.ts src/lib/call.test.ts src/lib/chat-thread-height.test.ts src/lib/punch-white.test.ts src/lib/stage-menu.test.ts src/lib/rai-shot.test.ts src/lib/vrm-rig.test.ts src/lib/presence-mode.test.ts"
   },
   "dependencies": {
     "@pixiv/three-vrm": "^3.5.5",

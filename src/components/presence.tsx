@@ -3,7 +3,6 @@ import { Puppet } from "@/components/puppet";
 import { StageShell } from "@/components/stage-shell";
 import { usePresenceMode } from "@/lib/presence-mode";
 import type { EmotionId, PoseId } from "@/lib/rai";
-import { toonHandlesPose } from "@/lib/vrm-rig";
 
 const ToonPresence = lazy(() => import("@/components/toon-presence"));
 
@@ -16,35 +15,34 @@ export type PresenceProps = {
 };
 
 /**
- * Presence slot: toon-shaded VRM is the default path.
- * PNG puppet stays the toggle/safety-net, and covers Helix keys the
- * stand-in cannot act (hand-shape poses).
+ * Shipping presence is the official PNG puppet.
+ * Lab mounts a WIP mesh preview that is not Star Rai.
  */
 export function Presence({ pose, emotion, talking, amplitude, className }: PresenceProps) {
   const mode = usePresenceMode((s) => s.mode);
-  const [toonFailed, setToonFailed] = useState(false);
-  const engineOn = mode === "toon" && !toonFailed;
-  const showToon = engineOn && toonHandlesPose(pose);
-  const showPng = !showToon;
+  const [labFailed, setLabFailed] = useState(false);
+  const labOn = mode === "lab" && !labFailed;
 
   return (
     <>
-      {engineOn ? (
-        <Suspense fallback={showPng ? null : <StageShell className={className} />}>
-          <div className={showToon ? "absolute inset-0" : "pointer-events-none invisible absolute inset-0"}>
-            <ToonPresence
-              pose={pose}
-              emotion={emotion}
-              talking={talking}
-              amplitude={amplitude}
-              className="h-full w-full"
-              onFail={() => setToonFailed(true)}
-            />
-          </div>
+      {labOn ? (
+        <Suspense fallback={<StageShell className={className} />}>
+          <ToonPresence
+            pose={pose}
+            emotion={emotion}
+            talking={talking}
+            amplitude={amplitude}
+            className={className}
+            onFail={() => setLabFailed(true)}
+          />
         </Suspense>
-      ) : null}
-      {showPng ? (
+      ) : (
         <Puppet pose={pose} emotion={emotion} talking={talking} amplitude={amplitude} className={className} />
+      )}
+      {labOn ? (
+        <p className="pointer-events-none absolute top-[max(3.6rem,calc(env(safe-area-inset-top)+2.6rem))] left-1/2 z-[6] -translate-x-1/2 rounded-full bg-elevated/90 px-2.5 py-0.5 text-[10px] tracking-wide text-muted shadow-[var(--shadow-border)]">
+          WIP mesh · not Rai
+        </p>
       ) : null}
     </>
   );
