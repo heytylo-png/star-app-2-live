@@ -1,6 +1,15 @@
-import { useLayoutEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { GripHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ChatMessage } from "@/lib/helix";
+import {
+  CHAT_THREAD_DEFAULT_PX,
+  CHAT_THREAD_MIN_PX,
+  clampChatThreadHeightPx,
+  loadChatThreadHeightPx,
+  maxChatThreadHeightPx,
+  saveChatThreadHeightPx,
+} from "@/lib/chat-thread-height";
 
 const NEAR_BOTTOM_PX = 56;
 
@@ -22,9 +31,67 @@ function lastMessageContent(messages: ChatMessage[]): string {
   return "";
 }
 
+function useChatThreadHeight() {
+  const [heightPx, setHeightPx] = useState(() =>
+    typeof window === "undefined" ? CHAT_THREAD_DEFAULT_PX : loadChatThreadHeightPx(window.innerHeight),
+  );
+  const dragRef = useRef<{ pointerId: number; startY: number; startH: number } | null>(null);
+
+  useEffect(() => {
+    const onResize = () => {
+      setHeightPx((h) => clampChatThreadHeightPx(h, window.innerHeight));
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const onPointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragRef.current = { pointerId: e.pointerId, startY: e.clientY, startH: heightPx };
+    document.body.classList.add("chat-thread-resizing");
+  }, [heightPx]);
+
+  const onPointerMove = useCallback((e: PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    const next = clampChatThreadHeightPx(drag.startH + (drag.startY - e.clientY), window.innerHeight);
+    setHeightPx(next);
+  }, []);
+
+  const endDrag = useCallback((e: PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    dragRef.current = null;
+    document.body.classList.remove("chat-thread-resizing");
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      /* already released */
+    }
+    setHeightPx((h) => saveChatThreadHeightPx(h, window.innerHeight));
+  }, []);
+
+  const onKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
+    const vh = window.innerHeight;
+    let next = heightPx;
+    if (e.key === "ArrowUp") next += 16;
+    else if (e.key === "ArrowDown") next -= 16;
+    else if (e.key === "Home") next = CHAT_THREAD_MIN_PX;
+    else if (e.key === "End") next = maxChatThreadHeightPx(vh);
+    else return;
+    e.preventDefault();
+    setHeightPx(saveChatThreadHeightPx(next, vh));
+  }, [heightPx]);
+
+  return { heightPx, onPointerDown, onPointerMove, endDrag, onKeyDown };
+}
+
 /**
- * Compact Chat transcript — ~3–4 message heights, scroll for the rest.
- * Does not grow with the viewport; the puppet keeps the stage.
+ * Expo-style compact transcript: dark quiet bubbles, bottom-third of the stage.
+ * No wrapping white card — the puppet stays visible through the stack.
+ * Optional top-edge grip resizes and persists height in localStorage.
  */
 export function ChatThread({
   messages,
@@ -38,6 +105,7 @@ export function ChatThread({
   const scrollerRef = useRef<HTMLDivElement>(null);
   const nearBottomRef = useRef(true);
   const prevLenRef = useRef(messages.length);
+  const { heightPx, onPointerDown, onPointerMove, endDrag, onKeyDown } = useChatThreadHeight();
 
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
   const lastStored = lastMessageContent(messages);
@@ -55,7 +123,7 @@ export function ChatThread({
     if (appended && last?.role === "user") nearBottomRef.current = true;
     if (!nearBottomRef.current) return;
     el.scrollTop = el.scrollHeight;
-  }, [messages, captionText, showListening]);
+  }, [messages, captionText, showListening, heightPx]);
 
   if (empty && !captionText && !callActive && !showSetup) {
     return (
@@ -67,60 +135,85 @@ export function ChatThread({
 
   if (empty && !captionText && !showListening) return null;
 
+  const minPx = CHAT_THREAD_MIN_PX;
+  const maxPx = typeof window === "undefined" ? 320 : maxChatThreadHeightPx(window.innerHeight);
+
   return (
     <div
-      ref={scrollerRef}
-      role="log"
-      aria-label="Chat transcript"
-      aria-live="polite"
-      data-testid="chat-thread"
-      onScroll={() => {
-        const el = scrollerRef.current;
-        if (!el) return;
-        nearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_PX;
-      }}
-      className="chat-thread pointer-events-auto mx-auto mb-2 w-full max-w-md min-h-0 rounded-xl bg-elevated/80 px-2.5 py-2 shadow-[var(--shadow-border)] backdrop-blur-[2px]"
+      className="chat-thread-frame pointer-events-auto mx-auto mb-1 w-full max-w-md min-h-0"
+      style={{ maxHeight: heightPx }}
+      data-testid="chat-thread-frame"
     >
-      <div className="flex flex-col justify-end gap-1.5">
-        {messages.map((m) => {
-          const isAssistant = m.role === "assistant";
-          const liveTalk = Boolean(callActive && talking && m.id === lastAssistant?.id);
-          const body = m.content.trim() || (isAssistant ? "…" : "");
-          if (!body) return null;
-          return (
+      <div
+        role="slider"
+        tabIndex={0}
+        aria-label="Resize transcript"
+        aria-orientation="vertical"
+        aria-valuemin={minPx}
+        aria-valuemax={maxPx}
+        aria-valuenow={heightPx}
+        aria-valuetext={`${heightPx} pixels`}
+        title="Drag to resize transcript"
+        data-testid="chat-thread-resize"
+        className="chat-thread-handle"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onKeyDown={onKeyDown}
+      >
+        <GripHorizontal className="size-3.5" aria-hidden />
+      </div>
+      <div
+        ref={scrollerRef}
+        role="log"
+        aria-label="Chat transcript"
+        aria-live="polite"
+        data-testid="chat-thread"
+        onScroll={() => {
+          const el = scrollerRef.current;
+          if (!el) return;
+          nearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_PX;
+        }}
+        className="chat-thread px-1 pb-1"
+      >
+        <div className="flex flex-col justify-end gap-1.5">
+          {messages.map((m) => {
+            const isAssistant = m.role === "assistant";
+            const liveTalk = Boolean(callActive && talking && m.id === lastAssistant?.id);
+            const body = m.content.trim() || (isAssistant ? "…" : "");
+            if (!body) return null;
+            return (
+              <div
+                key={m.id}
+                className={cn(
+                  "chat-bubble",
+                  isAssistant ? "chat-bubble-assistant mr-auto" : "chat-bubble-user ml-auto",
+                  liveTalk && "chat-bubble-live",
+                  m.error && "chat-bubble-error",
+                )}
+              >
+                <p className="whitespace-pre-wrap break-words">{body}</p>
+                {liveTalk ? (
+                  <span className="chat-bubble-hint">Tap to interrupt</span>
+                ) : null}
+              </div>
+            );
+          })}
+          {showListening ? (
+            <p className="px-1 text-center text-xs text-muted">Listening…</p>
+          ) : null}
+          {showCaption ? (
             <div
-              key={m.id}
               className={cn(
-                "max-w-[92%] rounded-xl px-3 py-1.5 leading-snug shadow-[var(--shadow-border)]",
-                isAssistant
-                  ? "mr-auto bg-elevated font-display text-[0.95rem] text-fg"
-                  : "ml-auto bg-bg text-sm text-fg",
-                liveTalk && "ring-1 ring-border",
-                m.error && "text-danger",
+                "chat-bubble",
+                listening ? "chat-bubble-user ml-auto" : "chat-bubble-assistant mx-auto",
               )}
             >
-              <p className="whitespace-pre-wrap break-words">{body}</p>
-              {liveTalk ? (
-                <span className="mt-0.5 block font-sans text-[0.65rem] tracking-wide text-subtle uppercase">
-                  Tap to interrupt
-                </span>
-              ) : null}
+              {captionText}
             </div>
-          );
-        })}
-        {showListening ? (
-          <p className="px-1 text-center text-sm text-muted">Listening…</p>
-        ) : null}
-        {showCaption ? (
-          <div
-            className={cn(
-              "max-w-[92%] rounded-xl px-3 py-1.5 text-sm leading-snug text-muted shadow-[var(--shadow-border)]",
-              listening ? "ml-auto bg-bg" : "mx-auto bg-elevated/90 text-center",
-            )}
-          >
-            {captionText}
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </div>
     </div>
   );

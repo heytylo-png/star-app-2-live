@@ -19,10 +19,13 @@ import {
   callTranscriptAction,
   callUtteranceToSend,
   classifyGetUserMediaError,
+  collapseDuplicateNgrams,
+  gateCallUtterance,
   hangUpCallState,
   meaningfulTranscript,
   MIC_UNBLOCK_STEPS,
   nextCallListenBackoffMs,
+  pushCallFinal,
   shouldEndCallOnPageEvent,
   shouldSpeakCallLine,
   shouldStartRecognitionOnError,
@@ -87,7 +90,71 @@ describe("empty transcript", () => {
     assert.equal(callUtteranceToSend({ finals: [], interim: "uh background tv" }), "");
     assert.equal(callUtteranceToSend({ finals: ["uh"], interim: "hey wait" }), "");
     assert.equal(callUtteranceToSend({ finals: ["Hey. Just got here."], interim: "noise" }), "Hey. Just got here.");
-    assert.ok(CALL_FINAL_DEBOUNCE_MS >= 400);
+    assert.ok(CALL_FINAL_DEBOUNCE_MS >= 700);
+    assert.ok(CALL_FINAL_DEBOUNCE_MS <= 900);
+  });
+});
+
+describe("one utterance per submit", () => {
+  it("waits for a 700–900ms pause before send", () => {
+    assert.equal(CALL_FINAL_DEBOUNCE_MS, 800);
+  });
+
+  it("collapses immediate duplicate n-grams from hot STT", () => {
+    const phrase = "who's your favorite artist";
+    const repeated = Array.from({ length: 4 }, () => phrase).join(" ");
+    assert.equal(collapseDuplicateNgrams(repeated), phrase);
+    assert.equal(
+      callUtteranceToSend({
+        finals: [phrase, phrase, phrase, phrase],
+      }),
+      phrase,
+    );
+    assert.equal(collapseDuplicateNgrams("hello hello hello"), "hello");
+    assert.equal(collapseDuplicateNgrams("no no"), "no no");
+    assert.equal(collapseDuplicateNgrams("who is who is"), "who is");
+  });
+
+  it("drops duplicate finals instead of concatenating them", () => {
+    const finals: string[] = [];
+    assert.equal(pushCallFinal(finals, "who's your favorite artist"), true);
+    assert.equal(pushCallFinal(finals, "who's your favorite artist"), false);
+    assert.equal(pushCallFinal(finals, "who's your favorite artist who's your favorite artist"), false);
+    assert.equal(pushCallFinal(finals, "  uh  "), false);
+    assert.deepEqual(finals, ["who's your favorite artist"]);
+    assert.equal(callUtteranceToSend({ finals }), "who's your favorite artist");
+  });
+
+  it("does not send while she is speaking or thinking", () => {
+    const finals = ["who's your favorite artist"];
+    assert.deepEqual(
+      gateCallUtterance({ talking: true, sending: false, listenPausedForTts: false, finals }),
+      { action: "keep_listening", text: "" },
+    );
+    assert.deepEqual(
+      gateCallUtterance({ talking: false, sending: true, listenPausedForTts: false, finals }),
+      { action: "keep_listening", text: "" },
+    );
+    assert.deepEqual(
+      gateCallUtterance({ talking: false, sending: false, listenPausedForTts: true, finals }),
+      { action: "keep_listening", text: "" },
+    );
+    assert.deepEqual(
+      gateCallUtterance({ talking: false, sending: false, listenPausedForTts: false, finals }),
+      { action: "send", text: "who's your favorite artist" },
+    );
+  });
+
+  it("keeps listening on empty / garbage STT", () => {
+    assert.deepEqual(
+      gateCallUtterance({ talking: false, sending: false, listenPausedForTts: false, finals: [] }),
+      { action: "keep_listening", text: "" },
+    );
+    assert.deepEqual(
+      gateCallUtterance({ talking: false, sending: false, listenPausedForTts: false, finals: ["um"] }),
+      { action: "keep_listening", text: "" },
+    );
+    assert.equal(callTranscriptAction(""), "keep_listening");
   });
 });
 
