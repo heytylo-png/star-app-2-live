@@ -1,0 +1,25 @@
+STAR RAI — CALL MODE (Helix / star-app-2-live)
+Live GitHub Pages only. Not Expo-only.
+Phone icon: listen → same Chat brain → speak the line only.
+
+START / STOP
+- Tap phone to start Call mode.
+- Tap again to hang up.
+- Thread stays (do not wipe chat / memory / sheet).
+
+LOOP
+1. Listen (browser speech recognition / mic).
+2. Empty transcript → keep listening; don’t invent a user line.
+3. Non-empty → same Chat brain path as typed Chat (grok-4-latest + voice card + filled memory / Chart / Life slots; fail → local brain).
+4. Pose commands by voice still swap the sheet first.
+5. Pose tint applies to the spoken bubble (not idle-frown on a teasing line).
+6. Speak line only — never the JSON, never the memory list, never a lore dump.
+7. TTS fail → still show the bubble (text visible even if speech fails).
+8. Honor speaker mute already in chrome (if muted, don’t force TTS).
+9. Don’t stay hot after they leave the page (abort mic / TTS / listeners on hide/unload).
+10. Don’t store recordings.
+
+UNCHANGED
+Kiss stays unmapped. Voice card + {"line","emotion","pose"}.
+Chat · Chart · Life shell. No xAI key in git.
+No Chat music display strip (Life tab owns Set/Stop).
