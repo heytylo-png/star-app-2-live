@@ -1,8 +1,8 @@
 # Star Rai animation
 
-Presence is a **PNG puppet**. Official pose sheets under `public/rai/` are the face of the live app. This file is the motion model for that puppet (track **#1**) and a stub for the next engines.
+Presence is a **PNG puppet**. Official pose sheets under `public/rai/` are the face of the live app. This file is the motion model for that puppet (track **#1**), the Spine/cutout foothold (track **#2**), and a stub for Rive (track **#3**).
 
-3D / Lab / WIP mesh is **not her**. Do not ship a Lab toggle as Rai. PR #15’s 3D-as-Rai path stays unmerged.
+3D / Lab / WIP mesh is **not her**. Do not ship a Lab toggle as Rai. PR #15’s 3D-as-Rai path stays unmerged. `?lab=1` / `?3d=1` do not change the body.
 
 ## Track 1 — PNG puppet (shipping)
 
@@ -19,7 +19,7 @@ The rig (`[data-rai-rig]`) is hip-origin (`transform-origin: 50% 72%`). A rAF lo
 
 Vertical travel stays under ~1px at rest so she does not float. `prefers-reduced-motion: reduce` zeros the loop.
 
-Code: `src/lib/rai-motion.ts` + `src/components/puppet.tsx`.
+Code: `src/lib/rai-motion.ts` + `src/components/puppet.tsx`. Stage switch: `src/components/presence-stage.tsx` (PNG unless a Spine query flag is on).
 
 ### Pose crossfade
 
@@ -46,19 +46,28 @@ Blink / eye layers: skipped for the same reason. Revisit only if we get eye shee
 
 Fallback: no overlay → idle or `talk_official` as a single body sheet. Reduced motion → static `talk_official` while speaking.
 
-## Track 2 — Spine / DragonBones (next)
+## Track 2 — Spine / cutout (foothold)
 
-Not in this PR. When we move off dual-PNG visemes, a Spine (or DragonBones) skeleton can own breathe, blink, and visemes on the **same official art**. Budget path: export from the PNG pack; no Live2D license.
+**Primary engine: Spine** (Essential license when we export a real rig). DragonBones is a free/stale fallback — not the authoring home. Full decision, licenses, layer cuts, and bone map: **[SPINE.md](./SPINE.md)**.
 
-Stub: keep `data-rai-engine="png-puppet"` so a later engine can swap the stage without renaming live pose keys.
+A full official Rai Spine export is **not** in this PR (needs a human in Spine Editor / Photopea). What *is* here:
 
-## Track 3 — Rive (after Spine)
+- In-repo **Canvas cutout** player (`src/lib/cutout-runtime.ts`) — Spine-shaped JSON, no Esoteric npm, no Pixi.
+- **`?spine=1`** (or `?engine=spine`) — geometric sample girl. Badge: not Rai. Pose keys still drive idle / talk / wave / scold / pout / shy.
+- **`?spine=rai`** — `public/spine/rai/skeleton.json` + cut layers. Missing files → **PNG puppet** (same Call/Chat).
+- Artist stub: `public/spine/rai/cut-guide.svg`, `layers/README.md`, bone list in SPINE.md.
 
-Not in this PR. Rive is the later interactive pass (state machine, pointer, Call amplitude → mouth). Do not buy Live2D or run After Effects for this. No Rive runtime is bundled today.
+Default URL is unchanged: `data-rai-engine="png-puppet"`. Do not flip this on in Pages deploy.
+
+Honest next step: cut idle.png → Spine Essential → JSON+atlas in `public/spine/rai/export/` → later PR dynamic-imports `@esotericsoftware/spine-webgl` behind the same flag.
+
+## Track 3 — Rive (later)
+
+Stub only: [public/rive/README.md](./public/rive/README.md). After Spine/cutout is proven on official art, Rive can own the interactive state machine (pointer, Call amplitude → mouth). Do not buy Live2D or run After Effects. No Rive runtime is bundled.
 
 ## Do not
 
 - Replace official PNGs with AI video or 3D as the live face
 - Invent a kiss sheet
 - Advance Lab mesh identity
-- Add a heavy animation engine just for idle life
+- Add a heavy animation engine (Pixi, spine-ts, Rive) to the **default** bundle just for idle life

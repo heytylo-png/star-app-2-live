@@ -145,7 +145,7 @@ The Worker forwards `POST /v1/chat/completions`, reads the key from `X-User-Key`
 
 | Feature | Behavior |
 | --- | --- |
-| Puppet / poses | Fully client-side PNG puppet (idle life + official talk flap) |
+| Puppet / poses | Fully client-side PNG puppet (idle life + official talk flap). Optional `?spine=1` cutout demo is not the shipping face |
 | Chat brain | Local pose-keyed `artifacts/star-rai-local-brain.txt`; optional Grok (`grok-4-latest`) when key present |
 | Voice | Browser `SpeechSynthesis` (prefers female English when available) |
 | Hold-to-talk | Browser `SpeechRecognition` when present; otherwise type |
@@ -184,10 +184,11 @@ See **[POSING.md](./POSING.md)** for the drop-in guide:
 
 ## Animation (PNG puppet)
 
-See **[ANIMATION.md](./ANIMATION.md)** for the shipping motion model:
+See **[ANIMATION.md](./ANIMATION.md)** for the shipping motion model and **[SPINE.md](./SPINE.md)** for track #2:
 
 - Official PNG is the live body (idle breathe / sway, 380ms pose crossfades, talk flap on `idle` + `talk_official`)
-- Spine / DragonBones is track #2; Rive is track #3 — stubs only
+- Spine is the track #2 **primary** (Canvas cutout demo on `?spine=1`; official layers on `?spine=rai` with PNG fallback). DragonBones is documented, not wired. Default URL does not flip this on.
+- Rive is track #3 — stub only (`public/rive/README.md`)
 - 3D / Lab mesh is not Rai
 
 
