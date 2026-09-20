@@ -28,6 +28,8 @@ describe("3-tab shell artifact", () => {
     assert.match(SHELL_SOURCE, /Launch on Chat/);
     assert.match(SHELL_SOURCE, /No natal wheel/);
     assert.match(SHELL_SOURCE, /No auto-reading on open/);
+    assert.match(SHELL_SOURCE, /sparse daily dashboard/);
+    assert.match(SHELL_SOURCE, /sky labels/);
     assert.match(SHELL_SOURCE, /Life comments still fire in Chat only/);
     assert.match(SHELL_SOURCE, /No now-playing bar \/ music strip on Chat/);
     assert.match(SHELL_SOURCE, /Show a now-playing \/ music bar on Chat/);

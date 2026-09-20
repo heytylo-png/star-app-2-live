@@ -215,6 +215,7 @@ describe("mute + speakable line", () => {
     assert.equal(spokenCallLine("LORE USE\nHer bio (Fukuoka, Osaka, parents, Libra, abroad)"), "");
     assert.equal(spokenCallLine("CHART\ntoday_date: 2026-09-19\nher_sun: Libra"), "");
     assert.equal(spokenCallLine("CLOCK\nweekday: Saturday\nhour: 1\ntz: America/Chicago"), "");
+    assert.equal(spokenCallLine("SKY\nsun_sign_today: Virgo\nmoon_sign_today: Gemini"), "");
   });
 
   it("still has a bubble line when TTS is skipped (mute or empty speakable)", () => {

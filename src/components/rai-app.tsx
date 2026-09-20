@@ -556,11 +556,11 @@ function RaiReady() {
     const chartStore = useChartStore.getState();
     const lastUser =
       [...current.messages].reverse().find((m) => m.role === "user")?.content ?? "";
-    const today = localDateKey();
     const clockTurn = resolveClockTurn({
       userText: lastUser,
       timeZone: mem.slots.timezone,
     });
+    const today = localDateKey(new Date(), clockTurn.now.timeZone);
     let chartTurn = resolveChartTurn({
       userText: lastUser,
       chatOpen: chatOpenForTab(tabRef.current),
@@ -570,6 +570,7 @@ function RaiReady() {
       alreadyFiredDate: chartStore.lastFiredDate,
       askedBirthday: chartStore.askedBirthday,
       existingDiary: chartStore.diaryFor(today),
+      timeZone: clockTurn.now.timeZone,
     });
     if (clockTurn.localOnly && !chartTurn.localOnly) {
       chartTurn = { kind: "none", localOnly: false };
@@ -1239,7 +1240,8 @@ function RaiReady() {
                 <p className="mt-2 text-[0.65rem] leading-relaxed text-subtle">
                   Empty keys stay off the prompt. Streak/relationship come from the affection chip.
                   Natal Chart v1 sends user_birth_date / user_sun / chart_source when filled — never
-                  user_rising, never her bio. Life sends session_on / now_playing / daily_playlist /
+                  user_rising, never her bio. Cheap sky keys ride the daily CHART block only when Chart
+                  fires. Life sends session_on / now_playing / daily_playlist /
                   mood_tag only while a music session is on.
                 </p>
               </div>
@@ -1413,8 +1415,8 @@ function RaiReady() {
               appears, unblock it: site settings → Microphone → Allow for
               heytylo-png.github.io. Tap again to hang up — thread stays.
               Mute in the header still skips TTS. Mic audio is never stored.
-              Tabs are Chat · Chart · Life — launch on Chat. Chart edits natal slots only (no
-              auto-reading). Life v1 is music only — paste a title, no Spotify/Apple login.
+              Tabs are Chat · Chart · Life — launch on Chat. Chart is a sparse daily sky pane
+              (no auto-reading, no wheel). Life v1 is music only — paste a title, no Spotify/Apple login.
               Session can stay on in the background; comments still land in Chat.
             </div>
           </div>

@@ -25,6 +25,8 @@ VITE_GROK_PROXY_URL=https://YOUR_WORKER.workers.dev npm run build
 
 Leave `VITE_GROK_PROXY_URL` unset to try direct `api.x.ai` first (works if CORS is allowed; otherwise the app falls back to the offline brain).
 
+Chart / sky facts are computed **in the browser** (`astronomy-engine`). Do not add a Worker `/sky` route for this pass and do not `wrangler deploy` for horoscope.
+
 ## Security note
 
 The Worker is a CORS bypass, not a secret vault. Anyone who can call your Worker URL can spend **their own** key (or a stolen one). Restrict with Cloudflare Access / allowed origins if you need tighter control.
