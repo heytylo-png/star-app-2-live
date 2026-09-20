@@ -22,6 +22,7 @@ import {
   collapseDuplicateNgrams,
   gateCallUtterance,
   hangUpCallState,
+  keepRawSttText,
   meaningfulTranscript,
   MIC_UNBLOCK_STEPS,
   nextCallListenBackoffMs,
@@ -90,14 +91,14 @@ describe("empty transcript", () => {
     assert.equal(callUtteranceToSend({ finals: [], interim: "uh background tv" }), "");
     assert.equal(callUtteranceToSend({ finals: ["uh"], interim: "hey wait" }), "");
     assert.equal(callUtteranceToSend({ finals: ["Hey. Just got here."], interim: "noise" }), "Hey. Just got here.");
-    assert.ok(CALL_FINAL_DEBOUNCE_MS >= 700);
-    assert.ok(CALL_FINAL_DEBOUNCE_MS <= 900);
+    assert.ok(CALL_FINAL_DEBOUNCE_MS >= 1000);
+    assert.ok(CALL_FINAL_DEBOUNCE_MS <= 1200);
   });
 });
 
 describe("one utterance per submit", () => {
-  it("waits for a 700–900ms pause before send", () => {
-    assert.equal(CALL_FINAL_DEBOUNCE_MS, 800);
+  it("waits for a 1000–1200ms pause before send", () => {
+    assert.equal(CALL_FINAL_DEBOUNCE_MS, 1100);
   });
 
   it("collapses immediate duplicate n-grams from hot STT", () => {
@@ -111,8 +112,16 @@ describe("one utterance per submit", () => {
       phrase,
     );
     assert.equal(collapseDuplicateNgrams("hello hello hello"), "hello");
-    assert.equal(collapseDuplicateNgrams("no no"), "no no");
+    assert.equal(collapseDuplicateNgrams("hello hello"), "hello");
+    assert.equal(collapseDuplicateNgrams("Hello hello"), "Hello");
     assert.equal(collapseDuplicateNgrams("who is who is"), "who is");
+  });
+
+  it("does not rewrite STT names (Rai stays Rai, Ray stays Ray)", () => {
+    assert.equal(keepRawSttText("hey Rai", ["Rai"]), "hey Rai");
+    assert.equal(keepRawSttText("hey Ray", ["Rai"]), "hey Ray");
+    assert.equal(callUtteranceToSend({ finals: ["hey Rai"] }), "hey Rai");
+    assert.equal(callUtteranceToSend({ finals: ["hey Ray"] }), "hey Ray");
   });
 
   it("drops duplicate finals instead of concatenating them", () => {

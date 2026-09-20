@@ -50,11 +50,10 @@ export const CALL_MIN_ALNUM_CHARS = 2;
 
 /**
  * Wait for a pause before sending one utterance.
- * Hot STT (especially Android Chrome continuous) repeats the same phrase as
- * several finals in one turn — 700–900ms lets the phrase settle, then we
- * collapse duplicate n-grams and submit once.
+ * Hot STT still doubles the first word at ~800ms ("hello hello") — 1000–1200ms
+ * lets the phrase settle, then we collapse duplicate n-grams / unigrams once.
  */
-export const CALL_FINAL_DEBOUNCE_MS = 800;
+export const CALL_FINAL_DEBOUNCE_MS = 1100;
 
 /** After her TTS, wait before the mic is hot again (room echo / her line). */
 export const CALL_POST_TTS_COOLDOWN_MS = 450;
@@ -134,7 +133,9 @@ function ngramsEqual(tokens: string[], a: number, b: number, n: number): boolean
 
 /**
  * Collapse immediate duplicate n-grams from hot STT.
- * "who's your favorite artist" ×4 → once. Keeps "no no" (two shorts).
+ * "who's your favorite artist" ×4 → once.
+ * Immediate repeated unigrams ("hello hello") and a leading duplicate first
+ * word are dropped — that was the leftover double after PR #16.
  */
 export function collapseDuplicateNgrams(text: string): string {
   const raw = (text ?? "").replace(/\s+/g, " ").trim();
@@ -153,13 +154,10 @@ export function collapseDuplicateNgrams(text: string): string {
           while (i + (reps + 1) * n <= tokens.length && ngramsEqual(tokens, i, i + reps * n, n)) {
             reps += 1;
           }
-          const collapse = n >= 2 ? reps >= 2 : reps >= 3;
-          if (collapse) {
-            out.push(...tokens.slice(i, i + n));
-            i += reps * n;
-            did = true;
-            continue;
-          }
+          out.push(...tokens.slice(i, i + n));
+          i += reps * n;
+          did = true;
+          continue;
         }
         out.push(tokens[i]);
         i += 1;
@@ -169,6 +167,16 @@ export function collapseDuplicateNgrams(text: string): string {
     if (!did) break;
   }
   return tokens.join(" ");
+}
+
+/**
+ * User bubble + send path: keep SpeechRecognition text as-is.
+ * Do not rewrite tokens to memory names (Rai↔Ray or similar). She already
+ * has the user name in memory — no ASR name autocorrect on shown or sent text.
+ */
+export function keepRawSttText(transcript: string, knownNames: readonly string[] = []): string {
+  void knownNames;
+  return (transcript ?? "").replace(/\s+/g, " ").trim();
 }
 
 export function normalizeCallUtterance(text: string): string {
@@ -204,7 +212,7 @@ export function pushCallFinal(finals: string[], piece: string): boolean {
 /** Finals only. Interim is caption preview — never a user turn. One collapsed utterance. */
 export function callUtteranceToSend(opts: { finals: string[]; interim?: string }): string {
   const joined = collapseDuplicateNgrams(opts.finals.join(" "));
-  return meaningfulTranscript(joined);
+  return keepRawSttText(meaningfulTranscript(joined));
 }
 
 export type CallSubmitGate = {

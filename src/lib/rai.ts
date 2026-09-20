@@ -563,13 +563,17 @@ export type ResolveSpokenPoseOpts = {
  * Pose for a spoken bubble.
  *
  * 1. User-named pose command wins (sheet already swapped).
- * 2. Live model key (not idle / kiss) is used as-is.
- * 3. Omitted / unknown / kiss / idle → context tint, else keep a dedicated
+ * 2. Emotion tired always tints to the tired sheet — never grin / peace / wave.
+ * 3. Live model key (not idle / kiss) is used as-is.
+ * 4. Omitted / unknown / kiss / idle → context tint, else keep a dedicated
  *    current body, else infer from emotion. Never leave frown idle under
  *    a spoken line. Rest may still settle to idle after the hold timer.
  */
 export function resolveSpokenPose(opts: ResolveSpokenPoseOpts): PoseId {
   if (opts.namedPose) return opts.namedPose;
+
+  // Tired is a rest face. Model/context keys like talk/peace/wave land as grins.
+  if (opts.emotion === "tired") return EMOTION_TO_POSE.tired;
 
   if (opts.modelPose && isDedicatedPose(opts.modelPose)) return opts.modelPose;
 

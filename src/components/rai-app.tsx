@@ -69,7 +69,9 @@ import {
   CALL_POST_TTS_COOLDOWN_MS,
   callMicNotice,
   classifyGetUserMediaError,
+  collapseDuplicateNgrams,
   gateCallUtterance,
+  keepRawSttText,
   nextCallListenBackoffMs,
   pushCallFinal,
   shouldEndCallOnPageEvent,
@@ -408,7 +410,7 @@ function RaiReady() {
       setCallListening(false);
       draftRef.current = "";
       setDraft("");
-      void sendRef.current(gated.text);
+      void sendRef.current(keepRawSttText(gated.text));
     };
 
     rec.onresult = (event) => {
@@ -425,13 +427,13 @@ function RaiReady() {
           interim += piece;
         }
       }
-      const preview = (finals.join(" ") || interim).trim();
+      const preview = keepRawSttText(collapseDuplicateNgrams(finals.join(" ") || interim));
       if (preview) {
         draftRef.current = preview;
         setDraft(preview);
         setCaption(preview);
       }
-      // One utterance: wait for a pause (~800ms) after the last final, then submit once.
+      // One utterance: wait for a pause (~1100ms) after the last final, then submit once.
       if (gotFinal && finals.length > 0) {
         listenBackoffAttemptRef.current = 0;
         if (listenDebounceTimerRef.current) window.clearTimeout(listenDebounceTimerRef.current);
@@ -1203,6 +1205,10 @@ function RaiReady() {
                     : "Say something"
               }
               rows={1}
+              spellCheck={false}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="sentences"
               disabled={callActive && (callListening || talking)}
               className="min-h-11 max-h-28 flex-1 resize-none rounded-md bg-elevated px-3 py-2.5 shadow-[var(--shadow-border)]"
             />
