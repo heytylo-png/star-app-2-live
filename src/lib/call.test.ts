@@ -19,7 +19,9 @@ import {
   callTranscriptAction,
   callUtteranceToSend,
   classifyGetUserMediaError,
+  callListenEndAction,
   collapseDuplicateNgrams,
+  collapseLeadingRepeatedToken,
   gateCallUtterance,
   hangUpCallState,
   keepRawSttText,
@@ -91,14 +93,44 @@ describe("empty transcript", () => {
     assert.equal(callUtteranceToSend({ finals: [], interim: "uh background tv" }), "");
     assert.equal(callUtteranceToSend({ finals: ["uh"], interim: "hey wait" }), "");
     assert.equal(callUtteranceToSend({ finals: ["Hey. Just got here."], interim: "noise" }), "Hey. Just got here.");
-    assert.ok(CALL_FINAL_DEBOUNCE_MS >= 1000);
-    assert.ok(CALL_FINAL_DEBOUNCE_MS <= 1200);
+    assert.ok(CALL_FINAL_DEBOUNCE_MS >= 1300);
+    assert.ok(CALL_FINAL_DEBOUNCE_MS <= 1500);
   });
 });
 
 describe("one utterance per submit", () => {
-  it("waits for a 1000–1200ms pause before send", () => {
-    assert.equal(CALL_FINAL_DEBOUNCE_MS, 1100);
+  it("waits for a 1300–1500ms pause before send", () => {
+    assert.equal(CALL_FINAL_DEBOUNCE_MS, 1400);
+  });
+
+  it("does not submit on recognition end — holds for the pause", () => {
+    assert.equal(
+      callListenEndAction({ debouncePending: true, hasSendableFinals: true }),
+      "hold_for_pause",
+    );
+    assert.equal(
+      callListenEndAction({ debouncePending: false, hasSendableFinals: true }),
+      "hold_for_pause",
+    );
+    assert.equal(
+      callListenEndAction({ debouncePending: false, hasSendableFinals: false }),
+      "backoff",
+    );
+  });
+
+  it("drops an immediate repeated token at the start (hello hello → hello)", () => {
+    assert.equal(collapseLeadingRepeatedToken("hello hello"), "hello");
+    assert.equal(collapseLeadingRepeatedToken("Hello hello"), "Hello");
+    assert.equal(collapseLeadingRepeatedToken("hello hello hello"), "hello");
+    assert.equal(collapseLeadingRepeatedToken("hello, hello"), "hello,");
+    assert.equal(collapseLeadingRepeatedToken("hello hello how are you"), "hello how are you");
+    assert.equal(collapseLeadingRepeatedToken("hey Rai"), "hey Rai");
+    assert.equal(collapseDuplicateNgrams("hello hello"), "hello");
+    assert.equal(collapseDuplicateNgrams("Hello hello"), "Hello");
+    assert.equal(
+      callUtteranceToSend({ finals: ["hello", "hello how are you"] }),
+      "hello how are you",
+    );
   });
 
   it("collapses immediate duplicate n-grams from hot STT", () => {
@@ -182,6 +214,7 @@ describe("mute + speakable line", () => {
     assert.equal(spokenCallLine("MEMORY FACTS\nname: Tylo\nmood: tired"), "");
     assert.equal(spokenCallLine("LORE USE\nHer bio (Fukuoka, Osaka, parents, Libra, abroad)"), "");
     assert.equal(spokenCallLine("CHART\ntoday_date: 2026-09-19\nher_sun: Libra"), "");
+    assert.equal(spokenCallLine("CLOCK\nweekday: Saturday\nhour: 1\ntz: America/Chicago"), "");
   });
 
   it("still has a bubble line when TTS is skipped (mute or empty speakable)", () => {

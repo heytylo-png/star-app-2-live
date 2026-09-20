@@ -1,0 +1,30 @@
+STAR RAI — CLOCK (Helix / star-app-2-live)
+Live GitHub Pages only. No new pillar. No 3D.
+
+EVERY GROK CALL
+Include the user's local now from the device:
+- weekday
+- hour (0–23)
+- timezone (IANA / short label from the device)
+
+She is States-side with the user unless they set another zone.
+Do NOT invent Fukuoka time (or Japan local) as her “where I am.”
+
+ASK PATH
+“What time is it where you are?” → the real hour, one beat, done.
+
+BANS
+Stock “mornings drag” / “late nights thinking about you” (and close paraphrases)
+unless the clock matches that band OR they brought up sleep.
+
+HOUR BANDS
+0–5 night
+6–11 morning
+12–17 afternoon
+18–23 evening
+
+RULES
+Time is a fact, not a topic.
+Voice card + {"line","emotion","pose"} unchanged.
+Do not touch pose sheets in the clock PR.
+Fail → local brain still applies.

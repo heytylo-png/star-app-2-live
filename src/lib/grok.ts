@@ -63,7 +63,7 @@ function buildMessages(
   messages: { role: "user" | "assistant"; content: string }[],
   systemExtra?: string,
 ): GrokMessage[] {
-  // Voice card (RAI_SYSTEM) + filled MEMORY FACTS only — never empty slots.
+  // Voice card (RAI_SYSTEM) + CLOCK/NOW + filled MEMORY FACTS — never empty slots.
   return [
     { role: "system", content: composeGrokSystem(RAI_SYSTEM, systemExtra) },
     ...messages.map((m) => ({ role: m.role, content: m.content })),

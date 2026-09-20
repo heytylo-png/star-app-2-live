@@ -50,10 +50,11 @@ export const CALL_MIN_ALNUM_CHARS = 2;
 
 /**
  * Wait for a pause before sending one utterance.
- * Hot STT still doubles the first word at ~800ms ("hello hello") — 1000–1200ms
- * lets the phrase settle, then we collapse duplicate n-grams / unigrams once.
+ * Hot STT still doubles the first word if we send on recognition `onend`
+ * (~300–800ms). 1300–1500ms lets the phrase settle; we also drop a leading
+ * repeated token ("hello hello" → "hello"). Do not commit on `onend`.
  */
-export const CALL_FINAL_DEBOUNCE_MS = 1100;
+export const CALL_FINAL_DEBOUNCE_MS = 1400;
 
 /** After her TTS, wait before the mic is hot again (room echo / her line). */
 export const CALL_POST_TTS_COOLDOWN_MS = 450;
@@ -132,10 +133,27 @@ function ngramsEqual(tokens: string[], a: number, b: number, n: number): boolean
 }
 
 /**
+ * Drop an immediate repeated token at the start ("hello hello" → "hello").
+ * Keeps the first token's spelling/case. Punctuation-insensitive.
+ */
+export function collapseLeadingRepeatedToken(text: string): string {
+  const raw = (text ?? "").replace(/\s+/g, " ").trim();
+  if (!raw) return "";
+  const tokens = raw.split(" ");
+  while (
+    tokens.length >= 2 &&
+    normCallToken(tokens[0]!) &&
+    normCallToken(tokens[0]!) === normCallToken(tokens[1]!)
+  ) {
+    tokens.splice(1, 1);
+  }
+  return tokens.join(" ");
+}
+
+/**
  * Collapse immediate duplicate n-grams from hot STT.
  * "who's your favorite artist" ×4 → once.
- * Immediate repeated unigrams ("hello hello") and a leading duplicate first
- * word are dropped — that was the leftover double after PR #16.
+ * Then drop a leftover leading unigram ("hello hello" → "hello").
  */
 export function collapseDuplicateNgrams(text: string): string {
   const raw = (text ?? "").replace(/\s+/g, " ").trim();
@@ -166,7 +184,22 @@ export function collapseDuplicateNgrams(text: string): string {
     }
     if (!did) break;
   }
-  return tokens.join(" ");
+  return collapseLeadingRepeatedToken(tokens.join(" "));
+}
+
+export type CallListenEndAction = "hold_for_pause" | "backoff";
+
+/**
+ * Recognition `onend` must not submit. Chrome often ends the session before
+ * the pause debounce. Keep waiting (and optionally restart listen) so the
+ * leading-token collapse sees the settled utterance.
+ */
+export function callListenEndAction(opts: {
+  debouncePending: boolean;
+  hasSendableFinals: boolean;
+}): CallListenEndAction {
+  if (opts.debouncePending || opts.hasSendableFinals) return "hold_for_pause";
+  return "backoff";
 }
 
 /**
@@ -226,6 +259,7 @@ export type CallSubmitGate = {
  * Submit gate for Call listen:
  * - one utterance per submit (collapsed finals)
  * - wait for CALL_FINAL_DEBOUNCE_MS pause in the listen loop before calling this
+ *   (do not submit from SpeechRecognition `onend`)
  * - do not send while she is speaking / thinking
  * - empty / garbage STT → keep listening, no reply
  */
