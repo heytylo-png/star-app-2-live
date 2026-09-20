@@ -34,6 +34,9 @@ describe("lab mesh contract", () => {
     assert.equal(glb.includes("handPointR"), true);
     assert.equal(glb.includes("blushShy"), true);
     assert.equal(glb.includes("starStudL"), true);
+    assert.equal(glb.includes("hairBang"), true);
+    assert.equal(glb.includes("ahoge"), true);
+    assert.equal(glb.includes("button5"), true);
   });
 });
 
@@ -80,6 +83,7 @@ describe("rigFor A-pose rest", () => {
     for (const file of [
       "00-brief.txt",
       "01-front-idle.png",
+      "02-three-quarter.png",
       "06-talk.png",
       "07-wave.png",
       "08-scold.png",

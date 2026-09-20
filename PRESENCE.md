@@ -49,7 +49,7 @@ Ground truth: `public/rai/idle.png` + `artifacts/star-rai-canon/00-brief.txt`.
 `public/models/star-rai-wip.glb` — authored toon stand-in (`npm run build:wip-mesh`).
 
 - Humanoid groups: hips → spine → chest → neck → head, plus arms/legs.
-- Rest pose is a hanging **A-pose** with the idle **glare** (lids half-closed, flat frown).
+- Hair is cards + tube strands + a crown/back cap (not capsules). Idle rest is a hanging **A-pose** with the idle **glare**.
 - Blink: `lidLeft` / `lidRight`. Talk: `mouthOpen` (idle frown hides while talking).
 - Mood slots: glare / talk smile / smirk / grit / pout / shy mouth + extra shy blush. Wave uses `handWaveR` (palm); scold uses `handPointR` (index). Kiss is not a slot.
 - Lab keeps the exported `MeshStandardMaterial` (toon gradient swap blanked the stage).
@@ -59,11 +59,13 @@ This is an honest low-poly WIP. It is meant to be **Star-shaped** (locks above),
 
 ### Remaining gaps
 
-- Primitive volumes, not a sculpted VRM. No cloth sim. Face slots are mesh visibility, not blendshapes. Fingers exist only as wave-palm / scold-point extras.
-- Hair is layered capsules, not individual locks. Ahoge is a tube hook.
-- No official 3/4 / side / back stills were checked in as separate art (turnaround notes in the brief).
+- Still a low-poly toon, not a sculpted VRM. No cloth sim. Face slots are mesh visibility, not blendshapes. Fingers exist only as wave-palm / scold-point extras.
+- Hair is cards + tube strands + skullcap volume, not a groomed particle system. Crown fill is still crude. Ahoge is a single hooked tube.
+- Eyes are almond planes with mesh iris/pupil, not painted textures or blendshape lids. Idle glare is a static lid shade plus blink meshes.
+- Skirt hem is two vertex-color bands — they can read as one stripe at a distance. Shirt is lathe + placket, not tailored cloth.
+- Arms/hands are still primitive volumes. Star studs can hide behind side hair.
 - Kiss stays unmapped. Mood PNG art is live on the PNG body and checked in as Lab refs — it is **not** a merge of Lab to main.
-- Not ready to replace the live PNG body.
+- Not ready to replace the live PNG body. **Do not merge. Do not deploy Lab to Pages as her.**
 
 ## Scaffolding (do not present as Rai)
 

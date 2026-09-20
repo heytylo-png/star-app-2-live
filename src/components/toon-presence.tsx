@@ -127,9 +127,9 @@ export default function ToonPresence({
           }}
         >
           <PresenceCamera />
-          <hemisphereLight args={["#fff4e8", "#cfc8bc", 1.05]} />
-          <directionalLight position={[0.55, 2.3, 2.2]} intensity={1.15} color="#fff7ef" />
-          <directionalLight position={[-1.7, 0.9, 0.5]} intensity={0.2} color="#c4ceda" />
+          <hemisphereLight args={["#fff4e8", "#cfc8bc", 1.28]} />
+          <directionalLight position={[0.25, 1.9, 3.1]} intensity={1.35} color="#fff7ef" />
+          <directionalLight position={[-1.2, 0.8, 1.4]} intensity={0.38} color="#ffe8d4" />
           <StarWip
             intentRef={intentRef}
             lookRef={lookRef}
@@ -406,10 +406,13 @@ function lidBaseFor(face: WipFace): number {
 }
 
 function lookEyes(face: WipFace, irisL: Object3D | null, irisR: Object3D | null) {
-  const down = face === "shy" ? -0.007 : face === "pout" ? -0.002 : -0.002;
-  const side = face === "shy" ? 0.005 : 0;
-  if (irisL) irisL.position.set(side, down, 0.012);
-  if (irisR) irisR.position.set(side, down, 0.012);
+  const down = face === "shy" ? -0.004 : 0;
+  const side = face === "shy" ? 0.004 : 0;
+  for (const iris of [irisL, irisR]) {
+    if (!iris) continue;
+    iris.position.x = side;
+    iris.position.y = down;
+  }
 }
 
 function applyWipHands(
@@ -441,7 +444,7 @@ function applyWipFace(face: WipFace, amplitude: number, nodes: WipFaceNodes) {
   }
   const blush = face === "shy" ? 1.15 : face === "pout" ? 1.2 : 1;
   for (const b of [nodes.blushL, nodes.blushR]) {
-    if (b) b.scale.set(1.25 * blush, 0.55 * blush, 0.4);
+    if (b) b.scale.set(1.02 * blush, 0.36 * blush, 0.26);
   }
   if (nodes.browL && nodes.browR) {
     const extra = face === "grit" ? 0.22 : face === "pout" ? 0.12 : face === "shy" ? -0.04 : 0;

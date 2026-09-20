@@ -193,7 +193,7 @@ https://github.com/heytylo-png/star-app-2-live
 ## Lab WIP mesh (not the live body)
 
 Default presence is the official PNG pack (`public/rai/`, `public/star-rai/`).
-Lab loads a custom checklist mesh:
+Lab loads a custom strand-hair toon mesh (not a booth VRM, not shipping Rai):
 
 ```text
 public/models/star-rai-wip.glb
