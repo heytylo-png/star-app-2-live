@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { AppTabs } from "@/components/app-tabs";
+import { ChatThread } from "@/components/chat-thread";
 import { InstallHint } from "@/components/install-hint";
 import { ChartPanel } from "@/components/chart-panel";
 import { ChartSetupCard } from "@/components/chart-setup-card";
@@ -206,7 +207,6 @@ function RaiReady() {
     [threads, activeId],
   );
   const empty = !thread || thread.messages.length === 0;
-  const lastAssistant = [...(thread?.messages ?? [])].reverse().find((m) => m.role === "assistant");
   const showSetup = chartHydrated && chartSetup === "pending" && !slots.user_birth_date;
   const todayKey = localDateKey();
   const todayDiary = diaryByDay[todayKey];
@@ -1056,26 +1056,15 @@ function RaiReady() {
           aria-labelledby="star-tab-chat"
           className="flex min-h-0 flex-1 flex-col justify-end px-4 pb-1"
         >
-          {caption || lastAssistant ? (
-            <p
-              className={cn(
-                "mx-auto mb-2 max-w-md rounded-xl bg-elevated/90 px-4 py-3 text-center font-display text-lg leading-snug text-fg shadow-[var(--shadow-border)] backdrop-blur-[2px] sm:text-xl",
-                (holding || callListening) && caption === "Listening…" && "text-muted",
-                callActive && talking && "ring-1 ring-border",
-              )}
-            >
-              {caption || lastAssistant?.content}
-              {callActive && talking ? (
-                <span className="mt-1 block text-[0.65rem] font-sans tracking-wide text-subtle uppercase">
-                  Tap to interrupt
-                </span>
-              ) : null}
-            </p>
-          ) : empty && !callActive && !showSetup ? (
-            <p className="mx-auto mb-2 max-w-sm text-center text-sm text-muted">
-              Say hey — or tap the phone to call her.
-            </p>
-          ) : null}
+          <ChatThread
+            messages={thread?.messages ?? []}
+            caption={caption}
+            empty={empty}
+            callActive={callActive}
+            talking={talking}
+            listening={holding || callListening}
+            showSetup={showSetup}
+          />
         </div>
         ) : tab === "chart" ? (
           <div className="pointer-events-auto flex min-h-0 flex-1 flex-col justify-end pt-1">

@@ -162,6 +162,15 @@
   animation: helix-pulse 1.2s ease-in-out infinite;
 }
 
+/* ~3–4 compact message rows; history scrolls inside. Puppet keeps the stage. */
+.chat-thread {
+  max-height: min(13.25rem, 32dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
 .companion-stage {
   position: absolute;
   inset: 0;
