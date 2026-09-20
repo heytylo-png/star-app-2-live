@@ -1241,7 +1241,7 @@ function RaiReady() {
                   Empty keys stay off the prompt. Streak/relationship come from the affection chip.
                   Natal Chart v1 sends user_birth_date / user_sun / chart_source when filled — never
                   user_rising, never her bio. Cheap sky keys ride the daily CHART block only when Chart
-                  fires. Life sends session_on / now_playing / daily_playlist /
+                  fires. Chart pane her-day is local (optional Grok once per day) and never a Chat post. Life sends session_on / now_playing / daily_playlist /
                   mood_tag only while a music session is on.
                 </p>
               </div>

@@ -5,7 +5,7 @@ Launch on Chat. Not Expo-only.
 TABS
 1. Chat — puppet, thread, pose commands. Composer can still paste / “I’m listening to X”
    to set a Life session. No now-playing bar / music strip on Chat.
-2. Chart — sparse daily dashboard (theme beat, sky labels, quiet birth edit, last diary).
+2. Chart — sparse daily dashboard (theme beat, her-day section, sky labels, quiet birth edit, last diary).
    No natal wheel. No auto-reading on open.
 3. Life — now_playing + Set/Stop, quiet daily list, mood tag.
    No Spotify / Apple login.
@@ -22,7 +22,9 @@ Life comments still fire in Chat only (not as a Life-tab narration dump).
 DO NOT
 - Cover the puppet with chrome that hides her stage.
 - Show a now-playing / music bar on Chat (Life keeps Set/Stop).
-- Move Grok into Chart (Grok stays on Chat replies).
+- Move Grok settings / Chat replies into Chart (Grok stays on Chat replies).
+  Chart/her-day may use the same Grok path once per local day for pane copy only —
+  fail soft, never a Chat post.
 - Put diary on Life (diary stays Chart).
 - Require music login.
 - Add Expo-only implementation.

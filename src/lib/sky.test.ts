@@ -13,10 +13,12 @@ import {
 import { HOROSCOPE_CHEAP_SOURCE, RAI_SYSTEM } from "./generated/star-rai-artifacts.ts";
 import { composeGrokSystem, formatMemoryFacts } from "./memory-slots.ts";
 import {
+  composeHerDay,
   composeSkyDashboard,
   computeSkyFacts,
   formatSkyFactLines,
   moonPhaseLabel,
+  sanitizeHerDayBeats,
   tropicalSignFromLongitude,
 } from "./sky.ts";
 
@@ -37,7 +39,10 @@ describe("cheap horoscope artifact", () => {
     assert.match(HOROSCOPE_CHEAP_SOURCE, /Do NOT invent Fukuoka local sky/);
     assert.match(HOROSCOPE_CHEAP_SOURCE, /omit rising/);
     assert.match(HOROSCOPE_CHEAP_SOURCE, /Do not copy Co-Star/);
-    assert.match(HOROSCOPE_CHEAP_SOURCE, /Opening Chart does not fire Grok/);
+    assert.match(HOROSCOPE_CHEAP_SOURCE, /Opening Chart does not auto-post a reading to Chat/);
+    assert.match(HOROSCOPE_CHEAP_SOURCE, /HER DAY/);
+    assert.match(HOROSCOPE_CHEAP_SOURCE, /Chart\/her-day/);
+    assert.match(HOROSCOPE_CHEAP_SOURCE, /once per local day/);
   });
 
   it("does not change the voice card output contract", () => {
@@ -225,5 +230,64 @@ describe("sparse Chart dashboard copy", () => {
     assert.equal(dash.labels.some((l) => l.key === "sun" || l.key === "moon"), false);
     assert.equal(dash.labels.find((l) => l.key === "her")?.value, "Libra");
     assert.equal(dash.labels.some((l) => l.key === "you"), false);
+  });
+});
+
+describe("her day copy", () => {
+  const sky = {
+    sunSignToday: "Virgo" as const,
+    moonSignToday: "Gemini" as const,
+    moonPhase: "Waning Crescent" as const,
+  };
+
+  it("describes Star Rai's day from natal Libra + today's sky, not user_sun", () => {
+    const her = composeHerDay({
+      todayDate: "2026-09-19",
+      herSun: HER_CHART.her_sun,
+      sky,
+    });
+    assert.equal(her.heading, "Her day");
+    assert.equal(her.natal, "Libra");
+    assert.equal(her.source, "local");
+    assert.equal(her.skyLine, "Virgo sun · Gemini moon · Waning Crescent");
+    assert.ok(her.beats.length >= 1 && her.beats.length <= 3);
+    const text = her.beats.join(" ");
+    assert.match(text, /Libra|Virgo|Gemini|Waning Crescent/);
+    assert.doesNotMatch(text, /Aries|your reading for today is|Fukuoka|Osaka|03:33|Co-Star/i);
+    assert.equal(her.beats.some((b) => isChartBannedLine(b)), false);
+    her.beats.forEach((b) => assert.ok(b.length <= 88));
+  });
+
+  it("stays distinct from the you+me theme glance", () => {
+    const dash = composeSkyDashboard({
+      todayDate: "2026-09-19",
+      weekday: "Saturday",
+      userSun: "Aries",
+      herSun: "Libra",
+      sky,
+    });
+    const her = composeHerDay({ todayDate: "2026-09-19", herSun: "Libra", sky });
+    assert.notEqual(her.beats.join(" "), dash.theme);
+    assert.doesNotMatch(her.beats.join(" "), /Aries next to Libra/);
+  });
+
+  it("fails soft when sky is missing and never dumps bio", () => {
+    const her = composeHerDay({ todayDate: "2026-09-19", sky: null });
+    assert.equal(her.natal, "Libra");
+    assert.equal(her.skyLine, undefined);
+    assert.ok(her.beats.length >= 1);
+    assert.match(her.beats.join(" "), /Libra/);
+    assert.doesNotMatch(her.beats.join(" "), /Fukuoka|03:33|mercury/i);
+  });
+
+  it("sanitizes Grok prose into 1–3 beats and rejects banned copy", () => {
+    assert.deepEqual(
+      sanitizeHerDayBeats("Virgo over Libra air — that's on me today.\nGemini moon — keep yours."),
+      ["Virgo over Libra air — that's on me today.", "Gemini moon — keep yours."],
+    );
+    assert.equal(sanitizeHerDayBeats("Your reading for today is Virgo."), null);
+    assert.equal(sanitizeHerDayBeats("Born in Fukuoka at 03:33."), null);
+    assert.equal(sanitizeHerDayBeats("Mercury is in my first house."), null);
+    assert.equal(sanitizeHerDayBeats("   "), null);
   });
 });

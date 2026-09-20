@@ -11,9 +11,17 @@
  */
 
 import type { EmotionId, PoseId } from "./rai.ts";
-import { namedPoseFromText } from "./rai.ts";
+import { namedPoseFromText, parseAct } from "./rai.ts";
 import type { MemorySlotState } from "./memory-slots.ts";
-import { computeSkyFacts, formatSkyFactLines, type SkyFacts } from "./sky.ts";
+import {
+  composeHerDay,
+  computeSkyFacts,
+  formatSkyFactLines,
+  herDayFromBeats,
+  sanitizeHerDayBeats,
+  type HerDayCopy,
+  type SkyFacts,
+} from "./sky.ts";
 
 /** In-code only. Never serialize into MEMORY FACTS. */
 export const HER_CHART = {
@@ -379,6 +387,52 @@ export function formatChartFactsBlock(opts: {
   lines.push("Prefer pose content|think|smug|tired|talk|idle. Never kiss.");
   lines.push("Sky keys are facts, not a topic. Do not invent Fukuoka local sky.");
   return lines.join("\n");
+}
+
+/**
+ * Compact CHART/her-day block for the Chart pane (not Chat).
+ * her_sun + today's sky only — no user_sun glance, no natal bio dump.
+ */
+export function formatHerDayFactsBlock(opts: {
+  todayDate: string;
+  sky?: SkyFacts | null;
+}): string {
+  const lines = [
+    "CHART",
+    "ask: her-day",
+    `today_date: ${opts.todayDate}`,
+    `her_sun: ${HER_CHART.her_sun}`,
+  ];
+  lines.push(...formatSkyFactLines(opts.sky));
+  lines.push("");
+  lines.push("This is Star Rai's Chart pane — HER day, first person.");
+  lines.push("1-3 short lines / sparse beats. Not their you+me glance.");
+  lines.push('Never say "your reading for today is." Never list planets.');
+  lines.push("Never dump Fukuoka, Osaka, 03:33, or natal houses as a topic.");
+  lines.push("Sky keys are facts. Do not invent Fukuoka local sky.");
+  lines.push("Prefer pose content|think|smug|tired|talk|idle. Never kiss.");
+  return lines.join("\n");
+}
+
+export function localHerDay(opts: { todayDate: string; sky?: SkyFacts | null }): HerDayCopy {
+  return composeHerDay({
+    todayDate: opts.todayDate,
+    sky: opts.sky,
+    herSun: HER_CHART.her_sun,
+    source: "local",
+  });
+}
+
+/** Apply a Grok JSON/text reply to local fallback without network. */
+export function applyHerDayGrokRaw(
+  raw: string,
+  local: HerDayCopy,
+  sky?: SkyFacts | null,
+): HerDayCopy {
+  const line = parseAct(raw).line;
+  const beats = sanitizeHerDayBeats(line);
+  if (!beats || beats.some((b) => isChartBannedLine(b))) return local;
+  return herDayFromBeats(beats, { natal: HER_CHART.her_sun, sky, source: "grok" });
 }
 
 export function detectChartIntent(userText: string): ChartTurnKind {

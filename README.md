@@ -118,14 +118,14 @@ Prefer pose content|think|smug|tired|talk|idle. Never kiss.
 Sky keys are facts, not a topic. Do not invent Fukuoka local sky.
 ```
 
-`today_date` and the sky snapshot use the **same CLOCK timezone** (browser IANA, optional explicit zone, else `America/Chicago`). Same local day does not fire Chart again unless they asked. Ask-path (her sign / birthday / origin) and diary stay on the local brain so her bio is not dumped through Grok. Opening the **Chart** tab does **not** call Grok — it shows a sparse daily pane (theme beat, Do/Don't, sun/moon labels, collapsed birth edit) from local ephemeris. Fail / CORS / bad JSON / no key / ephemeris throw → pose-keyed local brain (Chart tint pose when Chart fired). The model must not dump the slot list into `line`. Replies are JSON acts (`parseAct`). Streaming uses SSE when available; otherwise one-shot text is chunked into `onDelta` for mouth/caption UX.
+`today_date` and the sky snapshot use the **same CLOCK timezone** (browser IANA, optional explicit zone, else `America/Chicago`). Same local day does not fire Chart again unless they asked. Ask-path (her sign / birthday / origin) and diary stay on the local brain so her bio is not dumped through Grok. Opening the **Chart** tab does **not** auto-post a reading into Chat — it shows a sparse daily pane (theme beat, **Her day** section for Star Rai, Do/Don't, sun/moon labels, collapsed birth edit) from local ephemeris. Optional: if an xAI key is saved, Chart may call Grok once per local day with a `Chart/her-day` ask to fill her first-person beats; fail / no key → local copy. Fail / CORS / bad JSON / no key / ephemeris throw → pose-keyed local brain (Chart tint pose when Chart fired). The model must not dump the slot list into `line`. Replies are JSON acts (`parseAct`). Streaming uses SSE when available; otherwise one-shot text is chunked into `onDelta` for mouth/caption UX.
 
 ### Verify Chart / sky on a phone
 
 1. Open the live app (after this ships: **https://heytylo-png.github.io/star-app-2-live/**) in Chrome.
 2. Stay on **Chat** (beige long-shot stage unchanged). Optional: Settings → paste xAI key.
-3. Tap **Chart**. You should see a sparse daily card over the stage: weekday/date, one short Star Rai theme line, Do / Don't chips, labels for You / Her / Sun / Moon / Phase. Birth date/time/place is collapsed — not the first screen. No natal wheel. No “your reading for today is.”
-4. Expand **Birth**, save a date if you want `user_sun`. Chart does not auto-post a reading into Chat.
+3. Tap **Chart**. You should see a sparse daily card over the stage: weekday/date, one short Star Rai theme line, Do / Don't chips, a dedicated **Her day** section (Libra natal + today’s sun/moon/phase + 1–3 first-person beats about *her* day), then labels for You / Her / Sun / Moon / Phase. Birth date/time/place is collapsed — not the first screen. No natal wheel. No “your reading for today is.”
+4. Expand **Birth**, save a date if you want `user_sun`. Chart does not auto-post a reading into Chat. Her-day copy is local immediately; with a key it may refresh once per local day via Grok and fail soft.
 5. Back on **Chat**, send a normal line (or “horoscope today” if you skipped a birthday). With a key, Grok tints **one** line using the CHART/SKY facts. Without a key, local brain still tints. She must not list planets or invent Fukuoka sky.
 6. This path is **client-side** (`src/lib/sky.ts` + `astronomy-engine`). **No `wrangler deploy`.** The Worker under `worker/` remains the optional xAI CORS proxy only.
 
@@ -168,7 +168,7 @@ Future env: `VITE_API_BASE` — leave unset for pure Pages. `VITE_GROK_PROXY_URL
 - `star-rai-chat` — threads + `voiceOn`
 - `star-rai-xai-key` — optional xAI API key (never commit)
 - `star-rai-affection` — affection score, last talk day, streak (schema v1)
-- `star-rai-chart` — Chart v1 setup skip/done, last fire day, diary pages
+- `star-rai-chart` — Chart v1 setup skip/done, last fire day, diary pages, her-day pane copy
 
 Do not rename keys without a migrator. Document schema bumps here.
 
