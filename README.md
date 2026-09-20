@@ -13,14 +13,24 @@ Open that link on a desktop or mobile browser. Optional: install as a home-scree
 Tap the **phone** icon in the header. Spec: `artifacts/star-rai-call-mode.txt`.
 
 - Tap phone to start, tap again (or **Hang up**) to end. The chat thread, memory, and pose sheet stay.
-- Loop: **listen → same Chat brain as typed Chat → speak `line` only**.
-- Empty speech transcripts are ignored (keep listening; no invented user line).
+- **Android Chrome:** that tap calls `getUserMedia({ audio: true })` first so Chrome can show the microphone prompt. `SpeechRecognition` alone often does not. If the prompt never appears (blocked), Call shows an in-app banner: Chrome ⋮ or the lock icon → Site settings → Microphone → Allow for `heytylo-png.github.io`, then tap the phone again.
+- After Allow: listen loop (`webkitSpeechRecognition`) → same Chat brain as typed Chat → speak `line` only.
+- Empty speech transcripts are ignored (keep listening; no invented user line). Hangup stops mic tracks + recognition.
 - Pose commands by voice still swap the sheet first. Pose tint applies to the spoken bubble.
 - TTS speaks the parsed `line` only — never JSON, memory lists, or lore dumps. If TTS fails, the bubble still shows.
 - Header **mute** is honored (Call does not force speaker on).
 - Leaving the page (hide / unload) aborts mic, TTS, and listeners so Call does not stay hot.
-- Mic audio is never stored. Needs browser `SpeechRecognition` (Chrome / Edge / Android Chrome); otherwise typed chat + hold-to-talk stay available.
-- **Barge-in:** tap the stage (or speak over her) to stop TTS and listen again.
+- Mic audio is never stored. If speech input is missing, Call says so in-app (type instead).
+- **Barge-in:** tap the stage (or speak over her) to stop TTS and listen again — only while she is speaking.
+
+### Verify on Samsung / Chrome Android
+
+1. Open **https://heytylo-png.github.io/star-app-2-live/** in **Chrome** (not the Samsung Internet iframe if it differs).
+2. Tap the phone. Chrome should ask for the microphone on that tap. Allow.
+3. Status should read **Listening** with **Hang up**. Speak a short line; she should reply in the bubble (and TTS unless muted).
+4. If there is **no prompt**: the banner should explain how to unblock. Site settings → Microphone → Allow for `heytylo-png.github.io` → tap the phone again.
+5. Mute in the header, tap phone, speak: bubble still appears, speaker stays muted.
+6. Hang up: Listening stops. Switch apps / lock the phone: Call should not stay hot.
 
 Normal text chat and PTT are unchanged when Call is off.
 
