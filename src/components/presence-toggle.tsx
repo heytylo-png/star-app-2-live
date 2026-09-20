@@ -28,7 +28,7 @@ export function PresenceToggle({ className }: { className?: string }) {
             aria-pressed={on}
             onClick={() => setMode(opt.id)}
             className={cn(
-              "h-7 rounded-full px-2.5 text-[11px] tracking-wide transition-colors duration-150",
+              "h-7 min-w-9 rounded-full px-2.5 text-[11px] font-medium tracking-wide transition-colors duration-150",
               on ? "bg-accent text-accent-fg" : "text-muted hover:text-fg",
             )}
           >

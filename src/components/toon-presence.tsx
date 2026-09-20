@@ -11,6 +11,7 @@ import {
 import {
   Color,
   Euler,
+  Group,
   NoToneMapping,
   Object3D,
   PerspectiveCamera,
@@ -191,6 +192,7 @@ function StarVrm({
   const extraQuat = useRef(new Quaternion());
   const extraEuler = useRef(new Euler());
   const headWorld = useRef(new Vector3());
+  const rootRef = useRef<Group>(null);
   const onReadyRef = useRef(onReady);
   const onFailRef = useRef(onFail);
   const [scene, setScene] = useState<VRM["scene"] | null>(null);
@@ -303,13 +305,17 @@ function StarVrm({
     const yawGoal = rootYawFor(intent.pose);
     yawSmooth.current += (yawGoal - yawSmooth.current) * expT(4.2, dt);
 
-    const sway = reduced ? 0 : Math.sin(now * 0.55) * 0.018 + lookSmooth.current.x * -0.03;
-    const breatheY = reduced ? 0 : Math.sin(now * 1.05) * 0.007 + Math.sin(now * 0.48) * 0.003;
-    const talkBob = reduced || !intent.talking ? 0 : Math.sin(now * 7.5) * intent.amplitude * 0.01;
+    const sway = reduced ? 0 : Math.sin(now * 0.55) * 0.028 + lookSmooth.current.x * -0.04;
+    const breatheY = reduced ? 0 : Math.sin(now * 1.05) * 0.012 + Math.sin(now * 0.48) * 0.004;
+    const talkBob = reduced || !intent.talking ? 0 : Math.sin(now * 7.5) * intent.amplitude * 0.012;
 
-    vrm.scene.rotation.y = yawSmooth.current;
-    vrm.scene.rotation.z = sway;
-    vrm.scene.position.y = breatheY + talkBob;
+    // Do not write vrm.scene.rotation — rotateVRM0 parks VRM 0.0 at y=π.
+    const root = rootRef.current;
+    if (root) {
+      root.rotation.y = yawSmooth.current;
+      root.rotation.z = sway;
+      root.position.y = breatheY + talkBob;
+    }
 
     const head = vrm.humanoid.getNormalizedBoneNode("head");
     if (head) {
@@ -325,7 +331,11 @@ function StarVrm({
   });
 
   if (!scene) return null;
-  return <primitive object={scene} />;
+  return (
+    <group ref={rootRef}>
+      <primitive object={scene} />
+    </group>
+  );
 }
 
 function extraQuatFrom(e: BoneEuler, euler: Euler, quat: Quaternion): Quaternion {

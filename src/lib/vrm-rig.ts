@@ -48,12 +48,25 @@ const POINT_RIG: RigPose = {
 };
 
 /**
+ * VRM rest is T-pose. Drop the arms into a relaxed A-pose so idle
+ * doesn't look like a bind pose. Pose extras still stack on rest.
+ */
+const IDLE_A_POSE: RigPose = {
+  leftUpperArm: { x: 0.04, y: 0.08, z: 1.22 },
+  rightUpperArm: { x: 0.04, y: -0.08, z: -1.22 },
+  leftLowerArm: { x: 0.06, y: 0.12, z: 0.1 },
+  rightLowerArm: { x: 0.06, y: -0.12, z: -0.1 },
+  leftHand: { x: 0.05, y: 0.08, z: 0.04 },
+  rightHand: { x: 0.05, y: -0.08, z: -0.04 },
+};
+
+/**
  * Procedural body language for Helix pose keys that the stand-in can act.
  * Unlisted keys fall back to the PNG puppet (see `toonHandlesPose`).
  */
 const POSE_RIG: Partial<Record<PoseId, RigPose>> = {
-  idle: {},
-  talk: {},
+  idle: IDLE_A_POSE,
+  talk: IDLE_A_POSE,
   wink: {
     head: { x: 0.02, y: 0.14, z: 0.06 },
     neck: { x: 0, y: 0.06, z: 0.03 },
@@ -187,8 +200,10 @@ const EMOTION_RIG: Record<EmotionId, RigPose> = {
 };
 
 export function rigFor(pose: PoseId, emotion: EmotionId): RigPose {
-  if (pose !== "idle" && pose !== "talk") return POSE_RIG[pose] ?? {};
-  return EMOTION_RIG[emotion] ?? {};
+  if (pose !== "idle" && pose !== "talk") {
+    return { ...IDLE_A_POSE, ...(POSE_RIG[pose] ?? {}) };
+  }
+  return { ...IDLE_A_POSE, ...(EMOTION_RIG[emotion] ?? {}) };
 }
 
 /** Root-group yaw (radians). Front / slight ¾ by default — no 180° spin. */
