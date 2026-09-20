@@ -378,7 +378,7 @@ function RaiReady() {
     setCallListening(true);
     setHolding(false);
     setEmotion("glance");
-    setCaption("Listening…");
+    // Status chrome already says Listening — keep the last spoken bubble visible.
     try {
       rec.start();
     } catch {
@@ -716,7 +716,8 @@ function RaiReady() {
     setCallActive(false);
     listenAfterSpeakRef.current = false;
     stop();
-    // Thread / memory / sheet stay. Caption keeps the last spoken bubble.
+    // Thread / memory / sheet stay. Drop the listen placeholder so the last line shows.
+    setCaption((c) => (c === "Listening…" ? "" : c));
   }
   hangUpRef.current = hangUp;
 
@@ -952,7 +953,7 @@ function RaiReady() {
                 </span>
               ) : null}
             </p>
-          ) : empty && !showSetup ? (
+          ) : empty && !callActive && !showSetup ? (
             <p className="mx-auto mb-2 max-w-sm text-center text-sm text-muted">
               Say hey — or tap the phone to call her.
             </p>
