@@ -1,20 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import {
-  Color,
-  DataTexture,
-  Euler,
-  Group,
-  MeshToonMaterial,
-  NearestFilter,
-  NoColorSpace,
-  NoToneMapping,
-  Object3D,
-  PerspectiveCamera,
-  Quaternion,
-  RedFormat,
-  type Mesh,
-} from "three";
+import { Euler, Group, NoToneMapping, Object3D, PerspectiveCamera, Quaternion } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import type { EmotionId, PoseId } from "@/lib/rai";
 import { publicUrl } from "@/lib/utils";
@@ -74,6 +60,13 @@ export default function ToonPresence({
   intentRef.current = { pose, emotion, talking, amplitude };
 
   useEffect(() => {
+    const t = window.setTimeout(() => {
+      if (!ready) failRef.current?.();
+    }, 10000);
+    return () => window.clearTimeout(t);
+  }, [ready]);
+
+  useEffect(() => {
     const mq =
       typeof window !== "undefined" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
     const sync = () => {
@@ -122,6 +115,8 @@ export default function ToonPresence({
             alpha: true,
             powerPreference: "high-performance",
             toneMapping: NoToneMapping,
+            failIfMajorPerformanceCaveat: false,
+            preserveDrawingBuffer: true,
           }}
           style={{ width: "100%", height: "100%", background: "transparent" }}
           frameloop="always"
@@ -154,10 +149,10 @@ export default function ToonPresence({
 function PresenceCamera() {
   const camera = useThree((s) => s.camera);
   useLayoutEffect(() => {
-    camera.position.set(0.16, 0.88, 2.45);
-    camera.lookAt(0.0, 0.86, 0);
+    camera.position.set(0, 0.95, 3.15);
+    camera.lookAt(0.0, 0.92, 0);
     if (camera instanceof PerspectiveCamera) {
-      camera.fov = 32;
+      camera.fov = 28;
       camera.updateProjectionMatrix();
     }
   }, [camera]);
@@ -211,19 +206,11 @@ function StarWip({
       .loadAsync(url)
       .then((gltf) => {
         if (cancelled) return;
-        const root = gltf.scene;
-        const gradient = makeToonGradient();
-        root.traverse((obj) => {
-          obj.frustumCulled = false;
-          const mesh = obj as Mesh;
-          if (mesh.isMesh) {
-            const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-            mesh.material = mats.map((mat) => {
-              const color = "color" in mat && mat.color instanceof Color ? mat.color : new Color("#ccc");
-              return new MeshToonMaterial({ color: color.clone(), gradientMap: gradient });
-            });
-          }
-        });
+        try {
+          const root = gltf.scene;
+          root.traverse((obj) => {
+            obj.frustumCulled = false;
+          });
 
         const bones = new Map<RigBoneName, BoneState>();
         for (const name of RIG_BONES) {
@@ -264,6 +251,9 @@ function StarWip({
         vrmLike.current = root;
         setScene(root);
         onReadyRef.current();
+        } catch {
+          if (!cancelled) onFailRef.current();
+        }
       })
       .catch(() => {
         if (!cancelled) onFailRef.current();
@@ -394,17 +384,6 @@ function applyWipFace(face: WipFace, amplitude: number, nodes: WipFaceNodes) {
     nodes.browL.rotation.z = 0.22 + extra;
     nodes.browR.rotation.z = -0.22 - extra;
   }
-}
-
-function makeToonGradient(): DataTexture {
-  const data = new Uint8Array([90, 165, 255]);
-  const tex = new DataTexture(data, 3, 1, RedFormat);
-  tex.colorSpace = NoColorSpace;
-  tex.minFilter = NearestFilter;
-  tex.magFilter = NearestFilter;
-  tex.needsUpdate = true;
-  tex.generateMipmaps = false;
-  return tex;
 }
 
 function extraQuatFrom(e: BoneEuler, euler: Euler, quat: Quaternion): Quaternion {

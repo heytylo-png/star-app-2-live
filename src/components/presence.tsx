@@ -1,10 +1,25 @@
-import { lazy, Suspense, useState } from "react";
+import { Component, lazy, Suspense, useState, type ErrorInfo, type ReactNode } from "react";
 import { Puppet } from "@/components/puppet";
 import { StageShell } from "@/components/stage-shell";
 import { usePresenceMode } from "@/lib/presence-mode";
 import type { EmotionId, PoseId } from "@/lib/rai";
 
 const ToonPresence = lazy(() => import("@/components/toon-presence"));
+
+class LabBoundary extends Component<{ onFail: () => void; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch(err: Error, info: ErrorInfo) {
+    console.warn("Lab mesh failed", err, info.componentStack);
+    this.props.onFail();
+  }
+  render() {
+    if (this.state.failed) return null;
+    return this.props.children;
+  }
+}
 
 export type PresenceProps = {
   pose: PoseId;
@@ -27,14 +42,16 @@ export function Presence({ pose, emotion, talking, amplitude, className }: Prese
     <>
       {labOn ? (
         <Suspense fallback={<StageShell className={className} />}>
-          <ToonPresence
-            pose={pose}
-            emotion={emotion}
-            talking={talking}
-            amplitude={amplitude}
-            className={className}
-            onFail={() => setLabFailed(true)}
-          />
+          <LabBoundary onFail={() => setLabFailed(true)}>
+            <ToonPresence
+              pose={pose}
+              emotion={emotion}
+              talking={talking}
+              amplitude={amplitude}
+              className={className}
+              onFail={() => setLabFailed(true)}
+            />
+          </LabBoundary>
         </Suspense>
       ) : (
         <Puppet pose={pose} emotion={emotion} talking={talking} amplitude={amplitude} className={className} />
