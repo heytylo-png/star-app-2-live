@@ -12,11 +12,12 @@
     "predev": "node scripts/sync-star-rai-artifacts.js",
     "prebuild": "node scripts/sync-star-rai-artifacts.js",
     "pretest": "node scripts/sync-star-rai-artifacts.js",
-    "test": "node --experimental-strip-types --test src/lib/rai-pose.test.ts src/lib/local-brain.test.ts src/lib/memory-slots.test.ts src/lib/chart.test.ts src/lib/life.test.ts src/lib/shell.test.ts src/lib/call.test.ts src/lib/clock.test.ts src/lib/chat-thread-height.test.ts src/lib/punch-white.test.ts src/lib/stage-menu.test.ts src/lib/rai-shot.test.ts"
+    "test": "node --experimental-strip-types --test src/lib/rai-pose.test.ts src/lib/local-brain.test.ts src/lib/memory-slots.test.ts src/lib/chart.test.ts src/lib/life.test.ts src/lib/shell.test.ts src/lib/call.test.ts src/lib/clock.test.ts src/lib/chat-thread-height.test.ts src/lib/punch-white.test.ts src/lib/stage-menu.test.ts src/lib/rai-shot.test.ts src/lib/sky.test.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",
     "@radix-ui/react-slot": "^1.3.3",
+    "astronomy-engine": "^2.1.19",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.45.0",

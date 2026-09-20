@@ -1,0 +1,36 @@
+STAR RAI — CHEAP REAL HOROSCOPE (Helix / star-app-2-live)
+Budget path: client-side open ephemeris. No paid horoscope essay API.
+No natal wheel UI. No Live2D. Grok still writes the one-line tint.
+
+STACK
+- Static Pages app (existing)
+- astronomy-engine in the SPA (tropical sun/moon + optional phase). $0. No Worker /sky.
+- Cloudflare Worker stays the optional xAI CORS proxy only — do not add a paid astrology route.
+
+EVERY CHART-FIRING GROK CALL (when Chart v1 would fire)
+Append compact CHART/SKY facts for the user's local day (CLOCK device tz):
+- today_date
+- her_sun=Libra (constant)
+- user_sun (if known)
+- sun_sign_today / moon_sign_today (tropical, from ephemeris)
+- optional: moon_phase label
+Do NOT invent Fukuoka local sky. Use device local date/tz (same as CLOCK).
+Rising only if birth time+place already filled AND cheap compute is trustworthy; otherwise leave empty (Chart v1 left rising empty). This pass: omit rising (no geocode API).
+
+APP
+- Compute sky client-side. Fail soft → existing Chart tint without ephemeris / local brain.
+- Append facts to the grok-4-latest system prompt as a CHART / SKY block (filled keys only), same pattern as CLOCK / MEMORY.
+- Keep Chart v1 voice rules: one tint, no “your reading for today is,” no planet list dump, one you+me glance max.
+
+CHART PANE (sparse daily dashboard — layout inspiration only)
+Do not copy Co-Star brand assets, fonts, copy, or copyrighted horoscope text.
+- Editorial, high-contrast, lots of air. Helix beige / ink. Not a busy natal wheel.
+- Top: one short daily theme / advice beat from ephemeris + Star Rai voice (local; not a Grok essay on open).
+- Optional Do / Don’t chips from the same facts (Star Rai voice, not Co-Star).
+- user_sun / her_sun / today’s sky as clean labels, not a planet dump.
+- Birth date/time/place edit stays available but quieter (collapsed settings), not the first screen.
+- Opening Chart does not fire Grok / does not auto-post a reading to Chat.
+- Do not break the Chat long-shot beige stage.
+
+OUT OF SCOPE THIS PASS
+Paid daily-horoscope text feeds, natal wheel UI, Expo-only, pose sheet changes, 3D.

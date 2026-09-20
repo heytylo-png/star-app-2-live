@@ -36,6 +36,8 @@ describe("memory slots contract", () => {
     assert.match(MEMORY_SLOTS_CONTRACT, /star-life-one-pager/);
     assert.match(MEMORY_SLOTS_CONTRACT, /star-rai-clock/);
     assert.match(MEMORY_SLOTS_CONTRACT, /CLOCK block/);
+    assert.match(MEMORY_SLOTS_CONTRACT, /star-rai-horoscope-cheap/);
+    assert.match(MEMORY_SLOTS_CONTRACT, /sun_sign_today/);
     assert.doesNotMatch(MEMORY_SLOTS_CONTRACT, /\bFukuoka\b/);
   });
 });

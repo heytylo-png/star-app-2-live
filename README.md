@@ -100,7 +100,7 @@ mood_tag: cozy
 
 Empty keys are omitted. `role` is sent only if they stated one (never a default cameraman). Meetup Chart (`date` / optional `time` / `place`) and Life (`now_playing` / `mood_tag`) are omitted unless a meetup or session actually filled them. Natal Chart v1 keys (`user_birth_date`, optional `user_birth_time` / `user_birth_place`, `user_sun`, `chart_source`) are omitted until first-launch setup (or a later birthday) fills them. `user_rising` is never sent. Her lore bio stays in the voice card under LORE USE — it is not a topic list.
 
-When Chart v1 **fires** (once per local day while Chat is already in use, or when they asked), a separate **CHART** block is appended after MEMORY FACTS:
+When Chart v1 **fires** (once per local day while Chat is already in use, or when they asked), a separate **CHART** block is appended after MEMORY FACTS. Cheap tropical sun/moon from **client-side** `astronomy-engine` (no Worker `/sky`, no paid horoscope API) fill extra keys when the ephemeris works — fail soft omits them:
 
 ```
 CHART
@@ -108,13 +108,26 @@ today_date: 2026-09-19
 her_sun: Libra
 user_sun: Aries
 last_topic: rough day
+sun_sign_today: Virgo
+moon_sign_today: Gemini
+moon_phase: Waning Crescent
 
 Tint one line only. Never say "your reading for today is." Never list planets.
 At most one you+me glance. Not a compatibility essay.
 Prefer pose content|think|smug|tired|talk|idle. Never kiss.
+Sky keys are facts, not a topic. Do not invent Fukuoka local sky.
 ```
 
-`today_date` uses the **browser IANA timezone** (`Intl.DateTimeFormat().resolvedOptions().timeZone`), falling back to `America/Chicago`. Same local day does not fire again unless they asked. Ask-path (her sign / birthday / origin) and diary stay on the local brain so her bio is not dumped through Grok. Fail / CORS / bad JSON / no key → pose-keyed local brain (Chart tint pose when Chart fired). The model must not dump the slot list into `line`. Replies are JSON acts (`parseAct`). Streaming uses SSE when available; otherwise one-shot text is chunked into `onDelta` for mouth/caption UX.
+`today_date` and the sky snapshot use the **same CLOCK timezone** (browser IANA, optional explicit zone, else `America/Chicago`). Same local day does not fire Chart again unless they asked. Ask-path (her sign / birthday / origin) and diary stay on the local brain so her bio is not dumped through Grok. Opening the **Chart** tab does **not** call Grok — it shows a sparse daily pane (theme beat, Do/Don't, sun/moon labels, collapsed birth edit) from local ephemeris. Fail / CORS / bad JSON / no key / ephemeris throw → pose-keyed local brain (Chart tint pose when Chart fired). The model must not dump the slot list into `line`. Replies are JSON acts (`parseAct`). Streaming uses SSE when available; otherwise one-shot text is chunked into `onDelta` for mouth/caption UX.
+
+### Verify Chart / sky on a phone
+
+1. Open the live app (after this ships: **https://heytylo-png.github.io/star-app-2-live/**) in Chrome.
+2. Stay on **Chat** (beige long-shot stage unchanged). Optional: Settings → paste xAI key.
+3. Tap **Chart**. You should see a sparse daily card over the stage: weekday/date, one short Star Rai theme line, Do / Don't chips, labels for You / Her / Sun / Moon / Phase. Birth date/time/place is collapsed — not the first screen. No natal wheel. No “your reading for today is.”
+4. Expand **Birth**, save a date if you want `user_sun`. Chart does not auto-post a reading into Chat.
+5. Back on **Chat**, send a normal line (or “horoscope today” if you skipped a birthday). With a key, Grok tints **one** line using the CHART/SKY facts. Without a key, local brain still tints. She must not list planets or invent Fukuoka sky.
+6. This path is **client-side** (`src/lib/sky.ts` + `astronomy-engine`). **No `wrangler deploy`.** The Worker under `worker/` remains the optional xAI CORS proxy only.
 
 If there is no key, CORS failure, timeout (~12s), bad JSON, or API error → pose-keyed local brain (`artifacts/star-rai-local-brain.txt`). She never breaks character about APIs. There is **no** Settings field for the voice card — only the xAI key (localStorage).
 
@@ -167,7 +180,7 @@ See **[POSING.md](./POSING.md)** for the drop-in guide:
 - Morning official pack under `public/rai/` (`*_official.png`, `idle.png`, `peace.png`, `middle_finger.png`, `heart_official.png`)
 - Live key → file table (`wave` → `wave_official.png`, `hold` → `hold_official.png`, `scold` → `scold_official.png`; `kiss` unmapped)
 - Kept as-today: `turn`, `profile`, `three_quarter_left`, `three_quarter_right`; Helix extra `point` → `point-front.png`
-- Voice card (`artifacts/star-rai-voice-card.txt`) is baked into `RAI_SYSTEM` at sync/build (`scripts/sync-star-rai-artifacts.js`); offline fallback is `artifacts/star-rai-local-brain.txt` (pose-keyed lines); memory-slot contract is `artifacts/star-rai-memory-slots.txt` (appended after the voice card on grok-4-latest, filled keys only). Chart v1 SoT is `artifacts/star-chart-v1.txt`. Call mode SoT is `artifacts/star-rai-call-mode.txt`. Clock / NOW SoT is `artifacts/star-rai-clock.txt`. Do not edit `src/lib/generated/star-rai-artifacts.ts` by hand.
+- Voice card (`artifacts/star-rai-voice-card.txt`) is baked into `RAI_SYSTEM` at sync/build (`scripts/sync-star-rai-artifacts.js`); offline fallback is `artifacts/star-rai-local-brain.txt` (pose-keyed lines); memory-slot contract is `artifacts/star-rai-memory-slots.txt` (appended after the voice card on grok-4-latest, filled keys only). Chart v1 SoT is `artifacts/star-chart-v1.txt`. Cheap sky SoT is `artifacts/star-rai-horoscope-cheap.txt` (client-side astronomy-engine). Call mode SoT is `artifacts/star-rai-call-mode.txt`. Clock / NOW SoT is `artifacts/star-rai-clock.txt`. Do not edit `src/lib/generated/star-rai-artifacts.ts` by hand.
 
 ## Develop
 

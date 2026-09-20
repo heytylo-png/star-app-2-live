@@ -5,7 +5,7 @@ Launch on Chat. Not Expo-only.
 TABS
 1. Chat — puppet, thread, pose commands. Composer can still paste / “I’m listening to X”
    to set a Life session. No now-playing bar / music strip on Chat.
-2. Chart — edit birth date / time / place, show user_sun if any, last diary.
+2. Chart — sparse daily dashboard (theme beat, sky labels, quiet birth edit, last diary).
    No natal wheel. No auto-reading on open.
 3. Life — now_playing + Set/Stop, quiet daily list, mood tag.
    No Spotify / Apple login.

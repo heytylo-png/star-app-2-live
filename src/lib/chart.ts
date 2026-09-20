@@ -1,5 +1,6 @@
 /**
- * Chart v1 — sun + date only. SoT: artifacts/star-chart-v1.txt
+ * Chart v1 — sun + date natal; cheap live sky on fire. SoT: artifacts/star-chart-v1.txt
+ * + artifacts/star-rai-horoscope-cheap.txt
  *
  * Once-per-local-day uses the browser IANA timezone
  * (`Intl.DateTimeFormat().resolvedOptions().timeZone`), falling back to
@@ -12,6 +13,7 @@
 import type { EmotionId, PoseId } from "./rai.ts";
 import { namedPoseFromText } from "./rai.ts";
 import type { MemorySlotState } from "./memory-slots.ts";
+import { computeSkyFacts, formatSkyFactLines, type SkyFacts } from "./sky.ts";
 
 /** In-code only. Never serialize into MEMORY FACTS. */
 export const HER_CHART = {
@@ -68,6 +70,8 @@ export type ResolveChartTurnInput = {
   existingDiary?: string | null;
   now?: Date;
   timeZone?: string;
+  /** Injected sky. undefined = compute client-side. null = fail-soft omit. */
+  sky?: SkyFacts | null;
 };
 
 const SIGNS = [
@@ -353,23 +357,27 @@ export function pickSignTease(dateKey: string): string {
 }
 
 /**
- * Compact CHART block appended after MEMORY FACTS on grok-4-latest when Chart fires.
- * her_sun lives here — not in standing MEMORY FACTS.
+ * Compact CHART / SKY block appended after MEMORY FACTS on grok-4-latest when Chart fires.
+ * her_sun lives here — not in standing MEMORY FACTS. Sky keys only when computed.
+ * Never rising. Never invent Fukuoka local sky.
  */
 export function formatChartFactsBlock(opts: {
   todayDate: string;
   userSun?: string;
   lastTopic?: string;
+  sky?: SkyFacts | null;
 }): string {
   const lines = ["CHART", `today_date: ${opts.todayDate}`, `her_sun: ${HER_CHART.her_sun}`];
   if (opts.userSun?.trim()) lines.push(`user_sun: ${opts.userSun.trim()}`);
   if (opts.lastTopic?.trim()) lines.push(`last_topic: ${clip(opts.lastTopic, 72)}`);
+  lines.push(...formatSkyFactLines(opts.sky));
   lines.push("");
   lines.push('Tint one line only. Never say "your reading for today is." Never list planets.');
   if (opts.userSun?.trim()) {
     lines.push("At most one you+me glance. Not a compatibility essay.");
   }
   lines.push("Prefer pose content|think|smug|tired|talk|idle. Never kiss.");
+  lines.push("Sky keys are facts, not a topic. Do not invent Fukuoka local sky.");
   return lines.join("\n");
 }
 
@@ -547,6 +555,7 @@ export function resolveChartTurn(input: ResolveChartTurnInput): ChartTurn {
   }
 
   const tintPose = pickChartTintPose(today);
+  const sky = input.sky === undefined ? computeSkyFacts(now) : input.sky;
   return {
     kind: "daily",
     localOnly: false,
@@ -558,6 +567,7 @@ export function resolveChartTurn(input: ResolveChartTurnInput): ChartTurn {
       todayDate: today,
       userSun: input.userSun,
       lastTopic: input.lastTopic,
+      sky,
     }),
   };
 }
