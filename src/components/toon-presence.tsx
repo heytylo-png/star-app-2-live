@@ -127,9 +127,9 @@ export default function ToonPresence({
           }}
         >
           <PresenceCamera />
-          <hemisphereLight args={["#fff4e8", "#cfc8bc", 1.28]} />
-          <directionalLight position={[0.25, 1.9, 3.1]} intensity={1.35} color="#fff7ef" />
-          <directionalLight position={[-1.2, 0.8, 1.4]} intensity={0.38} color="#ffe8d4" />
+          <hemisphereLight args={["#fff6ec", "#d2c4b4", 1.35]} />
+          <directionalLight position={[0.15, 1.6, 3.4]} intensity={1.5} color="#fff8f0" />
+          <directionalLight position={[-1.0, 0.7, 1.6]} intensity={0.45} color="#ffe4c8" />
           <StarWip
             intentRef={intentRef}
             lookRef={lookRef}
@@ -402,7 +402,7 @@ function lidBaseFor(face: WipFace): number {
   if (face === "talkSmile") return 0.08;
   if (face === "smirk") return 0.12;
   if (face === "shy") return 0.2;
-  return 0.16;
+  return 0.18;
 }
 
 function lookEyes(face: WipFace, irisL: Object3D | null, irisR: Object3D | null) {
@@ -411,7 +411,7 @@ function lookEyes(face: WipFace, irisL: Object3D | null, irisR: Object3D | null)
   for (const iris of [irisL, irisR]) {
     if (!iris) continue;
     iris.position.x = side;
-    iris.position.y = down;
+    iris.position.y = -0.0038 + down;
   }
 }
 
@@ -448,8 +448,8 @@ function applyWipFace(face: WipFace, amplitude: number, nodes: WipFaceNodes) {
   }
   if (nodes.browL && nodes.browR) {
     const extra = face === "grit" ? 0.22 : face === "pout" ? 0.12 : face === "shy" ? -0.04 : 0;
-    nodes.browL.rotation.z = 0.26 + extra;
-    nodes.browR.rotation.z = -0.26 - extra;
+    nodes.browL.rotation.z = 0.22 + extra;
+    nodes.browR.rotation.z = -0.22 - extra;
   }
 }
 

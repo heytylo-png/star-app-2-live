@@ -1,6 +1,6 @@
 /**
  * Star Rai WIP toon mesh (glTF binary).
- * Second-pass silhouette: strand hair, anime eye planes, fitted uniform.
+ * Face + hair pass: solid locks + tapered strands, almond half-lid glare.
  * Same bone names as Lab so talk/wave/scold/pout/shy still drive.
  * Not a booth VRM, not Sairi, not shipping Rai.
  * No kiss / blow-kiss / heart-hands. scold ≠ shy ≠ pout.
@@ -15,23 +15,23 @@ const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const OUT = path.join(rootDir, "public/models/star-rai-wip.glb");
 
 const C = {
-  skin: 0xc99268,
-  skinShadow: 0xa87454,
-  hair: 0x0c0a0e,
-  hairHi: 0x2a232a,
+  skin: 0xc68654,
+  skinShadow: 0xa86a40,
+  hair: 0x0b0a0e,
+  hairHi: 0x242028,
   white: 0xf7f4ef,
   navy: 0x1a2748,
   bow: 0xd01832,
   gold: 0xd4a017,
-  amber: 0xe8a51c,
-  amberDeep: 0xb86a10,
-  pupil: 0x160e08,
-  brow: 0x14110f,
-  blush: 0xe0907c,
+  amber: 0xefaa22,
+  amberDeep: 0xb45c0c,
+  pupil: 0x140c08,
+  brow: 0x12100e,
+  blush: 0xe8a090,
   blushHot: 0xe06860,
   loafer: 0x6b3d24,
   loaferDark: 0x4a2818,
-  lid: 0xc48a64,
+  lid: 0xc07a4e,
   tooth: 0xf4efe8,
   liner: 0x1a1210,
 };
@@ -121,7 +121,8 @@ function hairRibbon(curve, width = 0.028, segs = 18) {
     side.crossVectors(face, tan);
     if (side.lengthSq() < 1e-8) side.set(1, 0, 0);
     else side.normalize();
-    const taper = 0.34 + 0.66 * Math.sin((i / segs) * Math.PI);
+    const t = i / segs;
+    const taper = 0.72 + 0.28 * (1 - t);
     const w = width * taper;
     const p = pts[i];
     positions.push(p.x + side.x * w, p.y + side.y * w, p.z + side.z * w);
@@ -151,6 +152,82 @@ function addStrand(parent, pts, radius, name, color = C.hair, segs = 14) {
   mesh(new THREE.TubeGeometry(curveOf(pts), segs, radius, 6, false), color, name, parent, null, null, null, {
     roughness: 0.93,
   });
+}
+
+function taperedTubeGeo(curve, tubularSegs, rStart, rEnd, radialSegs = 7) {
+  const pts = curve.getSpacedPoints(tubularSegs);
+  const positions = [];
+  const normals = [];
+  const uvs = [];
+  const indices = [];
+  const up = new THREE.Vector3(0, 1, 0);
+  const alt = new THREE.Vector3(1, 0, 0);
+  const tan = new THREE.Vector3();
+  const N = new THREE.Vector3();
+  const B = new THREE.Vector3();
+  for (let i = 0; i <= tubularSegs; i++) {
+    const t = i / tubularSegs;
+    const ease = Math.pow(1 - t, 0.55);
+    const radius = rEnd + (rStart - rEnd) * ease;
+    const p = pts[i];
+    const a = pts[Math.min(i + 1, tubularSegs)];
+    const b = pts[Math.max(i - 1, 0)];
+    tan.subVectors(a, b);
+    if (tan.lengthSq() < 1e-8) tan.set(0, -1, 0);
+    tan.normalize();
+    N.crossVectors(up, tan);
+    if (N.lengthSq() < 1e-6) N.crossVectors(alt, tan);
+    N.normalize();
+    B.crossVectors(tan, N).normalize();
+    for (let j = 0; j <= radialSegs; j++) {
+      const v = (j / radialSegs) * Math.PI * 2;
+      const cx = -radius * Math.cos(v);
+      const cy = radius * Math.sin(v);
+      const nx = cx * N.x + cy * B.x;
+      const ny = cx * N.y + cy * B.y;
+      const nz = cx * N.z + cy * B.z;
+      positions.push(p.x + nx, p.y + ny, p.z + nz);
+      const len = Math.hypot(nx, ny, nz) || 1;
+      normals.push(nx / len, ny / len, nz / len);
+      uvs.push(j / radialSegs, t);
+    }
+    if (i < tubularSegs) {
+      for (let j = 0; j < radialSegs; j++) {
+        const aIdx = i * (radialSegs + 1) + j;
+        const bIdx = aIdx + radialSegs + 1;
+        indices.push(aIdx, bIdx, aIdx + 1, bIdx, bIdx + 1, aIdx + 1);
+      }
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
+  geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setIndex(indices);
+  return geo;
+}
+
+function addLock(parent, pts, r0, r1, name, color = C.hair, segs = 18) {
+  mesh(taperedTubeGeo(curveOf(pts), segs, r0, r1, 7), color, name, parent, null, null, null, {
+    roughness: 0.9,
+  });
+}
+
+function displace(geo, amp, freq = 1) {
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const y = pos.getY(i);
+    const z = pos.getZ(i);
+    const n = Math.sin(x * 17 * freq + y * 13 * freq) * Math.cos(z * 11 * freq + x * 7);
+    const r = Math.hypot(x, z) || 1;
+    pos.setX(i, x + (n * amp * x) / r);
+    pos.setZ(i, z + (n * amp * z) / r);
+    pos.setY(i, y + n * amp * 0.35);
+  }
+  pos.needsUpdate = true;
+  geo.computeVertexNormals();
+  return geo;
 }
 
 function pleatedSkirt(topR, botR, h, pleats = 18) {
@@ -270,117 +347,92 @@ function addBow(parent) {
 }
 
 function addHair(head) {
-  // Top skullcap (full phi, short theta) covers the crown without reaching the eyes.
+  // Tiny back-shifted scalp so the part does not flash. Not a front-facing cap.
   mesh(
-    new THREE.SphereGeometry(0.112, 26, 14, 0, Math.PI * 2, 0, Math.PI * 0.38),
+    new THREE.SphereGeometry(0.07, 18, 12),
     C.hair,
-    "hairCrownCap",
+    "hairScalp",
     head,
-    [0, 0.068, -0.008],
-    [0.18, 0, 0],
-    [1.24, 1.0, 1.1],
-    { roughness: 0.94 },
-  );
-  mesh(new THREE.SphereGeometry(0.052, 14, 10), C.hair, "hairTempleL", head, [0.06, 0.118, 0.0], [0.35, 0.35, 0], [1.4, 0.78, 1.1], { roughness: 0.94 });
-  mesh(new THREE.SphereGeometry(0.052, 14, 10), C.hair, "hairTempleR", head, [-0.06, 0.118, 0.0], [0.35, -0.35, 0], [1.4, 0.78, 1.1], { roughness: 0.94 });
-  mesh(
-    new THREE.SphereGeometry(0.112, 28, 18, Math.PI * 0.82, Math.PI * 1.36, 0, Math.PI * 0.62),
-    C.hair,
-    "hairCap",
-    head,
-    [0, 0.05, -0.03],
-    [0.22, 0, 0],
-    [1.08, 0.92, 1.06],
-    { roughness: 0.94 },
-  );
-  // Back-only lathe: φ=0 is +X, φ=π/2 is -Z (back). Keep the +Z face open.
-  mesh(
-    new THREE.LatheGeometry(
-      [
-        [0.04, 0.09],
-        [0.1, 0.07],
-        [0.118, 0.01],
-        [0.112, -0.07],
-        [0.085, -0.13],
-        [0.045, -0.155],
-      ].map(([r, y]) => new THREE.Vector2(r, y)),
-      18,
-      0.4,
-      Math.PI * 1.22,
-    ),
-    C.hair,
-    "hairBackShell",
-    head,
-    [0, 0.018, -0.02],
-    null,
-    [1.04, 1, 1],
-    { roughness: 0.94 },
+    [0, 0.12, -0.048],
+    [0.5, 0, 0],
+    [1.55, 0.62, 1.28],
+    { roughness: 0.95 },
   );
 
-  // Side-swept bangs. Fringe covers the forehead; iris stays open.
+  // Side-swept bangs: stay above the brows so both eyes stay open.
   const bangs = [
-    [[0.0, 0.148, 0.0], [0.008, 0.12, 0.06], [0.016, 0.098, 0.09], [0.02, 0.086, 0.086]],
-    [[0.022, 0.146, -0.005], [0.03, 0.118, 0.055], [0.04, 0.096, 0.088], [0.048, 0.084, 0.08]],
-    [[-0.016, 0.148, 0.0], [-0.006, 0.12, 0.06], [0.006, 0.098, 0.09], [0.012, 0.086, 0.084]],
-    [[-0.04, 0.145, -0.005], [-0.046, 0.116, 0.052], [-0.042, 0.094, 0.08], [-0.032, 0.08, 0.068]],
-    [[0.05, 0.14, -0.01], [0.062, 0.11, 0.05], [0.072, 0.08, 0.07], [0.078, 0.06, 0.055]],
-    [[-0.052, 0.14, -0.01], [-0.066, 0.11, 0.048], [-0.074, 0.078, 0.062], [-0.07, 0.055, 0.045]],
-    [[0.078, 0.128, -0.02], [0.095, 0.08, 0.03], [0.1, 0.03, 0.02], [0.09, -0.03, 0.0]],
-    [[-0.078, 0.128, -0.02], [-0.095, 0.08, 0.028], [-0.1, 0.03, 0.016], [-0.09, -0.03, -0.004]],
-    [[0.01, 0.15, -0.02], [0.02, 0.125, 0.04], [0.03, 0.1, 0.078], [0.034, 0.09, 0.082]],
-    [[-0.03, 0.15, -0.02], [-0.02, 0.125, 0.04], [-0.01, 0.1, 0.078], [-0.004, 0.09, 0.08]],
+    { pts: [[0.0, 0.168, -0.005], [0.01, 0.145, 0.05], [0.018, 0.118, 0.075], [0.024, 0.092, 0.072]], r0: 0.013, r1: 0.0055 },
+    { pts: [[-0.02, 0.166, -0.006], [-0.03, 0.142, 0.048], [-0.038, 0.116, 0.072], [-0.042, 0.09, 0.07]], r0: 0.012, r1: 0.005 },
+    { pts: [[0.024, 0.165, -0.004], [0.038, 0.14, 0.05], [0.05, 0.114, 0.074], [0.058, 0.088, 0.068]], r0: 0.013, r1: 0.0055 },
+    { pts: [[-0.04, 0.162, -0.008], [-0.052, 0.136, 0.044], [-0.062, 0.11, 0.068], [-0.07, 0.084, 0.06]], r0: 0.011, r1: 0.0045 },
+    { pts: [[0.044, 0.16, -0.01], [0.06, 0.134, 0.042], [0.072, 0.108, 0.066], [0.08, 0.082, 0.058]], r0: 0.011, r1: 0.0045 },
+    { pts: [[0.01, 0.167, 0.008], [0.018, 0.142, 0.058], [0.028, 0.12, 0.078], [0.034, 0.096, 0.074]], r0: 0.01, r1: 0.004 },
+    { pts: [[-0.008, 0.166, 0.006], [-0.016, 0.14, 0.056], [-0.024, 0.118, 0.076], [-0.028, 0.094, 0.072]], r0: 0.01, r1: 0.004 },
+    { pts: [[0.032, 0.158, -0.02], [0.05, 0.128, 0.03], [0.062, 0.1, 0.05], [0.068, 0.072, 0.04]], r0: 0.01, r1: 0.004 },
+    { pts: [[-0.03, 0.158, -0.02], [-0.048, 0.128, 0.028], [-0.06, 0.098, 0.048], [-0.064, 0.07, 0.038]], r0: 0.01, r1: 0.004 },
   ];
-  bangs.forEach((pts, i) => {
-    addCard(head, pts, 0.016 + (i % 3) * 0.004, `hairBang${i}`);
-    addStrand(head, pts, 0.0065 + (i % 2) * 0.0018, `hairBangStrand${i}`, i % 2 ? C.hairHi : C.hair);
-  });
+  bangs.forEach((b, i) => addLock(head, b.pts, b.r0, b.r1, `hairBang${i}`, i % 2 ? C.hairHi : C.hair, 16));
 
-  const sides = [
-    [[0.1, 0.11, -0.01], [0.118, 0.04, 0.02], [0.112, -0.05, 0.01], [0.095, -0.13, -0.01]],
-    [[0.08, 0.1, -0.04], [0.105, 0.02, -0.015], [0.1, -0.07, -0.02], [0.08, -0.15, -0.03]],
-    [[0.06, 0.12, -0.06], [0.085, 0.02, -0.07], [0.078, -0.08, -0.06], [0.055, -0.16, -0.05]],
-    [[0.11, 0.08, 0.02], [0.12, 0.0, 0.03], [0.1, -0.08, 0.015], [0.078, -0.14, 0.0]],
-    [[-0.1, 0.11, -0.01], [-0.118, 0.04, 0.02], [-0.112, -0.05, 0.01], [-0.095, -0.13, -0.01]],
-    [[-0.08, 0.1, -0.04], [-0.105, 0.02, -0.015], [-0.1, -0.07, -0.02], [-0.08, -0.15, -0.03]],
-    [[-0.06, 0.12, -0.06], [-0.085, 0.02, -0.07], [-0.078, -0.08, -0.06], [-0.055, -0.16, -0.05]],
-    [[-0.11, 0.08, 0.02], [-0.12, 0.0, 0.03], [-0.1, -0.08, 0.015], [-0.078, -0.14, 0.0]],
+  // Face-framing locks — hang beside the eyes, not over them.
+  addLock(head, [[0.07, 0.148, -0.01], [0.09, 0.1, 0.032], [0.1, 0.04, 0.028], [0.095, -0.02, 0.01]], 0.012, 0.006, "hairFrame0");
+  addLock(head, [[0.082, 0.132, -0.025], [0.108, 0.055, 0.008], [0.11, -0.03, 0.0], [0.092, -0.09, -0.015]], 0.014, 0.006, "hairFrame1", C.hairHi);
+  addLock(head, [[-0.07, 0.148, -0.01], [-0.09, 0.1, 0.03], [-0.1, 0.04, 0.026], [-0.095, -0.02, 0.008]], 0.012, 0.006, "hairFrame2");
+  addLock(head, [[-0.082, 0.132, -0.025], [-0.108, 0.055, 0.006], [-0.11, -0.03, -0.002], [-0.092, -0.09, -0.016]], 0.014, 0.006, "hairFrame3", C.hairHi);
+
+  // Crown tufts — volume at the top, flowing back. Not a smooth dome.
+  const tufts = [
+    [[0.0, 0.15, -0.01], [0.012, 0.192, -0.04], [0.0, 0.175, -0.085]],
+    [[0.032, 0.145, -0.015], [0.055, 0.188, -0.045], [0.04, 0.16, -0.085]],
+    [[-0.032, 0.145, -0.015], [-0.055, 0.188, -0.045], [-0.04, 0.16, -0.085]],
+    [[0.055, 0.13, -0.02], [0.08, 0.172, -0.05], [0.062, 0.145, -0.085]],
+    [[-0.055, 0.13, -0.02], [-0.08, 0.172, -0.05], [-0.062, 0.145, -0.085]],
+    [[0.018, 0.155, -0.04], [0.025, 0.185, -0.07], [0.0, 0.155, -0.1]],
+    [[-0.022, 0.152, -0.045], [-0.012, 0.182, -0.078], [0.018, 0.155, -0.1]],
+    [[0.0, 0.155, 0.0], [0.02, 0.175, -0.03], [0.03, 0.15, -0.06]],
+    [[-0.015, 0.155, 0.0], [-0.03, 0.175, -0.03], [-0.025, 0.15, -0.06]],
   ];
-  sides.forEach((pts, i) => {
-    addCard(head, pts, 0.032, `hairSide${i}`, i % 2 ? C.hairHi : C.hair);
-    addStrand(head, pts, 0.012, `hairSideStrand${i}`, i % 2 ? C.hairHi : C.hair, 16);
-  });
+  tufts.forEach((pts, i) => addLock(head, pts, 0.018, 0.008, `hairCrown${i}`, i % 2 ? C.hairHi : C.hair, 12));
+
+  // Side layers to collarbone. Irregular lengths = messy PNG outline.
+  const sides = [
+    [[0.108, 0.12, -0.02], [0.135, 0.035, 0.012], [0.122, -0.055, 0.002], [0.09, -0.155, -0.018]],
+    [[0.09, 0.115, -0.05], [0.118, 0.02, -0.02], [0.105, -0.075, -0.028], [0.075, -0.165, -0.038]],
+    [[0.065, 0.13, -0.07], [0.092, 0.015, -0.075], [0.078, -0.085, -0.06], [0.05, -0.168, -0.045]],
+    [[0.12, 0.08, 0.02], [0.138, -0.01, 0.022], [0.108, -0.095, 0.004], [0.072, -0.148, -0.012]],
+    [[0.098, 0.065, 0.035], [0.122, -0.02, 0.012], [0.1, -0.105, -0.008], [0.07, -0.155, -0.025]],
+    [[-0.108, 0.12, -0.02], [-0.135, 0.035, 0.012], [-0.122, -0.055, 0.002], [-0.09, -0.155, -0.018]],
+    [[-0.09, 0.115, -0.05], [-0.118, 0.02, -0.02], [-0.105, -0.075, -0.028], [-0.075, -0.165, -0.038]],
+    [[-0.065, 0.13, -0.07], [-0.092, 0.015, -0.075], [-0.078, -0.085, -0.06], [-0.05, -0.168, -0.045]],
+    [[-0.12, 0.08, 0.02], [-0.138, -0.01, 0.022], [-0.108, -0.095, 0.004], [-0.072, -0.148, -0.012]],
+    [[-0.098, 0.065, 0.035], [-0.122, -0.02, 0.012], [-0.1, -0.105, -0.008], [-0.07, -0.155, -0.025]],
+  ];
+  sides.forEach((pts, i) => addLock(head, pts, 0.024, 0.01, `hairSide${i}`, i % 2 ? C.hairHi : C.hair, 16));
+
+  // PNG-like side spikes (silhouette, not a round helmet).
+  addLock(head, [[0.1, 0.09, 0.02], [0.14, 0.05, 0.038], [0.162, 0.015, 0.018], [0.15, -0.02, -0.01]], 0.012, 0.004, "hairSpikeL", C.hairHi, 14);
+  addLock(head, [[-0.1, 0.09, 0.02], [-0.138, 0.048, 0.034], [-0.158, 0.01, 0.014], [-0.145, -0.025, -0.01]], 0.012, 0.004, "hairSpikeR", C.hairHi, 14);
 
   const back = [
-    [[0.0, 0.14, -0.04], [0.0, 0.04, -0.11], [0.0, -0.06, -0.11], [0.0, -0.15, -0.07]],
-    [[0.045, 0.13, -0.03], [0.055, 0.03, -0.1], [0.045, -0.07, -0.1], [0.03, -0.16, -0.06]],
-    [[-0.045, 0.13, -0.03], [-0.055, 0.03, -0.1], [-0.045, -0.07, -0.1], [-0.03, -0.16, -0.06]],
-    [[0.08, 0.11, -0.02], [0.075, 0.0, -0.085], [0.055, -0.1, -0.075], [0.03, -0.17, -0.04]],
-    [[-0.08, 0.11, -0.02], [-0.075, 0.0, -0.085], [-0.055, -0.1, -0.075], [-0.03, -0.17, -0.04]],
+    [[0.0, 0.15, -0.04], [0.0, 0.04, -0.125], [0.0, -0.07, -0.118], [0.0, -0.162, -0.068]],
+    [[0.04, 0.142, -0.03], [0.055, 0.03, -0.115], [0.042, -0.08, -0.108], [0.026, -0.165, -0.058]],
+    [[-0.04, 0.142, -0.03], [-0.055, 0.03, -0.115], [-0.042, -0.08, -0.108], [-0.026, -0.165, -0.058]],
+    [[0.072, 0.125, -0.02], [0.08, 0.015, -0.095], [0.052, -0.09, -0.082], [0.028, -0.168, -0.042]],
+    [[-0.072, 0.125, -0.02], [-0.08, 0.015, -0.095], [-0.052, -0.09, -0.082], [-0.028, -0.168, -0.042]],
   ];
-  back.forEach((pts, i) => {
-    addCard(head, pts, 0.038, `hairBack${i}`);
-    addStrand(head, pts, 0.014, `hairBackStrand${i}`, C.hair, 16);
-  });
+  back.forEach((pts, i) => addLock(head, pts, 0.024, 0.011, `hairBack${i}`, C.hair, 16));
 
-  const crown = [
-    [[-0.02, 0.125, 0.02], [0.0, 0.162, -0.01], [0.03, 0.145, -0.04]],
-    [[0.03, 0.122, 0.0], [0.055, 0.16, -0.03], [0.03, 0.15, -0.06]],
-    [[-0.04, 0.122, -0.01], [-0.06, 0.16, -0.03], [-0.03, 0.145, -0.06]],
-    [[0.0, 0.13, -0.02], [0.01, 0.17, -0.04], [-0.02, 0.155, -0.07]],
-  ];
-  crown.forEach((pts, i) => addCard(head, pts, 0.028, `hairCrown${i}`, C.hairHi));
-
-  // ONE hooked ahoge from the crown — back-left, then up.
-  addStrand(
+  // ONE hooked ahoge from the crown — back-left, then up. Not from the forehead.
+  addLock(
     head,
     [
-      [0.0, 0.158, -0.02],
-      [-0.04, 0.23, -0.045],
-      [-0.08, 0.3, -0.02],
-      [-0.05, 0.355, 0.03],
-      [0.028, 0.375, 0.055],
+      [0.0, 0.172, -0.03],
+      [-0.045, 0.25, -0.055],
+      [-0.088, 0.325, -0.018],
+      [-0.055, 0.375, 0.03],
+      [0.028, 0.392, 0.055],
     ],
-    0.0055,
+    0.006,
+    0.0028,
     "ahoge",
     C.hair,
     28,
@@ -503,124 +555,135 @@ function build() {
   mesh(
     lathe(
       [
-        [0.018, 0.128],
-        [0.072, 0.118],
-        [0.102, 0.085],
-        [0.11, 0.042],
-        [0.1, 0.008],
-        [0.098, -0.022],
-        [0.082, -0.05],
-        [0.05, -0.072],
-        [0.016, -0.082],
+        [0.0, 0.12],
+        [0.016, 0.116],
+        [0.07, 0.108],
+        [0.1, 0.068],
+        [0.106, 0.028],
+        [0.1, -0.006],
+        [0.086, -0.038],
+        [0.054, -0.064],
+        [0.016, -0.078],
+        [0.0, -0.082],
       ],
       32,
     ),
     C.skin,
     "headMesh",
     head,
-    [0, 0.038, 0.006],
+    [0, 0.038, 0.01],
     null,
-    [0.98, 1.02, 0.88],
-    { roughness: 0.55 },
+    [1.04, 1.02, 0.88],
+    { roughness: 0.5 },
   );
-  mesh(new THREE.CylinderGeometry(0.028, 0.034, 0.058, 14), C.skin, "neckMesh", neck, [0, 0.01, 0], null, null, { roughness: 0.55 });
-  mesh(new THREE.SphereGeometry(0.011, 10, 8), C.skinShadow, "nose", head, [0, 0.018, 0.09], null, [0.62, 0.85, 0.7]);
+  mesh(new THREE.CylinderGeometry(0.028, 0.034, 0.058, 14), C.skin, "neckMesh", neck, [0, 0.01, 0], null, null, { roughness: 0.5 });
+  mesh(new THREE.SphereGeometry(0.008, 10, 8), C.skinShadow, "nose", head, [0, 0.014, 0.096], null, [0.52, 0.82, 0.58]);
 
   function eye(side, x) {
     const g = new THREE.Group();
     g.name = `eye${side}`;
-    g.position.set(x, 0.05, 0.094);
+    g.position.set(x, 0.048, 0.1);
+    g.rotation.z = side === "L" ? -0.06 : 0.06;
     head.add(g);
 
+    const w = 0.031;
+    const h = 0.0145;
+    const outline = new THREE.Mesh(
+      new THREE.ShapeGeometry(almondShape(w * 1.06, h * 1.12), 20),
+      toon(C.liner, { roughness: 0.45, side: THREE.DoubleSide }),
+    );
+    outline.name = `eyeOutline${side}`;
+    outline.position.z = 0.0006;
+    g.add(outline);
+
     const sclera = new THREE.Mesh(
-      new THREE.ShapeGeometry(almondShape(0.023, 0.0115)),
-      toon(C.white, { roughness: 0.38, side: THREE.DoubleSide, emissive: 0x222018, emissiveIntensity: 0.08 }),
+      new THREE.ShapeGeometry(almondShape(w, h), 20),
+      toon(C.white, { roughness: 0.28, side: THREE.DoubleSide, emissive: 0x3a2810, emissiveIntensity: 0.12 }),
     );
     sclera.name = `sclera${side}`;
-    sclera.position.z = 0.002;
+    sclera.position.z = 0.0014;
     g.add(sclera);
 
     const irisG = new THREE.Group();
     irisG.name = `iris${side}`;
-    irisG.position.set(0, -0.001, 0.004);
+    irisG.position.set(0, -0.0038, 0.0032);
     g.add(irisG);
-    mesh(new THREE.CircleGeometry(0.0128, 28), C.amberDeep, `irisRing${side}`, irisG, [0, 0, 0], null, null, {
-      roughness: 0.35,
+    mesh(new THREE.CircleGeometry(0.0154, 28), C.amberDeep, `irisRing${side}`, irisG, [0, 0, 0], null, [1, 0.78, 1], {
+      roughness: 0.3,
       emissive: C.amberDeep,
-      emissiveIntensity: 0.12,
-      side: THREE.DoubleSide,
-    });
-    mesh(new THREE.CircleGeometry(0.0106, 28), C.amber, `irisDisc${side}`, irisG, [0, 0, 0.0006], null, null, {
-      roughness: 0.32,
-      emissive: C.amber,
       emissiveIntensity: 0.22,
       side: THREE.DoubleSide,
     });
-    mesh(new THREE.CircleGeometry(0.0042, 16), C.pupil, `pupil${side}`, irisG, [0, -0.0005, 0.0012], null, null, {
+    mesh(new THREE.CircleGeometry(0.0124, 28), C.amber, `irisDisc${side}`, irisG, [0, -0.0006, 0.0006], null, [1, 0.78, 1], {
+      roughness: 0.26,
+      emissive: C.amber,
+      emissiveIntensity: 0.38,
+      side: THREE.DoubleSide,
+    });
+    mesh(new THREE.CircleGeometry(0.0054, 16), C.pupil, `pupil${side}`, irisG, [0, -0.001, 0.0012], null, [1, 0.9, 1], {
       roughness: 0.4,
       side: THREE.DoubleSide,
     });
-    mesh(new THREE.CircleGeometry(0.0024, 12), C.white, `catch${side}`, irisG, [0.0034, 0.004, 0.0018], null, null, {
-      roughness: 0.2,
+    mesh(new THREE.CircleGeometry(0.0028, 12), C.white, `catch${side}`, irisG, [0.0042, 0.0036, 0.0018], null, null, {
+      roughness: 0.16,
       emissive: 0xffffff,
-      emissiveIntensity: 0.4,
+      emissiveIntensity: 0.7,
       side: THREE.DoubleSide,
     });
 
-    mesh(new THREE.BoxGeometry(0.042, 0.0055, 0.008), C.liner, `liner${side}`, g, [0, 0.011, 0.003], [0.15, 0, 0]);
-
-    mesh(new THREE.BoxGeometry(0.044, 0.009, 0.007), C.lid, `lidShade${side}`, g, [0, 0.0085, 0.0035], [0.2, 0, 0]);
+    // Thin skin blink lid sits above the opening; dark liner is the idle half-lid glare.
     const lid = mesh(
-      new THREE.SphereGeometry(0.023, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.52),
+      new THREE.BoxGeometry(0.072, 0.008, 0.01),
       C.lid,
       side === "L" ? "lidLeft" : "lidRight",
       g,
-      [0, 0.007, 0.0],
-      [0.16, 0, 0],
-      [1.14, 0.5, 0.4],
+      [0, 0.014, 0.005],
+      [0.18, 0, 0],
     );
     lid.userData.blink = true;
+    mesh(new THREE.BoxGeometry(0.068, 0.005, 0.006), C.liner, `liner${side}`, g, [0, 0.0055, 0.008], [0.1, 0, 0]);
+    mesh(new THREE.BoxGeometry(0.058, 0.0016, 0.004), C.liner, `lowerLash${side}`, g, [0, -0.012, 0.005], [-0.08, 0, 0]);
 
     mesh(
-      new THREE.BoxGeometry(0.046, 0.0065, 0.007),
+      new THREE.BoxGeometry(0.042, 0.0032, 0.006),
       C.brow,
       `brow${side}`,
       head,
-      [x, 0.082, 0.082],
-      [0, 0, side === "L" ? 0.26 : -0.26],
+      [x * 0.92, 0.082, 0.09],
+      [0, 0, side === "L" ? 0.22 : -0.22],
     );
-    mesh(new THREE.SphereGeometry(0.016, 10, 8), C.blush, `blush${side}`, head, [x * 1.48, 0.004, 0.078], null, [1.05, 0.38, 0.28]);
-    mesh(new THREE.SphereGeometry(0.026, 10, 8), C.blushHot, `blushShy${side}`, head, [x * 1.52, 0.004, 0.08], null, [1.55, 0.7, 0.4]);
+    mesh(new THREE.SphereGeometry(0.014, 10, 8), C.blush, `blush${side}`, head, [x * 1.7, -0.004, 0.086], null, [1.2, 0.34, 0.22]);
+    mesh(new THREE.SphereGeometry(0.026, 10, 8), C.blushHot, `blushShy${side}`, head, [x * 1.65, 0.0, 0.086], null, [1.5, 0.62, 0.36]);
   }
-  eye("L", 0.036);
-  eye("R", -0.036);
+  eye("L", 0.042);
+  eye("R", -0.042);
 
-  mesh(new THREE.BoxGeometry(0.026, 0.0032, 0.0055), C.brow, "mouthIdle", head, [0, -0.016, 0.088]);
-  mesh(new THREE.BoxGeometry(0.01, 0.003, 0.005), C.brow, "mouthCornerL", head, [0.015, -0.02, 0.086], [0, 0, 0.48]);
-  mesh(new THREE.BoxGeometry(0.01, 0.003, 0.005), C.brow, "mouthCornerR", head, [-0.015, -0.02, 0.086], [0, 0, -0.48]);
+  mesh(new THREE.BoxGeometry(0.026, 0.0024, 0.005), C.brow, "mouthIdle", head, [0, -0.02, 0.094]);
+  mesh(new THREE.BoxGeometry(0.01, 0.0024, 0.0045), C.brow, "mouthCornerL", head, [0.015, -0.023, 0.092], [0, 0, 0.48]);
+  mesh(new THREE.BoxGeometry(0.01, 0.0024, 0.0045), C.brow, "mouthCornerR", head, [-0.015, -0.023, 0.092], [0, 0, -0.48]);
 
-  const mouthOpen = mesh(new THREE.SphereGeometry(0.016, 12, 8), C.bow, "mouthOpen", head, [0, -0.022, 0.088], null, [1.55, 0.42, 0.75]);
+  const mouthOpen = mesh(new THREE.SphereGeometry(0.016, 12, 8), C.bow, "mouthOpen", head, [0, -0.024, 0.092], null, [1.55, 0.42, 0.75]);
   mesh(new THREE.BoxGeometry(0.026, 0.007, 0.004), C.tooth, "teethTalk", mouthOpen, [0, 0.007, 0.006]);
-  const mouthSmirk = mesh(new THREE.BoxGeometry(0.024, 0.0038, 0.005), C.brow, "mouthSmirk", head, [0.007, -0.014, 0.09], [0, 0, -0.28]);
+  const mouthSmirk = mesh(new THREE.BoxGeometry(0.024, 0.0038, 0.005), C.brow, "mouthSmirk", head, [0.007, -0.016, 0.094], [0, 0, -0.28]);
   mesh(new THREE.BoxGeometry(0.01, 0.003, 0.004), C.brow, "smirkLift", mouthSmirk, [0.013, 0.004, 0]);
-  const mouthGrit = mesh(new THREE.SphereGeometry(0.016, 12, 8), C.bow, "mouthGrit", head, [0, -0.026, 0.084], null, [1.0, 0.62, 0.72]);
+  const mouthGrit = mesh(new THREE.SphereGeometry(0.016, 12, 8), C.bow, "mouthGrit", head, [0, -0.028, 0.088], null, [1.0, 0.62, 0.72]);
   mesh(new THREE.BoxGeometry(0.016, 0.005, 0.004), C.tooth, "teethGrit", mouthGrit, [0, 0.01, 0.005]);
-  mesh(new THREE.SphereGeometry(0.013, 10, 8), C.skinShadow, "mouthPout", head, [0, -0.022, 0.094], null, [1.2, 0.58, 0.72]);
-  mesh(new THREE.BoxGeometry(0.02, 0.0034, 0.005), C.brow, "mouthShy", head, [0.004, -0.018, 0.089], [0, 0, 0.12]);
+  mesh(new THREE.SphereGeometry(0.013, 10, 8), C.skinShadow, "mouthPout", head, [0, -0.024, 0.098], null, [1.2, 0.58, 0.72]);
+  mesh(new THREE.BoxGeometry(0.02, 0.0034, 0.005), C.brow, "mouthShy", head, [0.004, -0.02, 0.093], [0, 0, 0.12]);
 
   const starGeo = new THREE.ExtrudeGeometry(starShape(), { depth: 0.0032, bevelEnabled: false });
   starGeo.center();
-  const earL = mesh(new THREE.SphereGeometry(0.02, 12, 10), C.skin, "earL", head, [0.1, 0.028, 0.012], [0, 0.45, 0], [0.62, 1.08, 0.52]);
-  const earR = mesh(new THREE.SphereGeometry(0.02, 12, 10), C.skin, "earR", head, [-0.1, 0.028, 0.012], [0, -0.45, 0], [0.62, 1.08, 0.52]);
+  const earL = mesh(new THREE.SphereGeometry(0.02, 12, 10), C.skin, "earL", head, [0.102, 0.03, 0.018], [0, 0.4, 0], [0.62, 1.08, 0.52]);
+  const earR = mesh(new THREE.SphereGeometry(0.02, 12, 10), C.skin, "earR", head, [-0.102, 0.03, 0.018], [0, -0.4, 0], [0.62, 1.08, 0.52]);
   const studL = new THREE.Mesh(starGeo, toon(C.gold, { metalness: 0.62, roughness: 0.28 }));
   studL.name = "starStudL";
-  studL.position.set(0.016, -0.004, 0.01);
-  studL.rotation.y = -0.55;
+  studL.position.set(0.016, -0.004, 0.012);
+  studL.rotation.y = -0.45;
   earL.add(studL);
   const studR = new THREE.Mesh(starGeo.clone(), toon(C.gold, { metalness: 0.62, roughness: 0.28 }));
   studR.name = "starStudR";
-  studR.position.set(-0.016, -0.004, 0.01);
-  studR.rotation.y = 0.55;
+  studR.position.set(-0.016, -0.004, 0.012);
+  studR.rotation.y = 0.45;
   earR.add(studR);
 
   addHair(head);
