@@ -48,7 +48,7 @@ export function ChartPanel({ userSun, birthDate, birthTime, birthPlace }: ChartP
       id="star-pane-chart"
       role="tabpanel"
       aria-labelledby="star-tab-chart"
-      className="mx-3 mb-1 mt-auto max-h-[min(40rem,78%)] min-h-0 overflow-y-auto rounded-xl bg-elevated/92 px-5 py-5 shadow-[var(--shadow-border)] backdrop-blur-[2px] sm:mx-4 sm:px-6"
+      className="mx-3 mb-1 mt-auto w-full max-w-lg max-h-[min(40rem,78%)] min-h-0 self-center overflow-y-auto rounded-xl bg-elevated/92 px-5 py-5 shadow-[var(--shadow-border)] backdrop-blur-[2px] sm:mx-auto"
     >
       <p className="text-[0.65rem] tracking-[0.22em] text-subtle uppercase">
         {dash.weekday ? `${dash.weekday} · ${dash.dateLine}` : dash.dateLine}
@@ -76,7 +76,7 @@ export function ChartPanel({ userSun, birthDate, birthTime, birthPlace }: ChartP
         </div>
       ) : null}
 
-      <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3">
+      <ul className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4">
         {dash.labels.map((row) => (
           <li key={row.key} className="min-w-0">
             <p className="text-[0.65rem] tracking-[0.18em] text-subtle uppercase">{row.label}</p>
