@@ -421,11 +421,11 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       <div className="rai-stage-floor" />
 
       {/*
-        Framing: tight mid-shot. Crown pad is CSS -- she fills the stage,
-        Chat sits over her legs, ahoge stays in the top safe band.
+        Blend wraps the 3D rig (not the other way around) so sheet white
+        multiplies onto the beige room. Idle-life transforms stay on [data-rai-rig].
       */}
-      <div data-rai-rig className="rai-rig">
-        <div className="rai-blend">
+      <div className="rai-blend">
+        <div data-rai-rig className="rai-rig">
           {display.map((layer) => (
             <img
               key={layer.id}
@@ -444,9 +444,9 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
               }}
             />
           ))}
+          {/* Ahoge / hair tip proxy — rotates over the crown */}
+          <span data-rai-ahoge className="rai-ahoge" />
         </div>
-        {/* Ahoge / hair tip proxy — rotates over the crown */}
-        <span data-rai-ahoge className="rai-ahoge" />
       </div>
     </div>
   );

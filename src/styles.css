@@ -268,20 +268,16 @@ body.chat-thread-resizing {
   height: 100%;
   width: 100%;
   overflow: hidden;
-  background: var(--color-stage);
+  isolation: isolate;
+  background: var(--color-bg);
 }
 
 .rai-stage-wash {
   pointer-events: none;
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    ellipse at 50% 20%,
-    #f7f4ee 0%,
-    #f4f1eb 40%,
-    #efece6 78%,
-    #ebe6dc 100%
-  );
+  /* Solid beige — a white hotspot would still read as a studio card after multiply. */
+  background: var(--color-stage);
 }
 
 .rai-stage-floor {
@@ -331,8 +327,8 @@ body.chat-thread-resizing {
   }
 }
 
-/* Composite the PNG stack first, then multiply so sheet white becomes beige.
-   Shirt/skin stay readable; 3D transforms stay on .rai-rig, not this wrapper. */
+/* Outside the 3D rig: flatten the PNG stack, then multiply onto the beige plate.
+   Putting blend *inside* a perspective() parent left the white sheet intact. */
 .rai-blend {
   position: absolute;
   inset: 0;
