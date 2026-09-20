@@ -1,14 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  BookMarked,
   Mic,
-  Phone,
   PhoneOff,
   Send,
-  Settings,
   Square,
-  Volume2,
-  VolumeX,
   X,
 } from "lucide-react";
 import { AppTabs } from "@/components/app-tabs";
@@ -18,6 +13,7 @@ import { ChartPanel } from "@/components/chart-panel";
 import { ChartSetupCard } from "@/components/chart-setup-card";
 import { LifePanel } from "@/components/life-panel";
 import { Puppet } from "@/components/puppet";
+import { StageMenu } from "@/components/stage-menu";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,7 +26,6 @@ import {
 import { useChatStore } from "@/lib/chat-store";
 import {
   DEFAULT_EMOTION,
-  EMOTION_LABEL,
   namedPoseFromText,
   parseAct,
   poseResetDelayMs,
@@ -966,100 +961,48 @@ function RaiReady() {
       ) : null}
 
       <div className="pointer-events-none absolute inset-0 z-10 flex flex-col">
-        <header className="pointer-events-auto flex items-center gap-1.5 px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 sm:px-4 sm:gap-2">
-          <div className="min-w-0 flex-1">
-            <p className="font-display text-xl leading-none tracking-tight sm:text-2xl">Star Rai</p>
-            <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[0.65rem] tracking-widest text-muted uppercase sm:text-xs sm:mt-1">
-              <span
-                className={cn(
-                  "inline-block size-1.5 rounded-full",
-                  callActive && callListening
-                    ? "bg-danger animate-pulse"
-                    : callStarting
-                      ? "bg-danger animate-pulse"
-                    : holding
-                      ? "bg-danger animate-pulse"
-                      : talking
-                        ? "bg-fg"
-                        : sending
-                          ? "bg-muted"
-                          : callActive
-                            ? "bg-fg/70"
-                            : "bg-muted/50",
-                )}
-                aria-hidden
-              />
-              {status}
-              <span
-                className="rounded-full bg-elevated/80 px-2 py-0.5 text-[0.6rem] tracking-wide text-muted normal-case shadow-[var(--shadow-border)] sm:text-[0.65rem]"
-                title={`Affection ${affectionScore}/100`}
-              >
-                {TIER_LABEL[tier]}
-                {streakDays >= 2 ? ` · ${streakDays}d` : ""}
-              </span>
-              <span
-                className="text-subtle normal-case tracking-wide"
-                title={xaiSaved ? "xAI Grok brain" : "Offline local brain"}
-              >
-                · {xaiSaved ? "Grok" : "Local"}
-              </span>
-            </p>
-          </div>
-          <span className="hidden rounded-full bg-elevated px-2.5 py-1 text-[0.65rem] tracking-wide text-muted shadow-[var(--shadow-border)] xs:inline sm:text-xs sm:px-3">
-            {EMOTION_LABEL[emotion]}
-          </span>
-          <Button
-            type="button"
-            variant={callActive || callStarting ? "default" : "ghost"}
-            size="icon-sm"
-            aria-label={callActive || callStarting ? "Hang up" : "Start call"}
-            aria-pressed={callActive || callStarting}
-            title={
-              !callSupported || callNotice?.kind === "no-speech-api"
-                ? "Speech input unavailable"
-                : callActive || callStarting
-                  ? "Hang up"
-                  : "Call mode"
-            }
-            onClick={toggleCall}
-            className={cn((callActive || callStarting) && "ring-2 ring-ring")}
-          >
-            {callActive || callStarting ? <PhoneOff className="size-4" /> : <Phone className="size-4" />}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Settings"
-            onClick={() => {
-              setXaiKeyDraft("");
-              setKeyJustSaved(false);
-              setXaiSaved(hasXaiKey());
-              setXaiMask(maskXaiKey(getStoredXaiKey()));
-              setSettingsOpen(true);
-            }}
-          >
-            <Settings className="size-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label={`Memory (${memories.length})`}
-            onClick={() => setMemoryOpen(true)}
-          >
-            <BookMarked className="size-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label={voiceOn ? "Mute" : "Unmute"}
-            onClick={toggleVoice}
-          >
-            {voiceOn ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
-          </Button>
-        </header>
+        <StageMenu
+          status={status}
+          statusDotClass={cn(
+            "inline-block size-1.5 shrink-0 rounded-full",
+            callActive && callListening
+              ? "bg-danger animate-pulse"
+              : callStarting
+                ? "bg-danger animate-pulse"
+                : holding
+                  ? "bg-danger animate-pulse"
+                  : talking
+                    ? "bg-fg"
+                    : sending
+                      ? "bg-muted"
+                      : callActive
+                        ? "bg-fg/70"
+                        : "bg-muted/50",
+          )}
+          tierLabel={TIER_LABEL[tier]}
+          streakDays={streakDays}
+          brainLabel={xaiSaved ? "Grok" : "Local"}
+          callActive={callActive}
+          callStarting={callStarting}
+          callSupported={callSupported}
+          callBlockedReason={
+            !callSupported || callNotice?.kind === "no-speech-api"
+              ? "Speech input unavailable"
+              : undefined
+          }
+          voiceOn={voiceOn}
+          memoryCount={memories.length}
+          onOpenSettings={() => {
+            setXaiKeyDraft("");
+            setKeyJustSaved(false);
+            setXaiSaved(hasXaiKey());
+            setXaiMask(maskXaiKey(getStoredXaiKey()));
+            setSettingsOpen(true);
+          }}
+          onOpenMemory={() => setMemoryOpen(true)}
+          onToggleCall={toggleCall}
+          onToggleVoice={toggleVoice}
+        />
 
         {tab === "chat" ? (
         <div

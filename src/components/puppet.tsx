@@ -8,11 +8,13 @@ import {
   isDedicatedPose,
   isExpressiveEmotion,
   layersFor,
+  SPRITES,
   type EmotionId,
   type IdleBeat,
   type PoseId,
   type SpriteLayer,
 } from "@/lib/rai";
+import { punchedSpriteUrl } from "@/lib/punch-white";
 import { cn } from "@/lib/utils";
 
 type PuppetProps = {
@@ -60,8 +62,8 @@ function fadeMsFor(layer: SpriteLayer): number {
 }
 
 /**
- * Star Rai 2D puppet — idle life, look-at, Helix talk flap, tight beige mid-shot.
- * Layers crossfade by stable id so pose changes never hard-pop.
+ * Star Rai 2D puppet — idle life, look-at, Helix talk flap, beige mid-shot.
+ * Studio-white cards are punched to alpha. Layers crossfade by stable id.
  * While talking: Helix front + idle-talk opacity flap (talkPhase); Expo busts gated off.
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
@@ -90,22 +92,27 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const [blink, setBlink] = useState<0 | 1 | 2>(0);
   const [idleBeat, setIdleBeat] = useState<IdleBeat>("none");
   const [display, setDisplay] = useState<DisplayLayer[]>([]);
+  const [sheets, setSheets] = useState<Record<string, string>>({});
   const prevIds = useRef<Map<string, DisplayLayer>>(new Map());
   const fadeTimers = useRef<Map<string, number>>(new Map());
   const fadingIn = useRef<Set<string>>(new Set());
   const fadeRaf = useRef(0);
 
-  // Preload + decode every sprite so pose swaps never flash a blank decode.
+  // Punch studio-white cards to alpha, then decode so pose swaps never flash a plate.
   useEffect(() => {
+    let cancelled = false;
     const urls = allSpriteUrls();
-    for (const src of urls) {
-      const img = new Image();
-      img.decoding = "async";
-      img.src = src;
-      void img.decode().catch(() => {
-        /* still cached for a later paint */
+    const idle = SPRITES.poses.idle;
+    const ordered = [idle, ...urls.filter((src) => src !== idle)];
+    for (const src of ordered) {
+      void punchedSpriteUrl(src).then((url) => {
+        if (cancelled) return;
+        setSheets((prev) => (prev[src] === url ? prev : { ...prev, [src]: url }));
       });
     }
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -406,30 +413,26 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     };
   }, []);
 
+  const stageReady = Boolean(sheets[SPRITES.poses.idle]);
+
   return (
     <div
       ref={stageRef}
-      className={cn("rai-stage", className)}
+      className={cn("rai-stage", !stageReady && "rai-stage-pending", className)}
       aria-hidden="true"
       data-rai-pose={pose}
       data-rai-emotion={emotion}
       data-rai-talking={talking ? "1" : "0"}
       data-rai-idle-beat={idleBeat}
     >
-      {/* Beige stage plate — no white studio card. Tokens live in styles.css. */}
-      <div className="rai-stage-wash" />
-      <div className="rai-stage-floor" />
-
-      {/*
-        Blend wraps the 3D rig (not the other way around) so sheet white
-        multiplies onto the beige room. Idle-life transforms stay on [data-rai-rig].
-      */}
-      <div className="rai-blend">
-        <div data-rai-rig className="rai-rig">
-          {display.map((layer) => (
+      <div data-rai-rig className="rai-rig">
+        {display.map((layer) => {
+          const src = sheets[layer.src];
+          if (!src) return null;
+          return (
             <img
               key={layer.id}
-              src={layer.src}
+              src={src}
               alt=""
               draggable={false}
               decoding="async"
@@ -443,10 +446,10 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
                   : `opacity ${fadeMsFor(layer)}ms var(--ease-smooth-out)`,
               }}
             />
-          ))}
-          {/* Ahoge / hair tip proxy — rotates over the crown */}
-          <span data-rai-ahoge className="rai-ahoge" />
-        </div>
+          );
+        })}
+        {/* Ahoge / hair tip proxy — rotates over the crown */}
+        <span data-rai-ahoge className="rai-ahoge" />
       </div>
     </div>
   );
