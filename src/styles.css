@@ -37,6 +37,9 @@
   --duration-400: 400ms;
 
   --text-code: 0.8125rem;
+
+  /* Thin top chrome; puppet drops below it (~1in) with ahoge still in view. */
+  --rai-top-bar: 3.25rem;
 }
 
 @layer base {
@@ -51,6 +54,7 @@
     min-height: 100%;
     background: var(--color-bg);
     color: var(--color-fg);
+    --rai-top-bar: 3.25rem;
   }
 
   body {
@@ -259,111 +263,82 @@ body.chat-thread-resizing {
 }
 
 /*
-  Helix PNG stage — beige room, tight mid-shot, ahoge-safe zoom.
-  Shared tokens so a later 3D presence plate can sit in the same room
-  without a white studio card. Puppet JS still owns [data-rai-rig] motion.
+  Helix PNG stage — beige room, no white card. Studio-white is punched to
+  alpha in JS. Puppet JS still owns [data-rai-rig] motion.
 */
 .rai-stage {
   position: relative;
   height: 100%;
   width: 100%;
   overflow: hidden;
-  isolation: isolate;
   background: var(--color-bg);
-}
-
-.rai-stage-wash {
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  /* Solid beige — a white hotspot would still read as a studio card after multiply. */
-  background: var(--color-stage);
-}
-
-.rai-stage-floor {
-  pointer-events: none;
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0;
-  height: 38%;
-  background: linear-gradient(
-    to top,
-    color-mix(in oklab, var(--color-bg) 94%, transparent),
-    color-mix(in oklab, var(--color-stage) 28%, transparent),
-    transparent
-  );
 }
 
 .rai-rig {
   position: absolute;
-  left: -4%;
-  right: -4%;
-  /* Header band + a little crown air so sway cannot clip the ahoge. */
-  top: max(2.45rem, calc(env(safe-area-inset-top) + 0.2rem));
+  left: -10%;
+  right: -10%;
+  /* Sit under the top bar with crown air so sway cannot clip the ahoge. */
+  top: calc(env(safe-area-inset-top, 0px) + var(--rai-top-bar) + 0.35rem);
   /* Composer + tabs only — she continues into the compact Chat band. */
   bottom: clamp(5.1rem, 15vh, 7.25rem);
   transform-origin: 50% 28%;
   will-change: transform;
+  background: transparent;
 }
 
 @media (min-width: 640px) {
   .rai-rig {
-    left: 0;
-    right: 0;
+    left: -4%;
+    right: -4%;
   }
 }
 
 @media (min-width: 768px) {
   .rai-rig {
-    left: 6%;
-    right: 6%;
+    left: 2%;
+    right: 2%;
   }
 }
 
 @media (min-width: 1024px) {
   .rai-rig {
-    left: 10%;
-    right: 10%;
+    left: 8%;
+    right: 8%;
   }
-}
-
-/* Outside the 3D rig: flatten the PNG stack, then multiply onto the beige plate.
-   Putting blend *inside* a perspective() parent left the white sheet intact. */
-.rai-blend {
-  position: absolute;
-  inset: 0;
-  mix-blend-mode: multiply;
 }
 
 .rai-layer {
   position: absolute;
-  inset: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: block;
   width: 100%;
-  height: 100%;
   object-fit: contain;
   object-position: 50% 0%;
   pointer-events: none;
   user-select: none;
+  background: transparent;
   /*
-    Official pack is ~half-width on a white sheet with the ahoge at the top.
-    Zoom from the crown: crop side white + drop feet into Chat; never clip hair.
+    Zoom from the crown: enlarge further, drop ~1in so the top band is chrome.
+    Never clip hair/ahoge.
   */
-  top: 3.25%;
-  transform: scale(1.42);
+  top: 1.85rem;
+  transform: scale(1.76);
   transform-origin: 50% 0%;
 }
 
 @media (max-width: 639px) {
   .rai-layer {
-    top: 2.5%;
-    transform: scale(1.56);
+    top: 2.15rem;
+    transform: scale(1.94);
   }
 }
 
 @media (min-width: 640px) and (min-height: 900px) {
   .rai-layer {
-    transform: scale(1.36);
+    transform: scale(1.64);
   }
 }
 
@@ -376,6 +351,18 @@ body.chat-thread-resizing {
   width: 24%;
   transform-origin: 48% 100%;
   will-change: transform;
+}
+
+.stage-top-bar {
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-bg) 92%, transparent);
+  padding-top: env(safe-area-inset-top, 0px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.rai-stage-pending .rai-rig {
+  opacity: 0;
 }
 
 .companion-stage {
