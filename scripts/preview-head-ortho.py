@@ -65,8 +65,8 @@ cam = bpy.data.objects.new("ortho", cam_data)
 bpy.context.scene.collection.objects.link(cam)
 bpy.context.scene.camera = cam
 # Frame ahoge through bow. Z-up after glTF import.
-cam.location = (0.0, -2.2, 1.28)
-target = Vector((0.0, 0.0, 1.28))
+cam.location = (0.0, -2.2, 1.22)
+target = Vector((0.0, 0.0, 1.22))
 cam.rotation_euler = (target - cam.location).to_track_quat("-Z", "Y").to_euler()
 
 # Even clay light — local to this preview script, not the app.

@@ -402,7 +402,7 @@ function lidBaseFor(face: WipFace): number {
   if (face === "talkSmile") return 0.04;
   if (face === "smirk") return 0.06;
   if (face === "shy") return 0.12;
-  return 0.04;
+  return 0.1;
 }
 
 function lookEyes(face: WipFace, irisL: Object3D | null, irisR: Object3D | null) {
@@ -411,7 +411,7 @@ function lookEyes(face: WipFace, irisL: Object3D | null, irisR: Object3D | null)
   for (const iris of [irisL, irisR]) {
     if (!iris) continue;
     iris.position.x = side;
-    iris.position.y = -0.002 + down;
+    iris.position.y = 0 + down;
   }
 }
 

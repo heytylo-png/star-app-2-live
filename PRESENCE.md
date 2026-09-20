@@ -59,14 +59,13 @@ This is an honest low-poly WIP. It is meant to be **Star-shaped** (locks above),
 
 ### Remaining gaps
 
-HARD STOP (head/face only) is **not signed off**. Hide the grid and this is still a clay stand-in, not Rai. Do not merge. Do not start clothes/body. Do not deploy Lab to Pages as her.
+HARD STOP head reset is **not signed off**. The one grid-off still is still a clay stand-in, not Rai. **Stopped. Do not add verts. Do not start clothes.** Do not merge. Do not deploy Lab to Pages as her.
 
-- Front ortho vs `artifacts/star-rai-head/11-face-grid.jpg`: eyes/brows/mouth/chin/ahoge sit in the landmark band. The 3D bow sits lower than the drawing because the blouse is frozen this pass, so the neck still reads long.
-- Hair is sparse: three bang wisps, open temples, both eyes visible, hooked ahoge, gold star studs. Crown can flash scalp. Side hair is still hanging cards (pigtail slabs), not messy layers. Skullcap/hime attempts read as a helmet and were pulled.
-- Eyes are flat amber almonds with pupil + catch. Not the PNG's huge half-lid irises. No texture paint this pass.
-- Idle is a thin frown, no smile, no pink cheek circles (shy blush remains a hidden slot).
-- Still a low-poly toon, not a sculpted VRM. Body/clothes/bow/hands/shaders/lighting were not touched. Kiss stays unmapped.
-- ¾ / side / back / talk / wave / scold / pout / shy stills are hidden until this head is signed off.
+- Pipe neck is gone (chin sits on the frozen collar). Open temples, hooked ahoge, tiny gold studs, flat frown, warm tan. No idle blush circles.
+- Eyes are large amber discs aimed at the gold circles on `11-face-grid.jpg`, not the old slits. They still read as round clay ovals, not the PNG half-lid glare.
+- Hair is six collarbone locks + ahoge. Crown flashes scalp. Not messy layered hair.
+- Body/clothes/bow/hands/shaders/lighting frozen. Kiss stays unmapped.
+- ¾ / side / back / talk / wave / scold / pout / shy stills stay hidden until this head is signed off.
 
 ## Scaffolding (do not present as Rai)
 
