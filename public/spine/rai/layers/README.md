@@ -1,6 +1,6 @@
 # Star Rai — Spine cutout layers
 
-Drop **cut PNGs** here. Until every listed file exists, `?spine=rai` falls back to the official PNG puppet. Do not commit traced AI fills. Cut from `public/rai/idle.png` (1008×1792). See [SPINE.md](../../../SPINE.md) and [cut-guide.svg](./cut-guide.svg).
+Required cut PNGs live here (from `public/rai/idle.png`, 1008×1792). `?spine=rai` loads them through `skeleton.json`; any missing file still falls back to the official PNG puppet. Re-cut with `scripts/cut-rai-spine-layers.py` (Pillow / NumPy / SciPy). Do not commit traced AI fills. See [SPINE.md](../../../SPINE.md) and [cut-guide.svg](../cut-guide.svg).
 
 Required filenames (character-left = her left = screen right):
 

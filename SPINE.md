@@ -28,7 +28,7 @@ Official PNG sheets remain the shipping face until a **Spine (or this repo’s c
 | `src/components/presence-stage.tsx` | Query-flag switch. Default = `Puppet` |
 | `public/spine/rai/skeleton.json` | Rai-oriented bone/slot stub |
 | `public/spine/rai/cut-guide.svg` | Layer cut overlay (schematic, not a tracing) |
-| `public/spine/rai/layers/` | Empty drop folder + filename table |
+| `public/spine/rai/layers/` | Official idle cut PNGs + filename table |
 
 `data-rai-engine` is `png-puppet` on the live body, `spine-demo` on the sample, `spine-rai` only when layers actually load.
 
@@ -107,7 +107,7 @@ Free *preview* of Spine: Essential trial. Do not commit trial exports we cannot 
 8. Export **JSON + PNG atlas** (Spine 4.2). Drop into `public/spine/rai/export/` (create that folder in the runtime PR).  
 9. Engineering follow-up: add `@esotericsoftware/spine-webgl` **dynamic import** behind `?spine=1` / `?spine=rai`, keep PNG default, keep 3D Lab off. Copy the Spine Runtimes license notice.
 
-Until step 8 exists, the sample girl is the only moving skeleton in the app. That is honest.
+`?spine=rai` now loads the idle cut pack through the in-repo Canvas player. That is still not a Spine Editor export — step 8 above is the licensed runtime path. The sample girl remains `?spine=1`. Default URL stays the PNG puppet.
 
 ## Runtime notes (web)
 
