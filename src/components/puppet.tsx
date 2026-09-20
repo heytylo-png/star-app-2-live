@@ -62,7 +62,7 @@ function fadeMsFor(layer: SpriteLayer): number {
 }
 
 /**
- * Star Rai 2D puppet — idle life, look-at, Helix talk flap, cool-gray mid-shot.
+ * Star Rai 2D puppet — idle life, look-at, Helix talk flap, beige mid-shot.
  * Studio-white cards are punched to alpha. Layers crossfade by stable id.
  * While talking: Helix front + idle-talk opacity flap (talkPhase); Expo busts gated off.
  */
