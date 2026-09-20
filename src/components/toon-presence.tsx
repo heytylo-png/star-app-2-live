@@ -119,7 +119,7 @@ export default function ToonPresence({
     <StageShell stageRef={stageRef} className={className}>
       <PresenceFrame>
         <Canvas
-          camera={{ position: [0.14, 0.78, 2.55], fov: 28, near: 0.1, far: 24 }}
+          camera={{ position: [0.18, 0.92, 2.65], fov: 32, near: 0.1, far: 24 }}
           dpr={[1, 1.75]}
           gl={{
             antialias: true,
@@ -158,10 +158,10 @@ export default function ToonPresence({
 function PresenceCamera() {
   const camera = useThree((s) => s.camera);
   useLayoutEffect(() => {
-    camera.position.set(0.14, 0.78, 2.55);
-    camera.lookAt(0.02, 0.8, 0);
+    camera.position.set(0.18, 0.92, 2.65);
+    camera.lookAt(0.02, 0.9, 0);
     if (camera instanceof PerspectiveCamera) {
-      camera.fov = 28;
+      camera.fov = 32;
       camera.updateProjectionMatrix();
     }
   }, [camera]);
@@ -296,6 +296,16 @@ function StarVrm({
       if (!state) continue;
       const goal = { ...(targetRig[name] ?? ZERO) };
       if (name === WAVE_BONE) goal.y += waveBoost;
+      if (name === "head") {
+        goal.y += lookSmooth.current.x * 0.38;
+        goal.x += lookSmooth.current.y * 0.22;
+      }
+      if (name === "neck") {
+        goal.y += lookSmooth.current.x * 0.12;
+      }
+      if (name === "spine" && !reduced) {
+        goal.x += Math.sin(now * 1.05) * 0.04;
+      }
       state.current = lerpEuler(state.current, goal, expT(RIG_LERP, dt));
       state.node.quaternion
         .copy(state.rest)
@@ -305,8 +315,8 @@ function StarVrm({
     const yawGoal = rootYawFor(intent.pose);
     yawSmooth.current += (yawGoal - yawSmooth.current) * expT(4.2, dt);
 
-    const sway = reduced ? 0 : Math.sin(now * 0.55) * 0.028 + lookSmooth.current.x * -0.04;
-    const breatheY = reduced ? 0 : Math.sin(now * 1.05) * 0.012 + Math.sin(now * 0.48) * 0.004;
+    const sway = reduced ? 0 : Math.sin(now * 0.55) * 0.035 + lookSmooth.current.x * -0.05;
+    const breatheY = reduced ? 0 : Math.sin(now * 1.05) * 0.016 + Math.sin(now * 0.48) * 0.005;
     const talkBob = reduced || !intent.talking ? 0 : Math.sin(now * 7.5) * intent.amplitude * 0.012;
 
     // Do not write vrm.scene.rotation — rotateVRM0 parks VRM 0.0 at y=π.
@@ -314,7 +324,9 @@ function StarVrm({
     if (root) {
       root.rotation.y = yawSmooth.current;
       root.rotation.z = sway;
-      root.position.y = breatheY + talkBob;
+      root.position.y = breatheY + talkBob - 0.04;
+      const s = reduced ? 0.88 : 0.88 + Math.sin(now * 1.05) * 0.008;
+      root.scale.setScalar(s);
     }
 
     const head = vrm.humanoid.getNormalizedBoneNode("head");
