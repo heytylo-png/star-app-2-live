@@ -7,7 +7,9 @@
  */
 
 import { detectChartIntent, localDateKey } from "./chart.ts";
+import type { ClockBand } from "./clock.ts";
 import { namedPoseFromText, type EmotionId, type PoseId } from "./rai.ts";
+import type { SkyFacts } from "./sky.ts";
 
 export const LIFE_MOOD_TAGS = ["bratty", "smug", "tired", "soft"] as const;
 export type LifeMoodTag = (typeof LIFE_MOOD_TAGS)[number];
@@ -29,9 +31,17 @@ export type LifeSlots = {
   playlist_date?: string;
   /** Last track she already commented on — not sent to Grok. */
   commented_track?: string;
+  /** Local calendar date her mood_tag was locked — not sent to Grok. */
+  mood_date?: string;
 };
 
-export type LifeTurnKind = "none" | "ask_listening" | "ask_empty" | "track_change" | "session_stop";
+export type LifeTurnKind =
+  | "none"
+  | "ask_listening"
+  | "ask_empty"
+  | "track_change"
+  | "session_stop"
+  | "suggest";
 
 export type LifeTurn = {
   kind: LifeTurnKind;
@@ -41,6 +51,8 @@ export type LifeTurn = {
   moodTag?: LifeMoodTag;
   tintPose?: LifeTintPose;
   factsBlock?: string;
+  /** Local pick when she suggests — not a track change. */
+  suggestion?: string;
 };
 
 export type LifeAct = {
@@ -54,6 +66,9 @@ const LIFE_STOP_RE =
 
 const LISTENING_ASK_RE =
   /\b(what(?:'s| is| are) (?:you|she|we) listen(?:ing)? to|what(?:'s| is) (?:on|playing)|what(?:'s| is) this (?:song|track)|now playing\??$|what song)\b/i;
+
+const SUGGEST_ASK_RE =
+  /\b(suggest(?: a| me)?(?: song| track| tune)?|what should (?:we|i|you) (?:play|put on|listen(?: to)?)|your (?:pick|suggestion)|queue something|recommend(?: a)?(?: song| track)?|what do you want to (?:hear|play)|put something on)\b/i;
 
 const TITLE_PREFIX_RE =
   /\b(?:now playing|now playing:|i(?:'m| am) listening to|listening to|put(?:ting)? on|queue(?:ing)?|this (?:one(?:'s| is)|song(?:'s| is)|track(?:'s| is))|track:|song:|now:)\s+/i;
@@ -91,6 +106,13 @@ export function isListeningAsk(text: string): boolean {
   const t = text.replace(/\s+/g, " ").trim();
   if (!t) return false;
   return LISTENING_ASK_RE.test(t);
+}
+
+export function isSuggestAsk(text: string): boolean {
+  const t = text.replace(/\s+/g, " ").trim();
+  if (!t) return false;
+  if (isListeningAsk(t) || isLifeStop(t)) return false;
+  return SUGGEST_ASK_RE.test(t);
 }
 
 function isBarePoseCommand(text: string): boolean {
@@ -183,6 +205,10 @@ export function parseTrackTitle(text: string, opts: { forced?: boolean } = {}): 
   return undefined;
 }
 
+/**
+ * User chat may mention a tag word — that is not how she locks her daily tag.
+ * Kept for tests / Grok parse of her own copy. The Life pane has no picker.
+ */
 export function extractLifeMoodTag(text: string): LifeMoodTag | undefined {
   const cleaned = text.replace(/\s+/g, " ").trim();
   const tagged = cleaned.match(
@@ -202,6 +228,89 @@ export function extractLifeMoodTag(text: string): LifeMoodTag | undefined {
     return lone[1].toLowerCase() as LifeMoodTag;
   }
   return undefined;
+}
+
+const BAND_MOOD: Record<ClockBand, LifeMoodTag> = {
+  night: "tired",
+  morning: "bratty",
+  afternoon: "smug",
+  evening: "soft",
+};
+
+function moodFromSky(sky?: SkyFacts | null): LifeMoodTag | undefined {
+  const phase = sky?.moonPhase;
+  if (!phase) return undefined;
+  if (phase === "Full" || phase === "Waxing Gibbous") return "bratty";
+  if (phase === "First Quarter" || phase === "Waxing Crescent") return "smug";
+  if (phase === "New" || phase === "Waning Crescent") return "soft";
+  if (phase === "Last Quarter" || phase === "Waning Gibbous") return "tired";
+  return undefined;
+}
+
+function moodFromChat(chatMood?: string, lastTopic?: string): LifeMoodTag | undefined {
+  const blob = `${chatMood ?? ""} ${lastTopic ?? ""}`.toLowerCase();
+  if (!blob.trim()) return undefined;
+  if (/\b(tired|exhausted|sleepy|drained)\b/.test(blob)) return "tired";
+  if (/\b(soft|cozy|gentle|quiet)\b/.test(blob)) return "soft";
+  if (/\b(smug|hype|cool|spicy)\b/.test(blob)) return "smug";
+  if (/\b(bratty|annoyed|teasing|mad)\b/.test(blob)) return "bratty";
+  return undefined;
+}
+
+/** Hers for the local day. Locked once; later calls keep today's tag. */
+export function resolveHerDailyMood(input: {
+  today: string;
+  current?: LifeSlots;
+  band: ClockBand;
+  sky?: SkyFacts | null;
+  chatMood?: string;
+  lastTopic?: string;
+  fromMusicComment?: boolean;
+}): { mood_tag: LifeMoodTag; mood_date: string; alreadySet: boolean } {
+  const today = input.today.trim();
+  if (input.current?.mood_date === today && isLifeMoodTag(input.current.mood_tag)) {
+    return { mood_tag: input.current.mood_tag, mood_date: today, alreadySet: true };
+  }
+
+  const candidates: LifeMoodTag[] = [BAND_MOOD[input.band] ?? "bratty"];
+  const skyMood = moodFromSky(input.sky);
+  if (skyMood) candidates.push(skyMood);
+  const chatMood = moodFromChat(input.chatMood, input.lastTopic);
+  if (chatMood) candidates.push(chatMood);
+  if (input.fromMusicComment) {
+    candidates.push(pickLifeTintPose(`${today}:${input.current?.now_playing ?? "track"}`) === "tired" ? "tired" : candidates[0]!);
+  }
+
+  const seed = `${today}|${input.band}|${input.sky?.moonPhase ?? ""}|${input.chatMood ?? ""}`;
+  const mood_tag = candidates[hashString(seed) % candidates.length]!;
+  return { mood_tag, mood_date: today, alreadySet: false };
+}
+
+/** Patch to lock today's tag. Undefined when already locked. */
+export function herDailyMoodPatch(input: {
+  life?: LifeSlots;
+  today: string;
+  band: ClockBand;
+  sky?: SkyFacts | null;
+  chatMood?: string;
+  lastTopic?: string;
+  fromMusicComment?: boolean;
+}): LifeSlots | undefined {
+  const resolved = resolveHerDailyMood({
+    today: input.today,
+    current: input.life,
+    band: input.band,
+    sky: input.sky,
+    chatMood: input.chatMood,
+    lastTopic: input.lastTopic,
+    fromMusicComment: input.fromMusicComment,
+  });
+  if (resolved.alreadySet) return undefined;
+  return {
+    on: input.life?.on ?? false,
+    mood_tag: resolved.mood_tag,
+    mood_date: resolved.mood_date,
+  };
 }
 
 export function compactPlaylist(list?: string[]): string[] | undefined {
@@ -249,12 +358,20 @@ export function applyLifePatch(current: LifeSlots | undefined, patch?: LifeSlots
 
   if (patch.on === false) {
     const playlist = compactPlaylist(patch.daily_playlist ?? current?.daily_playlist);
-    if (!playlist) return undefined;
-    return {
+    const mood_tag = isLifeMoodTag(patch.mood_tag)
+      ? patch.mood_tag
+      : isLifeMoodTag(current?.mood_tag)
+        ? current.mood_tag
+        : undefined;
+    const mood_date = patch.mood_date ?? current?.mood_date;
+    if (!playlist && !mood_tag) return undefined;
+    return persistLife({
       on: false,
       daily_playlist: playlist,
       playlist_date: today,
-    };
+      mood_tag,
+      mood_date,
+    });
   }
 
   const title = patch.now_playing?.trim() || current?.now_playing;
@@ -269,6 +386,7 @@ export function applyLifePatch(current: LifeSlots | undefined, patch?: LifeSlots
     on: patch.on ?? current?.on ?? false,
     now_playing: title?.trim() ? clip(title, 48) : undefined,
     mood_tag: patch.mood_tag ?? current?.mood_tag,
+    mood_date: patch.mood_date ?? current?.mood_date,
     daily_playlist: acc.daily_playlist,
     playlist_date: acc.playlist_date,
     commented_track: patch.commented_track ?? current?.commented_track,
@@ -282,17 +400,20 @@ function persistLife(life?: LifeSlots): LifeSlots | undefined {
   const playlist = compactPlaylist(life.daily_playlist);
   const now_playing = life.now_playing?.trim() ? clip(life.now_playing, 48) : undefined;
   const mood_tag = isLifeMoodTag(life.mood_tag) ? life.mood_tag : undefined;
-  if (!life.on && !playlist) return undefined;
+  const mood_date = life.mood_date?.trim() || undefined;
+  if (!life.on && !playlist && !mood_tag) return undefined;
   if (!life.on) {
-    return {
-      on: false,
-      daily_playlist: playlist,
-      playlist_date: life.playlist_date,
-    };
+    const off: LifeSlots = { on: false };
+    if (playlist) off.daily_playlist = playlist;
+    if (life.playlist_date) off.playlist_date = life.playlist_date;
+    if (mood_tag) off.mood_tag = mood_tag;
+    if (mood_date) off.mood_date = mood_date;
+    return off;
   }
   const next: LifeSlots = { on: true };
   if (now_playing) next.now_playing = now_playing;
   if (mood_tag) next.mood_tag = mood_tag;
+  if (mood_date) next.mood_date = mood_date;
   if (playlist) next.daily_playlist = playlist;
   if (life.playlist_date) next.playlist_date = life.playlist_date;
   if (life.commented_track) next.commented_track = life.commented_track;
@@ -358,7 +479,6 @@ export function extractLifePatch(
       return {
         on: true,
         now_playing: title,
-        mood_tag: extractLifeMoodTag(cleaned),
         playlist_date: today,
       };
     }
@@ -367,7 +487,6 @@ export function extractLifePatch(
   if (isLifeStop(cleaned)) return { on: false };
 
   const title = parseTrackTitle(cleaned);
-  const mood = extractLifeMoodTag(cleaned);
   const sessionOn = Boolean(current?.on) || Boolean(title);
   if (!sessionOn) return undefined;
 
@@ -375,12 +494,8 @@ export function extractLifePatch(
     return {
       on: true,
       now_playing: title,
-      mood_tag: mood,
       playlist_date: today,
     };
-  }
-  if (mood) {
-    return { on: true, mood_tag: mood, playlist_date: current?.playlist_date ?? today };
   }
   return undefined;
 }
@@ -393,6 +508,8 @@ export function resolveLifeTurn(input: {
   userText: string;
   before?: LifeSlots;
   after?: LifeSlots;
+  /** Local pick already chosen for a suggest ask — not now_playing. */
+  suggestion?: string;
 }): LifeTurn {
   const text = input.userText.replace(/\s+/g, " ").trim();
   if (detectChartIntent(text) !== "none") {
@@ -417,6 +534,19 @@ export function resolveLifeTurn(input: {
       };
     }
     return { kind: "ask_empty", localOnly: true, tintPose: "talk" };
+  }
+
+  if (isSuggestAsk(text)) {
+    const suggestion = input.suggestion?.replace(/\s+/g, " ").trim() || undefined;
+    return {
+      kind: "suggest",
+      localOnly: true,
+      nowPlaying,
+      playlist,
+      moodTag: after?.mood_tag,
+      tintPose: pickLifeTintPose(suggestion ?? after?.mood_tag ?? "suggest"),
+      suggestion,
+    };
   }
 
   if (isLifeStop(text) && before?.on) {
@@ -479,6 +609,20 @@ export function actForLifeTurn(turn: LifeTurn): LifeAct | null {
     }
     case "session_stop":
       return { emotion: "soft", pose: "wave", line: "Music's off. Chat stays~" };
+    case "suggest": {
+      if (turn.suggestion) {
+        return {
+          emotion,
+          pose,
+          line: `${clipTitleForLine(turn.suggestion)}. That's my pick. Life has it~`,
+        };
+      }
+      return {
+        emotion: "smug",
+        pose: "talk",
+        line: "I'll drop one on Life. Don't wait on a setlist.",
+      };
+    }
     case "track_change": {
       const title = turn.nowPlaying ? clipTitleForLine(turn.nowPlaying) : "that one";
       const lines: Record<LifeTintPose, string> = {
@@ -501,5 +645,6 @@ export function isLifeOnlyCommand(text: string): boolean {
   if (!t) return false;
   if (isLifeStop(t) && t.split(/\s+/).length <= 8) return true;
   if (isListeningAsk(t)) return true;
+  if (isSuggestAsk(t)) return true;
   return false;
 }

@@ -218,9 +218,9 @@ export function useSpotifyPlayback(opts: { onTrackChange?: (title: string) => vo
   }, []);
 
   const playQuery = useCallback(
-    async (query: string) => {
+    async (query: string): Promise<boolean> => {
       const q = query.trim();
-      if (!q || !state.premium) return;
+      if (!q || !state.premium) return false;
       const deviceId = state.deviceId || getSpotifyDeviceId();
       setState((s) => ({ ...s, busy: true, error: null }));
       try {
@@ -228,7 +228,7 @@ export function useSpotifyPlayback(opts: { onTrackChange?: (title: string) => vo
         const first = tracks[0];
         if (!first) {
           setState((s) => ({ ...s, busy: false, error: "No Spotify tracks for that search." }));
-          return;
+          return false;
         }
         if (!deviceId) {
           onTrackChangeRef.current?.(formatSpotifyTrackTitle(first));
@@ -238,15 +238,17 @@ export function useSpotifyPlayback(opts: { onTrackChange?: (title: string) => vo
             title: formatSpotifyTrackTitle(first),
             error: "Player is still waking up. Title is set — tap Transfer when the device is ready.",
           }));
-          return;
+          return true;
         }
         await playSpotifyUris(deviceId, [first.uri]);
         setState((s) => ({ ...s, title: formatSpotifyTrackTitle(first) }));
+        return true;
       } catch (err) {
         setState((s) => ({
           ...s,
           error: premiumRequiredMessage(err) ?? (err instanceof Error ? err.message : "Search play failed."),
         }));
+        return false;
       } finally {
         setState((s) => ({ ...s, busy: false }));
       }

@@ -8,7 +8,8 @@ TABS
 2. Chart — sparse daily dashboard (theme beat, her-day section, sky labels, quiet birth edit, last diary).
    No natal wheel. No auto-reading on open.
 3. Life — optional Spotify Connect / play-pause / now playing (Premium Web Playback),
-   plus paste Set/Stop, quiet daily list, mood tag.
+   plus paste Set/Stop, quiet daily list, her suggestions, her favorite lists,
+   and her read-only daily mood tag (no user pills).
    Login never required. Chat stays clean.
 
 FIRST LAUNCH
@@ -27,6 +28,7 @@ DO NOT
   Chart/her-day may use the same Grok path once per local day for pane copy only —
   fail soft, never a Chat post.
 - Put diary on Life (diary stays Chart).
+- Let the user pick her Life mood tag.
 - Require music login (Spotify Connect is optional on Life).
 - Add Expo-only implementation.
 

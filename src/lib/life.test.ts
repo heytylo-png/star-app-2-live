@@ -15,8 +15,11 @@ import {
   extractLifePatch,
   formatLifeFactsBlock,
   formatLifeMemoryLines,
+  herDailyMoodPatch,
   isListeningAsk,
   isLifeStop,
+  isSuggestAsk,
+  resolveHerDailyMood,
   parseArtistTitle,
   parseTrackTitle,
   playlistForPrompt,
@@ -37,6 +40,9 @@ describe("Life v1 artifact", () => {
     assert.match(LIFE_V1_SOURCE, /VITE_SPOTIFY_CLIENT_ID/);
     assert.match(LIFE_V1_SOURCE, /Premium required for Web Playback/);
     assert.match(LIFE_V1_SOURCE, /Steal Chart/);
+    assert.match(LIFE_V1_SOURCE, /HERS for the local day/);
+    assert.match(LIFE_V1_SOURCE, /Play suggestion/);
+    assert.match(LIFE_V1_SOURCE, /favorite lists/);
   });
 
   it("does not change the voice card output contract", () => {
@@ -109,10 +115,10 @@ describe("session + playlist", () => {
     assert.ok((life?.daily_playlist?.length ?? 0) >= PLAYLIST_MIN);
   });
 
-  it("mood tag is only bratty|smug|tired|soft", () => {
+  it("does not let the user pick her mood tag from chat", () => {
     const a = extractLifePatch("I'm listening to Super Shy. vibe is smug");
     assert.equal(a?.now_playing, "Super Shy");
-    assert.equal(a?.mood_tag, "smug");
+    assert.equal(a?.mood_tag, undefined);
     const b = extractLifePatch("mood tag is cozy", { on: true, now_playing: "Super Shy" });
     assert.equal(b?.mood_tag, undefined);
   });
@@ -208,6 +214,66 @@ describe("Life turns", () => {
       after: { on: true, now_playing: "Super Shy" },
     });
     assert.equal(sign.kind, "none");
+  });
+
+  it("suggest ask is local and not a track change", () => {
+    assert.equal(isSuggestAsk("suggest a song"), true);
+    assert.equal(isSuggestAsk("what should we play"), true);
+    assert.equal(isSuggestAsk("what are you listening to"), false);
+    const turn = resolveLifeTurn({
+      userText: "suggest a song",
+      after: { on: true, now_playing: "Super Shy", mood_tag: "smug" },
+      suggestion: "NewJeans - ETA",
+    });
+    assert.equal(turn.kind, "suggest");
+    assert.equal(turn.localOnly, true);
+    assert.equal(turn.factsBlock, undefined);
+    assert.match(actForLifeTurn(turn)!.line, /ETA/);
+    assert.doesNotMatch(actForLifeTurn(turn)!.line, /setlist|concert/i);
+  });
+
+  it("locks her daily mood once from clock/sky and keeps it", () => {
+    const first = resolveHerDailyMood({
+      today: "2026-09-20",
+      band: "afternoon",
+      sky: { moonPhase: "First Quarter" },
+    });
+    assert.ok(["bratty", "smug", "tired", "soft"].includes(first.mood_tag));
+    assert.equal(first.alreadySet, false);
+    const again = resolveHerDailyMood({
+      today: "2026-09-20",
+      current: { on: true, mood_tag: first.mood_tag, mood_date: "2026-09-20" },
+      band: "night",
+    });
+    assert.equal(again.alreadySet, true);
+    assert.equal(again.mood_tag, first.mood_tag);
+    const nextDay = resolveHerDailyMood({
+      today: "2026-09-21",
+      current: { on: true, mood_tag: first.mood_tag, mood_date: "2026-09-20" },
+      band: "night",
+    });
+    assert.equal(nextDay.alreadySet, false);
+    assert.equal(nextDay.mood_date, "2026-09-21");
+    const patch = herDailyMoodPatch({
+      life: { on: false, mood_tag: first.mood_tag, mood_date: "2026-09-20" },
+      today: "2026-09-20",
+      band: "morning",
+    });
+    assert.equal(patch, undefined);
+  });
+
+  it("keeps her mood locally after the session stops", () => {
+    const on = applyLifePatch(undefined, {
+      on: true,
+      now_playing: "Super Shy",
+      mood_tag: "soft",
+      mood_date: "2026-09-20",
+    });
+    const after = applyLifePatch(on, { on: false });
+    assert.equal(after?.on, false);
+    assert.equal(after?.mood_tag, "soft");
+    assert.equal(after?.mood_date, "2026-09-20");
+    assert.deepEqual(after?.daily_playlist, ["Super Shy"]);
   });
 
   it("stops the session without a music login", () => {

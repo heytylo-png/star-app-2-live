@@ -45,7 +45,10 @@ import {
 } from "@/lib/chart";
 import { resolveClockTurn } from "@/lib/clock";
 import { useChartStore } from "@/lib/chart-store";
-import { parseTrackTitle, resolveLifeTurn, type LifeSlots } from "@/lib/life";
+import { useHerMusicStore } from "@/lib/her-music-store";
+import { pickLocalSuggestions } from "@/lib/her-music";
+import { lockHerDailyMood, requestLifeSuggestions } from "@/lib/her-suggest";
+import { isSuggestAsk, parseTrackTitle, resolveLifeTurn, type LifeSlots } from "@/lib/life";
 import { useSpotifyPlayback } from "@/lib/use-spotify-playback";
 import { chatOpenForTab, DEFAULT_SHELL_TAB, type ShellTab } from "@/lib/shell";
 import { newId, type ChatMessage } from "@/lib/helix";
@@ -597,18 +600,39 @@ function RaiReady() {
     if (chartTurn.kind === "diary" && chartTurn.diaryText && chartTurn.dateKey) {
       chartStore.saveDiary(chartTurn.dateKey, chartTurn.diaryText);
     }
-    const lifeAfter = mem.slots.life;
+    const musicChanged =
+      Boolean(mem.slots.life?.now_playing) &&
+      mem.slots.life?.now_playing !== lifeBeforeRef.current?.now_playing;
+    lockHerDailyMood(mem.slots.life, musicChanged);
+    const lifeAfter = useMemoryStore.getState().slots.life;
+    const suggestPick = isSuggestAsk(lastUser)
+      ? pickLocalSuggestions({
+          today,
+          mood: lifeAfter?.mood_tag,
+          lists: useHerMusicStore.getState().lists,
+          avoid: [
+            ...(lifeAfter?.daily_playlist ?? []),
+            ...(lifeAfter?.now_playing ? [lifeAfter.now_playing] : []),
+          ],
+        })[0]
+      : undefined;
+    if (isSuggestAsk(lastUser)) {
+      useHerMusicStore.getState().markAsked(today);
+      void requestLifeSuggestions({ today, life: lifeAfter, force: true });
+    }
     const lifeTurn = chartTurn.localOnly || clockTurn.localOnly
       ? { kind: "none" as const, localOnly: false }
       : resolveLifeTurn({
           userText: lastUser,
           before: lifeBeforeRef.current,
           after: lifeAfter,
+          suggestion: suggestPick?.title,
         });
     if (lifeTurn.kind === "track_change" && lifeTurn.nowPlaying) {
       useMemoryStore.getState().patchSlots({
         life: { on: true, commented_track: lifeTurn.nowPlaying },
       });
+      useHerMusicStore.getState().adoptTitle(lifeTurn.nowPlaying, lifeAfter?.mood_tag);
     }
     const factsBlock = useMemoryStore.getState().memoryFactsBlock({
       streakDays: liveAff.streakDays,
@@ -1078,6 +1102,15 @@ function RaiReady() {
               life={slots.life}
               onSetTitle={(title) => void send(`I'm listening to ${title}`)}
               onStop={() => void send("stop listening")}
+              onPlayTitle={(title) => {
+                void (async () => {
+                  if (spotify.connected && spotify.premium) {
+                    const played = await spotify.playQuery(title);
+                    if (played) return;
+                  }
+                  void send(`I'm listening to ${title}`);
+                })();
+              }}
               spotify={spotify}
             />
           </div>
@@ -1254,7 +1287,7 @@ function RaiReady() {
                   Natal Chart v1 sends user_birth_date / user_sun / chart_source when filled — never
                   user_rising, never her bio. Cheap sky keys ride the daily CHART block only when Chart
                   fires. Chart pane her-day is local (optional Grok once per day) and never a Chat post. Life sends session_on / now_playing / daily_playlist /
-                  mood_tag only while a music session is on.
+                  mood_tag only while a music session is on. mood_date, her suggestions, and her lists stay local.
                 </p>
               </div>
             ) : (
