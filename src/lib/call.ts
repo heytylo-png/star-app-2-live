@@ -88,7 +88,7 @@ export type CallMicNotice = {
 };
 
 /** Android Chrome: site settings path when the prompt never appears (blocked). */
-export const MIC_UNBLOCK_STEPS = `Chrome ⋮ or the lock icon → Site settings → Microphone → Allow for ${CALL_PAGES_HOST}`;
+export const MIC_UNBLOCK_STEPS = `Chrome menu or the lock icon → Site settings → Microphone → Allow for ${CALL_PAGES_HOST}`;
 
 export function callMicNotice(kind: CallMicNoticeKind): CallMicNotice {
   if (kind === "no-speech-api") {

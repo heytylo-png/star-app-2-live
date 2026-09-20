@@ -13,7 +13,7 @@ Open that link on a desktop or mobile browser. Optional: install as a home-scree
 Tap the **phone** icon in the header. Spec: `artifacts/star-rai-call-mode.txt`.
 
 - Tap phone to start, tap again (or **Hang up**) to end. The chat thread, memory, and pose sheet stay.
-- **Android Chrome:** that tap calls `getUserMedia({ audio: true })` first so Chrome can show the microphone prompt. `SpeechRecognition` alone often does not. If the prompt never appears (blocked), Call shows an in-app banner: Chrome ⋮ or the lock icon → Site settings → Microphone → Allow for `heytylo-png.github.io`, then tap the phone again.
+- **Android Chrome:** that tap calls `getUserMedia({ audio: true })` first so Chrome can show the microphone prompt. `SpeechRecognition` alone often does not. If the prompt never appears (blocked), Call shows an in-app banner: Chrome menu or the lock icon → Site settings → Microphone → Allow for `heytylo-png.github.io`, then tap the phone again.
 - After Allow: listen loop (`webkitSpeechRecognition`) → same Chat brain as typed Chat → speak `line` only.
 - Empty speech transcripts are ignored (keep listening; no invented user line). Hangup stops mic tracks + recognition.
 - Pose commands by voice still swap the sheet first. Pose tint applies to the spoken bubble.
