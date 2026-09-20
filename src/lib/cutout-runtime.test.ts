@@ -100,8 +100,34 @@ describe("sample girl cutout", () => {
   });
 });
 
-describe("Rai skeleton stub", () => {
-  it("lists cut layers that are not in the repo yet and is not ready to ship", () => {
+const RAI_LAYER_FILES = [
+  "hair_back.png",
+  "ahoge.png",
+  "hair_front.png",
+  "head.png",
+  "brow.png",
+  "mouth_closed.png",
+  "mouth_open.png",
+  "neck.png",
+  "torso.png",
+  "bow.png",
+  "upper_arm_r.png",
+  "forearm_r.png",
+  "hand_r.png",
+  "upper_arm_l.png",
+  "forearm_l.png",
+  "hand_l.png",
+  "skirt.png",
+  "thigh_r.png",
+  "thigh_l.png",
+  "calf_r.png",
+  "calf_l.png",
+  "foot_r.png",
+  "foot_l.png",
+] as const;
+
+describe("Rai cutout layers", () => {
+  it("ships official idle cuts under the README filenames and is ready when they load", () => {
     const raw = JSON.parse(readFileSync(join(root, "public/spine/rai/skeleton.json"), "utf8"));
     const skel = parseCutoutSkeleton(raw);
     assert.equal(skel.demo, false);
@@ -114,15 +140,23 @@ describe("Rai skeleton stub", () => {
     assert.ok(paths.some((p) => p.endsWith("mouth_open.png")));
     assert.ok(paths.every((p) => p.startsWith("spine/rai/layers/")));
     assert.ok(!paths.some((p) => /kiss|mouth_speak|face_eyes/i.test(p)));
-    const status = rigStatus(skel, new Set());
-    assert.equal(status.ready, false);
-    assert.ok(status.missing.length >= 8);
-    assert.equal(existsSync(join(root, "public/spine/rai/layers/head.png")), false);
+    const layerDir = join(root, "public/spine/rai/layers");
+    for (const file of RAI_LAYER_FILES) {
+      const full = join(layerDir, file);
+      assert.equal(existsSync(full), true, file);
+      assert.ok(readFileSync(full).length > 80, `${file} empty`);
+    }
+    const present = new Set(paths);
+    const status = rigStatus(skel, present);
+    assert.equal(status.ready, true);
+    assert.deepEqual(status.missing, []);
     assert.ok(existsSync(join(root, "public/spine/rai/cut-guide.svg")));
     assert.ok(existsSync(join(root, "public/rive/README.md")));
+    assert.equal(existsSync(join(layerDir, "mouth_speak.png")), false);
+    assert.equal(existsSync(join(layerDir, "face_eyes_closed.png")), false);
   });
 
-  it("does not evaluate official attachments without files", () => {
+  it("evaluates a planted idle from official attachments (head above feet)", () => {
     const skel = parseCutoutSkeleton(
       JSON.parse(readFileSync(join(root, "public/spine/rai/skeleton.json"), "utf8")),
     );
@@ -132,6 +166,12 @@ describe("Rai skeleton stub", () => {
     assert.ok(slots.length > 0);
     for (const slot of slots) {
       assert.ok(slot.attachment.path);
+      assert.equal(Number.isFinite(slot.x), true, slot.name);
+      assert.equal(Number.isFinite(slot.y), true, slot.name);
     }
+    const head = slots.find((s) => s.name === "head");
+    const foot = slots.find((s) => s.name === "footL");
+    assert.ok(head && foot);
+    assert.ok(head.y < foot.y, "head should be above feet in y-down space");
   });
 });

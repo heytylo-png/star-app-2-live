@@ -50,16 +50,16 @@ Fallback: no overlay → idle or `talk_official` as a single body sheet. Reduced
 
 **Primary engine: Spine** (Essential license when we export a real rig). DragonBones is a free/stale fallback — not the authoring home. Full decision, licenses, layer cuts, and bone map: **[SPINE.md](./SPINE.md)**.
 
-A full official Rai Spine export is **not** in this PR (needs a human in Spine Editor / Photopea). What *is* here:
+A licensed Spine Editor export is **not** here (do not buy Essential for this PR). What *is* here:
 
 - In-repo **Canvas cutout** player (`src/lib/cutout-runtime.ts`) — Spine-shaped JSON, no Esoteric npm, no Pixi.
 - **`?spine=1`** (or `?engine=spine`) — geometric sample girl. Badge: not Rai. Pose keys still drive idle / talk / wave / scold / pout / shy.
-- **`?spine=rai`** — `public/spine/rai/skeleton.json` + cut layers. Missing files → **PNG puppet** (same Call/Chat).
-- Artist stub: `public/spine/rai/cut-guide.svg`, `layers/README.md`, bone list in SPINE.md.
+- **`?spine=rai`** — `public/spine/rai/skeleton.json` + official idle cut layers in `layers/`. Missing files → **PNG puppet** (same Call/Chat).
+- Cut guide + glance still: `public/spine/rai/cut-guide.svg`, `layers/README.md`, `composite_idle_still.png`.
 
 Default URL is unchanged: `data-rai-engine="png-puppet"`. Do not flip this on in Pages deploy.
 
-Honest next step: cut idle.png → Spine Essential → JSON+atlas in `public/spine/rai/export/` → later PR dynamic-imports `@esotericsoftware/spine-webgl` behind the same flag.
+Honest next step: import these cuts in Spine Essential → JSON+atlas in `public/spine/rai/export/` → later PR dynamic-imports `@esotericsoftware/spine-webgl` behind the same flag.
 
 ## Track 3 — Rive (later)
 

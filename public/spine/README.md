@@ -7,7 +7,7 @@ Artist and runtime drop folder for animation **track #2**. Official PNG puppet u
 | [../../SPINE.md](../../SPINE.md) | Spine vs DragonBones decision, license, pipeline |
 | [rai/cut-guide.svg](./rai/cut-guide.svg) | Idle layer boxes (schematic) |
 | [rai/skeleton.json](./rai/skeleton.json) | Bone + slot stub for Star Rai |
-| [rai/layers/](./rai/layers/) | Cut PNGs go here (empty until a human cuts idle.png) |
+| [rai/layers/](./rai/layers/) | Official idle cut PNGs (filenames in that README) |
 | Sample girl | Code: `src/lib/cutout-sample.ts` — geometric stand-in, **not Rai** |
 
 ## Preview in the app
