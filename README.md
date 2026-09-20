@@ -1,6 +1,6 @@
 # star-app-2-live
 
-**Live channel for Star Rai presence** — lean Vite + React SPA with the puppet (idle life, look-at, crossfades, Helix talk flap, framing), **optional xAI Grok brain**, offline `composeAct` fallback, browser TTS, Call mode, soft affection, and durable memory.
+**Live channel for Star Rai presence** — lean Vite + React SPA. The **shipping body is the official PNG puppet**. A Lab-only Star-WIP toon mesh (React Three Fiber) can be previewed; it is **not** Rai and is never the default. Also: Helix talk flap, **optional xAI Grok brain**, offline `composeAct`, browser TTS, Call mode, soft affection, and durable memory. Header toggle: **PNG** (default) | **Lab**.
 
 ## Live URL
 
@@ -156,6 +156,7 @@ Future env: `VITE_API_BASE` — leave unset for pure Pages. `VITE_GROK_PROXY_URL
 - `star-rai-xai-key` — optional xAI API key (never commit)
 - `star-rai-affection` — affection score, last talk day, streak (schema v1)
 - `star-rai-chart` — Chart v1 setup skip/done, last fire day, diary pages
+- `star-rai-presence-v2` — `png` (default) or `lab` (WIP mesh preview). Legacy `star-rai-presence` is ignored.
 
 Do not rename keys without a migrator. Document schema bumps here.
 
@@ -168,6 +169,7 @@ See **[POSING.md](./POSING.md)** for the drop-in guide:
 - Live key → file table (`wave` → `wave_official.png`, `hold` → `hold_official.png`, `scold` → `scold_official.png`; `kiss` unmapped)
 - Kept as-today: `turn`, `profile`, `three_quarter_left`, `three_quarter_right`; Helix extra `point` → `point-front.png`
 - Voice card (`artifacts/star-rai-voice-card.txt`) is baked into `RAI_SYSTEM` at sync/build (`scripts/sync-star-rai-artifacts.js`); offline fallback is `artifacts/star-rai-local-brain.txt` (pose-keyed lines); memory-slot contract is `artifacts/star-rai-memory-slots.txt` (appended after the voice card on grok-4-latest, filled keys only). Chart v1 SoT is `artifacts/star-chart-v1.txt`. Call mode SoT is `artifacts/star-rai-call-mode.txt`. Clock / NOW SoT is `artifacts/star-rai-clock.txt`. Do not edit `src/lib/generated/star-rai-artifacts.ts` by hand.
+- Presence (PNG shipping + Lab WIP): **[PRESENCE.md](./PRESENCE.md)**
 
 ## Develop
 
@@ -187,3 +189,21 @@ npm run build
 ## Repo
 
 https://github.com/heytylo-png/star-app-2-live
+
+## Lab WIP mesh (not the live body)
+
+Default presence is the official PNG pack (`public/rai/`, `public/star-rai/`).
+Lab loads a custom strand-hair toon mesh (not a booth VRM, not shipping Rai):
+
+```text
+public/models/star-rai-wip.glb
+```
+
+Regenerate with `npm run build:wip-mesh`. Canon locks and the first expression set
+(idle / talk / wave / scold / pout / shy) live in `PRESENCE.md` and
+`artifacts/star-rai-canon/`. `?lab=1&wip=scold` pins a Lab still. Kiss is unmapped.
+
+`public/models/scaffolding/sairi-ponytail.vrm` is leftover non-Rai scaffolding
+and is **not loaded**. Do not present it as Star.
+
+Do not make Lab the default until the mesh is clearly her.

@@ -1,0 +1,117 @@
+STAR RAI — BLENDER / MODELER REFERENCE PACK
+Paste to Star Maker. Ground truth = live idle.png (462 @ 0.00s).
+Kiss unmapped. Do not invent a kiss pose.
+
+================================================================
+1. FRONT IDLE (primary)
+================================================================
+File: artifacts/star-app-2-poses/idle.png
+Also ship: talk_official.png, wave_official.png, scold_official.png,
+pout_official.png, shy_official.png.
+
+Idle lock:
+- Full-body standing, feet parallel, arms down, slight frown / half-lidded
+  amber glare (angry-neutral, not cute-smile idle).
+- Weight even. Soft blush on cheeks. White bg.
+
+Generated extras live in artifacts/star-rai-blender-refs/ and star-rai-blender-refs.zip
+02-three-quarter  03-side  04-back  05-face-closeup
+Front idle.png is still law. Earrings = tiny gold STAR STUDS, not dangles.
+
+================================================================
+2. TURNAROUND NOTES (3/4, side, back generated from idle)
+================================================================
+Keep front proportions. Extras are guides, not replacements.
+- Hair: mid-length black, messy layers, ends around collarbone / upper chest.
+  Volume at crown + sides. NOT waist-length. NOT a hime cut.
+- Ahoge: ONE long thin lock from crown, curves back-left then up like a hook.
+  Visible in 3/4 and side. Do not hide it on back view.
+- Back of shirt: plain white, no sailor flap, no large ribbon on back.
+  Bow is FRONT only, under collar.
+- Skirt: box/knife pleats all around, two white hem stripes continue in back.
+- Socks ribbed. Loafers brown penny-style, low heel.
+
+Camera for turnaround: same height as idle (eye-level-ish, full body in frame).
+
+================================================================
+3. FACE CLOSE-UP LOCK
+================================================================
+- Skin: warm tan / light brown. NOT pale, NOT gray-brown, NOT orange.
+- Eyes: large amber-gold iris, dark upper lid, sharp inner corner,
+  small highlight. Idle is slightly narrowed, not saucer-cute.
+- Brows: dark, slightly angled in (resting glare).
+- Hair: side-swept messy bangs. Both eyes visible. NO eyepatch bang.
+- Ears: small gold STAR studs (one per ear). Not hoops, not pearls.
+- Ahoge origin: top of crown, not forehead.
+- Face shape: soft jaw, teen, not chibi, not adult-square.
+
+Correct idle mood = mild scowl / unimpressed. Talk = open smile teeth.
+Wave = small closed-mouth smirk + hip hand.
+
+================================================================
+4. UNIFORM DETAILS (count from idle.png)
+================================================================
+Shirt
+- White short-sleeve BUTTON-UP with pointed collar (not sailor collar).
+- Red bow / ribbon tied at the collar notch (school-bow, not necktie).
+- Gold buttons down the placket: FIVE visible (collar to hem).
+- Sleeve cuff: navy band with TWO thin white/navy rings
+  (navy cuff + double stripe). Stripe width ≈ 1/4 of cuff height.
+- Shirt slightly fitted, hem sits on the skirt waist, not tucked deep.
+
+Skirt
+- Navy pleated, mid-thigh.
+- Hem: TWO parallel white stripes, even gap, full circumference.
+- Not a miniskirt micro. Not a long kilt.
+
+Socks
+- Navy, ribbed, mid-calf to just-below-knee.
+- Not thigh-high. Not ankle socks. Not white.
+
+Shoes
+- Brown leather loafers, penny strap, rounded toe, thin sole.
+- Not Mary Janes, not sneakers, not platforms.
+
+Jewelry
+- Only the two gold star studs. No necklace, no watch.
+
+================================================================
+5. FIRST EXPRESSION SET (model these, in order)
+================================================================
+idle     — glare, mouth flat/slight frown, arms down          idle.png
+talk     — open-mouth smile, same stance                       talk_official.png
+wave     — R palm up at head height, L hand on hip             wave_official.png
+scold    — index point + hip, grit / shout                     scold_official.png
+pout     — crossed arms, frown                                 pout_official.png
+shy      — fidget hands, blush, look down (NOT crossed arms)   shy_official.png
+
+Kiss = NO. Do not sculpt, do not render.
+
+Keep Helix extras separate if needed later:
+point-front (point only) ≠ scold
+scold-front stays; do not overwrite.
+
+================================================================
+6. DO-NOTS (modeler will guess these wrong)
+================================================================
+- Pale / porcelain skin
+- Hair past mid-chest or covering one eye
+- Missing ahoge, or two ahoges, or antenna-straight ahoge
+- Sailor collar / fuku scarf instead of button shirt + red bow
+- White socks, black tights, or bare legs
+- Gold buttons as silver or hidden
+- Single hem stripe or no stripes
+- Adult body / huge bust / child proportions
+- Blue or brown eyes
+- Hoop earrings, flower clips, glasses
+- Smile as default idle (idle is the glare)
+- Kiss / blow-kiss / heart-hands as default
+- Cameraman / viewer-role costume
+- Using legacy front_wave.png (old kiss-like art) or front_kiss.png
+- Stacking mouth PNGs on body (mouth sheets are full busts — ignore them)
+
+================================================================
+SHIP CHECK
+================================================================
+If only two extras can be made after front idle: 3/4 view + face close-up.
+Those beat another mood.

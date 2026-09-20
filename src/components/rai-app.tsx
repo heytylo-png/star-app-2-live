@@ -12,7 +12,8 @@ import { InstallHint } from "@/components/install-hint";
 import { ChartPanel } from "@/components/chart-panel";
 import { ChartSetupCard } from "@/components/chart-setup-card";
 import { LifePanel } from "@/components/life-panel";
-import { Puppet } from "@/components/puppet";
+import { Presence } from "@/components/presence";
+import { PresenceToggle } from "@/components/presence-toggle";
 import { StageMenu } from "@/components/stage-menu";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -35,6 +36,7 @@ import {
   type EmotionId,
   type PoseId,
 } from "@/lib/rai";
+import { labWipPosePin } from "@/lib/presence-mode";
 import { useMemoryStore } from "@/lib/memory-store";
 import { formatMemoryFacts } from "@/lib/memory-slots";
 import {
@@ -163,8 +165,8 @@ function RaiReady() {
   const [keyJustSaved, setKeyJustSaved] = useState(false);
   const [caption, setCaption] = useState("");
   const [emotion, setEmotion] = useState<EmotionId>(DEFAULT_EMOTION);
-  const [pose, setPose] = useState<PoseId>("idle");
-  const [talking, setTalking] = useState(false);
+  const [pose, setPose] = useState<PoseId>(() => labWipPosePin() ?? "idle");
+  const [talking, setTalking] = useState(() => labWipPosePin() === "talk");
   const [holding, setHolding] = useState(false);
   const [pttSupported, setPttSupported] = useState(true);
   const [callActive, setCallActive] = useState(false);
@@ -172,7 +174,7 @@ function RaiReady() {
   const [callSupported, setCallSupported] = useState(true);
   const [callStarting, setCallStarting] = useState(false);
   const [callNotice, setCallNotice] = useState<CallMicNotice | null>(null);
-  const [amp, setAmp] = useState(0);
+  const [amp, setAmp] = useState(() => (labWipPosePin() === "talk" ? 0.55 : 0));
 
   const abortRef = useRef<AbortController | null>(null);
   const recRef = useRef<Rec | null>(null);
@@ -275,6 +277,7 @@ function RaiReady() {
   }, []);
 
   useEffect(() => {
+    if (labWipPosePin()) return;
     if (sending || talking || callListening) return;
     if (holding) {
       setEmotion("glance");
@@ -978,7 +981,7 @@ function RaiReady() {
 
   return (
     <div className="relative h-dvh overflow-hidden bg-bg text-fg">
-      <Puppet pose={pose} emotion={emotion} talking={talking} amplitude={amp} className="absolute inset-0" />
+      <Presence pose={pose} emotion={emotion} talking={talking} amplitude={amp} className="absolute inset-0" />
 
       {/* Barge-in tap target while on call + speaking */}
       {callActive && (talking || sending) ? (
@@ -1022,6 +1025,7 @@ function RaiReady() {
           }
           voiceOn={voiceOn}
           memoryCount={memories.length}
+          trailing={<PresenceToggle />}
           onOpenSettings={() => {
             setXaiKeyDraft("");
             setKeyJustSaved(false);
