@@ -4,6 +4,7 @@ import { composeDiaryEntry, HER_CHART, localDateKey, localHerDay, natalFromSetup
 import { storedToHerDay, useChartStore } from "@/lib/chart-store";
 import { clockTimeZone, readLocalNow } from "@/lib/clock";
 import { requestHerDayCopy } from "@/lib/her-day";
+import { lockHerDailyMood } from "@/lib/her-suggest";
 import { useMemoryStore } from "@/lib/memory-store";
 import { birthDateInputValue, lastDiaryEntry } from "@/lib/shell";
 import { composeSkyDashboard, computeSkyFacts, type HerDayCopy } from "@/lib/sky";
@@ -51,6 +52,10 @@ export function ChartPanel({ userSun, birthDate, birthTime, birthPlace }: ChartP
       localHer: localHerDay({ todayDate, sky }),
     };
   }, [timezone, userSun]);
+
+  useEffect(() => {
+    lockHerDailyMood();
+  }, [dash.todayDate]);
 
   useEffect(() => {
     const cached = useChartStore.getState().herDayFor(dash.todayDate);

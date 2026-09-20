@@ -34,6 +34,8 @@ describe("3-tab shell artifact", () => {
     assert.match(SHELL_SOURCE, /her-day section/);
     assert.match(SHELL_SOURCE, /No now-playing bar \/ music strip on Chat/);
     assert.match(SHELL_SOURCE, /optional Spotify Connect/);
+    assert.match(SHELL_SOURCE, /her suggestions/);
+    assert.match(SHELL_SOURCE, /read-only daily mood/);
     assert.match(SHELL_SOURCE, /Login never required/);
     assert.match(SHELL_SOURCE, /Show a now-playing \/ music bar on Chat/);
     assert.match(SHELL_SOURCE, /Move Grok settings \/ Chat replies into Chart/);

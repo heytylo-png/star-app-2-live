@@ -200,7 +200,8 @@ Tokens (`access_token` / `refresh_token`) stay in `localStorage` (`star-rai-spot
 2. Tap **Connect Spotify** and approve. The redirect comes back to `/star-app-2-live/`.
 3. Premium: play/pause, now-playing title, optional search or **Transfer** to this tab.
 4. Track changes set `now_playing` + `session_on` and keep the existing one-comment-per-change Chat behavior.
-5. Not connected / free-tier / SDK fail → fail soft. Chat still works.
+5. Life also shows **her** daily mood (read-only), suggestions (optional **Play suggestion** via Spotify search/play), and her favorite lists. Suggesting is not a Chat comment.
+6. Not connected / free-tier / SDK fail → fail soft. Chat still works.
 
 There is **no** server API on Pages (unless you deploy the optional Worker). Client also probes:
 
@@ -217,6 +218,7 @@ Future env: `VITE_API_BASE` — leave unset for pure Pages. `VITE_GROK_PROXY_URL
 - `star-rai-affection` — affection score, last talk day, streak (schema v1)
 - `star-rai-chart` — Chart v1 setup skip/done, last fire day, diary pages, her-day pane copy
 - `star-rai-spotify` — Spotify PKCE tokens (access / refresh / expiry). Never a client secret.
+- `star-rai-her-music` — her favorite lists + Life suggestions (titles only; no Spotify playlist IDs)
 
 Do not rename keys without a migrator. Document schema bumps here.
 
