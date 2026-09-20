@@ -48,8 +48,13 @@ export const CALL_FILLER_SOUNDS = new Set([
 /** Ignore one-letter noise; keep real shorts like hi / ok / no / yo. */
 export const CALL_MIN_ALNUM_CHARS = 2;
 
-/** Wait for the utterance to settle before sending a final. */
-export const CALL_FINAL_DEBOUNCE_MS = 550;
+/**
+ * Wait for a pause before sending one utterance.
+ * Hot STT (especially Android Chrome continuous) repeats the same phrase as
+ * several finals in one turn — 700–900ms lets the phrase settle, then we
+ * collapse duplicate n-grams and submit once.
+ */
+export const CALL_FINAL_DEBOUNCE_MS = 800;
 
 /** After her TTS, wait before the mic is hot again (room echo / her line). */
 export const CALL_POST_TTS_COOLDOWN_MS = 450;
@@ -116,9 +121,116 @@ export function callTranscriptAction(transcript: string | null | undefined): Cal
   return meaningfulTranscript(transcript) ? "send" : "keep_listening";
 }
 
-/** Finals only. Interim is caption preview — never a user turn. */
+function normCallToken(token: string): string {
+  return token.toLowerCase().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "");
+}
+
+function ngramsEqual(tokens: string[], a: number, b: number, n: number): boolean {
+  for (let k = 0; k < n; k++) {
+    if (normCallToken(tokens[a + k]) !== normCallToken(tokens[b + k])) return false;
+  }
+  return true;
+}
+
+/**
+ * Collapse immediate duplicate n-grams from hot STT.
+ * "who's your favorite artist" ×4 → once. Keeps "no no" (two shorts).
+ */
+export function collapseDuplicateNgrams(text: string): string {
+  const raw = (text ?? "").replace(/\s+/g, " ").trim();
+  if (!raw) return "";
+  let tokens = raw.split(" ");
+  for (let guard = 0; guard < 8; guard++) {
+    const nMax = Math.floor(tokens.length / 2);
+    if (nMax < 1) break;
+    let did = false;
+    for (let n = nMax; n >= 1 && !did; n--) {
+      const out: string[] = [];
+      let i = 0;
+      while (i < tokens.length) {
+        if (i + 2 * n <= tokens.length && ngramsEqual(tokens, i, i + n, n)) {
+          let reps = 2;
+          while (i + (reps + 1) * n <= tokens.length && ngramsEqual(tokens, i, i + reps * n, n)) {
+            reps += 1;
+          }
+          const collapse = n >= 2 ? reps >= 2 : reps >= 3;
+          if (collapse) {
+            out.push(...tokens.slice(i, i + n));
+            i += reps * n;
+            did = true;
+            continue;
+          }
+        }
+        out.push(tokens[i]);
+        i += 1;
+      }
+      if (did) tokens = out;
+    }
+    if (!did) break;
+  }
+  return tokens.join(" ");
+}
+
+export function normalizeCallUtterance(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function sameCallUtterance(a: string, b: string): boolean {
+  const left = normalizeCallUtterance(a);
+  const right = normalizeCallUtterance(b);
+  return Boolean(left) && left === right;
+}
+
+/**
+ * Append a SpeechRecognition *final* if it is a new utterance.
+ * Drops empty / filler and immediate repeats of the last final.
+ * Returns true when the buffer changed.
+ */
+export function pushCallFinal(finals: string[], piece: string): boolean {
+  const cleaned = collapseDuplicateNgrams(meaningfulTranscript(piece));
+  if (!cleaned) return false;
+  const last = finals[finals.length - 1];
+  if (last && sameCallUtterance(last, cleaned)) return false;
+  const joined = finals.join(" ");
+  if (joined && sameCallUtterance(collapseDuplicateNgrams(`${joined} ${cleaned}`), joined)) return false;
+  finals.push(cleaned);
+  return true;
+}
+
+/** Finals only. Interim is caption preview — never a user turn. One collapsed utterance. */
 export function callUtteranceToSend(opts: { finals: string[]; interim?: string }): string {
-  return meaningfulTranscript(opts.finals.join(" "));
+  const joined = collapseDuplicateNgrams(opts.finals.join(" "));
+  return meaningfulTranscript(joined);
+}
+
+export type CallSubmitGate = {
+  talking: boolean;
+  sending: boolean;
+  listenPausedForTts: boolean;
+  finals: string[];
+};
+
+/**
+ * Submit gate for Call listen:
+ * - one utterance per submit (collapsed finals)
+ * - wait for CALL_FINAL_DEBOUNCE_MS pause in the listen loop before calling this
+ * - do not send while she is speaking / thinking
+ * - empty / garbage STT → keep listening, no reply
+ */
+export function gateCallUtterance(opts: CallSubmitGate): {
+  action: CallTranscriptAction;
+  text: string;
+} {
+  if (opts.talking || opts.sending || opts.listenPausedForTts) {
+    return { action: "keep_listening", text: "" };
+  }
+  const text = callUtteranceToSend({ finals: opts.finals });
+  if (!text) return { action: "keep_listening", text: "" };
+  return { action: "send", text };
 }
 
 /**

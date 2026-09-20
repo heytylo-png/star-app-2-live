@@ -68,11 +68,10 @@ import {
   CALL_LISTEN_DURING_TTS,
   CALL_POST_TTS_COOLDOWN_MS,
   callMicNotice,
-  callTranscriptAction,
-  callUtteranceToSend,
   classifyGetUserMediaError,
-  meaningfulTranscript,
+  gateCallUtterance,
   nextCallListenBackoffMs,
+  pushCallFinal,
   shouldEndCallOnPageEvent,
   shouldSpeakCallLine,
   shouldStartRecognitionOnError,
@@ -387,13 +386,20 @@ function RaiReady() {
     rec.continuous = true;
     // Transcript text only — never store mic audio (CALL_STORE_RECORDINGS = false).
     const finals: string[] = [];
+    let submitted = false;
 
     const commitFinals = () => {
+      if (submitted) return;
       if (gen !== callListenGenRef.current) return;
-      if (!callActiveRef.current || sendingRef.current || talkingRef.current) return;
-      if (listenPausedForTtsRef.current) return;
-      const text = callUtteranceToSend({ finals });
-      if (callTranscriptAction(text) !== "send") return;
+      if (!callActiveRef.current) return;
+      const gated = gateCallUtterance({
+        talking: talkingRef.current,
+        sending: sendingRef.current,
+        listenPausedForTts: listenPausedForTtsRef.current,
+        finals,
+      });
+      if (gated.action !== "send") return;
+      submitted = true;
       callListenGenRef.current += 1;
       listenBackoffAttemptRef.current = 0;
       clearCallListenTimers();
@@ -402,20 +408,19 @@ function RaiReady() {
       setCallListening(false);
       draftRef.current = "";
       setDraft("");
-      void sendRef.current(text);
+      void sendRef.current(gated.text);
     };
 
     rec.onresult = (event) => {
-      if (gen !== callListenGenRef.current) return;
-      if (talkingRef.current || listenPausedForTtsRef.current) return;
+      if (submitted || gen !== callListenGenRef.current) return;
+      if (sendingRef.current || talkingRef.current || listenPausedForTtsRef.current) return;
       let interim = "";
       let gotFinal = false;
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const piece = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          const cleaned = meaningfulTranscript(piece);
-          if (cleaned) finals.push(cleaned);
           gotFinal = true;
+          pushCallFinal(finals, piece);
         } else {
           interim += piece;
         }
@@ -426,8 +431,8 @@ function RaiReady() {
         setDraft(preview);
         setCaption(preview);
       }
-      // Prefer finals; debounce so a noise blip does not send or restart the loop.
-      if (gotFinal) {
+      // One utterance: wait for a pause (~800ms) after the last final, then submit once.
+      if (gotFinal && finals.length > 0) {
         listenBackoffAttemptRef.current = 0;
         if (listenDebounceTimerRef.current) window.clearTimeout(listenDebounceTimerRef.current);
         listenDebounceTimerRef.current = window.setTimeout(() => {
@@ -453,7 +458,7 @@ function RaiReady() {
       }
     };
     rec.onend = () => {
-      if (gen !== callListenGenRef.current) return;
+      if (submitted || gen !== callListenGenRef.current) return;
       recRef.current = null;
       setCallListening(false);
       if (!callActiveRef.current) return;
@@ -462,8 +467,13 @@ function RaiReady() {
         window.clearTimeout(listenDebounceTimerRef.current);
         listenDebounceTimerRef.current = 0;
       }
-      const text = callUtteranceToSend({ finals });
-      if (callTranscriptAction(text) === "send") {
+      const gated = gateCallUtterance({
+        talking: talkingRef.current,
+        sending: sendingRef.current,
+        listenPausedForTts: listenPausedForTtsRef.current,
+        finals,
+      });
+      if (gated.action === "send") {
         commitFinals();
         return;
       }
@@ -1086,7 +1096,7 @@ function RaiReady() {
         )}
 
         {tab === "chat" ? (
-        <div className="pointer-events-auto bg-gradient-to-t from-bg via-bg/90 to-transparent px-3 pt-4 pb-2 sm:px-4 sm:pt-5">
+        <div className="pointer-events-auto bg-gradient-to-t from-bg/80 via-bg/35 to-transparent px-3 pt-2 pb-1.5 sm:px-4 sm:pt-3">
           {callStarting ? (
             <div className="mx-auto mb-3 flex max-w-lg items-center justify-between gap-2 rounded-full bg-elevated px-3 py-2 shadow-[var(--shadow-border)]">
               <p className="text-xs tracking-wide text-muted">

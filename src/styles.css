@@ -162,13 +162,100 @@
   animation: helix-pulse 1.2s ease-in-out infinite;
 }
 
-/* ~3–4 compact message rows; history scrolls inside. Puppet keeps the stage. */
+/* Expo-style compact transcript: transparent frame in the bottom third,
+   dark quiet bubbles over her legs, puppet visible through the stack. */
+.chat-thread-frame {
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-thread-handle {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.75rem;
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+}
+
+.chat-thread-handle-pill {
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 1.15rem;
+  border-radius: 999px;
+  color: #f4efe8;
+  background: color-mix(in oklab, #2a2436 72%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.chat-thread-handle:hover .chat-thread-handle-pill,
+.chat-thread-handle:focus-visible .chat-thread-handle-pill {
+  background: color-mix(in oklab, #2a2436 88%, transparent);
+}
+
+.chat-thread-handle:focus-visible {
+  outline: none;
+}
+
+.chat-thread-handle:focus-visible .chat-thread-handle-pill {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
 .chat-thread {
-  max-height: min(13.25rem, 32dvh);
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
+}
+
+.chat-bubble {
+  max-width: 78%;
+  border-radius: 18px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: #f4efe8;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.chat-bubble-assistant {
+  background: color-mix(in oklab, #2a2436 78%, transparent);
+}
+
+.chat-bubble-user {
+  background: color-mix(in oklab, #3a314c 84%, transparent);
+}
+
+.chat-bubble-live {
+  box-shadow: 0 0 0 1px color-mix(in oklab, #f4efe8 28%, transparent);
+}
+
+.chat-bubble-error {
+  color: #f0c4c4;
+}
+
+.chat-bubble-hint {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, #f4efe8 62%, transparent);
+}
+
+body.chat-thread-resizing {
+  cursor: ns-resize;
+  user-select: none;
 }
 
 .companion-stage {
