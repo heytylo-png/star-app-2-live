@@ -48,6 +48,7 @@ function useChatThreadHeight() {
   const onPointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
     e.preventDefault();
+    e.currentTarget.focus();
     e.currentTarget.setPointerCapture(e.pointerId);
     dragRef.current = { pointerId: e.pointerId, startY: e.clientY, startH: heightPx };
     document.body.classList.add("chat-thread-resizing");
