@@ -260,7 +260,6 @@ function build() {
     null,
     [1.25, 0.22, 0.65],
   );
-  mouthOpen.visible = false;
   mesh(new THREE.BoxGeometry(0.022, 0.006, 0.004), C.tooth, "teethTalk", mouthOpen, [0, 0.006, 0.006]);
 
   // Wave: small closed-mouth smirk (asymmetric)
@@ -272,7 +271,6 @@ function build() {
     [0.006, -0.01, 0.091],
     [0, 0, -0.28],
   );
-  mouthSmirk.visible = false;
   mesh(new THREE.BoxGeometry(0.01, 0.003, 0.004), C.brow, "smirkLift", mouthSmirk, [0.012, 0.004, 0]);
 
   // Scold: grit / shout (wide open, not a smile)
@@ -285,7 +283,6 @@ function build() {
     null,
     [1.05, 0.55, 0.7],
   );
-  mouthGrit.visible = false;
   mesh(new THREE.BoxGeometry(0.018, 0.005, 0.004), C.tooth, "teethGrit", mouthGrit, [0, 0.007, 0.005]);
 
   // Pout: pushed-out frown (not shy)
@@ -298,7 +295,7 @@ function build() {
     null,
     [1.15, 0.55, 0.7],
   );
-  mouthPout.visible = false;
+  // Face extras stay visible in the file; Lab hides all but the rest glare.
 
   // gold STAR studs (not hoops / dangles)
   const starGeo = new THREE.ExtrudeGeometry(starShape(), { depth: 0.003, bevelEnabled: false });

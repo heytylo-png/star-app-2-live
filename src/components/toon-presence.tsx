@@ -247,6 +247,19 @@ function StarWip({
         blushR.current = root.getObjectByName("blushR") ?? null;
         browL.current = root.getObjectByName("browL") ?? null;
         browR.current = root.getObjectByName("browR") ?? null;
+        applyWipFace("glare", 0, {
+          idle: mouthIdle.current,
+          talk: mouthOpen.current,
+          smirk: mouthSmirk.current,
+          grit: mouthGrit.current,
+          pout: mouthPout.current,
+          blushL: blushL.current,
+          blushR: blushR.current,
+          browL: browL.current,
+          browR: browR.current,
+          cornerL: root.getObjectByName("mouthCornerL") ?? null,
+          cornerR: root.getObjectByName("mouthCornerR") ?? null,
+        });
 
         vrmLike.current = root;
         setScene(root);
