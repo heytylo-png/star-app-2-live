@@ -6,17 +6,17 @@
   --font-display: "Instrument Serif", ui-serif, Georgia, "Times New Roman", serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-  --color-bg: #efece6;
-  --color-stage: #efece6;
-  --color-surface: #f3efe7cc;
-  --color-elevated: #f3efe7;
-  --color-fg: #1c1916;
-  --color-muted: #6d675f;
-  --color-subtle: #8a847a;
+  --color-bg: #c9c9cb;
+  --color-stage: #c9c9cb;
+  --color-surface: #d8d8dacc;
+  --color-elevated: #d8d8da;
+  --color-fg: #1a1a1c;
+  --color-muted: #5c5c62;
+  --color-subtle: #78787e;
   --color-border: color-mix(in oklab, var(--color-fg) 12%, transparent);
   --color-border-strong: color-mix(in oklab, var(--color-fg) 22%, transparent);
-  --color-accent: #1c1916;
-  --color-accent-fg: #f7f4ee;
+  --color-accent: #1a1a1c;
+  --color-accent-fg: #f3f3f5;
   --color-danger: #a24b4b;
   --color-ring: color-mix(in oklab, var(--color-accent) 35%, transparent);
 
@@ -263,7 +263,7 @@ body.chat-thread-resizing {
 }
 
 /*
-  Helix PNG stage — flat beige room (no white card / wash / multiply plate).
+  Helix PNG stage — Expo cool flat gray room (no white card / beige paper).
   Studio-white is punched to alpha in JS. Puppet JS still owns [data-rai-rig] motion.
 */
 .rai-stage {

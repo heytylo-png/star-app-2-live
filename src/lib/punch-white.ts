@@ -4,9 +4,9 @@
  * connected backdrop from the edges so the shirt's shaded white stays.
  */
 
-export const STUDIO_LUMA_MIN = 244;
-export const STUDIO_CHROMA_MAX = 16;
-const FRINGE_LUMA_MIN = 228;
+export const STUDIO_LUMA_MIN = 238;
+export const STUDIO_CHROMA_MAX = 18;
+const FRINGE_LUMA_MIN = 224;
 const FRINGE_CHROMA_MAX = 24;
 
 export function isStudioWhite(r: number, g: number, b: number, a = 255): boolean {

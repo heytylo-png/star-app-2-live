@@ -34,6 +34,7 @@ describe("punchStudioWhite", () => {
   it("treats official-pack studio fill as punchable and shaded shirt as not", () => {
     assert.equal(isStudioWhite(255, 255, 255), true);
     assert.equal(isStudioWhite(244, 244, 246), true);
+    assert.equal(isStudioWhite(238, 238, 240), true);
     assert.equal(isStudioWhite(223, 220, 228), false);
     assert.equal(isStudioWhite(220, 211, 206), false);
     assert.ok(223 < STUDIO_LUMA_MIN);

@@ -6,8 +6,8 @@
   "scope": "/star-app-2-live/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#efece6",
-  "theme_color": "#efece6",
+  "background_color": "#c9c9cb",
+  "theme_color": "#c9c9cb",
   "lang": "en",
   "icons": [
     {
