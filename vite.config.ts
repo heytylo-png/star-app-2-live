@@ -13,5 +13,9 @@ export default defineConfig({
     alias: {
       "@": path.resolve(root, "./src"),
     },
+    dedupe: ["three"],
+  },
+  optimizeDeps: {
+    include: ["three", "@react-three/fiber", "@pixiv/three-vrm"],
   },
 });

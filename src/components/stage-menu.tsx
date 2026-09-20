@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import {
   BookMarked,
   ChevronDown,
@@ -28,6 +28,7 @@ type StageMenuProps = {
   onOpenMemory: () => void;
   onToggleCall: () => void;
   onToggleVoice: () => void;
+  trailing?: ReactNode;
 };
 
 export function StageMenu({
@@ -46,6 +47,7 @@ export function StageMenu({
   onOpenMemory,
   onToggleCall,
   onToggleVoice,
+  trailing,
 }: StageMenuProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -104,6 +106,7 @@ export function StageMenu({
             </span>
           </p>
         </div>
+        {trailing}
         <Button
           type="button"
           variant="ghost"

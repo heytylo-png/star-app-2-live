@@ -12,7 +12,8 @@ import { InstallHint } from "@/components/install-hint";
 import { ChartPanel } from "@/components/chart-panel";
 import { ChartSetupCard } from "@/components/chart-setup-card";
 import { LifePanel } from "@/components/life-panel";
-import { Puppet } from "@/components/puppet";
+import { Presence } from "@/components/presence";
+import { PresenceToggle } from "@/components/presence-toggle";
 import { StageMenu } from "@/components/stage-menu";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -948,7 +949,7 @@ function RaiReady() {
 
   return (
     <div className="relative h-dvh overflow-hidden bg-bg text-fg">
-      <Puppet pose={pose} emotion={emotion} talking={talking} amplitude={amp} className="absolute inset-0" />
+      <Presence pose={pose} emotion={emotion} talking={talking} amplitude={amp} className="absolute inset-0" />
 
       {/* Barge-in tap target while on call + speaking */}
       {callActive && (talking || sending) ? (
@@ -992,6 +993,7 @@ function RaiReady() {
           }
           voiceOn={voiceOn}
           memoryCount={memories.length}
+          trailing={<PresenceToggle />}
           onOpenSettings={() => {
             setXaiKeyDraft("");
             setKeyJustSaved(false);
