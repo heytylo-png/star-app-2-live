@@ -7,9 +7,9 @@
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   --color-bg: #efece6;
-  --color-stage: #f4f1eb;
-  --color-surface: #f6f2eacc;
-  --color-elevated: #f6f2ea;
+  --color-stage: #efece6;
+  --color-surface: #f3efe7cc;
+  --color-elevated: #f3efe7;
   --color-fg: #1c1916;
   --color-muted: #6d675f;
   --color-subtle: #8a847a;
@@ -288,8 +288,8 @@ body.chat-thread-resizing {
   height: 38%;
   background: linear-gradient(
     to top,
-    color-mix(in oklab, #efece6 92%, transparent),
-    color-mix(in oklab, #f4f1eb 32%, transparent),
+    color-mix(in oklab, var(--color-bg) 94%, transparent),
+    color-mix(in oklab, var(--color-stage) 28%, transparent),
     transparent
   );
 }
@@ -356,8 +356,8 @@ body.chat-thread-resizing {
 
 @media (max-width: 639px) {
   .rai-layer {
-    top: 2.75%;
-    transform: scale(1.5);
+    top: 2.5%;
+    transform: scale(1.56);
   }
 }
 
