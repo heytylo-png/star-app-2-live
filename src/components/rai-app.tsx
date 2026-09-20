@@ -45,6 +45,7 @@ import {
   natalFromSetup,
   resolveChartTurn,
 } from "@/lib/chart";
+import { resolveClockTurn } from "@/lib/clock";
 import { useChartStore } from "@/lib/chart-store";
 import { parseTrackTitle, resolveLifeTurn, type LifeSlots } from "@/lib/life";
 import { chatOpenForTab, DEFAULT_SHELL_TAB, type ShellTab } from "@/lib/shell";
@@ -64,6 +65,7 @@ import {
   CALL_FINAL_DEBOUNCE_MS,
   CALL_LISTEN_DURING_TTS,
   CALL_POST_TTS_COOLDOWN_MS,
+  callListenEndAction,
   callMicNotice,
   classifyGetUserMediaError,
   collapseDuplicateNgrams,
@@ -192,7 +194,9 @@ function RaiReady() {
   const listenDebounceTimerRef = useRef(0);
   const listenBackoffAttemptRef = useRef(0);
   const listenPausedForTtsRef = useRef(false);
-  const startCallListenRef = useRef<() => void>(() => {});
+  const callFinalsRef = useRef<string[]>([]);
+  const callSubmittedRef = useRef(false);
+  const startCallListenRef = useRef<(opts?: { continueUtterance?: boolean }) => void>(() => {});
   const poseRef = useRef<PoseId>("idle");
   const tabRef = useRef<ShellTab>(DEFAULT_SHELL_TAB);
   /** When the last act pose/emotion landed — drives the hold timer. */
@@ -349,7 +353,7 @@ function RaiReady() {
     }
   }
 
-  const scheduleCallListenRestart = useCallback((delayMs: number) => {
+  const scheduleCallListenRestart = useCallback((delayMs: number, continueUtterance = false) => {
     if (listenRestartTimerRef.current) {
       window.clearTimeout(listenRestartTimerRef.current);
       listenRestartTimerRef.current = 0;
@@ -358,11 +362,11 @@ function RaiReady() {
       listenRestartTimerRef.current = 0;
       if (!callActiveRef.current) return;
       if (sendingRef.current || talkingRef.current || listenPausedForTtsRef.current) return;
-      startCallListenRef.current();
+      startCallListenRef.current(continueUtterance ? { continueUtterance: true } : undefined);
     }, delayMs);
   }, []);
 
-  const startCallListen = useCallback(() => {
+  const startCallListen = useCallback((opts?: { continueUtterance?: boolean }) => {
     if (!callActiveRef.current) return;
     if (sendingRef.current) return;
     if (talkingRef.current && !CALL_LISTEN_DURING_TTS) return;
@@ -375,31 +379,47 @@ function RaiReady() {
       return;
     }
     unlockVoice();
-    const gen = ++callListenGenRef.current;
-    clearCallListenTimers();
+    const continueUtterance = Boolean(opts?.continueUtterance) && !callSubmittedRef.current;
+    if (!continueUtterance) {
+      callListenGenRef.current += 1;
+      callFinalsRef.current = [];
+      callSubmittedRef.current = false;
+      clearCallListenTimers();
+    } else if (listenRestartTimerRef.current) {
+      window.clearTimeout(listenRestartTimerRef.current);
+      listenRestartTimerRef.current = 0;
+    }
+    const gen = callListenGenRef.current;
     disarmRec(recRef.current);
     recRef.current = null;
+    if (callSubmittedRef.current) return;
 
     const rec = new SR();
     rec.lang = "en-US";
     rec.interimResults = true;
     rec.continuous = true;
     // Transcript text only — never store mic audio (CALL_STORE_RECORDINGS = false).
-    const finals: string[] = [];
-    let submitted = false;
 
-    const commitFinals = () => {
-      if (submitted) return;
+    const armDebounce = () => {
+      if (listenDebounceTimerRef.current) window.clearTimeout(listenDebounceTimerRef.current);
+      listenDebounceTimerRef.current = window.setTimeout(() => {
+        listenDebounceTimerRef.current = 0;
+        commitCallFinals();
+      }, CALL_FINAL_DEBOUNCE_MS);
+    };
+
+    const commitCallFinals = () => {
+      if (callSubmittedRef.current) return;
       if (gen !== callListenGenRef.current) return;
       if (!callActiveRef.current) return;
       const gated = gateCallUtterance({
         talking: talkingRef.current,
         sending: sendingRef.current,
         listenPausedForTts: listenPausedForTtsRef.current,
-        finals,
+        finals: callFinalsRef.current,
       });
       if (gated.action !== "send") return;
-      submitted = true;
+      callSubmittedRef.current = true;
       callListenGenRef.current += 1;
       listenBackoffAttemptRef.current = 0;
       clearCallListenTimers();
@@ -408,11 +428,12 @@ function RaiReady() {
       setCallListening(false);
       draftRef.current = "";
       setDraft("");
+      callFinalsRef.current = [];
       void sendRef.current(keepRawSttText(gated.text));
     };
 
     rec.onresult = (event) => {
-      if (submitted || gen !== callListenGenRef.current) return;
+      if (callSubmittedRef.current || gen !== callListenGenRef.current) return;
       if (sendingRef.current || talkingRef.current || listenPausedForTtsRef.current) return;
       let interim = "";
       let gotFinal = false;
@@ -420,25 +441,23 @@ function RaiReady() {
         const piece = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
           gotFinal = true;
-          pushCallFinal(finals, piece);
+          pushCallFinal(callFinalsRef.current, piece);
         } else {
           interim += piece;
         }
       }
-      const preview = keepRawSttText(collapseDuplicateNgrams(finals.join(" ") || interim));
+      const preview = keepRawSttText(
+        collapseDuplicateNgrams(callFinalsRef.current.join(" ") || interim),
+      );
       if (preview) {
         draftRef.current = preview;
         setDraft(preview);
         setCaption(preview);
       }
-      // One utterance: wait for a pause (~1100ms) after the last final, then submit once.
-      if (gotFinal && finals.length > 0) {
+      // One utterance: wait for a pause (~1400ms) after the last final, then submit once.
+      if (gotFinal && callFinalsRef.current.length > 0) {
         listenBackoffAttemptRef.current = 0;
-        if (listenDebounceTimerRef.current) window.clearTimeout(listenDebounceTimerRef.current);
-        listenDebounceTimerRef.current = window.setTimeout(() => {
-          listenDebounceTimerRef.current = 0;
-          commitFinals();
-        }, CALL_FINAL_DEBOUNCE_MS);
+        armDebounce();
       }
     };
     rec.onerror = (event) => {
@@ -458,23 +477,24 @@ function RaiReady() {
       }
     };
     rec.onend = () => {
-      if (submitted || gen !== callListenGenRef.current) return;
+      if (callSubmittedRef.current || gen !== callListenGenRef.current) return;
       recRef.current = null;
       setCallListening(false);
       if (!callActiveRef.current) return;
       if (sendingRef.current || talkingRef.current || listenPausedForTtsRef.current) return;
-      if (listenDebounceTimerRef.current) {
-        window.clearTimeout(listenDebounceTimerRef.current);
-        listenDebounceTimerRef.current = 0;
-      }
       const gated = gateCallUtterance({
         talking: talkingRef.current,
         sending: sendingRef.current,
         listenPausedForTts: listenPausedForTtsRef.current,
-        finals,
+        finals: callFinalsRef.current,
       });
-      if (gated.action === "send") {
-        commitFinals();
+      const endAction = callListenEndAction({
+        debouncePending: Boolean(listenDebounceTimerRef.current),
+        hasSendableFinals: gated.action === "send",
+      });
+      if (endAction === "hold_for_pause") {
+        if (!listenDebounceTimerRef.current) armDebounce();
+        scheduleCallListenRestart(80, true);
         return;
       }
       // Empty / whitespace / short / filler / noisy interim → keep listening; don’t invent.
@@ -500,7 +520,7 @@ function RaiReady() {
       }
       const delay = nextCallListenBackoffMs(listenBackoffAttemptRef.current);
       listenBackoffAttemptRef.current += 1;
-      scheduleCallListenRestart(delay);
+      scheduleCallListenRestart(delay, continueUtterance);
     }
   }, [scheduleCallListenRestart]);
   startCallListenRef.current = startCallListen;
@@ -540,7 +560,11 @@ function RaiReady() {
     const lastUser =
       [...current.messages].reverse().find((m) => m.role === "user")?.content ?? "";
     const today = localDateKey();
-    const chartTurn = resolveChartTurn({
+    const clockTurn = resolveClockTurn({
+      userText: lastUser,
+      timeZone: mem.slots.timezone,
+    });
+    let chartTurn = resolveChartTurn({
       userText: lastUser,
       chatOpen: chatOpenForTab(tabRef.current),
       userSun: mem.slots.user_sun,
@@ -550,6 +574,9 @@ function RaiReady() {
       askedBirthday: chartStore.askedBirthday,
       existingDiary: chartStore.diaryFor(today),
     });
+    if (clockTurn.localOnly && !chartTurn.localOnly) {
+      chartTurn = { kind: "none", localOnly: false };
+    }
     if (chartTurn.kind === "daily" && chartTurn.dateKey) {
       chartStore.markFired(chartTurn.dateKey);
     }
@@ -560,7 +587,7 @@ function RaiReady() {
       chartStore.saveDiary(chartTurn.dateKey, chartTurn.diaryText);
     }
     const lifeAfter = mem.slots.life;
-    const lifeTurn = chartTurn.localOnly
+    const lifeTurn = chartTurn.localOnly || clockTurn.localOnly
       ? { kind: "none" as const, localOnly: false }
       : resolveLifeTurn({
           userText: lastUser,
@@ -576,7 +603,7 @@ function RaiReady() {
       streakDays: liveAff.streakDays,
       relationship: TIER_LABEL[scoreToTier(liveAff.score)],
     });
-    const systemExtra = [factsBlock, chartTurn.factsBlock, lifeTurn.factsBlock]
+    const systemExtra = [clockTurn.factsBlock, factsBlock, chartTurn.factsBlock, lifeTurn.factsBlock]
       .filter(Boolean)
       .join("\n\n");
 
@@ -592,6 +619,7 @@ function RaiReady() {
           currentPose: poseRef.current,
           chartTurn,
           lifeTurn,
+          clockTurn,
           messages: current.messages
             .filter((m) => m.role === "user" || m.role === "assistant")
             .map((m) => ({ role: m.role, content: m.content })),
@@ -775,6 +803,8 @@ function RaiReady() {
     listenPausedForTtsRef.current = false;
     listenBackoffAttemptRef.current = 0;
     listenAfterSpeakRef.current = false;
+    callFinalsRef.current = [];
+    callSubmittedRef.current = false;
     setCallActive(false);
     setCallStarting(false);
     stop();

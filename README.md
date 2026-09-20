@@ -17,7 +17,7 @@ Tap the **phone** icon in the header. Spec: `artifacts/star-rai-call-mode.txt`.
 - After Allow: listen loop (`webkitSpeechRecognition`) → same Chat brain as typed Chat → speak `line` only.
 - Empty / whitespace / very short / filler transcripts (`uh`, `um`, `hmm`, …) are ignored (keep listening; no invented user line). Hangup stops mic tracks + recognition.
 - Recognition **pauses while she is speaking** (her voice + room noise are not transcribed mid-reply), then resumes after a short cooldown — or on hangup.
-- Final results are preferred over noisy interim; finals debounce before send. `no-speech` / empty cycles **back off** instead of thrashing start/stop. Call stays hot until hangup.
+- Final results are preferred over noisy interim; finals debounce ~1400ms before send (do not submit on recognition `onend`). Immediate leading repeats (`hello hello`) collapse to one token. Raw STT stays in the bubble (no Rai↔Ray rewrite). `no-speech` / empty cycles **back off** instead of thrashing start/stop. Call stays hot until hangup.
 - Pose commands by voice still swap the sheet first. Pose tint applies to the spoken bubble.
 - TTS speaks the parsed `line` only — never JSON, memory lists, or lore dumps. If TTS fails, the bubble still shows.
 - Header **mute** is honored (Call does not force speaker on).
@@ -65,7 +65,22 @@ Works offline for the app shell + static assets (puppet art already on device af
 4. Header status shows **Grok** when a key is saved, **Local** otherwise.
 5. After save, the UI shows only the last 4 characters (`••••abcd`). Clear removes the key.
 
-When a key is present, the client calls `https://api.x.ai/v1/chat/completions` with model `grok-4-latest` (fallbacks: `grok-4.6`, `grok-3`, `grok-2`). System prompt = baked voice card (`artifacts/star-rai-voice-card.txt` → `RAI_SYSTEM`) plus a compact **MEMORY FACTS** block (`artifacts/star-rai-memory-slots.txt`) of **filled slots only**:
+When a key is present, the client calls `https://api.x.ai/v1/chat/completions` with model `grok-4-latest` (fallbacks: `grok-4.6`, `grok-3`, `grok-2`). System prompt = baked voice card (`artifacts/star-rai-voice-card.txt` → `RAI_SYSTEM`) plus a compact **CLOCK** block (`artifacts/star-rai-clock.txt`) of the device local now, plus a compact **MEMORY FACTS** block (`artifacts/star-rai-memory-slots.txt`) of **filled slots only**:
+
+```
+CLOCK
+weekday: Saturday
+hour: 1
+tz: America/Chicago (CDT)
+band: night
+with_user: true
+
+Fact only — not a topic. She is in this zone with the user. Do not invent Fukuoka / Japan local.
+"What time is it where you are?" → this hour, one beat.
+Stock "mornings drag" / "late nights thinking about you" only if band matches (morning / night) or they brought up sleep.
+```
+
+Hour bands: 0–5 night, 6–11 morning, 12–17 afternoon, 18–23 evening. Timezone is the **browser IANA zone**, falling back to `America/Chicago`. She is States-side with the user unless they set another zone. “What time is it where you are?” is a local ask (real hour, one beat). Fail / CORS / bad JSON / no key → pose-keyed local brain.
 
 ```
 MEMORY FACTS
@@ -153,7 +168,7 @@ See **[POSING.md](./POSING.md)** for the drop-in guide:
 - Morning official pack under `public/rai/` (`*_official.png`, `idle.png`, `peace.png`, `middle_finger.png`, `heart_official.png`)
 - Live key → file table (`wave` → `wave_official.png`, `hold` → `hold_official.png`, `scold` → `scold_official.png`; `kiss` unmapped)
 - Kept as-today: `turn`, `profile`, `three_quarter_left`, `three_quarter_right`; Helix extra `point` → `point-front.png`
-- Voice card (`artifacts/star-rai-voice-card.txt`) is baked into `RAI_SYSTEM` at sync/build (`scripts/sync-star-rai-artifacts.js`); offline fallback is `artifacts/star-rai-local-brain.txt` (pose-keyed lines); memory-slot contract is `artifacts/star-rai-memory-slots.txt` (appended after the voice card on grok-4-latest, filled keys only). Chart v1 SoT is `artifacts/star-chart-v1.txt`. Call mode SoT is `artifacts/star-rai-call-mode.txt`. Do not edit `src/lib/generated/star-rai-artifacts.ts` by hand.
+- Voice card (`artifacts/star-rai-voice-card.txt`) is baked into `RAI_SYSTEM` at sync/build (`scripts/sync-star-rai-artifacts.js`); offline fallback is `artifacts/star-rai-local-brain.txt` (pose-keyed lines); memory-slot contract is `artifacts/star-rai-memory-slots.txt` (appended after the voice card on grok-4-latest, filled keys only). Chart v1 SoT is `artifacts/star-chart-v1.txt`. Call mode SoT is `artifacts/star-rai-call-mode.txt`. Clock / NOW SoT is `artifacts/star-rai-clock.txt`. Do not edit `src/lib/generated/star-rai-artifacts.ts` by hand.
 - Presence (PNG shipping + Lab WIP): **[PRESENCE.md](./PRESENCE.md)**
 
 ## Develop

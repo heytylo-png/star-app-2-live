@@ -1,4 +1,5 @@
 import { actForChartTurn, type ChartTurn } from "./chart.ts";
+import { actForClockTurn, type ClockTurn } from "./clock.ts";
 import { actForLifeTurn, parseTrackTitle, type LifeTurn } from "./life.ts";
 import { localBrainKeyFor, pickLocalBrainLine } from "./local-brain.ts";
 import { namedPoseFromText, resolveSpokenPose, type EmotionId, type PoseId } from "./rai.ts";
@@ -107,6 +108,7 @@ export function composeAct(
   currentPose?: PoseId | null,
   chartTurn?: ChartTurn,
   lifeTurn?: LifeTurn,
+  clockTurn?: ClockTurn,
 ): BrainAct {
   const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
   const lifeTitle = parseTrackTitle(lastUser);
@@ -114,16 +116,26 @@ export function composeAct(
   const tintCtx = { namedPose: named, currentPose, chartTurn, lifeTurn };
   const chartAct = chartTurn && chartTurn.kind !== "none" ? actForChartTurn(chartTurn) : null;
   const lifeAct = lifeTurn && lifeTurn.kind !== "none" ? actForLifeTurn(lifeTurn) : null;
+  const clockAct = clockTurn && clockTurn.kind !== "none" ? actForClockTurn(clockTurn) : null;
 
-  // Chart ask/diary stay local and never yield to Life. Life asks/track comments
-  // beat a same-turn Chart daily tint so music is not swallowed by the sun glance.
+  // Chart ask/diary stay local and never yield to Life. Clock ask is the real
+  // hour, one beat. Life asks/track comments beat a same-turn Chart daily tint
+  // so music is not swallowed by the sun glance.
   const preferChart = Boolean(chartTurn?.localOnly && chartAct);
-  const preferLife = Boolean(lifeAct && !preferChart && (lifeTurn?.localOnly || lifeTurn?.kind === "track_change"));
+  const preferClock = Boolean(clockTurn?.localOnly && clockAct && !preferChart);
+  const preferLife = Boolean(lifeAct && !preferChart && !preferClock && (lifeTurn?.localOnly || lifeTurn?.kind === "track_change"));
 
   if (preferChart && chartAct) {
     const mem = extractMemCandidate(lastUser);
     const act: BrainAct = { emotion: chartAct.emotion, line: chartAct.line };
     if (chartAct.pose) act.pose = chartAct.pose;
+    if (mem?.length) act.mem = mem;
+    return tintSpokenAct(act, tintCtx);
+  }
+  if (preferClock && clockAct) {
+    const mem = extractMemCandidate(lastUser);
+    const act: BrainAct = { emotion: clockAct.emotion, line: clockAct.line };
+    if (clockAct.pose) act.pose = clockAct.pose;
     if (mem?.length) act.mem = mem;
     return tintSpokenAct(act, tintCtx);
   }

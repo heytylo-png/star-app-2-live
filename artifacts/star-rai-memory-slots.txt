@@ -23,6 +23,9 @@ CONDITIONAL
   stop; standing Life keys are omitted from the prompt when session is off.
   Track-change LIFE block is separate — appended only when the track changes.
   See artifacts/star-life-one-pager.txt.
+- Clock / NOW — always appended as a compact CLOCK block (weekday, hour 0–23,
+  tz, band) from the device. She is States-side with the user unless they set
+  another zone. Not a topic list. See artifacts/star-rai-clock.txt.
 
 RULES
 - Do not invent name, city, role, or birthday.

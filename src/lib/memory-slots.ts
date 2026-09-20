@@ -6,6 +6,7 @@
  * require explicit user language (no default cameraman, no bio topics).
  */
 
+import { extractTimezone } from "./clock.ts";
 import {
   applyLifePatch,
   extractLifePatch,
@@ -40,6 +41,8 @@ export type MemorySlotState = {
   user_birth_place?: string;
   user_sun?: string;
   chart_source?: ChartSource;
+  /** Explicit user-set IANA zone only. Device zone is the Clock default. */
+  timezone?: string;
 };
 
 export type AffectionSlotInput = {
@@ -131,6 +134,9 @@ export function applySlotPatch(current: MemorySlotState, patch: MemorySlotState)
   if (patch.chart_source !== undefined) {
     next.chart_source = patch.chart_source;
   }
+  if (patch.timezone !== undefined) {
+    next.timezone = patch.timezone.trim() || undefined;
+  }
 
   if (!next.name) delete next.name;
   if (!next.mood) delete next.mood;
@@ -144,6 +150,7 @@ export function applySlotPatch(current: MemorySlotState, patch: MemorySlotState)
   if (!next.user_birth_place) delete next.user_birth_place;
   if (!next.user_sun) delete next.user_sun;
   if (!next.chart_source) delete next.chart_source;
+  if (!next.timezone) delete next.timezone;
   return next;
 }
 
@@ -277,6 +284,9 @@ export function extractSlotsFromUserText(
   const life = extractLife(cleaned, current.life);
   if (life) patch.life = life;
 
+  const timezone = extractTimezone(cleaned);
+  if (timezone) patch.timezone = timezone;
+
   let lastChoice: string | undefined;
   // A named track is not a pose command — "Super Shy" contains "shy".
   if (life?.now_playing) {
@@ -373,6 +383,7 @@ export function formatMemoryFacts(
   push("user_sun", slots.user_sun);
   push("chart_source", slots.chart_source);
   // user_rising is never sent in v1.
+  // timezone rides the CLOCK block, not MEMORY FACTS.
 
   for (const row of formatLifeMemoryLines(slots.life)) {
     lines.push(row);

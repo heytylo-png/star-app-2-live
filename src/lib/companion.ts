@@ -10,8 +10,8 @@ export const MOOD_LABEL: Record<CompanionMood, string> = {
 export const MAX_TTS_CHARS = 520;
 
 const DUMP_HEADER =
-  /^(MEMORY FACTS|LORE USE|ALWAYS CONSIDER|CONDITIONAL)\b/i;
-const BLOCK_DUMP = /^(CHART|LIFE)\s*\n/;
+  /^(MEMORY FACTS|LORE USE|ALWAYS CONSIDER|CONDITIONAL|CLOCK|NOW)\b/i;
+const BLOCK_DUMP = /^(CHART|LIFE|CLOCK)\s*\n/;
 
 function extractSpokenLine(text: string): string {
   const trimmed = text.trim();

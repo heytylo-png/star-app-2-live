@@ -34,6 +34,8 @@ describe("memory slots contract", () => {
     assert.match(MEMORY_SLOTS_CONTRACT, /session_on/);
     assert.match(MEMORY_SLOTS_CONTRACT, /daily_playlist/);
     assert.match(MEMORY_SLOTS_CONTRACT, /star-life-one-pager/);
+    assert.match(MEMORY_SLOTS_CONTRACT, /star-rai-clock/);
+    assert.match(MEMORY_SLOTS_CONTRACT, /CLOCK block/);
     assert.doesNotMatch(MEMORY_SLOTS_CONTRACT, /\bFukuoka\b/);
   });
 });
@@ -120,6 +122,12 @@ describe("formatMemoryFacts", () => {
     assert.doesNotMatch(block, /user_rising|her_sun|Fukuoka|Libra/);
   });
 
+  it("does not dump timezone into MEMORY FACTS (CLOCK owns it)", () => {
+    const block = formatMemoryFacts({ name: "Tylo", timezone: "America/Los_Angeles" });
+    assert.match(block, /^name: Tylo$/m);
+    assert.doesNotMatch(block, /timezone|America\/Los_Angeles/);
+  });
+
   it("never emits her bio as topics", () => {
     const block = formatMemoryFacts({ name: "Tylo" }, { relationship: "Stranger" });
     assert.doesNotMatch(block, HER_BIO_TOPIC_RE);
@@ -197,6 +205,12 @@ describe("extractSlotsFromUserText", () => {
     assert.equal(extractSlotsFromUserText("I'm tired.").mood, "tired");
     assert.match(extractSlotsFromUserText("I'm tired.").last_topic ?? "", /tired/i);
     assert.equal(extractSlotsFromUserText("Hey.").mood, undefined);
+  });
+
+  it("sets timezone only from explicit zone language, never Fukuoka lore", () => {
+    assert.equal(extractSlotsFromUserText("My timezone is America/New_York").timezone, "America/New_York");
+    assert.equal(extractSlotsFromUserText("I'm on Central time").timezone, "America/Chicago");
+    assert.equal(extractSlotsFromUserText("I live in Fukuoka").timezone, undefined);
   });
 });
 
