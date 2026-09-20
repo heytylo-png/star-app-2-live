@@ -46,6 +46,7 @@ import {
 import { resolveClockTurn } from "@/lib/clock";
 import { useChartStore } from "@/lib/chart-store";
 import { parseTrackTitle, resolveLifeTurn, type LifeSlots } from "@/lib/life";
+import { useSpotifyPlayback } from "@/lib/use-spotify-playback";
 import { chatOpenForTab, DEFAULT_SHELL_TAB, type ShellTab } from "@/lib/shell";
 import { newId, type ChatMessage } from "@/lib/helix";
 import { streamChat } from "@/lib/stream-chat";
@@ -201,6 +202,12 @@ function RaiReady() {
   const actLandedAt = useRef(0);
   /** Life slots before this turn's ingest — used to detect track changes. */
   const lifeBeforeRef = useRef<LifeSlots | undefined>(undefined);
+  const sendRef = useRef<(text: string) => Promise<void>>(async () => {});
+  const spotify = useSpotifyPlayback({
+    onTrackChange: (title) => {
+      void sendRef.current(`I'm listening to ${title}`);
+    },
+  });
 
   const thread = useMemo(
     () => threads.find((t) => t.id === activeId) ?? null,
@@ -238,6 +245,12 @@ function RaiReady() {
   useEffect(() => {
     tabRef.current = tab;
   }, [tab]);
+
+  useEffect(() => {
+    if (!spotify.justConnected) return;
+    setTab("life");
+    spotify.clearJustConnected();
+  }, [spotify.justConnected, spotify.clearJustConnected]);
 
   useEffect(() => {
     useAffectionStore.getState().touchDecay();
@@ -738,8 +751,6 @@ function RaiReady() {
     }
   }
 
-  const sendRef = useRef<(text: string) => Promise<void>>(async () => {});
-
   async function send(text: string) {
     const content = text.trim();
     if (!content || sendingRef.current) return;
@@ -1067,6 +1078,7 @@ function RaiReady() {
               life={slots.life}
               onSetTitle={(title) => void send(`I'm listening to ${title}`)}
               onStop={() => void send("stop listening")}
+              spotify={spotify}
             />
           </div>
         )}
