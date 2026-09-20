@@ -268,7 +268,8 @@ body.chat-thread-resizing {
 
 /*
   Helix PNG stage — beige room, Expo-like full-body long shot, no white card.
-  Studio-white is punched to alpha in JS. Puppet JS still owns [data-rai-rig] motion.
+  Studio-white is punched to alpha in JS. Puppet JS owns [data-rai-rig] idle life
+  (planted breathe / sway, no perspective flip). See ANIMATION.md.
 */
 .rai-stage {
   position: relative;
@@ -286,7 +287,8 @@ body.chat-thread-resizing {
   top: calc(env(safe-area-inset-top, 0px) + var(--rai-top-bar) + 0.2rem);
   /* Composer + tabs only — feet continue toward the compact Chat band. */
   bottom: clamp(5.1rem, 15vh, 7.25rem);
-  transform-origin: 50% 28%;
+  /* Hip origin: planted weight-shift / breathe. JS owns transform (no rotateY). */
+  transform-origin: 50% 72%;
   will-change: transform;
   background: transparent;
 }

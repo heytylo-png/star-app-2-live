@@ -84,8 +84,10 @@ Live chat keys use the **morning official pack** under `public/rai/`. Do not poi
 ## Talking
 
 - Live key `talk` uses `talk_official.png` (dedicated; holds ~3.4s / ~2.8s after speech like other non-idle poses).
-- Idle + speaking uses the same official talk sheet (full body, not Helix `idle-talk` overlay).
+- Idle **or** `talk` + speaking: official `idle.png` body + `talk_official.png` overlay whose opacity follows TTS amplitude / a synthetic jaw (`talkFlapOpacity`). Same full-body frame — not Helix `idle-talk`, not Expo mouth busts.
 - Other dedicated poses still hold their own PNG through speech (PR #1). No mouth overlay on those sheets.
+- Reduced motion: static `talk_official` while speaking (no flap).
+- Motion model: [ANIMATION.md](./ANIMATION.md).
 
 ## Add a new pose in 3 steps
 
@@ -95,4 +97,4 @@ Live chat keys use the **morning official pack** under `public/rai/`. Do not poi
 
 ## Act pose hold (unchanged from PR #1)
 
-Dedicated poses stay on screen at least **~3.4s** after they land (and **~2.8s after speech ends**, whichever is later). Crossfade ~340ms. Talking does not snap a dedicated pose to idle/talk unless the pose is idle (then the talk sheet is the idle-talk path).
+Dedicated poses stay on screen at least **~3.4s** after they land (and **~2.8s after speech ends**, whichever is later). Body-sheet crossfade ~380ms. Talking does not snap a dedicated pose to idle/talk unless the pose is idle or `talk` (then the official talk sheet flaps over idle).
