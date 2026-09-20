@@ -13,8 +13,8 @@ type NowPlayingBarProps = {
 };
 
 /**
- * Lightweight composer affordance — paste a title, no OAuth.
- * Never blocks Chat. Session stop is one tap. Next title still works in-session.
+ * Life pane Set/Stop — paste a title, no OAuth.
+ * Chat has no music strip; comments still fire in the Chat thread.
  */
 export function NowPlayingBar({
   sessionOn,

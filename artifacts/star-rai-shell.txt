@@ -3,7 +3,8 @@ Live GitHub Pages only. Spec for Chat · Chart · Life chrome.
 Launch on Chat. Not Expo-only.
 
 TABS
-1. Chat — puppet, thread, pose commands, music paste (already there).
+1. Chat — puppet, thread, pose commands. Composer can still paste / “I’m listening to X”
+   to set a Life session. No now-playing bar / music strip on Chat.
 2. Chart — edit birth date / time / place, show user_sun if any, last diary.
    No natal wheel. No auto-reading on open.
 3. Life — now_playing + Set/Stop, quiet daily list, mood tag.
@@ -20,6 +21,7 @@ Life comments still fire in Chat only (not as a Life-tab narration dump).
 
 DO NOT
 - Cover the puppet with chrome that hides her stage.
+- Show a now-playing / music bar on Chat (Life keeps Set/Stop).
 - Move Grok into Chart (Grok stays on Chat replies).
 - Put diary on Life (diary stays Chart).
 - Require music login.
