@@ -61,6 +61,12 @@ import {
 } from "@/lib/grok";
 import { speak, stopVoice, unlockVoice } from "@/lib/voice";
 import { speakable } from "@/lib/companion";
+import {
+  callTranscriptAction,
+  shouldEndCallOnPageEvent,
+  shouldSpeakCallLine,
+  spokenCallLine,
+} from "@/lib/call";
 import { cn } from "@/lib/utils";
 
 const STARTERS = [
@@ -163,6 +169,7 @@ function RaiReady() {
   const talkingRef = useRef(false);
   const listenAfterSpeakRef = useRef(false);
   const bargeRecRef = useRef<Rec | null>(null);
+  const hangUpRef = useRef<() => void>(() => {});
   const poseRef = useRef<PoseId>("idle");
   const tabRef = useRef<ShellTab>(DEFAULT_SHELL_TAB);
   /** When the last act pose/emotion landed — drives the hold timer. */
@@ -213,11 +220,29 @@ function RaiReady() {
   }, []);
 
   useEffect(() => {
+    const onPageEvent = (type: string) => {
+      const visibilityState = document.visibilityState;
+      if (!shouldEndCallOnPageEvent({ type, visibilityState })) return;
+      hangUpRef.current();
+    };
+    const onVisibility = () => onPageEvent("visibilitychange");
+    const onPageHide = () => onPageEvent("pagehide");
+    const onBeforeUnload = () => onPageEvent("beforeunload");
+    const onFreeze = () => onPageEvent("freeze");
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", onPageHide);
+    window.addEventListener("beforeunload", onBeforeUnload);
+    window.addEventListener("freeze", onFreeze);
     return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("beforeunload", onBeforeUnload);
+      window.removeEventListener("freeze", onFreeze);
+      callActiveRef.current = false;
+      listenAfterSpeakRef.current = false;
       abortRef.current?.abort();
       stopVoice();
-      recRef.current?.stop();
-      bargeRecRef.current?.stop();
+      stopRec();
     };
   }, []);
 
@@ -245,18 +270,28 @@ function RaiReady() {
     return () => window.clearTimeout(id);
   }, [draft, sending, talking, holding, callListening, pose, emotion]);
 
+  function disarmRec(rec: Rec | null) {
+    if (!rec) return;
+    rec.onresult = null;
+    rec.onend = null;
+    rec.onerror = null;
+    rec.onspeechstart = null;
+    try {
+      rec.abort?.();
+    } catch {
+      /* ignore */
+    }
+    try {
+      rec.stop();
+    } catch {
+      /* ignore */
+    }
+  }
+
   function stopRec() {
-    try {
-      recRef.current?.stop();
-    } catch {
-      /* ignore */
-    }
+    disarmRec(recRef.current);
     recRef.current = null;
-    try {
-      bargeRecRef.current?.stop();
-    } catch {
-      /* ignore */
-    }
+    disarmRec(bargeRecRef.current);
     bargeRecRef.current = null;
   }
 
@@ -287,6 +322,7 @@ function RaiReady() {
     rec.lang = "en-US";
     rec.interimResults = true;
     rec.continuous = false;
+    // Transcript text only — never store mic audio (CALL_STORE_RECORDINGS = false).
     let finalText = "";
     rec.onresult = (event) => {
       let said = "";
@@ -324,13 +360,13 @@ function RaiReady() {
       setCallListening(false);
       if (!callActiveRef.current) return;
       const text = (finalText || draftRef.current).trim();
-      if (text && !sendingRef.current) {
+      if (callTranscriptAction(text) === "send" && !sendingRef.current) {
         draftRef.current = "";
         setDraft("");
         void sendRef.current(text);
         return;
       }
-      // Keep the loop alive
+      // Empty transcript → keep listening; don’t invent a user line.
       window.setTimeout(() => {
         if (callActiveRef.current && !sendingRef.current && !talkingRef.current) {
           startCallListen();
@@ -536,7 +572,8 @@ function RaiReady() {
       );
 
       const act = parseAct(raw);
-      const line = act.line || streamLine(raw) || "…";
+      const parsed = act.line.trim();
+      const line = spokenCallLine(parsed) || spokenCallLine(raw) || streamLine(raw) || "…";
       store.patchMessage(threadId, assistant.id, { content: line });
       setCaption(line);
       setEmotion(act.emotion);
@@ -559,8 +596,7 @@ function RaiReady() {
       actLandedAt.current = Date.now();
       if (act.memories.length) useMemoryStore.getState().addMany(act.memories);
 
-      const shouldSpeak = voiceOnRef.current || callActiveRef.current;
-      if (shouldSpeak) {
+      if (shouldSpeakCallLine({ voiceOn: voiceOnRef.current, line })) {
         const spoken = speakable(line);
         if (spoken) {
           setTalking(true);
@@ -569,14 +605,18 @@ function RaiReady() {
           if (callActiveRef.current) {
             window.setTimeout(() => startBargeListen(), 180);
           }
-          await speak(
-            spoken,
-            (v) => {
-              lastAmp = lastAmp * 0.62 + v * 0.38;
-              setAmp(lastAmp);
-            },
-            controller.signal,
-          );
+          try {
+            await speak(
+              spoken,
+              (v) => {
+                lastAmp = lastAmp * 0.62 + v * 0.38;
+                setAmp(lastAmp);
+              },
+              controller.signal,
+            );
+          } catch {
+            // TTS fail → bubble already showing the line.
+          }
           speakFinishedClean = !controller.signal.aborted;
         } else {
           speakFinishedClean = true;
@@ -676,8 +716,9 @@ function RaiReady() {
     setCallActive(false);
     listenAfterSpeakRef.current = false;
     stop();
-    setCaption("");
+    // Thread / memory / sheet stay. Caption keeps the last spoken bubble.
   }
+  hangUpRef.current = hangUp;
 
   function bargeInTap() {
     if (!callActiveRef.current) return;
@@ -704,8 +745,7 @@ function RaiReady() {
       setCaption("Call mode needs speech input on this browser — type instead.");
       return;
     }
-    // Calls imply voice output
-    if (!voiceOn) setVoiceOn(true);
+    // Mute in chrome wins — do not force TTS on.
     callActiveRef.current = true;
     setCallActive(true);
     setCallSupported(true);
@@ -1237,7 +1277,9 @@ function RaiReady() {
             <div className="rounded-md bg-elevated px-3 py-2.5 text-xs leading-relaxed text-muted shadow-[var(--shadow-border)]">
               With a key, Star Rai calls xAI (<span className="text-fg">grok-4-latest</span>).
               CORS or key issues fall back to the local brain — no breaking character.
-              Phone icon starts Call mode (continuous listen → reply → speak).
+              Phone icon starts Call mode (listen → same Chat brain → speak the
+              line only). Tap again to hang up — thread stays. Mute in the header
+              still skips TTS. Mic audio is never stored.
               Tabs are Chat · Chart · Life — launch on Chat. Chart edits natal slots only (no
               auto-reading). Life v1 is music only — paste a title, no Spotify/Apple login.
               Session can stay on in the background; comments still land in Chat.

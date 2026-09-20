@@ -10,14 +10,19 @@ Open that link on a desktop or mobile browser. Optional: install as a home-scree
 
 ## Call mode
 
-Tap the **phone** icon in the header.
+Tap the **phone** icon in the header. Spec: `artifacts/star-rai-call-mode.txt`.
 
-- Continuous **listen → reply → speak** loop while the call is active (no hold-to-talk).
-- After she finishes TTS, listening starts again automatically.
-- **Barge-in:** tap the stage (or speak over her) to stop TTS and listen.
-- Status shows **On call / Listening / Speaking**; **Hang up** ends the loop.
-- Needs browser `SpeechRecognition` (Chrome / Edge / Android Chrome). If missing, she stays on typed chat + hold-to-talk when available.
-- Normal text chat and PTT are unchanged when Call is off.
+- Tap phone to start, tap again (or **Hang up**) to end. The chat thread, memory, and pose sheet stay.
+- Loop: **listen → same Chat brain as typed Chat → speak `line` only**.
+- Empty speech transcripts are ignored (keep listening; no invented user line).
+- Pose commands by voice still swap the sheet first. Pose tint applies to the spoken bubble.
+- TTS speaks the parsed `line` only — never JSON, memory lists, or lore dumps. If TTS fails, the bubble still shows.
+- Header **mute** is honored (Call does not force speaker on).
+- Leaving the page (hide / unload) aborts mic, TTS, and listeners so Call does not stay hot.
+- Mic audio is never stored. Needs browser `SpeechRecognition` (Chrome / Edge / Android Chrome); otherwise typed chat + hold-to-talk stay available.
+- **Barge-in:** tap the stage (or speak over her) to stop TTS and listen again.
+
+Normal text chat and PTT are unchanged when Call is off.
 
 ## Affection / relationship
 
@@ -102,7 +107,7 @@ The Worker forwards `POST /v1/chat/completions`, reads the key from `X-User-Key`
 | Chat brain | Local pose-keyed `artifacts/star-rai-local-brain.txt`; optional Grok (`grok-4-latest`) when key present |
 | Voice | Browser `SpeechSynthesis` (prefers female English when available) |
 | Hold-to-talk | Browser `SpeechRecognition` when present; otherwise type |
-| Call mode | Continuous listen→reply→speak + barge-in when SpeechRecognition present |
+| Call mode | Continuous listen → same Chat brain → speak `line` only; hangup + page-hide abort mic/TTS; mute honored; no recordings |
 | Affection | `localStorage` (`star-rai-affection`) — tier chip + tone |
 | Memory | `localStorage` (`star-rai-memory`) — compact slots + optional freeform notes |
 | Chat threads | `localStorage` (`star-rai-chat`) |
@@ -133,7 +138,7 @@ See **[POSING.md](./POSING.md)** for the drop-in guide:
 - Morning official pack under `public/rai/` (`*_official.png`, `idle.png`, `peace.png`, `middle_finger.png`, `heart_official.png`)
 - Live key → file table (`wave` → `wave_official.png`, `hold` → `hold_official.png`, `scold` → `scold_official.png`; `kiss` unmapped)
 - Kept as-today: `turn`, `profile`, `three_quarter_left`, `three_quarter_right`; Helix extra `point` → `point-front.png`
-- Voice card (`artifacts/star-rai-voice-card.txt`) is baked into `RAI_SYSTEM` at sync/build (`scripts/sync-star-rai-artifacts.js`); offline fallback is `artifacts/star-rai-local-brain.txt` (pose-keyed lines); memory-slot contract is `artifacts/star-rai-memory-slots.txt` (appended after the voice card on grok-4-latest, filled keys only). Chart v1 SoT is `artifacts/star-chart-v1.txt`. Do not edit `src/lib/generated/star-rai-artifacts.ts` by hand.
+- Voice card (`artifacts/star-rai-voice-card.txt`) is baked into `RAI_SYSTEM` at sync/build (`scripts/sync-star-rai-artifacts.js`); offline fallback is `artifacts/star-rai-local-brain.txt` (pose-keyed lines); memory-slot contract is `artifacts/star-rai-memory-slots.txt` (appended after the voice card on grok-4-latest, filled keys only). Chart v1 SoT is `artifacts/star-chart-v1.txt`. Call mode SoT is `artifacts/star-rai-call-mode.txt`. Do not edit `src/lib/generated/star-rai-artifacts.ts` by hand.
 
 ## Develop
 
