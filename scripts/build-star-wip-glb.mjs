@@ -2,6 +2,7 @@
  * Author a Star Rai WIP toon mesh (glTF binary).
  * Honest low-poly stand-in matching the canon checklist — not a booth VRM,
  * not Sairi, not shipping Rai.
+ * No kiss / blow-kiss / heart-hands meshes. scold ≠ shy ≠ pout as separate slots.
  */
 import { writeFileSync } from "node:fs";
 import path from "node:path";
@@ -191,8 +192,8 @@ function build() {
 
   // --- skirt: navy pleats + TWO white hem stripes ---
   mesh(pleatedSkirt(0.125, 0.2, 0.22, 16), C.navy, "skirt", hips, [0, -0.08, 0]);
-  mesh(new THREE.TorusGeometry(0.198, 0.006, 8, 32), C.white, "hemStripe1", hips, [0, -0.175, 0], [Math.PI / 2, 0, 0]);
-  mesh(new THREE.TorusGeometry(0.205, 0.006, 8, 32), C.white, "hemStripe2", hips, [0, -0.192, 0], [Math.PI / 2, 0, 0]);
+  mesh(new THREE.CylinderGeometry(0.205, 0.192, 0.011, 48, 1, true), C.white, "hemStripe1", hips, [0, -0.168, 0]);
+  mesh(new THREE.CylinderGeometry(0.212, 0.2, 0.011, 48, 1, true), C.white, "hemStripe2", hips, [0, -0.186, 0]);
 
   // --- legs / navy mid-calf socks / brown penny loafers ---
   for (const [up, low, foot, side] of [

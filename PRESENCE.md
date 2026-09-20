@@ -41,7 +41,7 @@ Ground truth: `public/rai/idle.png` + `artifacts/star-rai-canon/00-brief.txt`.
 | Skirt | Navy pleats, mid-thigh, **two** white hem stripes all around. |
 | Socks | Navy, ribbed, mid-calf / just-below-knee. |
 | Shoes | Brown penny loafers. |
-| Kiss | Unmapped. Do not sculpt. Mood PNGs (talk/wave/scold/pout/shy) come later. |
+| Kiss | **Unmapped.** Do not sculpt, map, or render kiss / blow-kiss / heart-hands. Mood PNG art still deferred. |
 
 ## Lab mesh
 
@@ -86,7 +86,7 @@ Lab approximates what the WIP armature can act:
 | `shy` | **Fidget hands at waist**, look down | Heavy blush, averted — not crossed arms |
 | `think` | Hand near chin | Glare rest |
 | `point` | Pointing arm only (not scold) | Glare rest |
-| `hearts` | Hands toward chest (not kiss / heart-hands default) | Glare rest |
+| `hearts` | Not acted in Lab (PNG prop sheet only — no heart-hands) | Glare rest |
 | `turn` / `profile` / `three_quarter*` | Body yaw only (~¾, not 180°) | Glare rest |
 | `kiss` | **Unmapped** | **Unmapped** |
 

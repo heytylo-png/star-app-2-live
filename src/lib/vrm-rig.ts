@@ -1,7 +1,9 @@
 import type { EmotionId, PoseId } from "@/lib/rai";
 import type { VRMHumanBoneName } from "@pixiv/three-vrm";
 
-/** Lab-only Star WIP. Not the shipping body. Not Sairi. */
+/** Lab-only Star WIP. Not the shipping body. Not Sairi.
+ *  Locks: scold ≠ shy ≠ pout (never alias). Kiss / blow-kiss / heart-hands stay off.
+ */
 export const WIP_GLB_FILE = "models/star-rai-wip.glb";
 /** Non-Rai scaffold. Do not load this as Star. */
 export const SCAFFOLD_VRM_FILE = "models/scaffolding/sairi-ponytail.vrm";
@@ -87,10 +89,15 @@ const POSE_RIG: Partial<Record<PoseId, RigPose>> = {
     rightLowerArm: { x: 0.25, y: -1.55, z: 0.2 },
     rightHand: { x: 0.15, y: -0.2, z: 0.25 },
   },
+  // Crossed arms — never reuse SHY_RIG (that is shy).
   pout: {
     head: { x: 0.08, y: 0.1, z: 0.04 },
     neck: { x: 0.04, y: 0.04, z: 0 },
     spine: { x: 0.04, y: 0, z: 0 },
+    leftUpperArm: { x: 0.35, y: 0.2, z: 0.55 },
+    rightUpperArm: { x: 0.4, y: -0.2, z: -0.55 },
+    leftLowerArm: { x: 0.2, y: 1.05, z: 0.2 },
+    rightLowerArm: { x: 0.25, y: -1.0, z: -0.15 },
   },
   tired: {
     head: { x: 0.22, y: -0.06, z: 0 },
@@ -114,7 +121,14 @@ const POSE_RIG: Partial<Record<PoseId, RigPose>> = {
     head: { x: 0, y: 0.12, z: 0.04 },
   },
   embarrassed: SHY_RIG,
-  scold: POINT_RIG,
+  // scold ≠ point: left on hip + grit lean. POINT_RIG is point-only.
+  scold: {
+    ...POINT_RIG,
+    leftUpperArm: { x: 0.2, y: -0.1, z: 0.55 },
+    leftLowerArm: { x: 0.15, y: 0.85, z: 0.12 },
+    leftHand: { x: 0.05, y: 0.08, z: 0.06 },
+    head: { x: -0.08, y: 0.06, z: 0 },
+  },
   shy: SHY_RIG,
   sad: {
     head: { x: 0.22, y: -0.08, z: 0 },
@@ -132,19 +146,7 @@ const POSE_RIG: Partial<Record<PoseId, RigPose>> = {
     head: { x: 0.04, y: 0, z: 0 },
     spine: { x: 0.03, y: 0, z: 0 },
   },
-  hearts: {
-    spine: { x: 0.06, y: 0, z: 0 },
-    chest: { x: 0.04, y: 0, z: 0 },
-    leftShoulder: { x: 0, y: -0.12, z: -0.08 },
-    rightShoulder: { x: 0, y: 0.12, z: 0.08 },
-    leftUpperArm: { x: 0.45, y: -0.15, z: 0.85 },
-    rightUpperArm: { x: 0.45, y: 0.15, z: -0.85 },
-    leftLowerArm: { x: 0.2, y: 1.05, z: 0.15 },
-    rightLowerArm: { x: 0.2, y: -1.05, z: -0.15 },
-    leftHand: { x: 0.15, y: 0.2, z: 0.1 },
-    rightHand: { x: 0.15, y: -0.2, z: -0.1 },
-    head: { x: -0.04, y: 0, z: 0 },
-  },
+  // Helix `hearts` is a PNG prop sheet. Lab does not fake heart-hands / kiss.
   turn: {
     hips: { x: 0, y: 0.72, z: 0 },
     spine: { x: 0.04, y: 0.18, z: 0.04 },
@@ -253,10 +255,10 @@ const WIP_POSE_RIG: Partial<Record<PoseId, RigPose>> = {
     spine: { x: 0.1, y: 0.05, z: 0 },
     leftUpperArm: { x: 0.18, y: 0.12, z: 0.22 },
     rightUpperArm: { x: 0.18, y: -0.12, z: -0.22 },
-    leftLowerArm: { x: 0.28, y: 0.42, z: 0.12 },
-    rightLowerArm: { x: 0.28, y: -0.42, z: -0.12 },
-    leftHand: { x: 0.05, y: 0.2, z: 0.06 },
-    rightHand: { x: 0.05, y: -0.2, z: -0.06 },
+    leftLowerArm: { x: 0.35, y: 0.35, z: 0.18 },
+    rightLowerArm: { x: 0.35, y: -0.35, z: -0.18 },
+    leftHand: { x: 0.08, y: 0.28, z: 0.1 },
+    rightHand: { x: 0.08, y: -0.28, z: -0.1 },
   },
   embarrassed: {
     head: { x: 0.3, y: 0.16, z: 0.04 },
@@ -272,21 +274,12 @@ const WIP_POSE_RIG: Partial<Record<PoseId, RigPose>> = {
     head: { x: 0.06, y: -0.08, z: 0.02 },
     neck: { x: 0.03, y: -0.04, z: 0 },
     spine: { x: 0.04, y: 0, z: 0 },
-    leftUpperArm: { x: 0.42, y: 0.18, z: 0.62 },
-    rightUpperArm: { x: 0.48, y: -0.22, z: -0.58 },
-    leftLowerArm: { x: 0.22, y: 1.15, z: 0.22 },
-    rightLowerArm: { x: 0.28, y: -1.05, z: -0.18 },
-    leftHand: { x: 0.08, y: 0.15, z: 0.08 },
-    rightHand: { x: 0.08, y: -0.15, z: -0.08 },
-  },
-  hearts: {
-    spine: { x: 0.06, y: 0, z: 0 },
-    chest: { x: 0.04, y: 0, z: 0 },
-    leftUpperArm: { x: 0.55, y: -0.12, z: 0.62 },
-    rightUpperArm: { x: 0.55, y: 0.12, z: -0.62 },
-    leftLowerArm: { x: 0.35, y: 1.05, z: 0.18 },
-    rightLowerArm: { x: 0.35, y: -1.05, z: -0.18 },
-    head: { x: -0.04, y: 0, z: 0 },
+    leftUpperArm: { x: 0.5, y: 0.22, z: 0.72 },
+    rightUpperArm: { x: 0.55, y: -0.28, z: -0.68 },
+    leftLowerArm: { x: 0.28, y: 1.25, z: 0.28 },
+    rightLowerArm: { x: 0.32, y: -1.15, z: -0.22 },
+    leftHand: { x: 0.1, y: 0.2, z: 0.1 },
+    rightHand: { x: 0.1, y: -0.2, z: -0.1 },
   },
 };
 
@@ -294,6 +287,7 @@ const WIP_POSE_RIG: Partial<Record<PoseId, RigPose>> = {
 export type WipFace = "glare" | "talkSmile" | "smirk" | "grit" | "pout" | "shy";
 
 export function wipFaceFor(pose: PoseId, talking: boolean): WipFace {
+  // Kiss is not a PoseId and must never grow a face slot.
   if (pose === "scold") return "grit";
   if (pose === "pout") return "pout";
   if (pose === "shy" || pose === "embarrassed") return "shy";
@@ -302,11 +296,17 @@ export function wipFaceFor(pose: PoseId, talking: boolean): WipFace {
   return "glare";
 }
 
+const DISTINCT_WIP = new Set<PoseId>(["scold", "shy", "pout"]);
+
 export function rigFor(pose: PoseId, emotion: EmotionId, aPoseRest = false): RigPose {
   if (aPoseRest) {
+    // No heart-hands / kiss-like arms on the WIP.
+    if (pose === "hearts") return {};
     if (pose !== "idle" && pose !== "talk") {
+      if (DISTINCT_WIP.has(pose)) return { ...(WIP_POSE_RIG[pose] ?? {}) };
       return { ...(WIP_POSE_RIG[pose] ?? POSE_RIG[pose] ?? {}) };
     }
+    if (emotion === "shy") return { ...(WIP_POSE_RIG.shy ?? {}) };
     return { ...(EMOTION_RIG[emotion] ?? {}) };
   }
   if (pose !== "idle" && pose !== "talk") {

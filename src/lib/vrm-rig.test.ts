@@ -22,6 +22,13 @@ describe("lab mesh contract", () => {
     const magic = readFileSync(join(publicRoot, WIP_GLB_FILE)).subarray(0, 4).toString("ascii");
     assert.equal(magic, "glTF");
   });
+
+  it("ships no kiss morph on the WIP glb", () => {
+    const glb = readFileSync(join(publicRoot, WIP_GLB_FILE));
+    assert.equal(glb.includes("kiss"), false);
+    assert.equal(glb.includes("blowKiss"), false);
+    assert.equal(glb.includes("heartHands"), false);
+  });
 });
 
 describe("rigFor A-pose rest", () => {
@@ -39,7 +46,7 @@ describe("rigFor A-pose rest", () => {
     assert.ok((wave.rightUpperArm?.z ?? 0) < -1);
   });
 
-  it("keeps scold, shy, and pout as three distinct WIP bodies", () => {
+  it("keeps scold, shy, and pout distinct on both WIP and T-pose maps", () => {
     const scold = rigFor("scold", "bratty", true);
     const shy = rigFor("shy", "bratty", true);
     const pout = rigFor("pout", "bratty", true);
@@ -51,9 +58,16 @@ describe("rigFor A-pose rest", () => {
     assert.ok((pout.leftLowerArm?.y ?? 0) > 0.8, "pout crosses arms");
     assert.ok((shy.leftLowerArm?.y ?? 0) < 0.6, "shy fidgets, does not cross");
     assert.ok((shy.head?.x ?? 0) > 0.25, "shy looks down");
+    const tScold = rigFor("scold", "bratty", false);
+    const tShy = rigFor("shy", "bratty", false);
+    const tPout = rigFor("pout", "bratty", false);
+    assert.notDeepEqual(tScold, tShy);
+    assert.notDeepEqual(tScold, tPout);
+    assert.notDeepEqual(tShy, tPout);
+    assert.ok((tPout.leftLowerArm?.y ?? 0) > 0.5, "T-pose pout also crosses");
   });
 
-  it("does not alias scold/shy/pout faces and never maps kiss", () => {
+  it("does not alias scold/shy/pout faces and never maps kiss or heart-hands", () => {
     assert.equal(wipFaceFor("scold", false), "grit");
     assert.equal(wipFaceFor("shy", false), "shy");
     assert.equal(wipFaceFor("pout", false), "pout");
@@ -61,9 +75,13 @@ describe("rigFor A-pose rest", () => {
     assert.equal(wipFaceFor("talk", false), "talkSmile");
     assert.equal(wipFaceFor("idle", false), "glare");
     assert.equal(wipFaceFor("idle", true), "talkSmile");
+    assert.equal(wipFaceFor("hearts", false), "glare");
     assert.notEqual(wipFaceFor("scold", true), wipFaceFor("shy", true));
     assert.notEqual(wipFaceFor("scold", true), wipFaceFor("pout", true));
     assert.notEqual(wipFaceFor("shy", true), wipFaceFor("pout", true));
     assert.equal(wipFaceFor("kiss" as never, false), "glare");
+    const hearts = rigFor("hearts", "bratty", true);
+    assert.equal(hearts.leftUpperArm, undefined);
+    assert.equal(hearts.rightUpperArm, undefined);
   });
 });
