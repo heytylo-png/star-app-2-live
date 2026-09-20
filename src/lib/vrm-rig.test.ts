@@ -62,10 +62,10 @@ describe("rigFor A-pose rest", () => {
     assert.ok((scold.rightUpperArm?.x ?? 0) < -1, "scold points");
     assert.ok((scold.leftUpperArm?.z ?? 0) > 0.6, "scold left hand on hip");
     assert.ok((scold.leftUpperLeg?.z ?? 0) > 0.1, "scold stance is wider");
-    assert.ok((pout.leftLowerArm?.y ?? 0) > 0.8, "pout crosses arms");
-    assert.ok((shy.leftLowerArm?.y ?? 0) < 0.6, "shy fidgets, does not cross");
+    assert.ok(Math.abs(pout.leftLowerArm?.z ?? 0) > 1, "pout folds arms across the chest");
+    assert.ok(Math.abs(shy.leftLowerArm?.z ?? 0) < 0.6, "shy fidgets, does not cross");
     assert.ok((shy.head?.x ?? 0) > 0.25, "shy looks down");
-    assert.ok((shy.leftUpperArm?.x ?? 0) > 0.4, "shy arms come forward to the waist");
+    assert.ok((shy.leftUpperArm?.x ?? 0) < -0.3, "shy arms come forward to the waist");
     const tScold = rigFor("scold", "bratty", false);
     const tShy = rigFor("shy", "bratty", false);
     const tPout = rigFor("pout", "bratty", false);

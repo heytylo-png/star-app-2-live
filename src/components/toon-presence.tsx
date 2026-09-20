@@ -437,7 +437,7 @@ function applyWipFace(face: WipFace, amplitude: number, nodes: WipFaceNodes) {
   show(nodes.blushShyR, face === "shy");
   if (nodes.talk && face === "talkSmile") {
     const a = Math.max(0, Math.min(1, amplitude));
-    nodes.talk.scale.set(1.35, 0.28 + a * 0.55, 0.62);
+    nodes.talk.scale.set(1.55, 0.42 + a * 0.5, 0.75);
   }
   const blush = face === "shy" ? 1.15 : face === "pout" ? 1.2 : 1;
   for (const b of [nodes.blushL, nodes.blushR]) {

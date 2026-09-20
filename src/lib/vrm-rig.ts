@@ -216,19 +216,19 @@ const EMOTION_RIG: Record<EmotionId, RigPose> = {
  */
 /** Left hand on hip — wave + scold only. Never reused for pout/shy. */
 const LEFT_ON_HIP: RigPose = {
-  leftUpperArm: { x: 0.42, y: -0.38, z: 1.02 },
-  leftLowerArm: { x: 0.28, y: 1.12, z: 0.22 },
-  leftHand: { x: 0.1, y: 0.12, z: 0.16 },
+  leftUpperArm: { x: -0.2, y: -0.45, z: 1.15 },
+  leftLowerArm: { x: -0.15, y: 0.25, z: -1.45 },
+  leftHand: { x: 0.15, y: 0.2, z: 0.12 },
 };
 
 const WIP_POSE_RIG: Partial<Record<PoseId, RigPose>> = {
   wave: {
     ...LEFT_ON_HIP,
     hips: { x: 0, y: -0.06, z: 0.03 },
-    rightShoulder: { x: 0, y: 0.16, z: 0.28 },
-    rightUpperArm: { x: -0.18, y: 0.42, z: -2.18 },
-    rightLowerArm: { x: 0.22, y: -0.58, z: -0.32 },
-    rightHand: { x: 0.2, y: 0.55, z: 0.35 },
+    rightShoulder: { x: 0, y: 0.16, z: 0.22 },
+    rightUpperArm: { x: -0.4, y: 0.2, z: -1.7 },
+    rightLowerArm: { x: -0.3, y: -0.2, z: -1.0 },
+    rightHand: { x: 0.35, y: 0.7, z: 0.25 },
     head: { x: 0, y: 0.08, z: 0.03 },
   },
   think: {
@@ -264,12 +264,12 @@ const WIP_POSE_RIG: Partial<Record<PoseId, RigPose>> = {
     head: { x: 0.4, y: 0.22, z: 0.06 },
     neck: { x: 0.16, y: 0.12, z: 0 },
     spine: { x: 0.12, y: 0.06, z: 0 },
-    leftUpperArm: { x: 0.62, y: 0.2, z: 0.12 },
-    rightUpperArm: { x: 0.62, y: -0.2, z: -0.12 },
-    leftLowerArm: { x: 0.52, y: 0.48, z: 0.18 },
-    rightLowerArm: { x: 0.52, y: -0.48, z: -0.18 },
-    leftHand: { x: 0.12, y: 0.38, z: 0.12 },
-    rightHand: { x: 0.12, y: -0.38, z: -0.12 },
+    leftUpperArm: { x: -0.55, y: 0.25, z: 0.12 },
+    rightUpperArm: { x: -0.55, y: -0.25, z: -0.12 },
+    leftLowerArm: { x: -0.85, y: 0.35, z: 0.35 },
+    rightLowerArm: { x: -0.85, y: -0.35, z: -0.35 },
+    leftHand: { x: 0.12, y: 0.3, z: 0.12 },
+    rightHand: { x: 0.12, y: -0.3, z: -0.12 },
   },
   embarrassed: {
     head: { x: 0.3, y: 0.16, z: 0.04 },
@@ -286,10 +286,10 @@ const WIP_POSE_RIG: Partial<Record<PoseId, RigPose>> = {
     neck: { x: 0.03, y: -0.05, z: 0 },
     spine: { x: 0.04, y: 0, z: 0 },
     hips: { x: 0, y: 0.1, z: 0 },
-    leftUpperArm: { x: 0.88, y: 0.32, z: 0.42 },
-    rightUpperArm: { x: 0.92, y: -0.38, z: -0.38 },
-    leftLowerArm: { x: 0.38, y: 1.42, z: 0.12 },
-    rightLowerArm: { x: 0.42, y: -1.32, z: -0.1 },
+    leftUpperArm: { x: -1.1, y: 0.5, z: 0.12 },
+    rightUpperArm: { x: -1.15, y: -0.55, z: -0.1 },
+    leftLowerArm: { x: -0.15, y: 0.2, z: -1.55 },
+    rightLowerArm: { x: -0.1, y: -0.25, z: 1.5 },
     leftHand: { x: 0.12, y: 0.22, z: 0.08 },
     rightHand: { x: 0.12, y: -0.22, z: -0.08 },
   },
