@@ -3,7 +3,7 @@
  *
  * Standing Life keys ride the same grok-4-latest MEMORY FACTS path as Chart
  * (filled + session on only). A LIFE instruction block is appended only on
- * a track change. Diary stays under Chart. No music login.
+ * a track change. Diary stays under Chart. Spotify login is optional (Life tab).
  */
 
 import { detectChartIntent, localDateKey } from "./chart.ts";

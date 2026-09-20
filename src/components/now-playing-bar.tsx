@@ -13,7 +13,7 @@ type NowPlayingBarProps = {
 };
 
 /**
- * Life pane Set/Stop — paste a title, no OAuth.
+ * Life pane Set/Stop — paste a title without Spotify.
  * Chat has no music strip; comments still fire in the Chat thread.
  */
 export function NowPlayingBar({

@@ -1,6 +1,6 @@
 STAR RAI — LIFE v1 (Helix / star-app-2-live)
 Live GitHub Pages only. Music only. Diary stays under Chart. Life tab can wait.
-No Spotify / Apple Music login required. Never block Chat on a music login.
+Spotify on Life is optional (Web Playback + PKCE). Never required. Never block Chat on a music login.
 
 V1 BEHAVIOR
 - User can name a track / paste a title.
@@ -22,6 +22,14 @@ MEMORY SLOTS (send only when filled — same MEMORY FACTS / Life block path as C
 - session_on (true while a Life music session is active)
 - daily_playlist (4–8 titles; never dump into her line)
 - mood_tag (bratty | smug | tired | soft)
+
+OPTIONAL SPOTIFY (Life tab only)
+- Authorization Code with PKCE. Client ID via VITE_SPOTIFY_CLIENT_ID. No client secret.
+- Tokens in localStorage / session only. Redirect: https://heytylo-png.github.io/star-app-2-live/
+- Premium required for Web Playback — say so if the account is free.
+- On track change: now_playing + session_on; one comment per change (same as paste).
+- Fail soft if not connected or Client ID missing. Connect + setup hint still show.
+- Chat stays clean (no Now Playing bar).
 
 DO NOT
 - Make music her topic if nothing is on.

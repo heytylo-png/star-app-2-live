@@ -3,6 +3,7 @@
 interface ImportMetaEnv {
   readonly VITE_GROK_PROXY_URL?: string;
   readonly VITE_API_BASE?: string;
+  readonly VITE_SPOTIFY_CLIENT_ID?: string;
 }
 
 interface ImportMeta {

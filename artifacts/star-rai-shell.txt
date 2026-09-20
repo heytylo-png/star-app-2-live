@@ -7,8 +7,9 @@ TABS
    to set a Life session. No now-playing bar / music strip on Chat.
 2. Chart — sparse daily dashboard (theme beat, her-day section, sky labels, quiet birth edit, last diary).
    No natal wheel. No auto-reading on open.
-3. Life — now_playing + Set/Stop, quiet daily list, mood tag.
-   No Spotify / Apple login.
+3. Life — optional Spotify Connect / play-pause / now playing (Premium Web Playback),
+   plus paste Set/Stop, quiet daily list, mood tag.
+   Login never required. Chat stays clean.
 
 FIRST LAUNCH
 Setup stays a skippable overlay on Chat (date/time/place/Skip).
@@ -26,7 +27,7 @@ DO NOT
   Chart/her-day may use the same Grok path once per local day for pane copy only —
   fail soft, never a Chat post.
 - Put diary on Life (diary stays Chart).
-- Require music login.
+- Require music login (Spotify Connect is optional on Life).
 - Add Expo-only implementation.
 
 UNCHANGED

@@ -155,12 +155,59 @@ The Worker forwards `POST /v1/chat/completions`, reads the key from `X-User-Key`
 | Chat threads | `localStorage` (`star-rai-chat`) |
 | xAI key | `localStorage` (`star-rai-xai-key`) — browser only |
 
+## Spotify on Life (optional)
+
+Life can play through the **Spotify Web Playback SDK** using **Authorization Code with PKCE**. There is **no client secret** in git or the Pages build. Chat stays clean (no Now Playing bar). Paste-a-title still works if Spotify is off.
+
+**Premium is required** for in-browser playback. Free-tier accounts see a clear message and can still paste a title.
+
+### 1. Create a Spotify Developer app
+
+1. Open [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) and create an app.
+2. App type: **Web app** / Single Page App. Do **not** put a client secret in this repo.
+3. Add these **Redirect URIs** exactly (trailing slash):
+
+   - `https://heytylo-png.github.io/star-app-2-live/`
+   - `http://localhost:5173/star-app-2-live/` (local Vite)
+   - `http://127.0.0.1:5173/star-app-2-live/` (local Vite via IP)
+
+4. Copy the **Client ID** only.
+
+### 2. Set the Client ID for the build
+
+Vite inlines `VITE_SPOTIFY_CLIENT_ID` at **build** time. Do not invent a key. If it is missing, Life still shows **Connect Spotify** plus a setup hint.
+
+Local (gitignored):
+
+```bash
+cp .env.example .env.local
+# put your Client ID in VITE_SPOTIFY_CLIENT_ID
+npm run dev
+```
+
+Pages rebuild:
+
+```bash
+VITE_SPOTIFY_CLIENT_ID=your_spotify_client_id npm run build
+# push main, then force-push dist/ to gh-pages with .nojekyll
+```
+
+Tokens (`access_token` / `refresh_token`) stay in `localStorage` (`star-rai-spotify`) and the PKCE verifier in `sessionStorage` (`star-rai-spotify-pkce`). Never commit them.
+
+### 3. Use it on Life
+
+1. Open the live app → **Life**.
+2. Tap **Connect Spotify** and approve. The redirect comes back to `/star-app-2-live/`.
+3. Premium: play/pause, now-playing title, optional search or **Transfer** to this tab.
+4. Track changes set `now_playing` + `session_on` and keep the existing one-comment-per-change Chat behavior.
+5. Not connected / free-tier / SDK fail → fail soft. Chat still works.
+
 There is **no** server API on Pages (unless you deploy the optional Worker). Client also probes:
 
 - `/star-app-2-live/api/chat`
 - `/star-app-2-live/api/tts`
 
-Future env: `VITE_API_BASE` — leave unset for pure Pages. `VITE_GROK_PROXY_URL` — optional CORS proxy base URL.
+Future env: `VITE_API_BASE` — leave unset for pure Pages. `VITE_GROK_PROXY_URL` — optional CORS proxy base URL. `VITE_SPOTIFY_CLIENT_ID` — optional Spotify app Client ID (PKCE; no secret).
 
 ## Persist keys (stable)
 
@@ -169,6 +216,7 @@ Future env: `VITE_API_BASE` — leave unset for pure Pages. `VITE_GROK_PROXY_URL
 - `star-rai-xai-key` — optional xAI API key (never commit)
 - `star-rai-affection` — affection score, last talk day, streak (schema v1)
 - `star-rai-chart` — Chart v1 setup skip/done, last fire day, diary pages, her-day pane copy
+- `star-rai-spotify` — Spotify PKCE tokens (access / refresh / expiry). Never a client secret.
 
 Do not rename keys without a migrator. Document schema bumps here.
 

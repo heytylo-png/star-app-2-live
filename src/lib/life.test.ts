@@ -34,6 +34,8 @@ describe("Life v1 artifact", () => {
     assert.match(LIFE_V1_SOURCE, /session_on/);
     assert.match(LIFE_V1_SOURCE, /daily_playlist/);
     assert.match(LIFE_V1_SOURCE, /Never block Chat on a music login/);
+    assert.match(LIFE_V1_SOURCE, /VITE_SPOTIFY_CLIENT_ID/);
+    assert.match(LIFE_V1_SOURCE, /Premium required for Web Playback/);
     assert.match(LIFE_V1_SOURCE, /Steal Chart/);
   });
 

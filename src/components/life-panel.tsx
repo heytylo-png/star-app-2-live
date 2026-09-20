@@ -1,19 +1,22 @@
 import { NowPlayingBar } from "@/components/now-playing-bar";
+import { SpotifyLifePlayer } from "@/components/spotify-life-player";
 import { LIFE_MOOD_TAGS, type LifeMoodTag, type LifeSlots } from "@/lib/life";
 import { useMemoryStore } from "@/lib/memory-store";
+import type { SpotifyPlaybackApi } from "@/lib/use-spotify-playback";
 import { cn } from "@/lib/utils";
 
 type LifePanelProps = {
   life?: LifeSlots;
   onSetTitle: (title: string) => void;
   onStop: () => void;
+  spotify: SpotifyPlaybackApi;
 };
 
 /**
- * Life pane — session + quiet daily list + mood tag.
- * No login. Comments still land in Chat, not here.
+ * Life pane — optional Spotify + paste Set/Stop + quiet daily list + mood tag.
+ * Login never required. Comments still land in Chat, not here.
  */
-export function LifePanel({ life, onSetTitle, onStop }: LifePanelProps) {
+export function LifePanel({ life, onSetTitle, onStop, spotify }: LifePanelProps) {
   const sessionOn = Boolean(life?.on);
   const playlist = life?.daily_playlist ?? [];
   const mood = life?.mood_tag;
@@ -34,10 +37,11 @@ export function LifePanel({ life, onSetTitle, onStop }: LifePanelProps) {
     >
       <p className="font-display text-xl leading-tight">Life</p>
       <p className="mt-0.5 text-xs text-muted">
-        Music only. Paste a title — no login. Session stays on in the background.
+        Music only. Connect Spotify or paste a title. Session stays on in the background.
       </p>
 
-      <div className="mt-3">
+      <div className="mt-3 space-y-3">
+        <SpotifyLifePlayer spotify={spotify} />
         <NowPlayingBar
           sessionOn={sessionOn}
           nowPlaying={life?.now_playing}
