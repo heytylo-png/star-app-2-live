@@ -174,22 +174,37 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 1.1rem;
+  height: 1.75rem;
   cursor: ns-resize;
   touch-action: none;
-  color: color-mix(in oklab, var(--color-fg) 38%, transparent);
   user-select: none;
 }
 
-.chat-thread-handle:hover,
-.chat-thread-handle:focus-visible {
-  color: var(--color-fg);
+.chat-thread-handle-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 1.15rem;
+  border-radius: 999px;
+  color: #f4efe8;
+  background: color-mix(in oklab, #2a2436 72%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.chat-thread-handle:hover .chat-thread-handle-pill,
+.chat-thread-handle:focus-visible .chat-thread-handle-pill {
+  background: color-mix(in oklab, #2a2436 88%, transparent);
 }
 
 .chat-thread-handle:focus-visible {
+  outline: none;
+}
+
+.chat-thread-handle:focus-visible .chat-thread-handle-pill {
   outline: 2px solid var(--color-ring);
-  outline-offset: 1px;
-  border-radius: 999px;
+  outline-offset: 2px;
 }
 
 .chat-thread {

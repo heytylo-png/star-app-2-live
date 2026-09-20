@@ -141,7 +141,7 @@ export function ChatThread({
   return (
     <div
       className="chat-thread-frame pointer-events-auto mx-auto mb-1 w-full max-w-md min-h-0"
-      style={{ maxHeight: heightPx }}
+      style={{ height: heightPx }}
       data-testid="chat-thread-frame"
     >
       <div
@@ -160,9 +160,12 @@ export function ChatThread({
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
+        onLostPointerCapture={endDrag}
         onKeyDown={onKeyDown}
       >
-        <GripHorizontal className="size-3.5" aria-hidden />
+        <span className="chat-thread-handle-pill">
+          <GripHorizontal className="size-4" aria-hidden />
+        </span>
       </div>
       <div
         ref={scrollerRef}
