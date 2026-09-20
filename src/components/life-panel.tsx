@@ -55,26 +55,23 @@ export function LifePanel({ life, onSetTitle, onStop, onPlayTitle, spotify }: Li
       id="star-pane-life"
       role="tabpanel"
       aria-labelledby="star-tab-life"
-      className="mx-3 mb-1 mt-auto max-h-[min(32rem,68%)] min-h-0 overflow-y-auto rounded-xl bg-elevated/88 px-4 py-3 shadow-[var(--shadow-border)] backdrop-blur-[2px] sm:mx-4"
+      className="mx-3 mb-1 mt-auto max-h-[min(36rem,74%)] min-h-0 overflow-y-auto rounded-xl bg-elevated/88 px-4 py-3 shadow-[var(--shadow-border)] backdrop-blur-[2px] sm:mx-4"
     >
-      <p className="font-display text-xl leading-tight">Life</p>
-      <p className="mt-0.5 text-xs text-muted">
-        Music only. Connect Spotify or paste a title. Session stays on in the background.
-      </p>
-
-      <div className="mt-3 border-t border-border pt-3">
-        <p className="text-[0.65rem] tracking-wide text-subtle uppercase">Her mood</p>
-        <p className="mt-0.5 text-xs text-muted">Hers for the day. Tints wording only.</p>
-        <p className="mt-2 text-sm text-fg">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="font-display text-xl leading-tight">Life</p>
+        <p className="text-xs text-muted" aria-label="Her mood for the day">
           {moodToday && mood ? (
             <>
-              Today · <span className="font-medium">{mood}</span>
+              Today · <span className="font-medium text-fg">{mood}</span>
             </>
           ) : (
-            <span className="text-muted">She hasn&apos;t named today yet.</span>
+            "Mood later"
           )}
         </p>
       </div>
+      <p className="mt-0.5 text-xs text-muted">
+        Music only. Her mood is hers for the day — wording tint only.
+      </p>
 
       <div className="mt-3 space-y-3">
         <SpotifyLifePlayer spotify={spotify} />
@@ -98,18 +95,14 @@ export function LifePanel({ life, onSetTitle, onStop, onPlayTitle, spotify }: Li
         {suggestions.length ? (
           <ul className="mt-2 space-y-2">
             {suggestions.map((row) => (
-              <li
-                key={row.title}
-                className="flex items-start justify-between gap-2 rounded-md bg-bg px-2.5 py-2"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm text-fg">{row.title}</p>
-                  {row.note ? <p className="mt-0.5 truncate text-xs text-muted">{row.note}</p> : null}
-                </div>
+              <li key={row.title} className="rounded-md bg-bg px-2.5 py-2">
+                <p className="text-sm leading-snug text-fg">{row.title}</p>
+                {row.note ? <p className="mt-0.5 text-xs text-muted">{row.note}</p> : null}
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
+                  className="mt-1.5 -ml-2"
                   disabled={spotify.busy}
                   onClick={() => onPlayTitle(row.title)}
                 >
