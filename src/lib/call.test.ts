@@ -7,15 +7,25 @@ import { speakable } from "./companion.ts";
 import { CALL_MODE_SOURCE, RAI_SYSTEM } from "./generated/star-rai-artifacts.ts";
 import { namedPoseFromText, resolveSpokenPose } from "./rai.ts";
 import {
+  CALL_AUDIO_CONSTRAINTS,
+  CALL_AUDIO_CONSTRAINTS_CHROME,
+  CALL_FINAL_DEBOUNCE_MS,
+  CALL_LISTEN_BACKOFF_MS,
+  CALL_LISTEN_DURING_TTS,
+  CALL_POST_TTS_COOLDOWN_MS,
   CALL_STORE_RECORDINGS,
   beginCallMicRequest,
   callMicNotice,
   callTranscriptAction,
+  callUtteranceToSend,
   classifyGetUserMediaError,
   hangUpCallState,
+  meaningfulTranscript,
   MIC_UNBLOCK_STEPS,
+  nextCallListenBackoffMs,
   shouldEndCallOnPageEvent,
   shouldSpeakCallLine,
+  shouldStartRecognitionOnError,
   speechRecErrorAction,
   spokenCallLine,
   stopMediaTracks,
@@ -54,9 +64,30 @@ describe("empty transcript", () => {
     assert.equal(callTranscriptAction(undefined), "keep_listening");
   });
 
-  it("sends a non-empty transcript on the same Chat path", () => {
-    assert.equal(callTranscriptAction("Hey. Just got here."), "send");
+  it("ignores very short finals and filler sounds", () => {
+    assert.equal(callTranscriptAction("a"), "keep_listening");
+    assert.equal(callTranscriptAction("."), "keep_listening");
+    assert.equal(callTranscriptAction("uh"), "keep_listening");
+    assert.equal(callTranscriptAction("um"), "keep_listening");
+    assert.equal(callTranscriptAction("  hmm  "), "keep_listening");
+    assert.equal(callTranscriptAction("ah"), "keep_listening");
+    assert.equal(meaningfulTranscript("uhh"), "");
+  });
+
+  it("still sends real short words", () => {
+    assert.equal(callTranscriptAction("hi"), "send");
+    assert.equal(callTranscriptAction("ok"), "send");
+    assert.equal(callTranscriptAction("no"), "send");
+    assert.equal(callTranscriptAction("yes"), "send");
     assert.equal(callTranscriptAction("  wave  "), "send");
+    assert.equal(callTranscriptAction("Hey. Just got here."), "send");
+  });
+
+  it("prefers finals and never sends noisy interim", () => {
+    assert.equal(callUtteranceToSend({ finals: [], interim: "uh background tv" }), "");
+    assert.equal(callUtteranceToSend({ finals: ["uh"], interim: "hey wait" }), "");
+    assert.equal(callUtteranceToSend({ finals: ["Hey. Just got here."], interim: "noise" }), "Hey. Just got here.");
+    assert.ok(CALL_FINAL_DEBOUNCE_MS >= 400);
   });
 });
 
@@ -118,16 +149,48 @@ describe("hangup + page leave", () => {
 });
 
 describe("Android Chrome mic permission", () => {
-  it("starts getUserMedia synchronously from the tap (no async gap)", () => {
+  it("starts getUserMedia synchronously from the tap with AEC / NS / AGC", () => {
     let called = false;
     const gum: Parameters<typeof beginCallMicRequest>[0] = (constraints) => {
       called = true;
-      assert.deepEqual(constraints, { audio: true });
+      const audio = constraints.audio as MediaTrackConstraints;
+      assert.equal(audio.echoCancellation, true);
+      assert.equal(audio.noiseSuppression, true);
+      assert.equal(audio.autoGainControl, true);
+      assert.equal(
+        (audio as MediaTrackConstraints & { googEchoCancellation?: boolean }).googEchoCancellation,
+        true,
+      );
       return Promise.resolve({ getTracks: () => [] } as unknown as MediaStream);
     };
     const pending = beginCallMicRequest(gum);
     assert.equal(called, true);
     assert.equal(typeof pending.then, "function");
+    assert.equal(CALL_AUDIO_CONSTRAINTS.echoCancellation, true);
+    assert.equal(CALL_AUDIO_CONSTRAINTS.noiseSuppression, true);
+    assert.equal(CALL_AUDIO_CONSTRAINTS.autoGainControl, true);
+    assert.equal(CALL_AUDIO_CONSTRAINTS_CHROME.echoCancellation, true);
+  });
+
+  it("retries without Chrome extras when the constraint set is rejected", async () => {
+    const seen: MediaStreamConstraints[] = [];
+    const gum: Parameters<typeof beginCallMicRequest>[0] = (constraints) => {
+      seen.push(constraints);
+      const err = Object.assign(new Error("overconstrained"), { name: "OverconstrainedError" });
+      if (seen.length < 3) return Promise.reject(err);
+      return Promise.resolve({ getTracks: () => [] } as unknown as MediaStream);
+    };
+    await beginCallMicRequest(gum);
+    assert.equal(seen.length, 3);
+    const first = seen[0]?.audio;
+    const second = seen[1]?.audio;
+    assert.equal(typeof first, "object");
+    assert.equal((first as MediaTrackConstraints).echoCancellation, true);
+    assert.equal(
+      (second as MediaTrackConstraints & { googEchoCancellation?: boolean }).googEchoCancellation,
+      undefined,
+    );
+    assert.equal(seen[2]?.audio, true);
   });
 
   it("classifies denied / blocked vs missing hardware", () => {
@@ -147,13 +210,25 @@ describe("Android Chrome mic permission", () => {
     assert.match(callMicNotice("no-speech-api").body, /webkitSpeechRecognition|speech input/i);
   });
 
-  it("keeps listening after empty / no-speech; surfaces not-allowed", () => {
-    assert.equal(speechRecErrorAction("no-speech", true), "restart");
-    assert.equal(speechRecErrorAction("aborted", true), "restart");
+  it("backs off after empty / no-speech instead of restarting from onerror", () => {
+    assert.equal(speechRecErrorAction("no-speech", true), "backoff");
+    assert.equal(speechRecErrorAction("aborted", true), "backoff");
+    assert.equal(speechRecErrorAction("network", true), "backoff");
     assert.equal(speechRecErrorAction("not-allowed", true), "denied");
     assert.equal(speechRecErrorAction("service-not-allowed", false), "denied");
     assert.equal(speechRecErrorAction("audio-capture", false), "denied");
-    assert.equal(speechRecErrorAction("audio-capture", true), "restart");
+    assert.equal(speechRecErrorAction("audio-capture", true), "backoff");
+    assert.equal(shouldStartRecognitionOnError("backoff"), false);
+    assert.equal(shouldStartRecognitionOnError("denied"), false);
+    assert.deepEqual([...CALL_LISTEN_BACKOFF_MS], [400, 700, 1100, 1600, 2200]);
+    assert.equal(nextCallListenBackoffMs(0), 400);
+    assert.equal(nextCallListenBackoffMs(4), 2200);
+    assert.equal(nextCallListenBackoffMs(99), 2200);
+  });
+
+  it("does not listen while TTS plays her line", () => {
+    assert.equal(CALL_LISTEN_DURING_TTS, false);
+    assert.ok(CALL_POST_TTS_COOLDOWN_MS >= 300);
   });
 
   it("stops tracks without throwing", () => {

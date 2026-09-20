@@ -13,24 +13,28 @@ Open that link on a desktop or mobile browser. Optional: install as a home-scree
 Tap the **phone** icon in the header. Spec: `artifacts/star-rai-call-mode.txt`.
 
 - Tap phone to start, tap again (or **Hang up**) to end. The chat thread, memory, and pose sheet stay.
-- **Android Chrome:** that tap calls `getUserMedia({ audio: true })` first so Chrome can show the microphone prompt. `SpeechRecognition` alone often does not. If the prompt never appears (blocked), Call shows an in-app banner: Chrome menu or the lock icon → Site settings → Microphone → Allow for `heytylo-png.github.io`, then tap the phone again.
+- **Android Chrome:** that tap calls `getUserMedia` first (with `echoCancellation`, `noiseSuppression`, `autoGainControl`, plus Chrome `goog*` variants; retries a simpler set if the device rejects it) so Chrome can show the microphone prompt. `SpeechRecognition` alone often does not. If the prompt never appears (blocked), Call shows an in-app banner: Chrome menu or the lock icon → Site settings → Microphone → Allow for `heytylo-png.github.io`, then tap the phone again.
 - After Allow: listen loop (`webkitSpeechRecognition`) → same Chat brain as typed Chat → speak `line` only.
-- Empty speech transcripts are ignored (keep listening; no invented user line). Hangup stops mic tracks + recognition.
+- Empty / whitespace / very short / filler transcripts (`uh`, `um`, `hmm`, …) are ignored (keep listening; no invented user line). Hangup stops mic tracks + recognition.
+- Recognition **pauses while she is speaking** (her voice + room noise are not transcribed mid-reply), then resumes after a short cooldown — or on hangup.
+- Final results are preferred over noisy interim; finals debounce before send. `no-speech` / empty cycles **back off** instead of thrashing start/stop. Call stays hot until hangup.
 - Pose commands by voice still swap the sheet first. Pose tint applies to the spoken bubble.
 - TTS speaks the parsed `line` only — never JSON, memory lists, or lore dumps. If TTS fails, the bubble still shows.
 - Header **mute** is honored (Call does not force speaker on).
 - Leaving the page (hide / unload) aborts mic, TTS, and listeners so Call does not stay hot.
 - Mic audio is never stored. If speech input is missing, Call says so in-app (type instead).
-- **Barge-in:** tap the stage (or speak over her) to stop TTS and listen again — only while she is speaking.
+- **Barge-in:** tap the stage to stop TTS and listen again — only while she is speaking. (The mic does not stay open over her line.)
 
 ### Verify on Samsung / Chrome Android
 
 1. Open **https://heytylo-png.github.io/star-app-2-live/** in **Chrome** (not the Samsung Internet iframe if it differs).
 2. Tap the phone. Chrome should ask for the microphone on that tap. Allow.
 3. Status should read **Listening** with **Hang up**. Speak a short line; she should reply in the bubble (and TTS unless muted).
-4. If there is **no prompt**: the banner should explain how to unblock. Site settings → Microphone → Allow for `heytylo-png.github.io` → tap the phone again.
-5. Mute in the header, tap phone, speak: bubble still appears, speaker stays muted.
-6. Hang up: Listening stops. Switch apps / lock the phone: Call should not stay hot.
+4. In a noisy room: background TV / AC should not send a turn. While she talks, the mic should not pick up her line as your next message. After she finishes, Listening returns.
+5. Silence / `no-speech` should keep Call on (Listening), not hang up or flap the mic.
+6. If there is **no prompt**: the banner should explain how to unblock. Site settings → Microphone → Allow for `heytylo-png.github.io` → tap the phone again.
+7. Mute in the header, tap phone, speak: bubble still appears, speaker stays muted.
+8. Hang up: Listening stops. Switch apps / lock the phone: Call should not stay hot.
 
 Normal text chat and PTT are unchanged when Call is off.
 
@@ -117,7 +121,7 @@ The Worker forwards `POST /v1/chat/completions`, reads the key from `X-User-Key`
 | Chat brain | Local pose-keyed `artifacts/star-rai-local-brain.txt`; optional Grok (`grok-4-latest`) when key present |
 | Voice | Browser `SpeechSynthesis` (prefers female English when available) |
 | Hold-to-talk | Browser `SpeechRecognition` when present; otherwise type |
-| Call mode | Continuous listen → same Chat brain → speak `line` only; hangup + page-hide abort mic/TTS; mute honored; no recordings |
+| Call mode | Continuous listen (AEC/NS/AGC gUM; pause SR during TTS; finals + backoff) → same Chat brain → speak `line` only; hangup + page-hide abort mic/TTS; mute honored; no recordings |
 | Affection | `localStorage` (`star-rai-affection`) — tier chip + tone |
 | Memory | `localStorage` (`star-rai-memory`) — compact slots + optional freeform notes |
 | Chat threads | `localStorage` (`star-rai-chat`) |

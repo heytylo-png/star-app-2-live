@@ -63,11 +63,18 @@ import { speak, stopVoice, unlockVoice } from "@/lib/voice";
 import { speakable } from "@/lib/companion";
 import {
   beginCallMicRequest,
+  CALL_FINAL_DEBOUNCE_MS,
+  CALL_LISTEN_DURING_TTS,
+  CALL_POST_TTS_COOLDOWN_MS,
   callMicNotice,
   callTranscriptAction,
+  callUtteranceToSend,
   classifyGetUserMediaError,
+  meaningfulTranscript,
+  nextCallListenBackoffMs,
   shouldEndCallOnPageEvent,
   shouldSpeakCallLine,
+  shouldStartRecognitionOnError,
   speechRecErrorAction,
   spokenCallLine,
   stopMediaTracks,
@@ -176,12 +183,17 @@ function RaiReady() {
   const sendingRef = useRef(false);
   const talkingRef = useRef(false);
   const listenAfterSpeakRef = useRef(false);
-  const bargeRecRef = useRef<Rec | null>(null);
   const hangUpRef = useRef<() => void>(() => {});
   const micStreamRef = useRef<MediaStream | null>(null);
   const callStartingRef = useRef(false);
   const micGrantedRef = useRef(false);
   const callStartGenRef = useRef(0);
+  const callListenGenRef = useRef(0);
+  const listenRestartTimerRef = useRef(0);
+  const listenDebounceTimerRef = useRef(0);
+  const listenBackoffAttemptRef = useRef(0);
+  const listenPausedForTtsRef = useRef(false);
+  const startCallListenRef = useRef<() => void>(() => {});
   const poseRef = useRef<PoseId>("idle");
   const tabRef = useRef<ShellTab>(DEFAULT_SHELL_TAB);
   /** When the last act pose/emotion landed — drives the hold timer. */
@@ -286,6 +298,17 @@ function RaiReady() {
     return () => window.clearTimeout(id);
   }, [draft, sending, talking, holding, callListening, pose, emotion]);
 
+  function clearCallListenTimers() {
+    if (listenRestartTimerRef.current) {
+      window.clearTimeout(listenRestartTimerRef.current);
+      listenRestartTimerRef.current = 0;
+    }
+    if (listenDebounceTimerRef.current) {
+      window.clearTimeout(listenDebounceTimerRef.current);
+      listenDebounceTimerRef.current = 0;
+    }
+  }
+
   function disarmRec(rec: Rec | null) {
     if (!rec) return;
     rec.onresult = null;
@@ -305,10 +328,9 @@ function RaiReady() {
   }
 
   function stopRec() {
+    clearCallListenTimers();
     disarmRec(recRef.current);
     recRef.current = null;
-    disarmRec(bargeRecRef.current);
-    bargeRecRef.current = null;
   }
 
   function stopCallMic() {
@@ -328,9 +350,24 @@ function RaiReady() {
     }
   }
 
+  const scheduleCallListenRestart = useCallback((delayMs: number) => {
+    if (listenRestartTimerRef.current) {
+      window.clearTimeout(listenRestartTimerRef.current);
+      listenRestartTimerRef.current = 0;
+    }
+    listenRestartTimerRef.current = window.setTimeout(() => {
+      listenRestartTimerRef.current = 0;
+      if (!callActiveRef.current) return;
+      if (sendingRef.current || talkingRef.current || listenPausedForTtsRef.current) return;
+      startCallListenRef.current();
+    }, delayMs);
+  }, []);
+
   const startCallListen = useCallback(() => {
     if (!callActiveRef.current) return;
     if (sendingRef.current) return;
+    if (talkingRef.current && !CALL_LISTEN_DURING_TTS) return;
+    if (listenPausedForTtsRef.current) return;
     const SR = getSpeechRecognition();
     if (!SR) {
       setCallSupported(false);
@@ -339,63 +376,101 @@ function RaiReady() {
       return;
     }
     unlockVoice();
-    stopRec();
+    const gen = ++callListenGenRef.current;
+    clearCallListenTimers();
+    disarmRec(recRef.current);
+    recRef.current = null;
+
     const rec = new SR();
     rec.lang = "en-US";
     rec.interimResults = true;
-    rec.continuous = false;
+    rec.continuous = true;
     // Transcript text only — never store mic audio (CALL_STORE_RECORDINGS = false).
-    let finalText = "";
+    const finals: string[] = [];
+
+    const commitFinals = () => {
+      if (gen !== callListenGenRef.current) return;
+      if (!callActiveRef.current || sendingRef.current || talkingRef.current) return;
+      if (listenPausedForTtsRef.current) return;
+      const text = callUtteranceToSend({ finals });
+      if (callTranscriptAction(text) !== "send") return;
+      callListenGenRef.current += 1;
+      listenBackoffAttemptRef.current = 0;
+      clearCallListenTimers();
+      disarmRec(recRef.current);
+      recRef.current = null;
+      setCallListening(false);
+      draftRef.current = "";
+      setDraft("");
+      void sendRef.current(text);
+    };
+
     rec.onresult = (event) => {
-      let said = "";
+      if (gen !== callListenGenRef.current) return;
+      if (talkingRef.current || listenPausedForTtsRef.current) return;
+      let interim = "";
       let gotFinal = false;
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const piece = event.results[i][0].transcript;
-        said += piece;
-        if (event.results[i].isFinal) gotFinal = true;
+        if (event.results[i].isFinal) {
+          const cleaned = meaningfulTranscript(piece);
+          if (cleaned) finals.push(cleaned);
+          gotFinal = true;
+        } else {
+          interim += piece;
+        }
       }
-      const next = said.trim();
-      draftRef.current = next;
-      setDraft(next);
-      if (next) setCaption(next);
-      if (gotFinal && next) finalText = next;
+      const preview = (finals.join(" ") || interim).trim();
+      if (preview) {
+        draftRef.current = preview;
+        setDraft(preview);
+        setCaption(preview);
+      }
+      // Prefer finals; debounce so a noise blip does not send or restart the loop.
+      if (gotFinal) {
+        listenBackoffAttemptRef.current = 0;
+        if (listenDebounceTimerRef.current) window.clearTimeout(listenDebounceTimerRef.current);
+        listenDebounceTimerRef.current = window.setTimeout(() => {
+          listenDebounceTimerRef.current = 0;
+          commitFinals();
+        }, CALL_FINAL_DEBOUNCE_MS);
+      }
     };
     rec.onerror = (event) => {
+      if (gen !== callListenGenRef.current) return;
       const err = event.error ?? "";
-      recRef.current = null;
-      setCallListening(false);
       const action = speechRecErrorAction(err, micGrantedRef.current);
       if (action === "denied") {
+        recRef.current = null;
+        setCallListening(false);
         setCallNotice(callMicNotice("denied"));
         hangUpRef.current();
         return;
       }
-      // Empty / no-speech / aborted / capture-after-grant → keep listening.
-      if (action === "restart" && callActiveRef.current && !sendingRef.current) {
-        window.setTimeout(() => {
-          if (callActiveRef.current && !sendingRef.current && !talkingRef.current) {
-            startCallListen();
-          }
-        }, err === "no-speech" ? 280 : 500);
+      // no-speech / aborted / network: do not start() here — Chrome also fires onend.
+      if (shouldStartRecognitionOnError(action)) {
+        scheduleCallListenRestart(nextCallListenBackoffMs(listenBackoffAttemptRef.current));
       }
     };
     rec.onend = () => {
+      if (gen !== callListenGenRef.current) return;
       recRef.current = null;
       setCallListening(false);
       if (!callActiveRef.current) return;
-      const text = (finalText || draftRef.current).trim();
-      if (callTranscriptAction(text) === "send" && !sendingRef.current) {
-        draftRef.current = "";
-        setDraft("");
-        void sendRef.current(text);
+      if (sendingRef.current || talkingRef.current || listenPausedForTtsRef.current) return;
+      if (listenDebounceTimerRef.current) {
+        window.clearTimeout(listenDebounceTimerRef.current);
+        listenDebounceTimerRef.current = 0;
+      }
+      const text = callUtteranceToSend({ finals });
+      if (callTranscriptAction(text) === "send") {
+        commitFinals();
         return;
       }
-      // Empty transcript → keep listening; don’t invent a user line.
-      window.setTimeout(() => {
-        if (callActiveRef.current && !sendingRef.current && !talkingRef.current) {
-          startCallListen();
-        }
-      }, 320);
+      // Empty / whitespace / short / filler / noisy interim → keep listening; don’t invent.
+      const delay = nextCallListenBackoffMs(listenBackoffAttemptRef.current);
+      listenBackoffAttemptRef.current += 1;
+      scheduleCallListenRestart(delay);
     };
     recRef.current = rec;
     setCallSupported(true);
@@ -413,72 +488,12 @@ function RaiReady() {
         hangUpRef.current();
         return;
       }
-      window.setTimeout(() => {
-        if (callActiveRef.current && !sendingRef.current) startCallListen();
-      }, 700);
+      const delay = nextCallListenBackoffMs(listenBackoffAttemptRef.current);
+      listenBackoffAttemptRef.current += 1;
+      scheduleCallListenRestart(delay);
     }
-  }, []);
-
-  /** Barge-in listener while she speaks — first speech or speechstart stops TTS. */
-  const startBargeListen = useCallback(() => {
-    if (!callActiveRef.current) return;
-    if (!talkingRef.current) return;
-    const SR = getSpeechRecognition();
-    if (!SR) return;
-    try {
-      bargeRecRef.current?.stop();
-    } catch {
-      /* ignore */
-    }
-    const rec = new SR();
-    rec.lang = "en-US";
-    rec.interimResults = true;
-    rec.continuous = false;
-    let tripped = false;
-    const trip = (seed?: string) => {
-      if (tripped) return;
-      tripped = true;
-      stopVoice();
-      setTalking(false);
-      setAmp(0);
-      abortRef.current?.abort();
-      try {
-        rec.stop();
-      } catch {
-        /* ignore */
-      }
-      bargeRecRef.current = null;
-      if (seed?.trim()) {
-        draftRef.current = seed.trim();
-        setDraft(seed.trim());
-        setCaption(seed.trim());
-      }
-      // Hand off to normal call listen after interrupt
-      window.setTimeout(() => {
-        if (callActiveRef.current) startCallListen();
-      }, 120);
-    };
-    rec.onspeechstart = () => trip();
-    rec.onresult = (event) => {
-      let said = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        said += event.results[i][0].transcript;
-      }
-      if (said.trim()) trip(said.trim());
-    };
-    rec.onerror = () => {
-      bargeRecRef.current = null;
-    };
-    rec.onend = () => {
-      bargeRecRef.current = null;
-    };
-    bargeRecRef.current = rec;
-    try {
-      rec.start();
-    } catch {
-      bargeRecRef.current = null;
-    }
-  }, [startCallListen]);
+  }, [scheduleCallListenRestart]);
+  startCallListenRef.current = startCallListen;
 
   async function complete(threadId: string) {
     const store = useChatStore.getState();
@@ -492,6 +507,10 @@ function RaiReady() {
       model: current.model,
     };
     store.appendMessage(threadId, assistant);
+    sendingRef.current = true;
+    talkingRef.current = false;
+    listenPausedForTtsRef.current = false;
+    callListenGenRef.current += 1;
     setSending(true);
     setTalking(false);
     setEmotion("glance");
@@ -628,12 +647,14 @@ function RaiReady() {
       if (shouldSpeakCallLine({ voiceOn: voiceOnRef.current, line })) {
         const spoken = speakable(line);
         if (spoken) {
+          // Pause / stop recognition while she talks so her voice + room noise
+          // are not transcribed as the next user turn. Tap still interrupts.
+          listenPausedForTtsRef.current = !CALL_LISTEN_DURING_TTS;
+          talkingRef.current = true;
           setTalking(true);
+          callListenGenRef.current += 1;
+          stopRec();
           let lastAmp = 0;
-          // Enable barge-in while speaking in call mode
-          if (callActiveRef.current) {
-            window.setTimeout(() => startBargeListen(), 180);
-          }
           try {
             await speak(
               spoken,
@@ -667,20 +688,16 @@ function RaiReady() {
       }
     } finally {
       abortRef.current = null;
+      sendingRef.current = false;
+      talkingRef.current = false;
+      listenPausedForTtsRef.current = false;
       setSending(false);
       setTalking(false);
       setAmp(0);
-      try {
-        bargeRecRef.current?.stop();
-      } catch {
-        /* ignore */
-      }
-      bargeRecRef.current = null;
 
       if (callActiveRef.current && speakFinishedClean && listenAfterSpeakRef.current) {
-        window.setTimeout(() => {
-          if (callActiveRef.current && !sendingRef.current) startCallListen();
-        }, 280);
+        listenBackoffAttemptRef.current = 0;
+        scheduleCallListenRestart(CALL_POST_TTS_COOLDOWN_MS);
       }
     }
   }
@@ -742,11 +759,14 @@ function RaiReady() {
 
   function hangUp() {
     callStartGenRef.current += 1;
+    callListenGenRef.current += 1;
     callActiveRef.current = false;
     callStartingRef.current = false;
+    listenPausedForTtsRef.current = false;
+    listenBackoffAttemptRef.current = 0;
+    listenAfterSpeakRef.current = false;
     setCallActive(false);
     setCallStarting(false);
-    listenAfterSpeakRef.current = false;
     stop();
     stopCallMic();
     // Thread / memory / sheet stay. Drop the listen placeholder so the last line shows.
@@ -757,14 +777,18 @@ function RaiReady() {
   function bargeInTap() {
     if (!callActiveRef.current) return;
     if (!talkingRef.current && !sendingRef.current) return;
+    callListenGenRef.current += 1;
+    listenPausedForTtsRef.current = false;
+    talkingRef.current = false;
+    sendingRef.current = false;
     stopVoice();
     abortRef.current?.abort();
     setTalking(false);
     setAmp(0);
     setSending(false);
-    window.setTimeout(() => {
-      if (callActiveRef.current) startCallListen();
-    }, 100);
+    stopRec();
+    listenBackoffAttemptRef.current = 0;
+    scheduleCallListenRestart(CALL_POST_TTS_COOLDOWN_MS);
   }
 
   function toggleCall() {
@@ -818,9 +842,12 @@ function RaiReady() {
         micStreamRef.current = stream;
         // Release the capture so SpeechRecognition can use the mic.
         // Permission stays granted for this origin until they block it.
+        // Constraints (AEC / NS / AGC) still ran on this tap's gUM request.
         stopMediaTracks(stream);
         micGrantedRef.current = true;
         callActiveRef.current = true;
+        listenBackoffAttemptRef.current = 0;
+        listenPausedForTtsRef.current = false;
         setCallActive(true);
         listenAfterSpeakRef.current = true;
         setCallNotice(null);
