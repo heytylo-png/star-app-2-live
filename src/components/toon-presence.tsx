@@ -402,7 +402,7 @@ function lidBaseFor(face: WipFace): number {
   if (face === "talkSmile") return 0.04;
   if (face === "smirk") return 0.06;
   if (face === "shy") return 0.12;
-  return 0.02;
+  return 0.04;
 }
 
 function lookEyes(face: WipFace, irisL: Object3D | null, irisR: Object3D | null) {
@@ -411,7 +411,7 @@ function lookEyes(face: WipFace, irisL: Object3D | null, irisR: Object3D | null)
   for (const iris of [irisL, irisR]) {
     if (!iris) continue;
     iris.position.x = side;
-    iris.position.y = -0.006 + down;
+    iris.position.y = -0.002 + down;
   }
 }
 
@@ -446,8 +446,8 @@ function applyWipFace(face: WipFace, amplitude: number, nodes: WipFaceNodes) {
   }
   if (nodes.browL && nodes.browR) {
     const extra = face === "grit" ? 0.22 : face === "pout" ? 0.12 : face === "shy" ? -0.04 : 0;
-    nodes.browL.rotation.z = 0.22 + extra;
-    nodes.browR.rotation.z = -0.22 - extra;
+    nodes.browL.rotation.z = 0.34 + extra;
+    nodes.browR.rotation.z = -0.34 - extra;
   }
 }
 

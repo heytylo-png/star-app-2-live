@@ -59,14 +59,14 @@ This is an honest low-poly WIP. It is meant to be **Star-shaped** (locks above),
 
 ### Remaining gaps
 
-- Still a low-poly toon, not a sculpted VRM. No cloth sim. Face slots are mesh visibility, not blendshapes. Fingers exist only as wave-palm / scold-point extras.
-- Hair is hanging layered cards (not a helmet/bowl or noodle tubes). One hooked ahoge from the crown. Bangs sit on the forehead; crown can still flash scalp. Not a painted fringe.
-- Head is a shorter teen sphere with warm tan, glare brows, thin frown, gold star studs. Idle has **no** pink cheek circles (shy blush still exists as a hidden slot).
-- Eyes are large amber discs with pupil + highlight and a skin upper lid. They still read rounder/more open than the PNG half-lid almonds. Not closeup-painted.
-- Skirt hem is two vertex-color bands — they can read as one stripe at a distance. Shirt is lathe + placket, not tailored cloth.
-- Arms/hands are still primitive volumes.
-- Kiss stays unmapped. Mood PNG art is live on the PNG body and checked in as Lab refs — it is **not** a merge of Lab to main.
-- Identity is closer at thumbnail (tan, ahoge hook, studs, bangs, glare brows) but this is still a stand-in. **Do not merge. Do not deploy Lab to Pages as her.**
+HARD STOP (head/face only) is **not signed off**. Hide the grid and this is still a clay stand-in, not Rai. Do not merge. Do not start clothes/body. Do not deploy Lab to Pages as her.
+
+- Front ortho vs `artifacts/star-rai-head/11-face-grid.jpg`: eyes/brows/mouth/chin/ahoge sit in the landmark band. The 3D bow sits lower than the drawing because the blouse is frozen this pass, so the neck still reads long.
+- Hair is sparse: three bang wisps, open temples, both eyes visible, hooked ahoge, gold star studs. Crown can flash scalp. Side hair is still hanging cards (pigtail slabs), not messy layers. Skullcap/hime attempts read as a helmet and were pulled.
+- Eyes are flat amber almonds with pupil + catch. Not the PNG's huge half-lid irises. No texture paint this pass.
+- Idle is a thin frown, no smile, no pink cheek circles (shy blush remains a hidden slot).
+- Still a low-poly toon, not a sculpted VRM. Body/clothes/bow/hands/shaders/lighting were not touched. Kiss stays unmapped.
+- ¾ / side / back / talk / wave / scold / pout / shy stills are hidden until this head is signed off.
 
 ## Scaffolding (do not present as Rai)
 
