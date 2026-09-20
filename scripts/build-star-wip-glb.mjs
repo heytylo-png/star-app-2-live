@@ -2,7 +2,8 @@
  * Author a Star Rai WIP toon mesh (glTF binary).
  * Honest low-poly stand-in matching the canon checklist — not a booth VRM,
  * not Sairi, not shipping Rai.
- * No kiss / blow-kiss / heart-hands meshes. scold ≠ shy ≠ pout as separate slots.
+ * Idle silhouette first (uniform + glare), then talk / wave / scold / pout / shy
+ * as separate slots. No kiss / blow-kiss / heart-hands. scold ≠ shy ≠ pout.
  */
 import { writeFileSync } from "node:fs";
 import path from "node:path";
@@ -14,9 +15,9 @@ const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const OUT = path.join(rootDir, "public/models/star-rai-wip.glb");
 
 const C = {
-  skin: 0xc99570,
+  skin: 0xce9a6e,
   skinShadow: 0xb07d5c,
-  hair: 0x141014,
+  hair: 0x121014,
   hairHi: 0x2a2228,
   white: 0xf7f4f0,
   navy: 0x1a2748,
@@ -27,11 +28,13 @@ const C = {
   pupil: 0x1a1008,
   brow: 0x1a1412,
   blush: 0xe08a78,
+  blushHot: 0xe07068,
   loafer: 0x6a3d26,
   loaferDark: 0x4a2a18,
   line: 0x2a1c16,
   lid: 0xc48a68,
   tooth: 0xf4efe8,
+  liner: 0x1a1210,
 };
 
 function toon(color, opts = {}) {
@@ -62,7 +65,7 @@ function bone(name, parent, x, y, z) {
   return b;
 }
 
-function starShape(outer = 0.011, inner = 0.0045, n = 5) {
+function starShape(outer = 0.013, inner = 0.0052, n = 5) {
   const s = new THREE.Shape();
   for (let i = 0; i < n * 2; i++) {
     const r = i % 2 === 0 ? outer : inner;
@@ -83,7 +86,7 @@ function pleatedSkirt(topR, botR, h, pleats = 18) {
     const x = pos.getX(i);
     const z = pos.getZ(i);
     const ang = Math.atan2(z, x);
-    const wave = 1 + 0.07 * Math.abs(Math.sin(ang * pleats));
+    const wave = 1 + 0.08 * Math.abs(Math.sin(ang * pleats));
     pos.setX(i, x * wave);
     pos.setZ(i, z * wave);
   }
@@ -92,12 +95,75 @@ function pleatedSkirt(topR, botR, h, pleats = 18) {
   return geo;
 }
 
+function ribbedSock(rTop, rBot, h) {
+  const geo = new THREE.CylinderGeometry(rBot, rTop, h, 20, 10, false);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const z = pos.getZ(i);
+    const ang = Math.atan2(z, x);
+    const rib = 1 + 0.045 * Math.sin(ang * 18);
+    pos.setX(i, x * rib);
+    pos.setZ(i, z * rib);
+  }
+  pos.needsUpdate = true;
+  geo.computeVertexNormals();
+  return geo;
+}
+
+function pointedCollar() {
+  const s = new THREE.Shape();
+  s.moveTo(0, 0);
+  s.lineTo(0.082, 0.01);
+  s.lineTo(0.018, 0.092);
+  s.closePath();
+  return new THREE.ExtrudeGeometry(s, { depth: 0.014, bevelEnabled: false });
+}
+
+function addWavePalm(hand) {
+  const g = new THREE.Group();
+  g.name = "handWaveR";
+  hand.add(g);
+  mesh(new THREE.BoxGeometry(0.058, 0.072, 0.016), C.skin, "palmR", g, [0, -0.038, 0]);
+  const span = 0.042;
+  for (let i = 0; i < 4; i++) {
+    const x = -span / 2 + (i * span) / 3;
+    const len = i === 1 || i === 2 ? 0.048 : 0.042;
+    mesh(
+      new THREE.BoxGeometry(0.011, len, 0.01),
+      C.skin,
+      `waveFinger${i}`,
+      g,
+      [x, -0.078 - (len - 0.042) * 0.4, 0],
+    );
+  }
+  mesh(
+    new THREE.BoxGeometry(0.012, 0.032, 0.012),
+    C.skin,
+    "waveThumb",
+    g,
+    [0.034, -0.028, 0.008],
+    [0.2, 0, 0.7],
+  );
+  return g;
+}
+
+function addPointHand(hand) {
+  const g = new THREE.Group();
+  g.name = "handPointR";
+  hand.add(g);
+  mesh(new THREE.SphereGeometry(0.026, 10, 8), C.skin, "fistR", g, [0, -0.018, 0], null, [1, 1.05, 0.82]);
+  mesh(new THREE.CylinderGeometry(0.007, 0.006, 0.07, 8), C.skin, "indexPointR", g, [0, -0.068, 0.004]);
+  mesh(new THREE.SphereGeometry(0.007, 8, 6), C.skin, "indexTipR", g, [0, -0.104, 0.004]);
+  return g;
+}
+
 function build() {
   const root = new THREE.Group();
   root.name = "starRaiWip";
   root.userData = {
     title: "Star Rai WIP",
-    note: "Custom toon mesh. Not shipping Rai. Idle rest = glare.",
+    note: "Custom toon mesh. Not shipping Rai. Idle rest = glare. Moods: talk/wave/scold/pout/shy.",
   };
 
   const hips = bone("hips", root, 0, 0.92, 0);
@@ -123,225 +189,286 @@ function build() {
   const lFoot = bone("leftFoot", lLowerLeg, 0, -0.34, 0.02);
   const rFoot = bone("rightFoot", rLowerLeg, 0, -0.34, 0.02);
 
-  // --- torso / pointed-collar blouse (NOT sailor) ---
-  mesh(new THREE.CylinderGeometry(0.105, 0.12, 0.28, 20), C.white, "shirt", chest, [0, 0.02, 0]);
-  mesh(new THREE.CylinderGeometry(0.118, 0.105, 0.08, 20), C.white, "shirtHem", hips, [0, 0.08, 0]);
+  // --- pointed-collar button-up (NOT sailor) ---
+  mesh(new THREE.CylinderGeometry(0.112, 0.1, 0.16, 22), C.white, "shirtUpper", chest, [0, 0.06, 0]);
+  mesh(new THREE.CylinderGeometry(0.1, 0.108, 0.15, 22), C.white, "shirtWaist", chest, [0, -0.085, 0]);
+  mesh(new THREE.CylinderGeometry(0.118, 0.108, 0.07, 22), C.white, "shirtHem", hips, [0, 0.085, 0]);
 
-  const collarShape = new THREE.Shape();
-  collarShape.moveTo(0, 0);
-  collarShape.lineTo(0.07, 0.012);
-  collarShape.lineTo(0.012, 0.078);
-  collarShape.closePath();
-  const collarGeo = new THREE.ExtrudeGeometry(collarShape, { depth: 0.012, bevelEnabled: false });
+  const collarGeo = pointedCollar();
   const collarL = new THREE.Mesh(collarGeo, toon(C.white));
   collarL.name = "collarL";
-  collarL.position.set(0.012, 0.042, 0.05);
-  collarL.rotation.set(-0.85, 0.55, 0.35);
+  collarL.position.set(0.01, 0.046, 0.052);
+  collarL.rotation.set(-0.92, 0.52, 0.32);
   upperChest.add(collarL);
   const collarR = new THREE.Mesh(collarGeo.clone(), toon(C.white));
   collarR.name = "collarR";
-  collarR.position.set(-0.012, 0.042, 0.05);
-  collarR.rotation.set(-0.85, -0.55, -0.35);
+  collarR.position.set(-0.01, 0.046, 0.052);
+  collarR.rotation.set(-0.92, -0.52, -0.32);
   collarR.scale.x = -1;
   upperChest.add(collarR);
 
   for (let i = 0; i < 5; i++) {
     mesh(
-      new THREE.SphereGeometry(0.007, 10, 8),
+      new THREE.SphereGeometry(0.0085, 10, 8),
       C.gold,
       `button${i + 1}`,
       chest,
-      [0, 0.1 - i * 0.038, 0.108],
+      [0, 0.11 - i * 0.04, 0.106],
     );
   }
 
-  // Red FRONT bow only
-  mesh(new THREE.SphereGeometry(0.016, 12, 10), C.bow, "bowKnot", upperChest, [0, 0.03, 0.12]);
+  // Red FRONT school bow only (none on the back)
+  mesh(new THREE.SphereGeometry(0.018, 12, 10), C.bow, "bowKnot", upperChest, [0, 0.028, 0.128]);
   mesh(
-    new THREE.BoxGeometry(0.055, 0.028, 0.012),
+    new THREE.SphereGeometry(0.034, 12, 10),
     C.bow,
     "bowL",
     upperChest,
-    [0.038, 0.03, 0.118],
-    [0, 0.35, 0.2],
+    [0.044, 0.03, 0.122],
+    [0, 0.28, 0.18],
+    [1.35, 0.72, 0.32],
   );
   mesh(
-    new THREE.BoxGeometry(0.055, 0.028, 0.012),
+    new THREE.SphereGeometry(0.034, 12, 10),
     C.bow,
     "bowR",
     upperChest,
-    [-0.038, 0.03, 0.118],
-    [0, -0.35, -0.2],
+    [-0.044, 0.03, 0.122],
+    [0, -0.28, -0.18],
+    [1.35, 0.72, 0.32],
   );
-  mesh(new THREE.BoxGeometry(0.012, 0.04, 0.006), C.bow, "bowTailL", upperChest, [0.012, -0.01, 0.115]);
-  mesh(new THREE.BoxGeometry(0.012, 0.04, 0.006), C.bow, "bowTailR", upperChest, [-0.012, -0.01, 0.115]);
+  mesh(new THREE.BoxGeometry(0.016, 0.055, 0.007), C.bow, "bowTailL", upperChest, [0.014, -0.012, 0.118], [0, 0, 0.18]);
+  mesh(new THREE.BoxGeometry(0.016, 0.055, 0.007), C.bow, "bowTailR", upperChest, [-0.014, -0.012, 0.118], [0, 0, -0.18]);
 
-  // --- arms: short sleeves + navy cuff + DOUBLE stripe ---
+  // --- short sleeves + navy cuff + DOUBLE white stripe ---
   for (const [arm, lower, hand, side] of [
     [lUpperArm, lLowerArm, lHand, "L"],
     [rUpperArm, rLowerArm, rHand, "R"],
   ]) {
     mesh(new THREE.CylinderGeometry(0.034, 0.03, 0.22, 12), C.skin, `arm${side}`, arm, [0, -0.11, 0]);
-    mesh(new THREE.CylinderGeometry(0.038, 0.036, 0.09, 12), C.white, `sleeve${side}`, arm, [0, -0.02, 0]);
-    mesh(new THREE.CylinderGeometry(0.039, 0.039, 0.028, 14), C.navy, `cuff${side}`, arm, [0, -0.068, 0]);
-    mesh(new THREE.TorusGeometry(0.039, 0.003, 8, 16), C.white, `cuffStripeA${side}`, arm, [0, -0.06, 0], [Math.PI / 2, 0, 0]);
-    mesh(new THREE.TorusGeometry(0.039, 0.003, 8, 16), C.white, `cuffStripeB${side}`, arm, [0, -0.074, 0], [Math.PI / 2, 0, 0]);
+    mesh(new THREE.CylinderGeometry(0.04, 0.037, 0.095, 14), C.white, `sleeve${side}`, arm, [0, -0.018, 0]);
+    mesh(new THREE.CylinderGeometry(0.041, 0.041, 0.03, 16), C.navy, `cuff${side}`, arm, [0, -0.068, 0]);
+    mesh(
+      new THREE.TorusGeometry(0.041, 0.0032, 8, 18),
+      C.white,
+      `cuffStripeA${side}`,
+      arm,
+      [0, -0.058, 0],
+      [Math.PI / 2, 0, 0],
+    );
+    mesh(
+      new THREE.TorusGeometry(0.041, 0.0032, 8, 18),
+      C.white,
+      `cuffStripeB${side}`,
+      arm,
+      [0, -0.076, 0],
+      [Math.PI / 2, 0, 0],
+    );
     mesh(new THREE.CylinderGeometry(0.028, 0.026, 0.2, 12), C.skin, `fore${side}`, lower, [0, -0.1, 0]);
-    mesh(new THREE.SphereGeometry(0.028, 10, 8), C.skin, `hand${side}`, hand, [0, -0.02, 0], null, [1, 1.15, 0.75]);
+    mesh(
+      new THREE.SphereGeometry(0.028, 10, 8),
+      C.skin,
+      `handDefault${side}`,
+      hand,
+      [0, -0.02, 0],
+      null,
+      [1, 1.15, 0.75],
+    );
+    if (side === "R") {
+      addWavePalm(hand);
+      addPointHand(hand);
+    }
   }
 
-  // --- skirt: navy pleats + TWO white hem stripes ---
-  mesh(pleatedSkirt(0.125, 0.2, 0.22, 16), C.navy, "skirt", hips, [0, -0.08, 0]);
-  mesh(new THREE.CylinderGeometry(0.205, 0.192, 0.011, 48, 1, true), C.white, "hemStripe1", hips, [0, -0.168, 0]);
-  mesh(new THREE.CylinderGeometry(0.212, 0.2, 0.011, 48, 1, true), C.white, "hemStripe2", hips, [0, -0.186, 0]);
+  // --- navy pleats + TWO white hem bands ---
+  mesh(pleatedSkirt(0.126, 0.205, 0.225, 16), C.navy, "skirt", hips, [0, -0.082, 0]);
+  mesh(new THREE.CylinderGeometry(0.208, 0.196, 0.012, 48, 1, true), C.white, "hemStripe1", hips, [0, -0.172, 0]);
+  mesh(new THREE.CylinderGeometry(0.216, 0.204, 0.012, 48, 1, true), C.white, "hemStripe2", hips, [0, -0.192, 0]);
 
-  // --- legs / navy mid-calf socks / brown penny loafers ---
+  // --- bare thighs, navy ribbed mid-calf socks, brown penny loafers ---
   for (const [up, low, foot, side] of [
     [lUpperLeg, lLowerLeg, lFoot, "L"],
     [rUpperLeg, rLowerLeg, rFoot, "R"],
   ]) {
-    mesh(new THREE.CylinderGeometry(0.05, 0.042, 0.32, 12), C.skin, `thigh${side}`, up, [0, -0.16, 0]);
-    mesh(new THREE.CylinderGeometry(0.04, 0.032, 0.16, 12), C.skin, `shin${side}`, low, [0, -0.08, 0]);
-    mesh(new THREE.CylinderGeometry(0.036, 0.033, 0.22, 14), C.navy, `sock${side}`, low, [0, -0.23, 0]);
-    mesh(new THREE.BoxGeometry(0.068, 0.038, 0.09), C.loafer, `loafer${side}`, foot, [0, -0.006, 0.01]);
-    mesh(new THREE.SphereGeometry(0.036, 12, 10), C.loafer, `toe${side}`, foot, [0, -0.004, 0.055], null, [0.95, 0.7, 1.05]);
-    mesh(new THREE.BoxGeometry(0.07, 0.01, 0.036), C.loaferDark, `penny${side}`, foot, [0, 0.016, 0.028]);
-    mesh(new THREE.BoxGeometry(0.07, 0.01, 0.12), C.loaferDark, `sole${side}`, foot, [0, -0.028, 0.022]);
+    mesh(new THREE.CylinderGeometry(0.05, 0.042, 0.32, 14), C.skin, `thigh${side}`, up, [0, -0.16, 0]);
+    mesh(new THREE.CylinderGeometry(0.04, 0.033, 0.15, 12), C.skin, `shin${side}`, low, [0, -0.075, 0]);
+    mesh(ribbedSock(0.037, 0.033, 0.235), C.navy, `sock${side}`, low, [0, -0.228, 0]);
+    mesh(new THREE.BoxGeometry(0.07, 0.036, 0.092), C.loafer, `loafer${side}`, foot, [0, -0.004, 0.012]);
+    mesh(
+      new THREE.SphereGeometry(0.038, 12, 10),
+      C.loafer,
+      `toe${side}`,
+      foot,
+      [0, -0.002, 0.058],
+      null,
+      [0.96, 0.68, 1.08],
+    );
+    mesh(new THREE.BoxGeometry(0.072, 0.01, 0.038), C.loaferDark, `penny${side}`, foot, [0, 0.018, 0.03]);
+    mesh(new THREE.BoxGeometry(0.072, 0.01, 0.125), C.loaferDark, `sole${side}`, foot, [0, -0.026, 0.024]);
   }
 
-  // --- head / glare idle face ---
-  mesh(new THREE.SphereGeometry(0.105, 24, 18), C.skin, "headMesh", head, [0, 0.04, 0], null, [0.95, 1.08, 0.92]);
+  // --- head / idle glare ---
+  mesh(new THREE.SphereGeometry(0.108, 26, 20), C.skin, "headMesh", head, [0, 0.04, 0], null, [0.94, 1.06, 0.9]);
   mesh(new THREE.CylinderGeometry(0.032, 0.036, 0.055, 12), C.skin, "neckMesh", neck, [0, 0.01, 0]);
 
   function eye(side, x) {
     const g = new THREE.Group();
     g.name = `eye${side}`;
-    g.position.set(x, 0.045, 0.082);
+    g.position.set(x, 0.046, 0.084);
     head.add(g);
-    mesh(new THREE.SphereGeometry(0.022, 16, 12), C.white, `sclera${side}`, g, [0, 0, 0], null, [1.05, 0.78, 0.45]);
-    mesh(new THREE.SphereGeometry(0.013, 14, 12), C.amber, `iris${side}`, g, [0, -0.002, 0.012]);
-    mesh(new THREE.SphereGeometry(0.006, 10, 8), C.pupil, `pupil${side}`, g, [0, -0.002, 0.022]);
-    mesh(new THREE.SphereGeometry(0.0035, 8, 6), C.white, `shine${side}`, g, [0.005, 0.004, 0.026]);
-    // half-lid (idle glare) + blink mesh
+    mesh(new THREE.SphereGeometry(0.024, 16, 12), C.white, `sclera${side}`, g, [0, 0, 0], null, [1.08, 0.8, 0.42]);
+    mesh(new THREE.SphereGeometry(0.0145, 14, 12), C.amber, `iris${side}`, g, [0, -0.002, 0.012]);
+    mesh(new THREE.SphereGeometry(0.0062, 10, 8), C.pupil, `pupil${side}`, g, [0, -0.002, 0.022]);
+    mesh(new THREE.SphereGeometry(0.0036, 8, 6), C.white, `shine${side}`, g, [0.005, 0.004, 0.026]);
+    mesh(
+      new THREE.BoxGeometry(0.046, 0.006, 0.01),
+      C.liner,
+      `liner${side}`,
+      g,
+      [0, 0.014, 0.01],
+      [0.15, 0, 0],
+    );
     const lid = mesh(
-      new THREE.SphereGeometry(0.023, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.55),
+      new THREE.SphereGeometry(0.025, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.55),
       C.lid,
       side === "L" ? "lidLeft" : "lidRight",
       g,
-      [0, 0.006, 0.002],
+      [0, 0.007, 0.002],
       [0.15, 0, 0],
-      [1.05, 0.7, 0.55],
+      [1.08, 0.72, 0.55],
     );
     lid.userData.blink = true;
     mesh(
-      new THREE.BoxGeometry(0.042, 0.006, 0.008),
+      new THREE.BoxGeometry(0.046, 0.007, 0.008),
       C.brow,
       `brow${side}`,
       head,
-      [x, 0.078, 0.08],
-      [0, 0, side === "L" ? 0.22 : -0.22],
+      [x, 0.082, 0.082],
+      [0, 0, side === "L" ? 0.26 : -0.26],
     );
-    mesh(new THREE.SphereGeometry(0.016, 10, 8), C.blush, `blush${side}`, head, [x * 1.35, 0.012, 0.078], null, [1.2, 0.55, 0.4]);
+    mesh(
+      new THREE.SphereGeometry(0.018, 10, 8),
+      C.blush,
+      `blush${side}`,
+      head,
+      [x * 1.4, 0.01, 0.08],
+      null,
+      [1.25, 0.55, 0.4],
+    );
+    mesh(
+      new THREE.SphereGeometry(0.024, 10, 8),
+      C.blushHot,
+      `blushShy${side}`,
+      head,
+      [x * 1.42, 0.008, 0.082],
+      null,
+      [1.45, 0.7, 0.45],
+    );
   }
-  eye("L", 0.034);
-  eye("R", -0.034);
+  eye("L", 0.036);
+  eye("R", -0.036);
 
   // Idle glare mouth (flat / slight frown) — default rest
-  mesh(new THREE.BoxGeometry(0.03, 0.004, 0.006), C.brow, "mouthIdle", head, [0, -0.012, 0.09]);
-  mesh(new THREE.BoxGeometry(0.01, 0.003, 0.005), C.brow, "mouthCornerL", head, [0.016, -0.015, 0.088], [0, 0, 0.45]);
-  mesh(new THREE.BoxGeometry(0.01, 0.003, 0.005), C.brow, "mouthCornerR", head, [-0.016, -0.015, 0.088], [0, 0, -0.45]);
+  mesh(new THREE.BoxGeometry(0.032, 0.004, 0.006), C.brow, "mouthIdle", head, [0, -0.012, 0.092]);
+  mesh(new THREE.BoxGeometry(0.011, 0.003, 0.005), C.brow, "mouthCornerL", head, [0.017, -0.016, 0.09], [0, 0, 0.48]);
+  mesh(new THREE.BoxGeometry(0.011, 0.003, 0.005), C.brow, "mouthCornerR", head, [-0.017, -0.016, 0.09], [0, 0, -0.48]);
 
-  // Talk: open-mouth smile + teeth
+  // Talk: open-mouth smile + teeth (not a shout)
   const mouthOpen = mesh(
-    new THREE.SphereGeometry(0.016, 12, 8),
+    new THREE.SphereGeometry(0.017, 12, 8),
     C.bow,
     "mouthOpen",
     head,
-    [0, -0.02, 0.088],
+    [0, -0.018, 0.09],
     null,
-    [1.25, 0.22, 0.65],
+    [1.35, 0.28, 0.62],
   );
-  mesh(new THREE.BoxGeometry(0.022, 0.006, 0.004), C.tooth, "teethTalk", mouthOpen, [0, 0.006, 0.006]);
+  mesh(new THREE.BoxGeometry(0.026, 0.007, 0.004), C.tooth, "teethTalk", mouthOpen, [0, 0.007, 0.006]);
 
-  // Wave: small closed-mouth smirk (asymmetric)
+  // Wave: small closed-mouth smirk
   const mouthSmirk = mesh(
-    new THREE.BoxGeometry(0.022, 0.004, 0.005),
+    new THREE.BoxGeometry(0.024, 0.004, 0.005),
     C.brow,
     "mouthSmirk",
     head,
-    [0.006, -0.01, 0.091],
-    [0, 0, -0.28],
+    [0.007, -0.01, 0.093],
+    [0, 0, -0.3],
   );
-  mesh(new THREE.BoxGeometry(0.01, 0.003, 0.004), C.brow, "smirkLift", mouthSmirk, [0.012, 0.004, 0]);
+  mesh(new THREE.BoxGeometry(0.011, 0.003, 0.004), C.brow, "smirkLift", mouthSmirk, [0.013, 0.004, 0]);
 
-  // Scold: grit / shout (wide open, not a smile)
+  // Scold: grit / shout (tall open, not a smile)
   const mouthGrit = mesh(
-    new THREE.SphereGeometry(0.015, 12, 8),
+    new THREE.SphereGeometry(0.016, 12, 8),
     C.bow,
     "mouthGrit",
     head,
-    [0, -0.022, 0.086],
+    [0, -0.022, 0.088],
     null,
-    [1.05, 0.55, 0.7],
+    [1.0, 0.62, 0.72],
   );
-  mesh(new THREE.BoxGeometry(0.018, 0.005, 0.004), C.tooth, "teethGrit", mouthGrit, [0, 0.007, 0.005]);
+  mesh(new THREE.BoxGeometry(0.016, 0.005, 0.004), C.tooth, "teethGrit", mouthGrit, [0, 0.01, 0.005]);
 
   // Pout: pushed-out frown (not shy)
-  const mouthPout = mesh(
-    new THREE.SphereGeometry(0.012, 10, 8),
+  mesh(
+    new THREE.SphereGeometry(0.013, 10, 8),
     C.skinShadow,
     "mouthPout",
     head,
-    [0, -0.018, 0.094],
+    [0, -0.018, 0.098],
     null,
-    [1.15, 0.55, 0.7],
+    [1.2, 0.58, 0.72],
   );
+
+  // Shy: small tight line, distinct from idle glare and pout
+  mesh(new THREE.BoxGeometry(0.02, 0.0035, 0.005), C.brow, "mouthShy", head, [0.004, -0.014, 0.093], [0, 0, 0.12]);
+
   // Face extras stay visible in the file; Lab hides all but the rest glare.
 
   // gold STAR studs (not hoops / dangles)
-  const starGeo = new THREE.ExtrudeGeometry(starShape(), { depth: 0.003, bevelEnabled: false });
+  const starGeo = new THREE.ExtrudeGeometry(starShape(), { depth: 0.0035, bevelEnabled: false });
   starGeo.center();
-  const earL = mesh(new THREE.SphereGeometry(0.018, 10, 8), C.skin, "earL", head, [0.1, 0.03, 0], [0, 0.4, 0], [0.7, 1, 0.6]);
-  const earR = mesh(new THREE.SphereGeometry(0.018, 10, 8), C.skin, "earR", head, [-0.1, 0.03, 0], [0, -0.4, 0], [0.7, 1, 0.6]);
+  const earL = mesh(new THREE.SphereGeometry(0.019, 10, 8), C.skin, "earL", head, [0.102, 0.028, 0], [0, 0.4, 0], [0.7, 1, 0.6]);
+  const earR = mesh(new THREE.SphereGeometry(0.019, 10, 8), C.skin, "earR", head, [-0.102, 0.028, 0], [0, -0.4, 0], [0.7, 1, 0.6]);
   const studL = new THREE.Mesh(starGeo, toon(C.gold));
   studL.name = "starStudL";
-  studL.position.set(0.018, 0, 0.006);
-  studL.rotation.y = -0.6;
+  studL.position.set(0.02, 0, 0.007);
+  studL.rotation.y = -0.55;
   earL.add(studL);
   const studR = new THREE.Mesh(starGeo.clone(), toon(C.gold));
   studR.name = "starStudR";
-  studR.position.set(-0.018, 0, 0.006);
-  studR.rotation.y = 0.6;
+  studR.position.set(-0.02, 0, 0.007);
+  studR.rotation.y = 0.55;
   earR.add(studR);
 
-  // --- hair: mid-length messy black + ONE hooked ahoge from crown ---
-  mesh(new THREE.SphereGeometry(0.112, 20, 16), C.hair, "hairCap", head, [0, 0.055, -0.01], null, [1.02, 0.95, 1.0]);
-  mesh(new THREE.SphereGeometry(0.08, 14, 12), C.hair, "hairCrown", head, [0, 0.11, -0.02], null, [1.15, 0.7, 1.05]);
-  // side-swept bangs, both eyes visible
-  mesh(new THREE.SphereGeometry(0.05, 12, 10), C.hair, "bangC", head, [0.01, 0.095, 0.08], [0.5, 0.2, 0], [1.3, 0.45, 0.55]);
-  mesh(new THREE.SphereGeometry(0.045, 12, 10), C.hair, "bangL", head, [0.055, 0.09, 0.07], [0.4, -0.4, 0.2], [1.1, 0.4, 0.5]);
-  mesh(new THREE.SphereGeometry(0.042, 12, 10), C.hair, "bangR", head, [-0.05, 0.088, 0.068], [0.35, 0.5, -0.15], [1.05, 0.38, 0.48]);
-  // side / back to collarbone (not waist)
-  mesh(new THREE.SphereGeometry(0.07, 12, 10), C.hair, "sideL", head, [0.09, 0.0, -0.01], [0.2, 0, 0.15], [0.7, 1.35, 0.85]);
-  mesh(new THREE.SphereGeometry(0.07, 12, 10), C.hair, "sideR", head, [-0.09, 0.0, -0.01], [0.2, 0, -0.15], [0.7, 1.35, 0.85]);
-  mesh(new THREE.SphereGeometry(0.09, 14, 12), C.hair, "hairBack", head, [0, -0.02, -0.07], [0.35, 0, 0], [1.05, 1.2, 0.75]);
-  mesh(new THREE.SphereGeometry(0.05, 10, 8), C.hairHi, "layerL", head, [0.07, 0.06, 0.04], null, [0.8, 0.5, 0.6]);
-  mesh(new THREE.SphereGeometry(0.05, 10, 8), C.hairHi, "layerR", head, [-0.06, 0.055, 0.03], null, [0.75, 0.45, 0.55]);
+  // --- messy mid-length black hair + ONE hooked ahoge from crown ---
+  mesh(new THREE.SphereGeometry(0.116, 22, 18), C.hair, "hairCap", head, [0, 0.052, -0.012], null, [1.04, 0.96, 1.02]);
+  mesh(new THREE.SphereGeometry(0.084, 14, 12), C.hair, "hairCrown", head, [0, 0.118, -0.022], null, [1.18, 0.68, 1.08]);
+  mesh(new THREE.SphereGeometry(0.052, 12, 10), C.hair, "bangC", head, [0.012, 0.098, 0.086], [0.55, 0.22, 0], [1.35, 0.42, 0.52]);
+  mesh(new THREE.SphereGeometry(0.046, 12, 10), C.hair, "bangL", head, [0.058, 0.092, 0.072], [0.42, -0.42, 0.18], [1.12, 0.38, 0.5]);
+  mesh(new THREE.SphereGeometry(0.044, 12, 10), C.hair, "bangR", head, [-0.052, 0.09, 0.07], [0.38, 0.48, -0.12], [1.08, 0.36, 0.48]);
+  mesh(new THREE.SphereGeometry(0.038, 10, 8), C.hair, "bangSideL", head, [0.078, 0.07, 0.05], [0.3, -0.5, 0.2], [0.9, 0.7, 0.45]);
+  mesh(new THREE.SphereGeometry(0.036, 10, 8), C.hair, "bangSideR", head, [-0.072, 0.068, 0.048], [0.28, 0.45, -0.15], [0.85, 0.65, 0.42]);
+  mesh(new THREE.SphereGeometry(0.074, 12, 10), C.hair, "sideL", head, [0.092, -0.02, -0.008], [0.22, 0, 0.12], [0.72, 1.55, 0.88]);
+  mesh(new THREE.SphereGeometry(0.074, 12, 10), C.hair, "sideR", head, [-0.092, -0.02, -0.008], [0.22, 0, -0.12], [0.72, 1.55, 0.88]);
+  mesh(new THREE.SphereGeometry(0.094, 14, 12), C.hair, "hairBack", head, [0, -0.03, -0.075], [0.38, 0, 0], [1.08, 1.32, 0.78]);
+  mesh(new THREE.SphereGeometry(0.052, 10, 8), C.hairHi, "layerL", head, [0.072, 0.055, 0.042], null, [0.82, 0.52, 0.58]);
+  mesh(new THREE.SphereGeometry(0.05, 10, 8), C.hairHi, "layerR", head, [-0.062, 0.05, 0.032], null, [0.78, 0.48, 0.52]);
+  mesh(new THREE.SphereGeometry(0.04, 8, 8), C.hair, "nape", head, [0, -0.06, -0.05], [0.4, 0, 0], [1.1, 0.7, 0.6]);
 
   const ahogeCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0.01, 0.14, -0.01),
-    new THREE.Vector3(-0.02, 0.2, -0.03),
-    new THREE.Vector3(-0.055, 0.24, -0.02),
-    new THREE.Vector3(-0.04, 0.3, 0.01),
-    new THREE.Vector3(-0.01, 0.34, 0.03),
+    new THREE.Vector3(0.0, 0.152, -0.018),
+    new THREE.Vector3(-0.035, 0.215, -0.04),
+    new THREE.Vector3(-0.072, 0.275, -0.018),
+    new THREE.Vector3(-0.04, 0.335, 0.02),
+    new THREE.Vector3(0.018, 0.355, 0.042),
   ]);
-  mesh(new THREE.TubeGeometry(ahogeCurve, 28, 0.007, 8, false), C.hair, "ahoge", head);
+  mesh(new THREE.TubeGeometry(ahogeCurve, 32, 0.0065, 8, false), C.hair, "ahoge", head);
 
-  // A-pose: arms already hang from hierarchy (negative Y). Slight outward.
-  lUpperArm.rotation.z = 0.18;
-  rUpperArm.rotation.z = -0.18;
-  lLowerArm.rotation.z = 0.06;
-  rLowerArm.rotation.z = -0.06;
+  // A-pose: arms hang from hierarchy (negative Y). Slight outward.
+  lUpperArm.rotation.z = 0.16;
+  rUpperArm.rotation.z = -0.16;
+  lLowerArm.rotation.z = 0.05;
+  rLowerArm.rotation.z = -0.05;
 
   return root;
 }

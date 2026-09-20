@@ -184,10 +184,9 @@ Lab loads a custom checklist mesh:
 public/models/star-rai-wip.glb
 ```
 
-Regenerate with `npm run build:wip-mesh`. Canon locks (gold star studs, pointed
-button-up, idle glare, tan / ahoge / amber / bow / buttons / cuff + skirt
-stripes / navy socks / brown loafers) are in `PRESENCE.md` and
-`artifacts/star-rai-canon/00-brief.txt`.
+Regenerate with `npm run build:wip-mesh`. Canon locks and the first expression set
+(idle / talk / wave / scold / pout / shy) live in `PRESENCE.md` and
+`artifacts/star-rai-canon/`. `?lab=1&wip=scold` pins a Lab still. Kiss is unmapped.
 
 `public/models/scaffolding/sairi-ponytail.vrm` is leftover non-Rai scaffolding
 and is **not loaded**. Do not present it as Star.

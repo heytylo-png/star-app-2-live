@@ -36,6 +36,7 @@ import {
   type EmotionId,
   type PoseId,
 } from "@/lib/rai";
+import { labWipPosePin } from "@/lib/presence-mode";
 import { useMemoryStore } from "@/lib/memory-store";
 import { formatMemoryFacts } from "@/lib/memory-slots";
 import {
@@ -162,8 +163,8 @@ function RaiReady() {
   const [keyJustSaved, setKeyJustSaved] = useState(false);
   const [caption, setCaption] = useState("");
   const [emotion, setEmotion] = useState<EmotionId>(DEFAULT_EMOTION);
-  const [pose, setPose] = useState<PoseId>("idle");
-  const [talking, setTalking] = useState(false);
+  const [pose, setPose] = useState<PoseId>(() => labWipPosePin() ?? "idle");
+  const [talking, setTalking] = useState(() => labWipPosePin() === "talk");
   const [holding, setHolding] = useState(false);
   const [pttSupported, setPttSupported] = useState(true);
   const [callActive, setCallActive] = useState(false);
@@ -171,7 +172,7 @@ function RaiReady() {
   const [callSupported, setCallSupported] = useState(true);
   const [callStarting, setCallStarting] = useState(false);
   const [callNotice, setCallNotice] = useState<CallMicNotice | null>(null);
-  const [amp, setAmp] = useState(0);
+  const [amp, setAmp] = useState(() => (labWipPosePin() === "talk" ? 0.55 : 0));
 
   const abortRef = useRef<AbortController | null>(null);
   const recRef = useRef<Rec | null>(null);
@@ -272,6 +273,7 @@ function RaiReady() {
   }, []);
 
   useEffect(() => {
+    if (labWipPosePin()) return;
     if (sending || talking || callListening) return;
     if (holding) {
       setEmotion("glance");

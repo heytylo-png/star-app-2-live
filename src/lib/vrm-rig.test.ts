@@ -8,6 +8,7 @@ import {
   WIP_GLB_FILE,
   rigFor,
   wipFaceFor,
+  wipHandFor,
 } from "./vrm-rig.ts";
 
 const publicRoot = join(dirname(fileURLToPath(import.meta.url)), "../../public");
@@ -28,6 +29,11 @@ describe("lab mesh contract", () => {
     assert.equal(glb.includes("kiss"), false);
     assert.equal(glb.includes("blowKiss"), false);
     assert.equal(glb.includes("heartHands"), false);
+    assert.equal(glb.includes("mouthShy"), true);
+    assert.equal(glb.includes("handWaveR"), true);
+    assert.equal(glb.includes("handPointR"), true);
+    assert.equal(glb.includes("blushShy"), true);
+    assert.equal(glb.includes("starStudL"), true);
   });
 });
 
@@ -55,9 +61,11 @@ describe("rigFor A-pose rest", () => {
     assert.notDeepEqual(shy, pout);
     assert.ok((scold.rightUpperArm?.x ?? 0) < -1, "scold points");
     assert.ok((scold.leftUpperArm?.z ?? 0) > 0.6, "scold left hand on hip");
+    assert.ok((scold.leftUpperLeg?.z ?? 0) > 0.1, "scold stance is wider");
     assert.ok((pout.leftLowerArm?.y ?? 0) > 0.8, "pout crosses arms");
     assert.ok((shy.leftLowerArm?.y ?? 0) < 0.6, "shy fidgets, does not cross");
     assert.ok((shy.head?.x ?? 0) > 0.25, "shy looks down");
+    assert.ok((shy.leftUpperArm?.x ?? 0) > 0.4, "shy arms come forward to the waist");
     const tScold = rigFor("scold", "bratty", false);
     const tShy = rigFor("shy", "bratty", false);
     const tPout = rigFor("pout", "bratty", false);
@@ -65,6 +73,25 @@ describe("rigFor A-pose rest", () => {
     assert.notDeepEqual(tScold, tPout);
     assert.notDeepEqual(tShy, tPout);
     assert.ok((tPout.leftLowerArm?.y ?? 0) > 0.5, "T-pose pout also crosses");
+  });
+
+  it("checks in the first expression set as canon stills, not a kiss sheet", () => {
+    const canon = join(dirname(fileURLToPath(import.meta.url)), "../../artifacts/star-rai-canon");
+    for (const file of [
+      "00-brief.txt",
+      "01-front-idle.png",
+      "06-talk.png",
+      "07-wave.png",
+      "08-scold.png",
+      "09-pout.png",
+      "10-shy.png",
+    ]) {
+      assert.equal(existsSync(join(canon, file)), true, file);
+    }
+    const brief = readFileSync(join(canon, "00-brief.txt"), "utf8");
+    assert.match(brief, /scold/);
+    assert.match(brief, /Kiss = NO/);
+    assert.equal(existsSync(join(canon, "kiss.png")), false);
   });
 
   it("does not alias scold/shy/pout faces and never maps kiss or heart-hands", () => {
@@ -80,6 +107,11 @@ describe("rigFor A-pose rest", () => {
     assert.notEqual(wipFaceFor("scold", true), wipFaceFor("pout", true));
     assert.notEqual(wipFaceFor("shy", true), wipFaceFor("pout", true));
     assert.equal(wipFaceFor("kiss" as never, false), "glare");
+    assert.equal(wipHandFor("wave"), "wavePalm");
+    assert.equal(wipHandFor("scold"), "point");
+    assert.equal(wipHandFor("pout"), "default");
+    assert.equal(wipHandFor("shy"), "default");
+    assert.equal(wipHandFor("idle"), "default");
     const hearts = rigFor("hearts", "bratty", true);
     assert.equal(hearts.leftUpperArm, undefined);
     assert.equal(hearts.rightUpperArm, undefined);

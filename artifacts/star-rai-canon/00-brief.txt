@@ -14,10 +14,14 @@ Idle lock:
   amber glare (angry-neutral, not cute-smile idle).
 - Weight even. Soft blush on cheeks. White bg.
 
+Generated extras live in artifacts/star-rai-blender-refs/ and star-rai-blender-refs.zip
+02-three-quarter  03-side  04-back  05-face-closeup
+Front idle.png is still law. Earrings = tiny gold STAR STUDS, not dangles.
+
 ================================================================
-2. TURNAROUND NOTES (no official side/back still exists)
+2. TURNAROUND NOTES (3/4, side, back generated from idle)
 ================================================================
-Invent only silhouette — keep front proportions.
+Keep front proportions. Extras are guides, not replacements.
 - Hair: mid-length black, messy layers, ends around collarbone / upper chest.
   Volume at crown + sides. NOT waist-length. NOT a hime cut.
 - Ahoge: ONE long thin lock from crown, curves back-left then up like a hook.

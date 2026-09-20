@@ -19,7 +19,8 @@ Chat, Call, talk, memory, and Helix acts are unchanged.
 Header control: **PNG | Lab**. Stored in `localStorage` key `star-rai-presence-v2`.
 
 - Legacy `star-rai-presence` (`toon` / `png`) is ignored so testers are not stuck on the old Sairi scaffold.
-- `?lab=1` opens Lab when no v2 key is set.
+- `?lab=1` opens Lab for that load (does not write storage). `?lab=0` forces PNG.
+- `?lab=1&wip=scold` (also `talk` / `wave` / `pout` / `shy` / `idle`) pins that Lab still. Kiss is not a pin.
 
 Lab shows a badge: **WIP mesh · not Rai**.
 
@@ -41,7 +42,7 @@ Ground truth: `public/rai/idle.png` + `artifacts/star-rai-canon/00-brief.txt`.
 | Skirt | Navy pleats, mid-thigh, **two** white hem stripes all around. |
 | Socks | Navy, ribbed, mid-calf / just-below-knee. |
 | Shoes | Brown penny loafers. |
-| Kiss | **Unmapped.** Do not sculpt, map, or render kiss / blow-kiss / heart-hands. Mood PNG art still deferred. |
+| Kiss | **Unmapped.** Do not sculpt, map, or render kiss / blow-kiss / heart-hands. First expression set is checked in under `artifacts/star-rai-canon/` (idle + talk/wave/scold/pout/shy). |
 
 ## Lab mesh
 
@@ -50,17 +51,18 @@ Ground truth: `public/rai/idle.png` + `artifacts/star-rai-canon/00-brief.txt`.
 - Humanoid groups: hips → spine → chest → neck → head, plus arms/legs.
 - Rest pose is a hanging **A-pose** with the idle **glare** (lids half-closed, flat frown).
 - Blink: `lidLeft` / `lidRight`. Talk: `mouthOpen` (idle frown hides while talking).
-- Runtime converts exported colors to `MeshToonMaterial`.
+- Mood slots: glare / talk smile / smirk / grit / pout / shy mouth + extra shy blush. Wave uses `handWaveR` (palm); scold uses `handPointR` (index). Kiss is not a slot.
+- Lab keeps the exported `MeshStandardMaterial` (toon gradient swap blanked the stage).
 - Path constant: `WIP_GLB_FILE` in `src/lib/vrm-rig.ts`.
 
 This is an honest low-poly WIP. It is meant to be **Star-shaped** (locks above), not another booth schoolgirl.
 
 ### Remaining gaps
 
-- Primitive volumes, not a sculpted VRM. No fingers, no cloth sim. Face slots are mesh visibility (glare / talk smile / smirk / grit / pout / shy), not sculpted blendshapes.
+- Primitive volumes, not a sculpted VRM. No cloth sim. Face slots are mesh visibility, not blendshapes. Fingers exist only as wave-palm / scold-point extras.
 - Hair is layered capsules, not individual locks. Ahoge is a tube hook.
 - No official 3/4 / side / back stills were checked in as separate art (turnaround notes in the brief).
-- Mood PNGs and a kiss pose are out of scope.
+- Kiss stays unmapped. Mood PNG art is live on the PNG body and checked in as Lab refs — it is **not** a merge of Lab to main.
 - Not ready to replace the live PNG body.
 
 ## Scaffolding (do not present as Rai)
@@ -102,5 +104,5 @@ Hand-shape keys (`peace`, `middle_finger`, `hold`) still have no finger rig — 
 
 ## Toon look
 
-Lab uses `MeshToonMaterial` + a 3-stop gradient map. Lighting is hemisphere + two
+Lab uses `MeshStandardMaterial` on the authored mesh. Lighting is hemisphere + two
 directionals — no IBL, no ACES.

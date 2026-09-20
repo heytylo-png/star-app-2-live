@@ -13,9 +13,11 @@ import {
   WIP_GLB_FILE,
   ZERO,
   wipFaceFor,
+  wipHandFor,
   type BoneEuler,
   type RigBoneName,
   type WipFace,
+  type WipHand,
 } from "@/lib/vrm-rig";
 import { PresenceFrame, StageShell } from "@/components/stage-shell";
 
@@ -175,7 +177,7 @@ function StarWip({
   const vrmLike = useRef<Group | null>(null);
   const bonesRef = useRef<Map<RigBoneName, BoneState>>(new Map());
   const lookSmooth = useRef({ x: 0, y: 0 });
-  const yawSmooth = useRef(0.12);
+  const yawSmooth = useRef(0.04);
   const blinkRef = useRef({ t: 0, next: 2.2, value: 0 });
   const extraQuat = useRef(new Quaternion());
   const extraEuler = useRef(new Euler());
@@ -186,10 +188,18 @@ function StarWip({
   const mouthSmirk = useRef<Object3D | null>(null);
   const mouthGrit = useRef<Object3D | null>(null);
   const mouthPout = useRef<Object3D | null>(null);
+  const mouthShy = useRef<Object3D | null>(null);
   const blushL = useRef<Object3D | null>(null);
   const blushR = useRef<Object3D | null>(null);
+  const blushShyL = useRef<Object3D | null>(null);
+  const blushShyR = useRef<Object3D | null>(null);
   const browL = useRef<Object3D | null>(null);
   const browR = useRef<Object3D | null>(null);
+  const irisL = useRef<Object3D | null>(null);
+  const irisR = useRef<Object3D | null>(null);
+  const handDefaultR = useRef<Object3D | null>(null);
+  const handWaveR = useRef<Object3D | null>(null);
+  const handPointR = useRef<Object3D | null>(null);
   const rootRef = useRef<Group>(null);
   const onReadyRef = useRef(onReady);
   const onFailRef = useRef(onFail);
@@ -230,22 +240,38 @@ function StarWip({
         mouthSmirk.current = root.getObjectByName("mouthSmirk") ?? null;
         mouthGrit.current = root.getObjectByName("mouthGrit") ?? null;
         mouthPout.current = root.getObjectByName("mouthPout") ?? null;
+        mouthShy.current = root.getObjectByName("mouthShy") ?? null;
         blushL.current = root.getObjectByName("blushL") ?? null;
         blushR.current = root.getObjectByName("blushR") ?? null;
+        blushShyL.current = root.getObjectByName("blushShyL") ?? null;
+        blushShyR.current = root.getObjectByName("blushShyR") ?? null;
         browL.current = root.getObjectByName("browL") ?? null;
         browR.current = root.getObjectByName("browR") ?? null;
+        irisL.current = root.getObjectByName("irisL") ?? null;
+        irisR.current = root.getObjectByName("irisR") ?? null;
+        handDefaultR.current = root.getObjectByName("handDefaultR") ?? null;
+        handWaveR.current = root.getObjectByName("handWaveR") ?? null;
+        handPointR.current = root.getObjectByName("handPointR") ?? null;
         applyWipFace("glare", 0, {
           idle: mouthIdle.current,
           talk: mouthOpen.current,
           smirk: mouthSmirk.current,
           grit: mouthGrit.current,
           pout: mouthPout.current,
+          shyMouth: mouthShy.current,
           blushL: blushL.current,
           blushR: blushR.current,
+          blushShyL: blushShyL.current,
+          blushShyR: blushShyR.current,
           browL: browL.current,
           browR: browR.current,
           cornerL: root.getObjectByName("mouthCornerL") ?? null,
           cornerR: root.getObjectByName("mouthCornerR") ?? null,
+        });
+        applyWipHands("default", {
+          defR: handDefaultR.current,
+          waveR: handWaveR.current,
+          pointR: handPointR.current,
         });
 
         vrmLike.current = root;
@@ -277,31 +303,38 @@ function StarWip({
     lookSmooth.current.x += (look.x - lookSmooth.current.x) * expT(LOOK_LERP, dt);
     lookSmooth.current.y += (look.y - lookSmooth.current.y) * expT(LOOK_LERP, dt);
 
+    const face = wipFaceFor(intent.pose, intent.talking || intent.pose === "talk");
     const blink = stepBlink(blinkRef.current, dt, reduced);
+    const lidBase = lidBaseFor(face);
     for (const lid of [lidL.current, lidR.current]) {
       if (!lid) continue;
-      lid.rotation.x = 0.15 + blink * 1.05;
+      lid.rotation.x = lidBase + blink * 1.05;
     }
-    applyWipFace(
-      wipFaceFor(intent.pose, intent.talking || intent.pose === "talk"),
-      intent.amplitude,
-      {
-        idle: mouthIdle.current,
-        talk: mouthOpen.current,
-        smirk: mouthSmirk.current,
-        grit: mouthGrit.current,
-        pout: mouthPout.current,
-        blushL: blushL.current,
-        blushR: blushR.current,
-        browL: browL.current,
-        browR: browR.current,
-        cornerL: vrmLike.current?.getObjectByName("mouthCornerL") ?? null,
-        cornerR: vrmLike.current?.getObjectByName("mouthCornerR") ?? null,
-      },
-    );
+    applyWipFace(face, intent.amplitude, {
+      idle: mouthIdle.current,
+      talk: mouthOpen.current,
+      smirk: mouthSmirk.current,
+      grit: mouthGrit.current,
+      pout: mouthPout.current,
+      shyMouth: mouthShy.current,
+      blushL: blushL.current,
+      blushR: blushR.current,
+      blushShyL: blushShyL.current,
+      blushShyR: blushShyR.current,
+      browL: browL.current,
+      browR: browR.current,
+      cornerL: root.getObjectByName("mouthCornerL") ?? null,
+      cornerR: root.getObjectByName("mouthCornerR") ?? null,
+    });
+    applyWipHands(wipHandFor(intent.pose), {
+      defR: handDefaultR.current,
+      waveR: handWaveR.current,
+      pointR: handPointR.current,
+    });
+    lookEyes(face, irisL.current, irisR.current);
 
     const targetRig = rigFor(intent.pose, intent.emotion, true);
-    const waveBoost = intent.pose === "wave" && !reduced ? Math.sin(now * 8.2) * 0.45 : 0;
+    const waveBoost = intent.pose === "wave" && !reduced ? Math.sin(now * 8.2) * 0.22 : 0;
 
     for (const name of RIG_BONES) {
       const state = bonesRef.current.get(name);
@@ -352,37 +385,68 @@ type WipFaceNodes = {
   smirk: Object3D | null;
   grit: Object3D | null;
   pout: Object3D | null;
+  shyMouth: Object3D | null;
   blushL: Object3D | null;
   blushR: Object3D | null;
+  blushShyL: Object3D | null;
+  blushShyR: Object3D | null;
   browL: Object3D | null;
   browR: Object3D | null;
   cornerL: Object3D | null;
   cornerR: Object3D | null;
 };
 
+function lidBaseFor(face: WipFace): number {
+  if (face === "pout") return 0.34;
+  if (face === "grit") return 0.04;
+  if (face === "talkSmile") return 0.08;
+  if (face === "smirk") return 0.12;
+  if (face === "shy") return 0.2;
+  return 0.16;
+}
+
+function lookEyes(face: WipFace, irisL: Object3D | null, irisR: Object3D | null) {
+  const down = face === "shy" ? -0.007 : face === "pout" ? -0.002 : -0.002;
+  const side = face === "shy" ? 0.005 : 0;
+  if (irisL) irisL.position.set(side, down, 0.012);
+  if (irisR) irisR.position.set(side, down, 0.012);
+}
+
+function applyWipHands(
+  hand: WipHand,
+  nodes: { defR: Object3D | null; waveR: Object3D | null; pointR: Object3D | null },
+) {
+  if (nodes.defR) nodes.defR.visible = hand === "default";
+  if (nodes.waveR) nodes.waveR.visible = hand === "wavePalm";
+  if (nodes.pointR) nodes.pointR.visible = hand === "point";
+}
+
 function applyWipFace(face: WipFace, amplitude: number, nodes: WipFaceNodes) {
   const show = (node: Object3D | null, on: boolean) => {
     if (node) node.visible = on;
   };
-  show(nodes.idle, face === "glare" || face === "shy");
-  show(nodes.cornerL, face === "glare" || face === "shy" || face === "pout");
-  show(nodes.cornerR, face === "glare" || face === "shy" || face === "pout");
+  show(nodes.idle, face === "glare");
+  show(nodes.shyMouth, face === "shy");
+  show(nodes.cornerL, face === "glare" || face === "pout");
+  show(nodes.cornerR, face === "glare" || face === "pout");
   show(nodes.talk, face === "talkSmile");
   show(nodes.smirk, face === "smirk");
   show(nodes.grit, face === "grit");
   show(nodes.pout, face === "pout");
+  show(nodes.blushShyL, face === "shy");
+  show(nodes.blushShyR, face === "shy");
   if (nodes.talk && face === "talkSmile") {
     const a = Math.max(0, Math.min(1, amplitude));
-    nodes.talk.scale.set(1.25, 0.22 + a * 0.7, 0.65);
+    nodes.talk.scale.set(1.35, 0.28 + a * 0.55, 0.62);
   }
-  const blush = face === "shy" ? 1.55 : 1;
+  const blush = face === "shy" ? 1.15 : face === "pout" ? 1.2 : 1;
   for (const b of [nodes.blushL, nodes.blushR]) {
-    if (b) b.scale.set(1.2 * blush, 0.55 * blush, 0.4);
+    if (b) b.scale.set(1.25 * blush, 0.55 * blush, 0.4);
   }
   if (nodes.browL && nodes.browR) {
-    const extra = face === "grit" || face === "pout" ? 0.16 : 0;
-    nodes.browL.rotation.z = 0.22 + extra;
-    nodes.browR.rotation.z = -0.22 - extra;
+    const extra = face === "grit" ? 0.22 : face === "pout" ? 0.12 : face === "shy" ? -0.04 : 0;
+    nodes.browL.rotation.z = 0.26 + extra;
+    nodes.browR.rotation.z = -0.26 - extra;
   }
 }
 

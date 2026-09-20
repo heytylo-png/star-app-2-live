@@ -28,6 +28,12 @@ export const RIG_BONES = [
   "rightUpperArm",
   "rightLowerArm",
   "rightHand",
+  "leftUpperLeg",
+  "rightUpperLeg",
+  "leftLowerLeg",
+  "rightLowerLeg",
+  "leftFoot",
+  "rightFoot",
 ] as const satisfies readonly VRMHumanBoneName[];
 
 export type RigBoneName = (typeof RIG_BONES)[number];
@@ -210,19 +216,20 @@ const EMOTION_RIG: Record<EmotionId, RigPose> = {
  */
 /** Left hand on hip — wave + scold only. Never reused for pout/shy. */
 const LEFT_ON_HIP: RigPose = {
-  leftUpperArm: { x: 0.55, y: -0.22, z: 0.88 },
-  leftLowerArm: { x: 0.32, y: 0.98, z: 0.18 },
-  leftHand: { x: 0.08, y: 0.06, z: 0.08 },
+  leftUpperArm: { x: 0.42, y: -0.38, z: 1.02 },
+  leftLowerArm: { x: 0.28, y: 1.12, z: 0.22 },
+  leftHand: { x: 0.1, y: 0.12, z: 0.16 },
 };
 
 const WIP_POSE_RIG: Partial<Record<PoseId, RigPose>> = {
   wave: {
     ...LEFT_ON_HIP,
-    rightShoulder: { x: 0, y: 0.12, z: 0.22 },
-    rightUpperArm: { x: -0.28, y: 0.32, z: -2.05 },
-    rightLowerArm: { x: 0.12, y: -0.42, z: -0.12 },
-    rightHand: { x: 0.1, y: 0, z: 0.12 },
-    head: { x: 0, y: 0.12, z: 0.04 },
+    hips: { x: 0, y: -0.06, z: 0.03 },
+    rightShoulder: { x: 0, y: 0.16, z: 0.28 },
+    rightUpperArm: { x: -0.18, y: 0.42, z: -2.18 },
+    rightLowerArm: { x: 0.22, y: -0.58, z: -0.32 },
+    rightHand: { x: 0.2, y: 0.55, z: 0.35 },
+    head: { x: 0, y: 0.08, z: 0.03 },
   },
   think: {
     head: { x: 0.12, y: -0.22, z: 0.05 },
@@ -234,12 +241,16 @@ const WIP_POSE_RIG: Partial<Record<PoseId, RigPose>> = {
   },
   scold: {
     ...LEFT_ON_HIP,
-    rightShoulder: { x: 0, y: 0.2, z: 0.1 },
-    rightUpperArm: { x: -1.32, y: 0.42, z: -0.22 },
-    rightLowerArm: { x: -0.1, y: -0.08, z: 0.06 },
-    rightHand: { x: 0.1, y: 0, z: 0.12 },
-    head: { x: -0.08, y: 0.06, z: 0 },
-    neck: { x: -0.04, y: 0.03, z: 0 },
+    hips: { x: 0, y: 0, z: 0 },
+    leftUpperLeg: { x: 0, y: 0, z: 0.16 },
+    rightUpperLeg: { x: 0, y: 0, z: -0.16 },
+    rightShoulder: { x: 0.06, y: 0.22, z: 0.1 },
+    rightUpperArm: { x: -1.52, y: 0.18, z: -0.12 },
+    rightLowerArm: { x: -0.12, y: -0.04, z: 0.04 },
+    rightHand: { x: 0.06, y: 0, z: 0.04 },
+    head: { x: -0.1, y: 0.04, z: 0 },
+    neck: { x: -0.05, y: 0.02, z: 0 },
+    chest: { x: -0.04, y: 0, z: 0 },
   },
   point: {
     rightShoulder: { x: 0, y: 0.16, z: 0.08 },
@@ -250,15 +261,15 @@ const WIP_POSE_RIG: Partial<Record<PoseId, RigPose>> = {
   },
   // Fidget hands at waist + look down. NOT crossed arms (that is pout).
   shy: {
-    head: { x: 0.32, y: 0.18, z: 0.05 },
-    neck: { x: 0.14, y: 0.1, z: 0 },
-    spine: { x: 0.1, y: 0.05, z: 0 },
-    leftUpperArm: { x: 0.18, y: 0.12, z: 0.22 },
-    rightUpperArm: { x: 0.18, y: -0.12, z: -0.22 },
-    leftLowerArm: { x: 0.35, y: 0.35, z: 0.18 },
-    rightLowerArm: { x: 0.35, y: -0.35, z: -0.18 },
-    leftHand: { x: 0.08, y: 0.28, z: 0.1 },
-    rightHand: { x: 0.08, y: -0.28, z: -0.1 },
+    head: { x: 0.4, y: 0.22, z: 0.06 },
+    neck: { x: 0.16, y: 0.12, z: 0 },
+    spine: { x: 0.12, y: 0.06, z: 0 },
+    leftUpperArm: { x: 0.62, y: 0.2, z: 0.12 },
+    rightUpperArm: { x: 0.62, y: -0.2, z: -0.12 },
+    leftLowerArm: { x: 0.52, y: 0.48, z: 0.18 },
+    rightLowerArm: { x: 0.52, y: -0.48, z: -0.18 },
+    leftHand: { x: 0.12, y: 0.38, z: 0.12 },
+    rightHand: { x: 0.12, y: -0.38, z: -0.12 },
   },
   embarrassed: {
     head: { x: 0.3, y: 0.16, z: 0.04 },
@@ -271,15 +282,16 @@ const WIP_POSE_RIG: Partial<Record<PoseId, RigPose>> = {
   },
   // Crossed arms + frown. NOT shy fidget.
   pout: {
-    head: { x: 0.06, y: -0.08, z: 0.02 },
-    neck: { x: 0.03, y: -0.04, z: 0 },
+    head: { x: 0.05, y: -0.1, z: 0.02 },
+    neck: { x: 0.03, y: -0.05, z: 0 },
     spine: { x: 0.04, y: 0, z: 0 },
-    leftUpperArm: { x: 0.5, y: 0.22, z: 0.72 },
-    rightUpperArm: { x: 0.55, y: -0.28, z: -0.68 },
-    leftLowerArm: { x: 0.28, y: 1.25, z: 0.28 },
-    rightLowerArm: { x: 0.32, y: -1.15, z: -0.22 },
-    leftHand: { x: 0.1, y: 0.2, z: 0.1 },
-    rightHand: { x: 0.1, y: -0.2, z: -0.1 },
+    hips: { x: 0, y: 0.1, z: 0 },
+    leftUpperArm: { x: 0.88, y: 0.32, z: 0.42 },
+    rightUpperArm: { x: 0.92, y: -0.38, z: -0.38 },
+    leftLowerArm: { x: 0.38, y: 1.42, z: 0.12 },
+    rightLowerArm: { x: 0.42, y: -1.32, z: -0.1 },
+    leftHand: { x: 0.12, y: 0.22, z: 0.08 },
+    rightHand: { x: 0.12, y: -0.22, z: -0.08 },
   },
 };
 
@@ -294,6 +306,15 @@ export function wipFaceFor(pose: PoseId, talking: boolean): WipFace {
   if (pose === "wave") return "smirk";
   if (talking || pose === "talk") return "talkSmile";
   return "glare";
+}
+
+/** Wave palm / scold point / otherwise mittens. Kiss never gets a hand slot. */
+export type WipHand = "default" | "wavePalm" | "point";
+
+export function wipHandFor(pose: PoseId): WipHand {
+  if (pose === "wave") return "wavePalm";
+  if (pose === "scold") return "point";
+  return "default";
 }
 
 const DISTINCT_WIP = new Set<PoseId>(["scold", "shy", "pout"]);
@@ -322,8 +343,10 @@ export function rootYawFor(pose: PoseId): number {
   if (pose === "three_quarter_left") return 0.48;
   if (pose === "three_quarter_right") return -0.48;
   if (pose === "three_quarter") return 0.32;
-  if (pose === "shy" || pose === "embarrassed") return 0.22;
-  return 0.16;
+  if (pose === "shy" || pose === "embarrassed") return 0.2;
+  if (pose === "pout") return 0.1;
+  if (pose === "scold" || pose === "wave" || pose === "talk" || pose === "idle") return 0.04;
+  return 0.08;
 }
 
 /**
