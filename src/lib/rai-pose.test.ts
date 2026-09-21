@@ -5,6 +5,8 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
   CHART_BEAT_TINT_POSES,
+  allSpriteUrls,
+  canIdleBlink,
   DEFAULT_EMOTION,
   EMOTION_HOLD_MS,
   EMOTION_TO_POSE,
@@ -311,6 +313,62 @@ describe("layersFor talking vs pose hold", () => {
   it("resolves idle to official idle.png", () => {
     const layers = layersFor({ ...base, pose: "idle", emotion: "bratty", talking: false });
     assert.match(layers[0]!.src, /rai\/idle\.png/);
+    assert.doesNotMatch(layers[0]!.src, /idle_blink/);
+  });
+
+  it("blinks only on rest idle using the closed-lid full body", () => {
+    const rest = {
+      ...base,
+      pose: "idle" as const,
+      emotion: "bratty" as const,
+      talking: false,
+      blink: 2 as const,
+    };
+    const blink = layersFor(rest);
+    assert.equal(blink.length, 1);
+    assert.match(blink[0]!.src, /rai\/idle_blink\.png/);
+    assert.doesNotMatch(blink[0]!.src, /face_eyes|mouth_speak|mouth_oh/);
+
+    assert.match(layersFor({ ...rest, blink: 0 })[0]!.src, /rai\/idle\.png$/);
+    assert.match(layersFor({ ...rest, talking: true })[0]!.src, /talk_official/);
+    assert.match(layersFor({ ...rest, pose: "wave" })[0]!.src, /wave_official/);
+    assert.match(layersFor({ ...rest, pose: "scold" })[0]!.src, /scold_official/);
+    assert.match(layersFor({ ...rest, pose: "talk" })[0]!.src, /talk_official/);
+    assert.match(layersFor({ ...rest, pose: "smug" })[0]!.src, /smug_official/);
+    assert.match(layersFor({ ...rest, emotion: "smug" })[0]!.src, /smug_official/);
+    assert.match(layersFor({ ...rest, emotion: "shy" })[0]!.src, /shy_official/);
+    assert.match(layersFor({ ...rest, emotion: "hype" })[0]!.src, /peace\.png/);
+    assert.match(layersFor({ ...rest, reducedMotion: true })[0]!.src, /rai\/idle\.png$/);
+    assert.doesNotMatch(
+      layersFor({ ...rest, reducedMotion: true })[0]!.src,
+      /idle_blink|face_eyes/,
+    );
+    assert.match(layersFor({ ...rest, emotion: "glance" })[0]!.src, /idle_blink/);
+
+    assert.equal(canIdleBlink(rest), true);
+    assert.equal(canIdleBlink({ ...rest, talking: true }), false);
+    assert.equal(canIdleBlink({ ...rest, pose: "wave" }), false);
+    assert.equal(canIdleBlink({ ...rest, reducedMotion: true }), false);
+    assert.equal(USE_EXPO_TALK_BUST, false);
+    assert.ok(allSpriteUrls().includes(SPRITES.idleBlink));
+    assert.match(SPRITES.idleBlink, /rai\/idle_blink\.png/);
+
+    const ihdr = (rel: string) => {
+      const buf = readFileSync(join(publicRoot, rel));
+      return {
+        width: buf.readUInt32BE(16),
+        height: buf.readUInt32BE(20),
+        colorType: buf[25],
+      };
+    };
+    const idle = ihdr("rai/idle.png");
+    const closed = ihdr("rai/idle_blink.png");
+    assert.equal(closed.width, idle.width);
+    assert.equal(closed.height, idle.height);
+    assert.equal(closed.width, 1008);
+    assert.equal(closed.height, 1792);
+    assert.equal(closed.colorType, idle.colorType);
+    assert.equal(closed.colorType, 2, "RGB plate, punched at runtime like idle.png");
   });
 
   it("pins soft/hype off frown idle even when pose is still idle", () => {

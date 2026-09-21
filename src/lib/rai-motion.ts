@@ -10,6 +10,17 @@ export const POSE_CROSSFADE_MS = 380;
 /** Smile/grin Expo alts are not official idle beats — kept for API only. */
 export const IDLE_BEAT_FADE_MS = 400;
 
+/**
+ * Rest-idle blink on `idle_blink.png`.
+ * Fade stays inside 80–120ms and under the pose crossfade so lids read as a
+ * blink. Hold is the fully-closed dwell after that fade-in.
+ */
+export const IDLE_BLINK_FADE_MS = 100;
+export const IDLE_BLINK_HOLD_MS = 100;
+/** Random gap between blinks, inclusive range ~3–6s. */
+export const IDLE_BLINK_GAP_MIN_MS = 3000;
+export const IDLE_BLINK_GAP_MAX_MS = 6000;
+
 /** Idle vertical travel stays under this so the sheet does not float. */
 export const IDLE_MAX_TRANSLATE_Y_PX = 1.2;
 /** Weight-shift rock, excluding look-at lean. */

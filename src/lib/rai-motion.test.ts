@@ -4,6 +4,10 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
+  IDLE_BLINK_FADE_MS,
+  IDLE_BLINK_GAP_MAX_MS,
+  IDLE_BLINK_GAP_MIN_MS,
+  IDLE_BLINK_HOLD_MS,
   IDLE_BREATHE_MAX,
   IDLE_BREATHE_MIN,
   IDLE_MAX_ROCK_DEG,
@@ -43,6 +47,11 @@ describe("official PNG puppet motion", () => {
   it("crossfades pose sheets and plants the rig on the hips", () => {
     assert.equal(POSE_CROSSFADE_MS, 380);
     assert.ok(POSE_CROSSFADE_MS >= 300 && POSE_CROSSFADE_MS <= 480);
+    assert.ok(IDLE_BLINK_FADE_MS <= POSE_CROSSFADE_MS);
+    assert.ok(IDLE_BLINK_FADE_MS >= 80 && IDLE_BLINK_FADE_MS <= 120);
+    assert.ok(IDLE_BLINK_HOLD_MS >= 80 && IDLE_BLINK_HOLD_MS <= 120);
+    assert.equal(IDLE_BLINK_GAP_MIN_MS, 3000);
+    assert.equal(IDLE_BLINK_GAP_MAX_MS, 6000);
     assert.match(css, /\.rai-rig\s*\{/);
     assert.match(css, /transform-origin:\s*50%\s*72%/);
     assert.doesNotMatch(css, /perspective\(1400px\)/);
