@@ -36,6 +36,15 @@ import {
   type PoseId,
 } from "@/lib/rai";
 import { useMemoryStore } from "@/lib/memory-store";
+import { usePresenceStore } from "@/lib/presence-store";
+import {
+  PRESENCE_HEARTBEAT_MS,
+  clipTopicHint,
+  offerReturnBeat,
+  threadHasFreshReturnBeat,
+  topicHintFromUserText,
+  type ReturnSurface,
+} from "@/lib/return-memory";
 import { formatMemoryFacts } from "@/lib/memory-slots";
 import {
   composeDiaryEntry,
@@ -137,6 +146,9 @@ export function RaiApp() {
     void Promise.resolve(useChartStore.persist.rehydrate()).finally(() => {
       useChartStore.getState().setHydrated(true);
     });
+    void Promise.resolve(usePresenceStore.persist.rehydrate()).finally(() => {
+      usePresenceStore.getState().setHydrated(true);
+    });
   }, []);
   return <RaiReady />;
 }
@@ -150,6 +162,8 @@ function RaiReady() {
   const memories = useMemoryStore((s) => s.items);
   const slots = useMemoryStore((s) => s.slots);
   const chartHydrated = useChartStore((s) => s.hydrated);
+  const chatHydrated = useChatStore((s) => s.hydrated);
+  const presenceHydrated = usePresenceStore((s) => s.hydrated);
   const chartSetup = useChartStore((s) => s.setup);
   const diaryByDay = useChartStore((s) => s.diaryByDay);
   const affectionScore = useAffectionStore((s) => s.score);
@@ -206,6 +220,7 @@ function RaiReady() {
   /** Life slots before this turn's ingest — used to detect track changes. */
   const lifeBeforeRef = useRef<LifeSlots | undefined>(undefined);
   const sendRef = useRef<(text: string) => Promise<void>>(async () => {});
+  const deliverReturnRef = useRef<(surface: ReturnSurface) => void>(() => {});
   const spotify = useSpotifyPlayback({
     onTrackChange: (title) => {
       void sendRef.current(`I'm listening to ${title}`);
@@ -289,6 +304,92 @@ function RaiReady() {
       micStreamRef.current = null;
     };
   }, []);
+
+  function deliverReturnBeat(surface: ReturnSurface) {
+    if (!useChatStore.getState().hydrated) return;
+    if (!usePresenceStore.getState().hydrated) return;
+    if (sendingRef.current) return;
+
+    const presence = usePresenceStore.getState();
+    const mem = useMemoryStore.getState();
+    const store = useChatStore.getState();
+    let active = store.threads.find((t) => t.id === store.activeId) ?? null;
+    const fromSlots = clipTopicHint(mem.slots.last_topic ?? "");
+    const now = Date.now();
+    const offer = offerReturnBeat(
+      {
+        lastSeenAt: presence.lastSeenAt,
+        lastTopicHint: presence.lastTopicHint ?? (fromSlots || null),
+        returnAckedFor: presence.returnAckedFor,
+      },
+      now,
+      surface,
+      { threadHasReturn: threadHasFreshReturnBeat(active?.messages ?? []) },
+    );
+    presence.applySnapshot(offer.next);
+    if (!offer.inject || !offer.line) return;
+
+    if (!active) active = store.createThread({ model: defaultModel });
+    store.appendMessage(active.id, {
+      id: newId(),
+      role: "assistant",
+      content: offer.line,
+      createdAt: now,
+      model: active.model,
+      source: "return",
+    });
+    setCaption(offer.line);
+  }
+  deliverReturnRef.current = deliverReturnBeat;
+
+  useEffect(() => {
+    if (!chatHydrated || !presenceHydrated) return;
+
+    const deliver = (surface: ReturnSurface) => deliverReturnRef.current(surface);
+    deliver(callActiveRef.current ? "call" : "chat");
+
+    let beat = 0;
+    const startBeat = () => {
+      if (beat) return;
+      beat = window.setInterval(() => {
+        if (document.visibilityState === "visible") {
+          usePresenceStore.getState().touchLastSeen();
+        }
+      }, PRESENCE_HEARTBEAT_MS);
+    };
+    const stopBeat = () => {
+      if (!beat) return;
+      window.clearInterval(beat);
+      beat = 0;
+    };
+    if (document.visibilityState === "visible") startBeat();
+
+    const onVis = () => {
+      if (document.visibilityState === "hidden") {
+        stopBeat();
+        usePresenceStore.getState().touchLastSeen();
+        return;
+      }
+      deliver(callActiveRef.current ? "call" : "chat");
+      startBeat();
+    };
+    const onLeave = () => {
+      stopBeat();
+      usePresenceStore.getState().touchLastSeen();
+    };
+
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("pagehide", onLeave);
+    window.addEventListener("beforeunload", onLeave);
+    window.addEventListener("freeze", onLeave);
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("pagehide", onLeave);
+      window.removeEventListener("beforeunload", onLeave);
+      window.removeEventListener("freeze", onLeave);
+      onLeave();
+    };
+  }, [chatHydrated, presenceHydrated]);
 
   useEffect(() => {
     if (sending || talking || callListening) return;
@@ -796,6 +897,9 @@ function RaiReady() {
     useMemoryStore.getState().ingestUserTurn(content, {
       lastChoice: lifeTitle ? undefined : named === false ? "kiss" : named || undefined,
     });
+    const topicHint = topicHintFromUserText(content);
+    if (topicHint) usePresenceStore.getState().setLastTopicHint(topicHint);
+    usePresenceStore.getState().touchLastSeen();
     store.appendMessage(active.id, {
       id: newId(),
       role: "user",
@@ -920,6 +1024,7 @@ function RaiReady() {
         setCallActive(true);
         listenAfterSpeakRef.current = true;
         setCallNotice(null);
+        deliverReturnRef.current("call");
         startCallListen();
       })
       .catch((err) => {

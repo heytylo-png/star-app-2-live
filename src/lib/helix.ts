@@ -12,6 +12,8 @@ export type ChatMessage = {
   createdAt: number;
   model?: string;
   error?: string;
+  /** Local away/return nag — one assistant bubble per qualifying gap. */
+  source?: "return";
 };
 
 export type Thread = {
