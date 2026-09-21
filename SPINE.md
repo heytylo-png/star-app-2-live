@@ -26,7 +26,7 @@ Official PNG sheets remain the shipping face until a **Spine (or this repo’s c
 | `src/lib/cutout-sample.ts` | Geometric **sample girl** — not Rai |
 | `src/components/spine-stage.tsx` | Canvas stage; PNG fallback on failure |
 | `src/components/presence-stage.tsx` | Query-flag switch. Default = `Puppet` |
-| `public/spine/rai/skeleton.json` | Rai-oriented bone/slot stub |
+| `public/spine/rai/skeleton.json` | Rai bones/slots + authored idle/talk/wave/scold/pout/shy clips |
 | `public/spine/rai/cut-guide.svg` | Layer cut overlay (schematic, not a tracing) |
 | `public/spine/rai/layers/` | Official idle cut PNGs + filename table |
 
@@ -107,7 +107,7 @@ Free *preview* of Spine: Essential trial. Do not commit trial exports we cannot 
 8. Export **JSON + PNG atlas** (Spine 4.2). Drop into `public/spine/rai/export/` (create that folder in the runtime PR).  
 9. Engineering follow-up: add `@esotericsoftware/spine-webgl` **dynamic import** behind `?spine=1` / `?spine=rai`, keep PNG default, keep 3D Lab off. Copy the Spine Runtimes license notice.
 
-`?spine=rai` now loads the idle cut pack through the in-repo Canvas player. That is still not a Spine Editor export — step 8 above is the licensed runtime path. The sample girl remains `?spine=1`. Default URL stays the PNG puppet.
+`?spine=rai` loads the idle cut pack through the in-repo Canvas player **with bone timelines ported from** `src/lib/cutout-sample.ts` (same rotate keys: wave `upperArmR` 128→148 flap + left-arm hip pose; scold / pout / shy distinct). Idle/talk `y` keys are remapped to Rai rest so the official PNG bind does not jump. Talk mouth stays `skeleton.talk` (jaw + `mouth_open`) — no jaw keys needed. Empty `bones: {}` was the bind-pose hole; do **not** recut layers for chunkiness. That is still not a Spine Editor export — step 8 above is the licensed runtime path. The sample girl remains `?spine=1`. Default URL stays the PNG puppet.
 
 ## Runtime notes (web)
 

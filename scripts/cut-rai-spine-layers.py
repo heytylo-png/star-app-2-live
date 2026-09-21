@@ -6,6 +6,9 @@ Expo bust crops. Character-left = her left = screen right.
 
 Source: public/rai/idle.png (1008×1792). mouth_open from talk_official.png
 aligned to the idle head.
+
+Pose motion lives in skeleton.json bone timelines. A full recut keeps those
+clips (do not wipe bones: {} back onto idle/talk/wave/scold/pout/shy).
 """
 from __future__ import annotations
 
@@ -719,7 +722,7 @@ def write_skeleton(meta: dict[str, dict]) -> None:
             }
         )
 
-    empty = {n: {"duration": d, "loop": True, "bones": {}} for n, d in {
+    stubs = {n: {"duration": d, "loop": True, "bones": {}} for n, d in {
         "idle": 3.2,
         "talk": 3.2,
         "wave": 1.6,
@@ -727,6 +730,25 @@ def write_skeleton(meta: dict[str, dict]) -> None:
         "pout": 2.4,
         "shy": 2.6,
     }.items()}
+    # Recuts must not wipe authored pose motion (the allowed hole fix).
+    prev_anims: dict = {}
+    if SKEL_PATH.is_file():
+        try:
+            prev_anims = json.loads(SKEL_PATH.read_text()).get("animations") or {}
+        except json.JSONDecodeError:
+            prev_anims = {}
+    animations: dict = {}
+    for name, stub in stubs.items():
+        prev = prev_anims.get(name) if isinstance(prev_anims.get(name), dict) else None
+        bones_tl = (prev or {}).get("bones") if prev else None
+        clip = {
+            "duration": (prev or {}).get("duration", stub["duration"]),
+            "loop": (prev or {}).get("loop", stub["loop"]),
+            "bones": bones_tl if isinstance(bones_tl, dict) and bones_tl else stub["bones"],
+        }
+        if prev and "slots" in prev:
+            clip["slots"] = prev["slots"]
+        animations[name] = clip
 
     skel = {
         "name": "star-rai-cutout",
@@ -736,7 +758,7 @@ def write_skeleton(meta: dict[str, dict]) -> None:
         "demo": False,
         "bones": bones,
         "slots": slots,
-        "animations": empty,
+        "animations": animations,
         "poseToAnimation": {
             "idle": "idle",
             "talk": "talk",

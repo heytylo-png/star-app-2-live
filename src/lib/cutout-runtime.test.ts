@@ -146,6 +146,10 @@ describe("Rai cutout layers", () => {
       assert.equal(existsSync(full), true, file);
       assert.ok(readFileSync(full).length > 80, `${file} empty`);
     }
+    // Frozen cut pack — pose motion lives in skeleton.json timelines, not recuts.
+    assert.equal(readFileSync(join(layerDir, "upper_arm_r.png")).length, 31437);
+    assert.equal(readFileSync(join(layerDir, "hand_r.png")).length, 13686);
+    assert.equal(readFileSync(join(layerDir, "mouth_open.png")).length, 9272);
     const present = new Set(paths);
     const status = rigStatus(skel, present);
     assert.equal(status.ready, true);
@@ -173,5 +177,138 @@ describe("Rai cutout layers", () => {
     const foot = slots.find((s) => s.name === "footL");
     assert.ok(head && foot);
     assert.ok(head.y < foot.y, "head should be above feet in y-down space");
+  });
+
+  it("authors bone motion so wave/scold/pout/shy are not bind pose", () => {
+    const skel = parseCutoutSkeleton(
+      JSON.parse(readFileSync(join(root, "public/spine/rai/skeleton.json"), "utf8")),
+    );
+    for (const pose of ["idle", "talk", "wave", "scold", "pout", "shy"] as const) {
+      const clip = skel.animations[pose];
+      assert.ok(clip, pose);
+      const bones = clip.bones ?? {};
+      assert.ok(Object.keys(bones).length > 0, `${pose} clip still has bones: {}`);
+      const hasTimeline = Object.values(bones).some(
+        (tl) => (tl.rotate?.length ?? 0) > 0 || (tl.x?.length ?? 0) > 0 || (tl.y?.length ?? 0) > 0,
+      );
+      assert.ok(hasTimeline, `${pose} has no rotate/translate keys`);
+    }
+    assert.equal(skel.animations.kiss, undefined);
+    assert.equal(skel.poseToAnimation?.kiss, undefined);
+
+    const idle = applyClip(skel, skel.animations.idle, 0);
+    const idleWorld = worldFromLocals(skel, idle);
+    const wave = applyClip(skel, skel.animations.wave, 0.2);
+    const waveWorld = worldFromLocals(skel, wave);
+    const idleHand = idleWorld.get("handR");
+    const waveHand = waveWorld.get("handR");
+    assert.ok(idleHand && waveHand);
+    assert.ok(
+      waveHand.y < idleHand.y - 80,
+      `wave must raise her right arm (viewer left): y ${waveHand.y} vs idle ${idleHand.y}`,
+    );
+    const waveHandT1 = worldFromLocals(skel, applyClip(skel, skel.animations.wave, 0.4)).get("handR");
+    assert.ok(waveHandT1);
+    assert.ok(
+      Math.abs(waveHandT1.rotation - waveHand.rotation) > 4 || Math.abs(waveHandT1.y - waveHand.y) > 8,
+      "wave flap must move across the clip, not a held bind pose",
+    );
+
+    const scoldWorld = worldFromLocals(skel, applyClip(skel, skel.animations.scold, 0.2));
+    const scoldHand = scoldWorld.get("handR");
+    assert.ok(scoldHand);
+    assert.ok(scoldHand.y < idleHand.y - 40, "scold must lift the pointing arm off bind pose");
+    assert.ok(
+      Math.abs(scoldHand.y - waveHand.y) > 40 || Math.abs(scoldHand.rotation - waveHand.rotation) > 20,
+      "scold point must be distinct from wave",
+    );
+
+    const poutHead = applyClip(skel, skel.animations.pout, 0).get("head");
+    const shyHead = applyClip(skel, skel.animations.shy, 0).get("head");
+    const poutArmR = applyClip(skel, skel.animations.pout, 0).get("upperArmR");
+    const shyArmR = applyClip(skel, skel.animations.shy, 0).get("upperArmR");
+    assert.ok(poutHead && shyHead && poutArmR && shyArmR);
+    assert.ok(poutHead.rotation < -3, `pout head tilt ${poutHead.rotation}`);
+    assert.ok(shyHead.rotation > 6, `shy head tuck ${shyHead.rotation}`);
+    assert.notEqual(Math.sign(poutHead.rotation), Math.sign(shyHead.rotation));
+    assert.notEqual(poutArmR.rotation, shyArmR.rotation);
+    assert.ok(shyArmR.rotation < 0, "shy covers with the right arm inward");
+
+    const restHipY = idle.get("hip")!.y;
+    let maxFootDy = 0;
+    for (let t = 0; t <= 3.2; t += 0.1) {
+      const w = worldFromLocals(skel, applyClip(skel, skel.animations.idle, t));
+      const hip = applyClip(skel, skel.animations.idle, t).get("hip")!;
+      assert.equal(hip.y, restHipY, "idle hip must stay planted (no float key)");
+      const footL = w.get("footL")!;
+      const footR = w.get("footR")!;
+      maxFootDy = Math.max(
+        maxFootDy,
+        Math.abs(footL.y - idleWorld.get("footL")!.y),
+        Math.abs(footR.y - idleWorld.get("footR")!.y),
+      );
+    }
+    assert.ok(maxFootDy < 4, `idle feet floated ${maxFootDy}px`);
+  });
+
+  it("ports sample-girl rotate keys onto Rai wave/scold/pout/shy (y remapped to Rai rest)", () => {
+    const sample = sampleGirlSkeleton();
+    const rai = parseCutoutSkeleton(
+      JSON.parse(readFileSync(join(root, "public/spine/rai/skeleton.json"), "utf8")),
+    );
+    const rot = (skel: { animations: typeof sample.animations }, pose: string, bone: string) =>
+      (skel.animations[pose]?.bones?.[bone]?.rotate ?? []).map((k) => [k.time, k.value]);
+    for (const [pose, bone] of [
+      ["wave", "upperArmR"],
+      ["wave", "forearmR"],
+      ["wave", "handR"],
+      ["wave", "upperArmL"],
+      ["wave", "forearmL"],
+      ["wave", "handL"],
+      ["scold", "upperArmR"],
+      ["scold", "forearmR"],
+      ["scold", "handR"],
+      ["scold", "upperArmL"],
+      ["scold", "forearmL"],
+      ["pout", "head"],
+      ["pout", "upperArmL"],
+      ["pout", "upperArmR"],
+      ["shy", "upperArmL"],
+      ["shy", "forearmL"],
+      ["shy", "upperArmR"],
+      ["shy", "forearmR"],
+    ] as const) {
+      assert.deepEqual(rot(rai, pose, bone), rot(sample, pose, bone), `${pose}.${bone}`);
+    }
+    const chestRest = rai.bones.find((b) => b.name === "chest")!.y;
+    const chestKeys = rai.animations.idle!.bones!.chest!.y!.map((k) => k.value);
+    assert.equal(chestKeys[0], chestRest);
+    assert.ok(chestKeys.every((v) => Math.abs(v - chestRest) <= 4), "idle chest y stays near Rai rest");
+    const torsoRest = rai.bones.find((b) => b.name === "torso")!.y;
+    const talkY = rai.animations.talk!.bones!.torso!.y!.map((k) => k.value);
+    assert.equal(talkY[0], torsoRest);
+    assert.ok(!rai.animations.talk!.bones!.jaw, "talk mouth is skeleton.talk, not jaw keys");
+  });
+
+  it("keeps talk jaw/mouth and adds a light torso bob on the talk clip", () => {
+    const skel = parseCutoutSkeleton(
+      JSON.parse(readFileSync(join(root, "public/spine/rai/skeleton.json"), "utf8")),
+    );
+    const talking = new CutoutPlayer(skel);
+    talking.setTalk(true, 1);
+    talking.update(0.2);
+    const jawTalk = talking.evaluate().find((s) => s.name === "mouth");
+    const quiet = new CutoutPlayer(skel);
+    quiet.setTalk(false, 0);
+    quiet.update(0.2);
+    const jawQuiet = quiet.evaluate().find((s) => s.name === "mouth");
+    assert.ok(jawTalk && jawQuiet);
+    assert.equal(jawQuiet.attachment.name, "mouth_closed");
+    assert.equal(jawTalk.attachment.name, "mouth_open");
+
+    const idleTorso = applyClip(skel, skel.animations.idle, 0.18).get("torso");
+    const talkTorso = applyClip(skel, skel.animations.talk, 0.18).get("torso");
+    assert.ok(idleTorso && talkTorso);
+    assert.notEqual(talkTorso.y, idleTorso.y, "talk clip should bob the torso vs idle");
   });
 });

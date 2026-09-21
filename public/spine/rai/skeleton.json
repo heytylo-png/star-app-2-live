@@ -537,32 +537,317 @@
     "idle": {
       "duration": 3.2,
       "loop": true,
-      "bones": {}
+      "bones": {
+        "hip": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 0.8, "value": -0.55 },
+            { "time": 1.6, "value": 0.2 },
+            { "time": 2.4, "value": 0.5 },
+            { "time": 3.2, "value": 0 }
+          ],
+          "x": [
+            { "time": 0, "value": 0 },
+            { "time": 1.6, "value": 3.2 },
+            { "time": 3.2, "value": 0 }
+          ]
+        },
+        "torso": {
+          "scaleY": [
+            { "time": 0, "value": 1 },
+            { "time": 1.55, "value": 1.018 },
+            { "time": 3.2, "value": 1 }
+          ],
+          "scaleX": [
+            { "time": 0, "value": 1 },
+            { "time": 1.55, "value": 0.992 },
+            { "time": 3.2, "value": 1 }
+          ]
+        },
+        "chest": {
+          "y": [
+            { "time": 0, "value": -150 },
+            { "time": 1.55, "value": -153 },
+            { "time": 3.2, "value": -150 }
+          ]
+        },
+        "ahoge": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 0.9, "value": 10 },
+            { "time": 1.8, "value": -6 },
+            { "time": 2.6, "value": 6 },
+            { "time": 3.2, "value": 0 }
+          ]
+        },
+        "hairFront": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 1.6, "value": 1.4 },
+            { "time": 3.2, "value": 0 }
+          ]
+        },
+        "upperArmL": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 1.6, "value": -4 },
+            { "time": 3.2, "value": 0 }
+          ]
+        },
+        "upperArmR": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 1.6, "value": 4 },
+            { "time": 3.2, "value": 0 }
+          ]
+        }
+      }
     },
     "talk": {
       "duration": 3.2,
       "loop": true,
-      "bones": {}
+      "bones": {
+        "hip": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 0.8, "value": -0.55 },
+            { "time": 1.6, "value": 0.2 },
+            { "time": 2.4, "value": 0.5 },
+            { "time": 3.2, "value": 0 }
+          ],
+          "x": [
+            { "time": 0, "value": 0 },
+            { "time": 1.6, "value": 3.2 },
+            { "time": 3.2, "value": 0 }
+          ]
+        },
+        "torso": {
+          "scaleY": [
+            { "time": 0, "value": 1 },
+            { "time": 1.55, "value": 1.018 },
+            { "time": 3.2, "value": 1 }
+          ],
+          "scaleX": [
+            { "time": 0, "value": 1 },
+            { "time": 1.55, "value": 0.992 },
+            { "time": 3.2, "value": 1 }
+          ],
+          "y": [
+            { "time": 0, "value": -190 },
+            { "time": 0.18, "value": -188 },
+            { "time": 0.4, "value": -191 },
+            { "time": 3.2, "value": -190 }
+          ]
+        },
+        "chest": {
+          "y": [
+            { "time": 0, "value": -150 },
+            { "time": 1.55, "value": -153 },
+            { "time": 3.2, "value": -150 }
+          ]
+        },
+        "ahoge": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 0.9, "value": 10 },
+            { "time": 1.8, "value": -6 },
+            { "time": 2.6, "value": 6 },
+            { "time": 3.2, "value": 0 }
+          ]
+        },
+        "hairFront": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 1.6, "value": 1.4 },
+            { "time": 3.2, "value": 0 }
+          ]
+        },
+        "upperArmL": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 1.6, "value": -4 },
+            { "time": 3.2, "value": 0 }
+          ]
+        },
+        "upperArmR": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 1.6, "value": 4 },
+            { "time": 3.2, "value": 0 }
+          ]
+        }
+      }
     },
     "wave": {
       "duration": 1.6,
       "loop": true,
-      "bones": {}
+      "bones": {
+        "hip": {
+          "rotate": [{ "time": 0, "value": 2 }]
+        },
+        "torso": {
+          "rotate": [{ "time": 0, "value": 4 }]
+        },
+        "head": {
+          "rotate": [{ "time": 0, "value": 6 }]
+        },
+        "upperArmR": {
+          "rotate": [
+            { "time": 0, "value": 128 },
+            { "time": 0.4, "value": 148 },
+            { "time": 0.8, "value": 118 },
+            { "time": 1.2, "value": 150 },
+            { "time": 1.6, "value": 128 }
+          ]
+        },
+        "forearmR": {
+          "rotate": [
+            { "time": 0, "value": 18 },
+            { "time": 0.4, "value": 38 },
+            { "time": 0.8, "value": 10 },
+            { "time": 1.2, "value": 36 },
+            { "time": 1.6, "value": 18 }
+          ]
+        },
+        "handR": {
+          "rotate": [
+            { "time": 0, "value": 8 },
+            { "time": 0.4, "value": 18 },
+            { "time": 0.8, "value": 4 },
+            { "time": 1.6, "value": 8 }
+          ]
+        },
+        "upperArmL": {
+          "rotate": [{ "time": 0, "value": 38 }]
+        },
+        "forearmL": {
+          "rotate": [{ "time": 0, "value": 44 }]
+        },
+        "handL": {
+          "rotate": [{ "time": 0, "value": 10 }]
+        },
+        "ahoge": {
+          "rotate": [
+            { "time": 0, "value": -22 },
+            { "time": 0.8, "value": -10 },
+            { "time": 1.6, "value": -22 }
+          ]
+        }
+      }
     },
     "scold": {
       "duration": 1.4,
       "loop": true,
-      "bones": {}
+      "bones": {
+        "hip": {
+          "rotate": [{ "time": 0, "value": -2 }],
+          "y": [{ "time": 0, "value": 0 }]
+        },
+        "torso": {
+          "rotate": [{ "time": 0, "value": 8 }],
+          "scaleY": [{ "time": 0, "value": 1.02 }]
+        },
+        "chest": {
+          "rotate": [{ "time": 0, "value": 6 }]
+        },
+        "head": {
+          "rotate": [{ "time": 0, "value": 4 }]
+        },
+        "upperArmR": {
+          "rotate": [
+            { "time": 0, "value": 96 },
+            { "time": 0.7, "value": 104 },
+            { "time": 1.4, "value": 96 }
+          ]
+        },
+        "forearmR": {
+          "rotate": [{ "time": 0, "value": 12 }]
+        },
+        "handR": {
+          "rotate": [{ "time": 0, "value": 6 }]
+        },
+        "upperArmL": {
+          "rotate": [{ "time": 0, "value": 40 }]
+        },
+        "forearmL": {
+          "rotate": [{ "time": 0, "value": 46 }]
+        },
+        "thighL": {
+          "rotate": [{ "time": 0, "value": -8 }]
+        },
+        "thighR": {
+          "rotate": [{ "time": 0, "value": 8 }]
+        },
+        "ahoge": {
+          "rotate": [{ "time": 0, "value": -20 }]
+        }
+      }
     },
     "pout": {
       "duration": 2.4,
       "loop": true,
-      "bones": {}
+      "bones": {
+        "hip": {
+          "rotate": [{ "time": 0, "value": 3 }]
+        },
+        "torso": {
+          "rotate": [{ "time": 0, "value": -3 }]
+        },
+        "head": {
+          "rotate": [
+            { "time": 0, "value": -8 },
+            { "time": 1.2, "value": -6 },
+            { "time": 2.4, "value": -8 }
+          ]
+        },
+        "upperArmL": {
+          "rotate": [{ "time": 0, "value": -8 }]
+        },
+        "upperArmR": {
+          "rotate": [{ "time": 0, "value": 8 }]
+        },
+        "ahoge": {
+          "rotate": [
+            { "time": 0, "value": -36 },
+            { "time": 1.2, "value": -30 },
+            { "time": 2.4, "value": -36 }
+          ]
+        }
+      }
     },
     "shy": {
       "duration": 2.6,
       "loop": true,
-      "bones": {}
+      "bones": {
+        "hip": {
+          "rotate": [{ "time": 0, "value": -4 }]
+        },
+        "torso": {
+          "rotate": [{ "time": 0, "value": 6 }],
+          "scaleY": [{ "time": 0, "value": 0.985 }]
+        },
+        "chest": {
+          "rotate": [{ "time": 0, "value": 4 }]
+        },
+        "head": {
+          "rotate": [{ "time": 0, "value": 12 }]
+        },
+        "upperArmL": {
+          "rotate": [{ "time": 0, "value": 28 }]
+        },
+        "forearmL": {
+          "rotate": [{ "time": 0, "value": 48 }]
+        },
+        "upperArmR": {
+          "rotate": [{ "time": 0, "value": -24 }]
+        },
+        "forearmR": {
+          "rotate": [{ "time": 0, "value": -42 }]
+        },
+        "ahoge": {
+          "rotate": [{ "time": 0, "value": -8 }]
+        }
+      }
     }
   },
   "poseToAnimation": {

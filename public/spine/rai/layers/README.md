@@ -2,6 +2,8 @@
 
 Required cut PNGs live here (from `public/rai/idle.png`, 1008×1792). `?spine=rai` loads them through `skeleton.json`; any missing file still falls back to the official PNG puppet. Re-cut with `scripts/cut-rai-spine-layers.py` (Pillow / NumPy / SciPy). Do not commit traced AI fills. See [SPINE.md](../../../SPINE.md) and [cut-guide.svg](../cut-guide.svg).
 
+This pack is **frozen** for pose motion: empty `bones: {}` clips were fixed by authoring timelines in `skeleton.json`, not by recutting layers. Recut only if a pose literally tears a hole.
+
 Required filenames (character-left = her left = screen right):
 
 | File | Bone / slot | Notes |

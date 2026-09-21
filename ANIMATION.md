@@ -53,7 +53,7 @@ A licensed Spine Editor export is **not** here (do not buy Essential for this PR
 
 - In-repo **Canvas cutout** player (`src/lib/cutout-runtime.ts`) — Spine-shaped JSON, no Esoteric npm, no Pixi.
 - **`?spine=1`** (or `?engine=spine`) — geometric sample girl. Badge: not Rai. Pose keys still drive idle / talk / wave / scold / pout / shy.
-- **`?spine=rai`** — `public/spine/rai/skeleton.json` + official idle cut layers in `layers/`. Missing files → **PNG puppet** (same Call/Chat).
+- **`?spine=rai`** — `public/spine/rai/skeleton.json` + official idle cut layers in `layers/`. Pose clips are ported from `src/lib/cutout-sample.ts` (wave `upperArmR` 128→148 flap; talk mouth is `skeleton.talk`, not jaw keys). Missing files → **PNG puppet** (same Call/Chat). Do not recut the frozen pack to fix empty clips.
 - Cut guide + glance still: `public/spine/rai/cut-guide.svg`, `layers/README.md`, `composite_idle_still.png`.
 
 Default URL is unchanged: `data-rai-engine="png-puppet"`. Do not flip this on in Pages deploy.
