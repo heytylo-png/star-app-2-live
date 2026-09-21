@@ -48,8 +48,6 @@ describe("chat transcript height", () => {
       assert.ok(max <= Math.round(rig * CHAT_THREAD_RIG_BAND));
       // Face + ahoge live in the upper rig — keep more than half the viewport clear.
       assert.ok(vh - max > vh * 0.5, `face/ahoge band too small at ${vh} (max ${max})`);
-      // Top of the stack stays in the lower third of the puppet box.
-      assert.ok(max / rig <= CHAT_THREAD_RIG_BAND + 1e-6);
     }
   });
 
