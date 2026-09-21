@@ -237,7 +237,7 @@ See **[POSING.md](./POSING.md)** for the drop-in guide:
 See **[ANIMATION.md](./ANIMATION.md)** for the shipping motion model and **[SPINE.md](./SPINE.md)** for track #2:
 
 - Official PNG is the live body (idle breathe / sway, 380ms pose crossfades, talk/mood sheet on the spoken bubble; idle is rest-only)
-- Spine is the track #2 **primary** (Canvas cutout demo on `?spine=1`; official layers on `?spine=rai` with PNG fallback). DragonBones is documented, not wired. Default URL does not flip this on.
+- Spine is the track #2 **primary** (Canvas cutout demo on `?spine=1`; official layers on `?spine=rai` with PNG fallback). `?spine=rai` pose clips include bone timelines so wave raises her right arm. DragonBones is documented, not wired. Default URL does not flip this on.
 - Rive is track #3 — stub only (`public/rive/README.md`)
 - 3D / Lab mesh is not Rai
 
