@@ -27,14 +27,13 @@ Body sheets swap by stable layer id (`body:<src>`). Incoming starts at opacity 0
 
 ### Talk / mouth
 
-Idle and the live `talk` key share the same official full-body frame. While speaking on that path:
+Idle is rest-only (pose tint). The live `talk` key and other mood sheets hold their PNG through the spoken bubble — frown `idle.png` is not the body mid-line.
 
-1. **Body** = `idle.png` (closed)
-2. **Talk overlay** = `talk_official.png` at `talkFlapOpacity(phase, amplitude)`
+While speaking on rest idle (no dedicated/mood sheet yet):
 
-Amplitude comes from TTS (or a synthetic jaw when the analyser is flat). Overlay opacity is **instant** while talking so the mouth can cycle; when speech ends the overlay eases out with the pose fade.
+- **Body** = `talk_official.png` (not frown idle underneath)
 
-Dedicated poses (`wave`, `scold`, `wink`, …) **hold their own PNG** through speech — no mouth overlay on those sheets.
+Amplitude still drives a small talk bob on the rig. Dedicated poses (`talk`, `wave`, `scold`, `wink`, …) **hold their own PNG** through speech — no mouth overlay on those sheets.
 
 **Not used on the live body**
 
@@ -44,7 +43,7 @@ Dedicated poses (`wave`, `scold`, `wink`, …) **hold their own PNG** through sp
 
 Blink / eye layers: skipped for the same reason. Revisit only if we get eye sheets that match the official full-body frame.
 
-Fallback: no overlay → idle or `talk_official` as a single body sheet. Reduced motion → static `talk_official` while speaking.
+Fallback: spoken `talk` / mood sheet as a single body. Reduced motion matches that (no flap over frown idle).
 
 ## Track 2 — Spine / cutout (foothold)
 

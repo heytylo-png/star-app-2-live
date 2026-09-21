@@ -65,9 +65,9 @@ export function isDedicatedPose(pose: PoseId): boolean {
 }
 
 /**
- * Idle rest + the live `talk` key share the same official full-body frame,
- * so speaking can flap `talk_official` over `idle` instead of a hard cut.
- * Wave/scold/shy/… still hold their own sheet (no mouth overlay).
+ * Idle rest + the live `talk` key share the same official full-body frame.
+ * Spoken `talk` still holds `talk_official` through the line — frown idle is
+ * rest-only (pose tint). Wave/scold/shy/… hold their own sheet.
  */
 export function isTalkPathPose(pose: PoseId): boolean {
   return pose === "idle" || pose === "talk";
@@ -321,10 +321,6 @@ function body(src: string, opacity = 1, id?: string): SpriteLayer {
   return { id: id ?? `body:${src}`, src, opacity, role: "body" };
 }
 
-function talkLayer(src: string, opacity: number): SpriteLayer {
-  return { id: "talk", src, opacity, role: "talk" };
-}
-
 /** Expo talk bust as a stable-id body so viseme src swaps hard-cut. */
 function expoTalkBody(src: string): SpriteLayer {
   return { id: "expo-talk", src, opacity: 1, role: "body" };
@@ -349,11 +345,12 @@ function talkBustSrc(viseme: TalkViseme): string {
 /**
  * Pose state machine — live keys resolve through SPRITES.poses / LIVE_POSE_FILES.
  *
- * Dedicated act poses (except the talk key) hold their sheet through speech.
- * Idle / talk + speaking: official idle body + talk_official mouth flap
- * (same full-body frame). Expo mouth_* / face_eyes_* busts stay off — they
- * are portrait crops and would fight the long-shot pack.
- * kiss is not a key — callers must keep the current body.
+ * Dedicated act poses (including the spoken `talk` key) hold their sheet
+ * through speech. Frown idle is rest-only — never the body under a spoken
+ * bubble or mid-line. Mood pins still apply when the pose key is still idle.
+ * Expo mouth_* / face_eyes_* busts stay off — they are portrait crops and
+ * would fight the long-shot pack. kiss is not a key — callers must keep the
+ * current body.
  */
 export function layersFor(state: PuppetState): SpriteLayer[] {
   const {
@@ -362,34 +359,11 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     talking,
     amplitude,
     blink = 0,
-    talkPhase = 0,
-    reducedMotion = false,
   } = state;
 
-  // Dedicated act poses own the stage — no bust/mouth overlay on wave/scold/…
-  if (isDedicatedPose(pose) && !isTalkPathPose(pose)) {
+  // Dedicated act poses own the stage — hold talk/mood through the line.
+  if (isDedicatedPose(pose)) {
     return [body(SPRITES.poses[pose])];
-  }
-
-  if (talking) {
-    if (USE_EXPO_TALK_BUST) {
-      if (blink === 2) {
-        return [expoTalkBody(SPRITES.talkBust.eyesClosed)];
-      }
-      if (blink === 1) {
-        return [expoTalkBody(SPRITES.talkBust.eyesHalf)];
-      }
-      return [expoTalkBody(talkBustSrc(talkViseme(amplitude, emotion, pose)))];
-    }
-    if (reducedMotion) {
-      return [body(SPRITES.poses.talk)];
-    }
-    const flap = talkFlapOpacity(talkPhase, amplitude, true);
-    return [body(SPRITES.poses.idle), talkLayer(SPRITES.poses.talk, flap)];
-  }
-
-  if (pose === "talk") {
-    return [body(SPRITES.poses.talk)];
   }
 
   if (emotion === "shy") {
@@ -406,6 +380,20 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
   }
   if (emotion === "hype") {
     return [body(SPRITES.poses.peace)];
+  }
+
+  if (talking) {
+    if (USE_EXPO_TALK_BUST) {
+      if (blink === 2) {
+        return [expoTalkBody(SPRITES.talkBust.eyesClosed)];
+      }
+      if (blink === 1) {
+        return [expoTalkBody(SPRITES.talkBust.eyesHalf)];
+      }
+      return [expoTalkBody(talkBustSrc(talkViseme(amplitude, emotion, pose)))];
+    }
+    // Spoken / talking never sits on frown idle. Hold the talk sheet.
+    return [body(SPRITES.poses.talk)];
   }
 
   return [body(SPRITES.poses.idle)];
@@ -735,6 +723,34 @@ export function streamActHints(partial: string): { emotion?: EmotionId; pose?: P
     if (p) out.pose = p;
   }
   return out;
+}
+
+/**
+ * Pose tint for a partially streamed spoken act.
+ *
+ * Voice-card JSON is `{"line","emotion","pose"}` — the spoken bubble can go
+ * live before pose/emotion keys. Tint as soon as the line (or a hint) is
+ * visible so frown idle never sits mid-line on that bubble.
+ */
+export function streamSpokenAct(
+  partial: string,
+  opts: Omit<ResolveSpokenPoseOpts, "emotion" | "modelPose" | "spoken"> = {},
+): { emotion: EmotionId; pose: PoseId } | null {
+  const live = streamLine(partial);
+  const hints = streamActHints(partial);
+  if (!live && !hints.emotion && !hints.pose) return null;
+  const emotion = hints.emotion ?? DEFAULT_EMOTION;
+  return {
+    emotion,
+    pose: resolveSpokenPose({
+      ...opts,
+      namedPose: opts.namedPose,
+      modelPose: hints.pose ?? null,
+      emotion,
+      spoken: true,
+      seed: opts.seed?.trim() || live,
+    }),
+  };
 }
 
 function extractJsonObject(text: string): string | null {

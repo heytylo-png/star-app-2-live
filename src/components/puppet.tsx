@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   allSpriteUrls,
-  isTalkPathPose,
   layersFor,
   POSE_CROSSFADE_MS,
   SPRITES,
@@ -56,9 +55,9 @@ function fadeMsFor(layer: SpriteLayer, talking: boolean): number {
 }
 
 /**
- * Star Rai 2D puppet — planted idle life, look-at lean, official talk flap.
+ * Star Rai 2D puppet — planted idle life, look-at lean, talk/mood sheets.
  * Studio-white cards are punched to alpha. Layers crossfade by stable id.
- * Talking on idle/talk: idle body + talk_official overlay (amplitude / phase).
+ * Spoken bubble holds talk/mood through the line; frown idle is rest-only.
  * Expo bust mouth/eye crops stay off. Dedicated poses hold their own sheet.
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
@@ -68,17 +67,14 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const ampSmooth = useRef(0);
   const ampTarget = useRef(amplitude);
   const talkingRef = useRef(talking);
-  const poseRef = useRef(pose);
   const lastTs = useRef(0);
   const raf = useRef(0);
   const reducedRef = useRef(false);
 
   ampTarget.current = amplitude;
   talkingRef.current = talking;
-  poseRef.current = pose;
 
   const [ampLive, setAmpLive] = useState(0);
-  const [talkPhase, setTalkPhase] = useState(0);
   const [blink, setBlink] = useState<0 | 1 | 2>(0);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [display, setDisplay] = useState<DisplayLayer[]>([]);
@@ -216,13 +212,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
         jaw = ampSmooth.current;
       }
 
-      // Publish amp/phase only when the talk overlay needs it (avoid idle re-renders).
-      if (talkingRef.current && isTalkPathPose(poseRef.current) && !reduced) {
-        setTalkPhase(t);
-        setAmpLive(jaw);
-      } else {
-        setAmpLive((prev) => (Math.abs(prev - jaw) > 0.02 ? jaw : prev));
-      }
+      // Amp is for the talk bob on the rig. Spoken sheets do not flap idle underneath.
+      setAmpLive((prev) => (Math.abs(prev - jaw) > 0.02 ? jaw : prev));
 
       const motion = puppetIdleMotion(t, {
         reduced,
@@ -256,16 +247,15 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
         talking,
         amplitude: ampLive,
         angle: 0,
-        talkPhase,
+        talkPhase: 0,
         blink,
         idleBeat: "none",
         reducedMotion,
       }),
-    [pose, emotion, talking, ampLive, talkPhase, blink, reducedMotion],
+    [pose, emotion, talking, ampLive, blink, reducedMotion],
   );
 
   // Crossfade pool: incoming fades from 0, outgoing fades to 0, overlap both.
-  // talk id stays stable for official flap (instant opacity while speaking).
   useEffect(() => {
     const next = new Map<string, DisplayLayer>();
     desired.forEach((layer, i) => {
