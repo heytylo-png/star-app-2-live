@@ -364,10 +364,17 @@ function RaiReady() {
     };
     if (document.visibilityState === "visible") startBeat();
 
+    const persistIfAway = () => {
+      // Only stamp lastSeenAt when the tab is actually backgrounded.
+      // Reload / HMR while visible must not clobber a DevTools lastSeenAt edit.
+      if (document.visibilityState === "hidden") {
+        usePresenceStore.getState().touchLastSeen();
+      }
+    };
     const onVis = () => {
       if (document.visibilityState === "hidden") {
         stopBeat();
-        usePresenceStore.getState().touchLastSeen();
+        persistIfAway();
         return;
       }
       deliver(callActiveRef.current ? "call" : "chat");
@@ -375,7 +382,7 @@ function RaiReady() {
     };
     const onLeave = () => {
       stopBeat();
-      usePresenceStore.getState().touchLastSeen();
+      persistIfAway();
     };
 
     document.addEventListener("visibilitychange", onVis);
@@ -387,7 +394,7 @@ function RaiReady() {
       window.removeEventListener("pagehide", onLeave);
       window.removeEventListener("beforeunload", onLeave);
       window.removeEventListener("freeze", onLeave);
-      onLeave();
+      stopBeat();
     };
   }, [chatHydrated, presenceHydrated]);
 
