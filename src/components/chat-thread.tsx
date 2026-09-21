@@ -90,9 +90,9 @@ function useChatThreadHeight() {
 }
 
 /**
- * Expo-style compact transcript: dark quiet bubbles, bottom-third of the stage.
- * No wrapping white card — the puppet stays visible through the stack.
- * Optional top-edge grip resizes and persists height in localStorage.
+ * Bottom-band transcript: dark quiet bubbles on the hem / mid-skirt.
+ * Hard-capped to the lower third of `.rai-rig` so face + ahoge stay clear.
+ * No wrapping white card. Top-edge grip resizes inside that ceiling.
  */
 export function ChatThread({
   messages,
@@ -142,7 +142,7 @@ export function ChatThread({
   return (
     <div
       className="chat-thread-frame pointer-events-auto mx-auto mb-1 w-full max-w-md min-h-0"
-      style={{ height: heightPx }}
+      style={{ height: heightPx, maxHeight: maxPx }}
       data-testid="chat-thread-frame"
     >
       <div
