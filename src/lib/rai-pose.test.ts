@@ -375,6 +375,13 @@ describe("voice card prompt", () => {
   it("matches artifacts/star-rai-voice-card.txt character-for-character", () => {
     const card = readFileSync(join(publicRoot, "../artifacts/star-rai-voice-card.txt"), "utf8");
     assert.equal(RAI_SYSTEM, card);
+    assert.match(RAI_SYSTEM, /^TRACK$/m);
+    assert.match(RAI_SYSTEM, /^CORRECTION$/m);
+    assert.match(RAI_SYSTEM, /^ASKS$/m);
+    assert.match(RAI_SYSTEM, /Looking at you\. Don't flinch/);
+    assert.match(RAI_SYSTEM, /Then ask already/);
+    assert.match(RAI_SYSTEM, /Never kiss/);
+    assert.match(RAI_SYSTEM, /\{"line":"...","emotion":/);
   });
 });
 

@@ -4,9 +4,18 @@
 # Multiple rows per key; one is picked (avoid lastLine).
 # kiss is unmapped — never add a kiss key.
 # _default is used when the pose key has no rows.
+# Generic chat (no named pose) tracks the last user line via src/lib/track.ts.
+# _correction / _permission rows serve that tracker. Never a stock flirt
+# that ignores what they said.
 
 idle | bratty | Facing you. Front and center~
-idle | smug | Looking at you. Don't flinch :3
+idle | smug | Still here. You seeing this :3
+
+_correction | bratty | Not what you said. My miss — hit me with the real line :3
+_correction | smug | Okay. Wrong read. Say it again, I'll match you :3
+
+_permission | smug | All I have to do is ask? Cute. I'm not making you ask :3
+_permission | bratty | You said I just have to ask. I heard you. Not begging :3
 
 talk | bratty | Talking. Keep up~
 talk | smug | Mouth's moving. You listening :3

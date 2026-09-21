@@ -216,6 +216,7 @@ describe("mute + speakable line", () => {
     assert.equal(spokenCallLine("CHART\ntoday_date: 2026-09-19\nher_sun: Libra"), "");
     assert.equal(spokenCallLine("CLOCK\nweekday: Saturday\nhour: 1\ntz: America/Chicago"), "");
     assert.equal(spokenCallLine("SKY\nsun_sign_today: Virgo\nmoon_sign_today: Gemini"), "");
+    assert.equal(spokenCallLine("LAST USER SAID\nAll you have to do is ask"), "");
   });
 
   it("still has a bubble line when TTS is skipped (mute or empty speakable)", () => {
@@ -367,7 +368,7 @@ describe("pose commands + tint still apply on a voice turn", () => {
     const pose = resolveSpokenPose({
       emotion: "bratty",
       spoken: true,
-      seed: "Don't flinch :3",
+      seed: "Yeah, I heard that~",
     });
     assert.notEqual(pose, "idle");
     assert.equal(pose, "talk");
