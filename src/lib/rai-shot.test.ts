@@ -22,6 +22,12 @@ describe("PNG puppet long shot", () => {
       assert.ok(n >= 1, `long-shot scale ${n} would shrink below the sheet`);
       assert.ok(n <= 1.28, `long-shot scale ${n} is a mid-shot/bust`);
     }
+    // Framing C — more body on the same idle.png sheet. Phone was 1.20.
+    assert.equal(phone, 1.08);
+    assert.equal(shot, 1.04);
+    assert.equal(tall, 1);
+    assert.ok(phone <= 1.1, "phone stays in the pulled-back 1.08–1.10 band");
+    assert.ok(phone < 1.2, "phone is less face-tight than the previous 1.20 long-shot");
     assert.ok(phone >= shot, "phone can be slightly tighter than desktop");
     assert.ok(tall <= shot, "tall desktops pull back further");
     assert.doesNotMatch(css, /scale\(1\.(5|6|7|8|9)/);

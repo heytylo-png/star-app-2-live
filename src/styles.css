@@ -40,10 +40,12 @@
 
   /* Thin top chrome; puppet sits under it in long-shot (ahoge still in view). */
   --rai-top-bar: 3.25rem;
-  /* Full-body long shot — below PR #17 mid-shot (1.36–1.56) and PR #19 bust (1.64–1.94). */
-  --rai-long-shot: 1.16;
-  --rai-long-shot-phone: 1.20;
-  --rai-long-shot-tall: 1.10;
+  /* Full-body long shot — below PR #17 mid-shot (1.36–1.56) and PR #19 bust (1.64–1.94).
+     Framing C: phone pulled back 1.20 → 1.08 so more of the body stays in frame.
+     Desktop and tall match that pull; phone stays slightly tighter. Crown stays top-biased. */
+  --rai-long-shot: 1.04;
+  --rai-long-shot-phone: 1.08;
+  --rai-long-shot-tall: 1.00;
 }
 
 @layer base {
@@ -367,7 +369,8 @@ body.chat-thread-resizing {
   z-index: 1;
   /*
     Crown-origin long shot: modest zoom so the full body stays in frame
-    (ahoge safe, feet toward Chat). Not a face-filling mid-shot / bust.
+    (ahoge safe, feet toward Chat). Phone scale is the pulled-back 1.08 crop.
+    Not a face-filling mid-shot / bust.
   */
   top: 2%;
   transform: scale(var(--rai-long-shot));
