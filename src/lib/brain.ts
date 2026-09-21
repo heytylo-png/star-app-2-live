@@ -3,6 +3,7 @@ import { actForClockTurn, type ClockTurn } from "./clock.ts";
 import { actForLifeTurn, parseTrackTitle, type LifeTurn } from "./life.ts";
 import { localBrainKeyFor, pickLocalBrainLine } from "./local-brain.ts";
 import { namedPoseFromText, resolveSpokenPose, type EmotionId, type PoseId } from "./rai.ts";
+import { localTrackAct } from "./track.ts";
 
 export type BrainMessage = { role: "user" | "assistant"; content: string };
 
@@ -158,8 +159,20 @@ export function composeAct(
     userText: lastUser,
     currentPose,
   });
-  const row = pickLocalBrainLine(poseKey);
   const mem = extractMemCandidate(lastUser);
+
+  // Named pose commands still use the pose-keyed bank. Kiss stays unmapped.
+  // Generic chat tracks the last user line instead of a stock pose beat.
+  if (keyed == null) {
+    const tracked = localTrackAct(lastUser);
+    if (tracked) {
+      const act: BrainAct = { emotion: tracked.emotion, line: tracked.line };
+      if (mem?.length) act.mem = mem;
+      return tintSpokenAct(act, { ...tintCtx, namedPose: keyed });
+    }
+  }
+
+  const row = pickLocalBrainLine(poseKey);
 
   const act: BrainAct = { emotion: row.emotion, line: row.line };
   // Named pose commands already swapped the sheet; echo the key. Kiss / omitted → tint.

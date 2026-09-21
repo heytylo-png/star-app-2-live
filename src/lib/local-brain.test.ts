@@ -35,6 +35,10 @@ describe("local brain table", () => {
     assert.ok((map.get("_default")?.length ?? 0) >= 1);
     assert.ok(localBrainPoseKeys().includes("wave"));
     assert.ok(!localBrainPoseKeys().includes("kiss"));
+    assert.ok(!localBrainPoseKeys().includes("_correction"));
+    assert.ok(!localBrainPoseKeys().includes("_permission"));
+    assert.ok((map.get("_correction")?.length ?? 0) >= 2);
+    assert.ok((map.get("_permission")?.length ?? 0) >= 2);
   });
 
   it("picks a wave line from the table and avoids lastLine", () => {
@@ -50,6 +54,8 @@ describe("local brain table", () => {
     assert.equal(usedDefaultBank("kiss"), true);
     assert.equal(usedDefaultBank("nope"), true);
     assert.equal(usedDefaultBank("wave"), false);
+    assert.equal(usedDefaultBank("_correction"), false);
+    assert.equal(usedDefaultBank("_permission"), false);
     resetLocalBrainLastLine();
     const row = pickLocalBrainLine("not-a-pose");
     assert.ok(row.line.length > 0);
@@ -82,7 +88,8 @@ describe("composeAct local-brain path", () => {
     const act = composeAct([{ role: "user", content: "Hey. Just got here." }], undefined, "idle");
     assert.ok(act.pose === "talk" || act.pose === "smug");
     assert.notEqual(act.pose, "idle");
-    assert.match(act.line, /Facing you|Don't flinch/);
+    assert.match(act.line, /Just got here|Facing you|You seeing this/);
+    assert.doesNotMatch(act.line, /Don't flinch/i);
   });
 
   it("finger-front command keys middle_finger lines", () => {

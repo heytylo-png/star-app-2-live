@@ -42,7 +42,7 @@ export function parseLocalBrain(source: string = LOCAL_BRAIN_SOURCE): Map<string
 const BANK = parseLocalBrain();
 
 export function localBrainPoseKeys(): string[] {
-  return [...BANK.keys()].filter((k) => k !== "_default");
+  return [...BANK.keys()].filter((k) => k !== "_default" && !k.startsWith("_"));
 }
 
 function rowsFor(poseKey: string): LocalBrainRow[] {

@@ -4,6 +4,7 @@ import type { ClockTurn } from "@/lib/clock";
 import type { LifeTurn } from "@/lib/life";
 import { getStoredXaiKey, streamGrok } from "@/lib/grok";
 import { isValidActJson, type PoseId } from "@/lib/rai";
+import { formatLastUserCue, packChatTurns } from "@/lib/track";
 
 export type StreamChatInput = {
   model: string;
@@ -127,8 +128,12 @@ export async function streamChat(
   if (getStoredXaiKey()) {
     try {
       let grokRaw = "";
+      const messages = packChatTurns(input.messages);
+      const systemExtra = [input.systemExtra, formatLastUserCue(messages)]
+        .filter((block) => block?.trim())
+        .join("\n\n");
       await streamGrok(
-        { messages: input.messages, systemExtra: input.systemExtra },
+        { messages, systemExtra },
         (delta) => {
           grokRaw += delta;
           onDelta(delta);
