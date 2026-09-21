@@ -821,16 +821,16 @@
           ]
         },
         "upperArmL": {
-          "rotate": [{ "time": 0, "value": -8 }]
-        },
-        "forearmL": {
-          "rotate": [{ "time": 0, "value": -6 }]
-        },
-        "upperArmR": {
           "rotate": [{ "time": 0, "value": 8 }]
         },
-        "forearmR": {
+        "forearmL": {
           "rotate": [{ "time": 0, "value": 6 }]
+        },
+        "upperArmR": {
+          "rotate": [{ "time": 0, "value": -8 }]
+        },
+        "forearmR": {
+          "rotate": [{ "time": 0, "value": -6 }]
         },
         "ahoge": {
           "rotate": [

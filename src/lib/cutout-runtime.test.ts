@@ -231,8 +231,8 @@ describe("Rai cutout layers", () => {
     assert.ok(poutHead.rotation < -3, `pout head tilt ${poutHead.rotation}`);
     assert.ok(shyHead.rotation > 6, `shy head tuck ${shyHead.rotation}`);
     assert.notEqual(Math.sign(poutHead.rotation), Math.sign(shyHead.rotation));
-    assert.ok(poutArmR.rotation > 0, "pout hangs the right arm in");
-    assert.ok(shyArmR.rotation < 0, "shy covers with the right arm inward");
+    assert.ok(poutArmR.rotation < 0, "pout hangs the right arm in");
+    assert.ok(shyArmR.rotation < poutArmR.rotation, "shy covers further inward than pout");
 
     const restHipY = idle.get("hip")!.y;
     let maxFootDy = 0;
