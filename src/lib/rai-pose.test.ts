@@ -135,7 +135,9 @@ describe("live key → file map", () => {
     assert.doesNotMatch(SPRITES.poses.wave, /front_wave|star-rai\/poses\/wave/);
   });
 
-  it("body-pack wave is 1008×1792 RGBA; live 1152×1728 crop stays untouched", () => {
+  it("PNG puppet wave is wired to the retoned official sheet (1008×1792 RGBA)", () => {
+    assert.equal(LIVE_POSE_FILES.wave, "rai/wave_official.png");
+    assert.match(SPRITES.poses.wave, /rai\/wave_official\.png/);
     const ihdr = (rel: string) => {
       const buf = readFileSync(join(publicRoot, rel));
       assert.equal(buf.subarray(0, 8).toString("binary"), "\x89PNG\r\n\x1a\n");
@@ -149,9 +151,10 @@ describe("live key → file map", () => {
     assert.equal(pack.width, 1008);
     assert.equal(pack.height, 1792);
     assert.equal(pack.colorType, 6, "RGBA");
-    const live = ihdr("star-rai/poses/wave.png");
-    assert.equal(live.width, 1152);
-    assert.equal(live.height, 1728);
+    // Helix 3/4 crop is not the live wave key (object-fit contain; 9:16 pack).
+    const helix = ihdr("star-rai/poses/wave.png");
+    assert.equal(helix.width, 1152);
+    assert.equal(helix.height, 1728);
   });
 
   it("does not point hold at old front_hold", () => {
@@ -355,7 +358,9 @@ describe("layersFor talking vs pose hold", () => {
   });
 
   it("wave/hold/scold use official sheets", () => {
-    assert.match(layersFor({ ...base, pose: "wave", talking: false })[0]!.src, /wave_official/);
+    const waveSrc = layersFor({ ...base, pose: "wave", talking: false })[0]!.src;
+    assert.match(waveSrc, /rai\/wave_official\.png/);
+    assert.doesNotMatch(waveSrc, /front_wave|star-rai\/poses\/wave/);
     assert.match(layersFor({ ...base, pose: "hold", talking: false })[0]!.src, /hold_official/);
     assert.match(layersFor({ ...base, pose: "scold", talking: false })[0]!.src, /scold_official/);
   });

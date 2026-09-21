@@ -5,11 +5,12 @@ Source: public/rai/wave_official.png (dark 720×1280 sheet TyLo flagged).
 Tone target: live public/star-rai/poses/wave.png cheek ~ (221, 150, 116).
 Secondary: official idle/talk highlight peach.
 
-Does not touch public/star-rai/poses/wave.png (live crop already matched).
-Does not rewrite the Pages plate pipeline — replaces the body-pack PNG only.
+Writes the shipping PNG-puppet wave: public/rai/wave_official.png
+(LIVE_POSE_FILES.wave). Does not retarget the pose map to Helix
+star-rai/poses/wave.png or Expo front_wave.png.
 
-Output: public/rai/wave_official.png as 1008×1792 RGBA (idle canvas, 9:16).
-1152×1728 live crop would lose socks/shoes; documented in the PR.
+Output: 1008×1792 RGBA (official idle canvas, 9:16). Puppet uses
+object-fit:contain; 1152×1728 is the unused Helix 3/4 crop.
 """
 from __future__ import annotations
 
