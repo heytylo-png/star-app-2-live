@@ -30,8 +30,8 @@ import {
   parseAct,
   poseResetDelayMs,
   resolveSpokenPose,
-  streamActHints,
   streamLine,
+  streamSpokenAct,
   type EmotionId,
   type PoseId,
 } from "@/lib/rai";
@@ -662,26 +662,22 @@ function RaiReady() {
         (delta, meta) => {
           if (meta?.reset) raw = "";
           raw += delta;
-          const hints = streamActHints(raw);
           const live = streamLine(raw);
-          if (hints.emotion || hints.pose) {
-            if (hints.emotion) setEmotion(hints.emotion);
-            const lifeTitle = parseTrackTitle(lastUser);
-            const named = lifeTitle ? null : namedPoseFromText(lastUser);
-            const next = resolveSpokenPose({
-              namedPose: named,
-              modelPose: hints.pose ?? null,
-              emotion: hints.emotion ?? DEFAULT_EMOTION,
-              spoken: true,
-              nowPlayingJustSet: lifeTurn.kind === "track_change",
-              chartBeat: chartTurn.kind === "daily",
-              chartTintPose: chartTurn.tintPose,
-              lifeTintPose: lifeTurn.tintPose,
-              seed: live || lastUser,
-              currentPose: poseRef.current,
-            });
-            setPose(next);
-            poseRef.current = next;
+          const lifeTitle = parseTrackTitle(lastUser);
+          const named = lifeTitle ? null : namedPoseFromText(lastUser);
+          const streamed = streamSpokenAct(raw, {
+            namedPose: named,
+            nowPlayingJustSet: lifeTurn.kind === "track_change",
+            chartBeat: chartTurn.kind === "daily",
+            chartTintPose: chartTurn.tintPose,
+            lifeTintPose: lifeTurn.tintPose,
+            seed: live || lastUser,
+            currentPose: poseRef.current,
+          });
+          if (streamed) {
+            setEmotion(streamed.emotion);
+            setPose(streamed.pose);
+            poseRef.current = streamed.pose;
             actLandedAt.current = Date.now();
           }
           if (live) {

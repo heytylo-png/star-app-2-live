@@ -25,6 +25,7 @@ import {
   parseAct,
   poseResetDelayMs,
   resolveSpokenPose,
+  streamSpokenAct,
   talkFlapOpacity,
   USE_EXPO_TALK_BUST,
 } from "./rai.ts";
@@ -244,20 +245,18 @@ describe("layersFor talking vs pose hold", () => {
     assert.ok(!layers.some((l) => l.role === "talk"));
   });
 
-  it("flaps talk_official over idle when idle or talk pose is speaking", () => {
-    const idle = layersFor({ ...base, pose: "idle", talking: true });
-    assert.equal(idle.length, 2);
-    assert.equal(idle[0]!.role, "body");
-    assert.match(idle[0]!.src, /rai\/idle\.png/);
-    assert.equal(idle[1]!.role, "talk");
-    assert.match(idle[1]!.src, /talk_official/);
-    assert.ok(idle[1]!.opacity > 0 && idle[1]!.opacity <= 1);
+  it("holds talk_official while the talk key is speaking — no frown idle mid-line", () => {
+    const idle = layersFor({ ...base, pose: "idle", emotion: "bratty", talking: true });
+    assert.equal(idle.length, 1);
+    assert.match(idle[0]!.src, /talk_official/);
+    assert.doesNotMatch(idle[0]!.src, /rai\/idle\.png/);
+    assert.ok(!idle.some((l) => l.role === "talk"));
 
-    const talk = layersFor({ ...base, pose: "talk", talking: true });
-    assert.equal(talk.length, 2);
-    assert.match(talk[0]!.src, /rai\/idle\.png/);
-    assert.match(talk[1]!.src, /talk_official/);
-    assert.equal(talk[1]!.id, "talk");
+    const talk = layersFor({ ...base, pose: "talk", emotion: "bratty", talking: true });
+    assert.equal(talk.length, 1);
+    assert.match(talk[0]!.src, /talk_official/);
+    assert.doesNotMatch(talk.map((l) => l.src).join(" "), /rai\/idle\.png/);
+    assert.ok(!talk.some((l) => l.role === "talk"));
   });
 
   it("holds talk_official after speech on the talk key", () => {
@@ -268,7 +267,13 @@ describe("layersFor talking vs pose hold", () => {
   });
 
   it("uses a static talk sheet when reduced-motion is on", () => {
-    const layers = layersFor({ ...base, pose: "idle", talking: true, reducedMotion: true });
+    const layers = layersFor({
+      ...base,
+      pose: "idle",
+      emotion: "bratty",
+      talking: true,
+      reducedMotion: true,
+    });
     assert.equal(layers.length, 1);
     assert.match(layers[0]!.src, /talk_official/);
   });
@@ -289,6 +294,11 @@ describe("layersFor talking vs pose hold", () => {
   it("pins soft/hype off frown idle even when pose is still idle", () => {
     assert.match(layersFor({ ...base, pose: "idle", emotion: "soft", talking: false })[0]!.src, /content_official/);
     assert.match(layersFor({ ...base, pose: "idle", emotion: "hype", talking: false })[0]!.src, /peace\.png/);
+    assert.match(layersFor({ ...base, pose: "idle", emotion: "smug", talking: true })[0]!.src, /smug_official/);
+    assert.doesNotMatch(
+      layersFor({ ...base, pose: "idle", emotion: "smug", talking: true })[0]!.src,
+      /rai\/idle\.png/,
+    );
   });
 
   it("does not let idleBeat replace a dedicated pose", () => {
@@ -344,8 +354,9 @@ describe("layersFor talking vs pose hold", () => {
   });
 
   it("does not invent kiss on the talk path", () => {
-    const layers = layersFor({ ...base, pose: "idle", talking: true });
+    const layers = layersFor({ ...base, pose: "idle", emotion: "bratty", talking: true });
     assert.ok(!layers.some((l) => /kiss/i.test(l.src)));
+    assert.match(layers[0]!.src, /talk_official/);
   });
 });
 
@@ -548,5 +559,26 @@ describe("pose tint", () => {
     });
     assert.equal(pose, "talk");
     assert.notEqual(pose, "idle");
+  });
+
+  it("tints as soon as the spoken line streams — before pose/emotion keys", () => {
+    assert.equal(streamSpokenAct("{"), null);
+    const lineFirst = streamSpokenAct('{"line":"Facing you. Front and center~"', {
+      currentPose: "idle",
+    });
+    assert.ok(lineFirst);
+    assert.equal(lineFirst.pose, "talk");
+    assert.notEqual(lineFirst.pose, "idle");
+    assert.equal(lineFirst.emotion, DEFAULT_EMOTION);
+
+    const smug = streamSpokenAct('{"line":"Cute.","emotion":"smug"', { currentPose: "idle" });
+    assert.equal(smug?.pose, "smug");
+    assert.equal(smug?.emotion, "smug");
+
+    const named = streamSpokenAct('{"line":"Wink~"', { namedPose: "wink", currentPose: "idle" });
+    assert.equal(named?.pose, "wink");
+
+    const keep = streamSpokenAct('{"line":"Still waving."', { currentPose: "wave" });
+    assert.equal(keep?.pose, "wave");
   });
 });
