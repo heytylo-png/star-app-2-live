@@ -140,6 +140,7 @@ export const LIVE_POSE_FILES = {
   pout: "rai/pout_official.png",
   tired: "rai/tired_official.png",
   smug: "rai/smug_official.png",
+  /** Shipping PNG-puppet wave: retoned full-body (TyLo dark sheet → idle/live cheek). */
   wave: "rai/wave_official.png",
   hold: "rai/hold_official.png",
   embarrassed: "rai/embarrassed_official.png",
