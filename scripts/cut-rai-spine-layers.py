@@ -30,7 +30,19 @@ STUDIO_CHROMA_MAX = 18
 FRINGE_LUMA_MIN = 224
 FRINGE_CHROMA_MAX = 24
 OVERLAP = 12  # px, within the 8–16 spec
+SEAM_OVERLAP = 16  # extra overlap for flashing joints (shoulders, hem, scalp, ankles)
 CX = 504  # idle body center (button / bow line)
+
+# Re-cut only these when seams flash — do not rewrite the rest of the pack.
+SEAM_LAYERS = [
+    "torso",
+    "bow",
+    "hair_front",
+    "brow",
+    "skirt",
+    "foot_l",
+    "foot_r",
+]
 
 REQUIRED = [
     "hair_back",
@@ -159,7 +171,62 @@ def close_holes(mask: np.ndarray, px: int = 2) -> np.ndarray:
     return ndimage.binary_closing(mask, iterations=px)
 
 
+def expand_foot_mask(orig: np.ndarray, mask: np.ndarray, x0: int, x1: int) -> np.ndarray:
+    """Include loafer pixels the studio-white fringe punch ate (inner edges)."""
+    r = orig[:, :, 0].astype(np.int16)
+    g = orig[:, :, 1].astype(np.int16)
+    b = orig[:, :, 2].astype(np.int16)
+    h, w = orig.shape[:2]
+    yy = np.arange(h)[:, None]
+    xx = np.arange(w)[None, :]
+    region = (yy >= 1592) & (yy < 1776) & (xx >= x0) & (xx < x1)
+    brown = (r > 40) & (r >= g - 8) & (r > b) & (g > 16) & (b < 135)
+    outline = (r < 95) & (g < 85) & (b < 95) & (yy > 1605)
+    return close_holes(mask | (region & (brown | outline)), 2)
+
+
+def expand_skirt_mask(orig: np.ndarray, mask: np.ndarray) -> np.ndarray:
+    """Keep hem navy + stripes, including fringe punch ate along the thigh line."""
+    r = orig[:, :, 0].astype(np.int16)
+    g = orig[:, :, 1].astype(np.int16)
+    b = orig[:, :, 2].astype(np.int16)
+    mx = np.maximum(np.maximum(r, g), b)
+    mn = np.minimum(np.minimum(r, g), b)
+    chroma = mx - mn
+    h, w = orig.shape[:2]
+    yy = np.arange(h)[:, None]
+    xx = np.arange(w)[None, :]
+    region = (yy >= 736) & (yy < 1048) & (xx > 275) & (xx < 735)
+    navy = region & (b + 12 >= r) & (mx < 105)
+    stripe = region & (yy >= 915) & (mn > 155) & (chroma < 55)
+    extra = navy | (stripe & dilate(navy, 8))
+    return close_holes(mask | extra, 3)
+
+
+def restore_from_original(orig: np.ndarray, punched: np.ndarray, mask: np.ndarray) -> np.ndarray:
+    out = punched.copy()
+    out[mask, :3] = orig[mask, :3]
+    out[mask, 3] = 255
+    return out
+    out = punched.copy()
+    out[mask, :3] = orig[mask, :3]
+    out[mask, 3] = 255
+    return out
+
+
 def crop_masked(src: np.ndarray, mask: np.ndarray, pad: int = 2) -> tuple[np.ndarray, tuple[int, int, int, int]]:
+    ys, xs = np.where(mask)
+    if len(xs) == 0:
+        raise SystemExit("empty mask")
+    h, w = src.shape[:2]
+    x0 = max(0, int(xs.min()) - pad)
+    y0 = max(0, int(ys.min()) - pad)
+    x1 = min(w, int(xs.max()) + 1 + pad)
+    y1 = min(h, int(ys.max()) + 1 + pad)
+    layer = np.zeros((y1 - y0, x1 - x0, 4), dtype=np.uint8)
+    local = mask[y0:y1, x0:x1]
+    layer[local] = src[y0:y1, x0:x1][local]
+    return layer, (x0, y0, x1, y1)
     ys, xs = np.where(mask)
     if len(xs) == 0:
         raise SystemExit(f"empty mask")
@@ -188,7 +255,7 @@ def classify(arr: np.ndarray) -> dict[str, np.ndarray]:
     xx = np.arange(w)[None, :]
 
     dark = sil & (mx < 100)
-    navy_zone = ((yy >= 730) & (yy <= 1025)) | ((yy >= 1235) & (yy <= 1670))
+    navy_zone = ((yy >= 730) & (yy <= 1055)) | ((yy >= 1235) & (yy <= 1670))
     cuff_zone = (yy >= 490) & (yy <= 575) & ((xx < 410) | (xx > 600))
     navy = sil & (b + 12 >= r) & (mx < 95) & (navy_zone | cuff_zone)
     eye_box = (yy >= 196) & (yy <= 252) & (xx >= 428) & (xx <= 612)
@@ -203,8 +270,8 @@ def classify(arr: np.ndarray) -> dict[str, np.ndarray]:
     button = sil & (r > 155) & (g > 115) & (b < 145) & (r > b + 25) & (yy > 410) & (yy < 760) & (xx > 470) & (xx < 535)
     shoe = sil & (r > 50) & (r > g) & (r > b + 12) & (g > 22) & (b < 115) & (yy > 1588) & (yy < 1770)
     sock = navy & (yy >= 1235)
-    skirt_navy = navy & (yy >= 730) & (yy <= 1025) & ~cuff_zone
-    hem = sil & (mn > 170) & (chroma < 40) & (yy >= 930) & (yy <= 1015) & (xx > 300) & (xx < 710)
+    skirt_navy = navy & (yy >= 730) & (yy <= 1055) & ~cuff_zone
+    hem = sil & (mn > 160) & (chroma < 50) & (yy >= 920) & (yy <= 1045) & (xx > 288) & (xx < 722)
 
     return {
         "sil": sil,
@@ -252,11 +319,14 @@ def build_masks(idle: np.ndarray, talk: np.ndarray) -> dict[str, np.ndarray]:
     scalp = hair & B(460, 118, 540, 162)
     ahoge = close_holes(ahoge | scalp, 1)
 
-    # --- hair front: bangs + cheek / shoulder locks (draw-order on top) ---
-    bangs = hair & B(390, 70, 650, 228)
-    lock_r = hair & B(275, 155, 430, 430)  # screen left lock (her right)
-    lock_l = hair & B(590, 155, 740, 430)
-    hair_front = close_holes(bangs | lock_r | lock_l, 2) & ~eye_box
+    # --- hair front: bangs + cheek / shoulder locks + scalp under bangs ---
+    bangs = hair & B(380, 60, 660, 235)
+    lock_r = hair & B(270, 150, 435, 435)  # screen left lock (her right)
+    lock_l = hair & B(585, 150, 745, 435)
+    # forehead / scalp fill so bangs do not flash skin gaps
+    scalp = (skin | hair) & B(395, 140, 635, 202)
+    hair_front = close_holes(bangs | lock_r | lock_l | scalp | dilate(bangs, 4), 3)
+    # do not punch a rectangular eye hole — that flashed white corners on the scalp
 
     # --- hair back: crown + nape (behind body) — no bow / shirt ---
     crown = hair & B(355, 40, 680, 230)
@@ -264,8 +334,7 @@ def build_masks(idle: np.ndarray, talk: np.ndarray) -> dict[str, np.ndarray]:
     hair_back = close_holes((crown | nape) & ~ahoge, 2)
     hair_back = hair_back & ~c["bow"] & ~c["shirt"]
     hair_back = hair_back | (hair_front & B(360, 90, 670, 220) & dilate(hair_back, OVERLAP))
-    hair_front = hair_front | (hair_back & B(390, 90, 650, 228) & dilate(hair_front, OVERLAP))
-    hair_front = hair_front & ~eye_box
+    hair_front = hair_front | (hair_back & B(380, 80, 660, 230) & dilate(hair_front, SEAM_OVERLAP))
 
     # --- head: cranium + eyes + ears; no jaw / mouth / hair volume ---
     face_skin = skin & B(400, 165, 630, 300) & ~hair
@@ -277,12 +346,12 @@ def build_masks(idle: np.ndarray, talk: np.ndarray) -> dict[str, np.ndarray]:
     head = close_holes((face_skin | eyes | ear_r | ear_l | earring) & ~mouth_hole, 2)
     head = head | (skin & B(478, 248, 554, 264))
 
-    # --- brow: just the scowl lines, not the bangs ---
-    brow_dark = sil & (idle[:, :, 0] < 80) & (idle[:, :, 1] < 70)
-    brow = close_holes(
-        (brow_dark & (B(442, 184, 498, 204) | B(534, 184, 590, 204))),
-        1,
-    )
+    # --- brow: scowl strokes plus a skin strip (not two tight boxes) ---
+    brow_dark = sil & (idle[:, :, 0] < 90) & (idle[:, :, 1] < 80)
+    brow_core = brow_dark & B(425, 174, 612, 214)
+    brow = close_holes(dilate(brow_core, 5), 2)
+    brow = brow | (skin & B(432, 176, 604, 214))
+    brow = brow & ~eye_box
 
     # --- mouth ---
     mouth_box = B(466, 248, 562, 318)
@@ -294,16 +363,21 @@ def build_masks(idle: np.ndarray, talk: np.ndarray) -> dict[str, np.ndarray]:
     neck = neck | (skin & B(470, 300, 560, 330))  # chin / jaw overlap
 
     # --- bow ---
-    bow = close_holes(dilate(c["bow"], 1), 1)
+    bow = close_holes(dilate(c["bow"], 3), 2)
+    # keep a collar overlap so the knot does not flash shirt-white
+    bow = bow | (shirt & B(468, 368, 558, 432) & dilate(c["bow"], 8))
 
-    # --- torso: shirt + buttons, sleeves cropped off ---
-    torso_x = B(392, 360, 622, 820)
-    sleeves_off = ~((yy < 575) & ((xx < 400) | (xx > 618)))
-    collar = shirt & B(430, 348, 590, 412)
-    torso = close_holes(((shirt | c["button"]) & torso_x & sleeves_off) | collar, 2)
-    torso = torso & ~dilate(bow, 1)
-    # waist overlap with skirt
-    torso = torso | (c["skirt_navy"] & B(400, 768, 620, 792))
+    # --- torso: shirt + buttons; sleeves cropped but shoulder caps kept ---
+    collar = shirt & B(420, 340, 600, 420)
+    torso_core = (shirt | c["button"] | collar) & B(340, 338, 676, 825)
+    # hanging short sleeves only (below the shoulder cap), not the shoulder itself
+    hanging_sleeve = (yy >= 468) & ((xx < 372) | (xx > 644))
+    far_sleeve = (xx < 332) | (xx > 684)
+    torso = close_holes(torso_core & ~hanging_sleeve & ~far_sleeve, 3)
+    torso = torso | ((shirt | c["button"]) & B(348, 360, 668, 500) & ~far_sleeve)
+    torso = torso & ~hair & (yy >= 348)
+    # waist overlap with skirt — do not carve the bow out (bow draws on top)
+    torso = torso | (c["skirt_navy"] & B(390, 752, 630, 800))
 
     # --- arms (her right = screen left = wave / scold) ---
     sleeve_r = shirt & B(278, 400, 412, 575)
@@ -323,10 +397,24 @@ def build_masks(idle: np.ndarray, talk: np.ndarray) -> dict[str, np.ndarray]:
     forearm_l = forearm_l | (upper_arm_l & B(618, 690 - OVERLAP, 730, 690)) | (hand_l & B(648, 850, 730, 850 + OVERLAP))
 
     # --- skirt ---
-    skirt = close_holes((c["skirt_navy"] | c["hem"]) & B(288, 752, 720, 1018), 2)
-    skirt = skirt & ~dilate(hand_r | hand_l, 3)
-    skirt = skirt | (torso & B(420, 768, 600, 812))
-    skirt = skirt | (shirt & B(430, 752, 590, 800))
+    navy_near = dilate(c["skirt_navy"], 10)
+    hem = c["hem"] & navy_near  # white stripes only, not the crotch gap
+    skirt = close_holes((c["skirt_navy"] | hem | dilate(c["skirt_navy"], 6)) & B(275, 738, 735, 1048), 3)
+    r = idle[:, :, 0].astype(np.int16)
+    g = idle[:, :, 1].astype(np.int16)
+    bch = idle[:, :, 2].astype(np.int16)
+    mn = np.minimum(np.minimum(r, g), bch)
+    chroma = np.maximum(np.maximum(r, g), bch) - mn
+    leftover_white = sil & (mn > 228) & (chroma < 18) & ~navy_near
+    skirt = skirt & ~leftover_white
+    # fists only — do not eat the hem corners
+    skirt = skirt & ~dilate(hand_r & B(270, 900, 355, 1058), 2)
+    skirt = skirt & ~dilate(hand_l & B(665, 890, 735, 1058), 2)
+    skirt = skirt | (torso & B(400, 752, 620, 816))
+    skirt = skirt | (shirt & B(420, 748, 600, 808))
+    skirt = skirt | (c["skirt_navy"] & B(390, 950, 620, 1045))
+    skirt = skirt | (dilate(c["skirt_navy"], 12) & B(400, 968, 610, 1032) & sil & ~leftover_white)
+    skirt = skirt | (skin & B(355, 968, 660, 968 + SEAM_OVERLAP))
 
     # --- legs ---
     thigh_r = close_holes(skin & B(355, 968, 512, 1315), 2)
@@ -337,10 +425,17 @@ def build_masks(idle: np.ndarray, talk: np.ndarray) -> dict[str, np.ndarray]:
     calf_l = close_holes((skin | c["sock"]) & B(520, 1268, 640, 1655), 2)
     calf_r = calf_r | (thigh_r & B(378, 1315 - OVERLAP, 500, 1315))
     calf_l = calf_l | (thigh_l & B(520, 1315 - OVERLAP, 640, 1315))
-    foot_r = close_holes(c["shoe"] & B(400, 1592, 512, 1768), 2)
-    foot_l = close_holes(c["shoe"] & B(508, 1592, 630, 1768), 2)
-    foot_r = foot_r | (calf_r & B(400, 1638, 512, 1638 + OVERLAP))
-    foot_l = foot_l | (calf_l & B(508, 1638, 630, 1638 + OVERLAP))
+    # loafers: full silhouette including dark outlines, not just brown fill
+    foot_r = close_holes(sil & B(392, 1586, 516, 1774) & (xx < 512) & (yy >= 1596), 3)
+    foot_l = close_holes(sil & B(500, 1584, 642, 1774) & (xx >= 504) & (yy >= 1596), 3)
+    foot_r = (dilate(foot_r, 2) & sil & B(390, 1584, 520, 1776) & (xx < 514)) | (
+        c["sock"] & B(395, 1618, 502, 1618 + SEAM_OVERLAP)
+    )
+    foot_l = (dilate(foot_l, 2) & sil & B(498, 1582, 644, 1776) & (xx >= 502)) | (
+        c["sock"] & B(518, 1618, 636, 1618 + SEAM_OVERLAP)
+    )
+    foot_r = close_holes(foot_r, 2)
+    foot_l = close_holes(foot_l, 2)
 
     return {
         "hair_back": hair_back,
@@ -515,6 +610,28 @@ def local_offset(name: str) -> tuple[float, float]:
         return wx, wy
     px, py = BONE_WORLD[parent]
     return wx - px, wy - py
+
+
+def patch_skeleton(meta: dict[str, dict]) -> None:
+    """Update attachment size/offset for recut layers only. Keep other slots."""
+    skel = json.loads(SKEL_PATH.read_text())
+
+    def att_fields(layer: str) -> dict:
+        x0, y0, x1, y1 = meta[layer]["bbox"]
+        px, py = PIVOTS[layer]
+        w, h = x1 - x0, y1 - y0
+        return {
+            "width": w,
+            "height": h,
+            "x": round((x0 + w / 2) - px, 2),
+            "y": round((y0 + h / 2) - py, 2),
+        }
+
+    for slot in skel["slots"]:
+        for name, att in slot.get("attachments", {}).items():
+            if name in meta:
+                att.update(att_fields(name))
+    SKEL_PATH.write_text(json.dumps(skel, indent=2) + "\n")
 
 
 def write_skeleton(meta: dict[str, dict]) -> None:
@@ -738,7 +855,19 @@ def label_still(arr: np.ndarray, title: str) -> Image.Image:
     return out
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    only = None
+    args = list(sys.argv[1:] if argv is None else argv)
+    if args[:1] == ["--only"]:
+        only = set(args[1:] or SEAM_LAYERS)
+        unknown = only - set(REQUIRED)
+        if unknown:
+            print("unknown layers", sorted(unknown), file=sys.stderr)
+            return 2
+    elif args:
+        print("usage: cut-rai-spine-layers.py [--only [layer ...]]", file=sys.stderr)
+        return 2
+
     if not IDLE_PATH.is_file():
         print("missing", IDLE_PATH, file=sys.stderr)
         return 1
@@ -749,26 +878,36 @@ def main() -> int:
     talk = align_talk(idle, talk_p)
 
     masks = build_masks(idle, talk)
+    masks["foot_r"] = expand_foot_mask(idle_rgb, masks["foot_r"], 386, 520)
+    masks["foot_l"] = expand_foot_mask(idle_rgb, masks["foot_l"], 496, 646)
+    masks["skirt"] = expand_skirt_mask(idle_rgb, masks["skirt"])
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     meta: dict[str, dict] = {}
-    layers: dict[str, tuple[np.ndarray, tuple[int, int, int, int]]] = {}
+    write_names = [n for n in REQUIRED if only is None or n in only]
 
-    for name in REQUIRED:
+    for name in write_names:
         src = talk if name == "mouth_open" else idle
         mask = masks[name]
+        if name in ("foot_l", "foot_r", "skirt"):
+            src = restore_from_original(idle_rgb, idle, mask)
         n = int(mask.sum())
         if n < 40:
             print(f"WARNING {name} only {n} pixels", file=sys.stderr)
         img, bbox = crop_masked(src, mask)
         Image.fromarray(img).save(OUT_DIR / f"{name}.png", optimize=True)
-        layers[name] = (img, bbox)
         meta[name] = {"bbox": bbox, "pixels": n, "pivot": PIVOTS[name]}
         print(f"{name:16s} {n:7d}px  bbox={bbox}")
 
-    write_skeleton(meta)
+    if only is None:
+        write_skeleton(meta)
+    else:
+        patch_skeleton(meta)
     skel = json.loads(SKEL_PATH.read_text())
     still = runtime_composite(skel)
-    label_still(still, "Glance test — assembled official cut layers").save(COMPOSITE_PATH, optimize=True)
+    title = "Glance test — assembled official cut layers"
+    if only:
+        title = "Glance test — seam re-cut (shoulders / bangs / brow / hem / loafers)"
+    label_still(still, title).save(COMPOSITE_PATH, optimize=True)
     print("wrote", COMPOSITE_PATH)
     print("wrote", SKEL_PATH)
     return 0
