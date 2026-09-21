@@ -41,4 +41,14 @@ describe("PNG puppet long shot", () => {
     assert.doesNotMatch(css, /#ffffff_0%/);
     assert.doesNotMatch(css, /\.rai-stage-wash/);
   });
+
+  it("plants a soft contact shadow, warm pocket, and amber rim on live stage classes", () => {
+    assert.match(css, /\.rai-rig::after\s*\{/);
+    assert.match(css, /transform-origin:\s*50%\s*72%/);
+    assert.match(css, /radial-gradient\(ellipse at center,\s*rgba\(28,\s*25,\s*22,\s*0\.1[0-6]/);
+    assert.match(css, /\.rai-stage::before\s*\{/);
+    assert.match(css, /rgba\(232,\s*163,\s*28,\s*0\.1[0-5]/);
+    assert.match(css, /\.rai-layer[\s\S]*drop-shadow\(1px 0 0 rgba\(232,\s*163,\s*28/);
+    assert.doesNotMatch(css, /drop-shadow\([^)]*(?:0,\s*\d+,\s*255|#0ff|cyan)/i);
+  });
 });

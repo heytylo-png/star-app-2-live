@@ -259,7 +259,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   useEffect(() => {
     const next = new Map<string, DisplayLayer>();
     desired.forEach((layer, i) => {
-      next.set(layer.id, { ...layer, z: layer.role === "talk" ? 20 + i : i });
+      // Body starts at 1 so sheets sit above .rai-rig::after (contact shadow at z 0).
+      next.set(layer.id, { ...layer, z: layer.role === "talk" ? 20 + i : i + 1 });
     });
 
     const merged = new Map(prevIds.current);
