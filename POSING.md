@@ -17,7 +17,7 @@ public/
     pout_official.png
     tired_official.png
     smug_official.png
-    wave_official.png       # NOT wave.png / front_wave.png
+    wave_official.png       # full-body retone, 1008×1792 RGBA; NOT star-rai/poses/wave.png
     hold_official.png       # NOT front_hold.png
     embarrassed_official.png
     scold_official.png      # live scold key — scold-front.png stays on disk unused
@@ -55,7 +55,7 @@ Live chat keys use the **morning official pack** under `public/rai/`. Do not poi
 | `pout` | `rai/pout_official.png` |
 | `tired` | `rai/tired_official.png` |
 | `smug` | `rai/smug_official.png` |
-| `wave` | `rai/wave_official.png` |
+| `wave` | `rai/wave_official.png` (1008×1792 RGBA, cheek matched to live ~(221,150,116); live 1152×1728 crop stays `star-rai/poses/wave.png`) |
 | `hold` | `rai/hold_official.png` |
 | `embarrassed` | `rai/embarrassed_official.png` |
 | `scold` | `rai/scold_official.png` |

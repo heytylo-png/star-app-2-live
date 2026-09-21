@@ -135,6 +135,25 @@ describe("live key → file map", () => {
     assert.doesNotMatch(SPRITES.poses.wave, /front_wave|star-rai\/poses\/wave/);
   });
 
+  it("body-pack wave is 1008×1792 RGBA; live 1152×1728 crop stays untouched", () => {
+    const ihdr = (rel: string) => {
+      const buf = readFileSync(join(publicRoot, rel));
+      assert.equal(buf.subarray(0, 8).toString("binary"), "\x89PNG\r\n\x1a\n");
+      return {
+        width: buf.readUInt32BE(16),
+        height: buf.readUInt32BE(20),
+        colorType: buf[25],
+      };
+    };
+    const pack = ihdr("rai/wave_official.png");
+    assert.equal(pack.width, 1008);
+    assert.equal(pack.height, 1792);
+    assert.equal(pack.colorType, 6, "RGBA");
+    const live = ihdr("star-rai/poses/wave.png");
+    assert.equal(live.width, 1152);
+    assert.equal(live.height, 1728);
+  });
+
   it("does not point hold at old front_hold", () => {
     assert.doesNotMatch(SPRITES.poses.hold, /front_hold/);
   });
