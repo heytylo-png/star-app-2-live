@@ -170,11 +170,21 @@
   animation: helix-pulse 1.2s ease-in-out infinite;
 }
 
-/* Expo-style compact transcript: transparent frame in the bottom third,
-   dark quiet bubbles over her legs, puppet visible through the stack. */
+/* Bottom band only: dark quiet bubbles on the hem / mid-skirt.
+   Max height = lower third of .rai-rig so face + ahoge stay clear.
+   Resize grip can shrink; CSS max-height is the climb ceiling. */
 .chat-thread-frame {
   display: flex;
   flex-direction: column;
+  max-height: min(
+    32dvh,
+    calc(
+      (
+          100dvh - env(safe-area-inset-top, 0px) - var(--rai-top-bar) - 0.2rem -
+            clamp(5.1rem, 15vh, 7.25rem)
+        ) / 3
+    )
+  );
 }
 
 .chat-thread-handle {
