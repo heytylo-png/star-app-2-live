@@ -277,6 +277,20 @@ body.chat-thread-resizing {
   width: 100%;
   overflow: hidden;
   background: var(--color-bg);
+  /* Pocket + rig stack inside the stage so chat chrome (z-10) stays on top. */
+  isolation: isolate;
+}
+
+/* Warm lit pocket behind her — amber key, cooler beige corners. Not cyber blue. */
+.rai-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 55% 45% at 68% 28%, rgba(232, 163, 28, 0.12) 0%, transparent 65%),
+    radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, rgba(228, 223, 214, 0.55) 100%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .rai-rig {
@@ -291,6 +305,21 @@ body.chat-thread-resizing {
   transform-origin: 50% 72%;
   will-change: transform;
   background: transparent;
+  z-index: 1;
+}
+
+/* Soft elliptical contact shadow under the hip origin (~72%) — no hard comic blob. */
+.rai-rig::after {
+  content: "";
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 2%;
+  height: 8%;
+  background: radial-gradient(ellipse at center, rgba(28, 25, 22, 0.14) 0%, rgba(28, 25, 22, 0) 70%);
+  filter: blur(6px);
+  pointer-events: none;
+  z-index: 0;
 }
 
 @media (min-width: 640px) {
@@ -325,6 +354,7 @@ body.chat-thread-resizing {
   pointer-events: none;
   user-select: none;
   background: transparent;
+  z-index: 1;
   /*
     Crown-origin long shot: modest zoom so the full body stays in frame
     (ahoge safe, feet toward Chat). Not a face-filling mid-shot / bust.
@@ -332,6 +362,11 @@ body.chat-thread-resizing {
   top: 2%;
   transform: scale(var(--rai-long-shot));
   transform-origin: 50% 0%;
+  /* 1px amber rim on the punched sprite. Keep ahoge crisp; no cyan. */
+  filter:
+    drop-shadow(1px 0 0 rgba(232, 163, 28, 0.22))
+    drop-shadow(-1px 0 0 rgba(232, 163, 28, 0.12))
+    drop-shadow(0 1px 0 rgba(232, 163, 28, 0.1));
 }
 
 @media (max-width: 639px) {
