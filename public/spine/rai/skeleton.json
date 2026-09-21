@@ -307,10 +307,10 @@
         "foot_r": {
           "name": "foot_r",
           "path": "spine/rai/layers/foot_r.png",
-          "width": 90,
-          "height": 149,
-          "x": 11.0,
-          "y": 11.5
+          "width": 134,
+          "height": 173,
+          "x": 10.0,
+          "y": 3.5
         }
       }
     },
@@ -322,10 +322,10 @@
         "foot_l": {
           "name": "foot_l",
           "path": "spine/rai/layers/foot_l.png",
-          "width": 93,
-          "height": 155,
-          "x": -10.5,
-          "y": 8.5
+          "width": 140,
+          "height": 173,
+          "x": -11.0,
+          "y": 3.5
         }
       }
     },
@@ -337,10 +337,10 @@
         "skirt": {
           "name": "skirt",
           "path": "spine/rai/layers/skirt.png",
-          "width": 391,
-          "height": 268,
-          "x": -7.5,
-          "y": 4.0
+          "width": 401,
+          "height": 262,
+          "x": -8.5,
+          "y": -15.0
         }
       }
     },
@@ -352,9 +352,9 @@
         "torso": {
           "name": "torso",
           "path": "spine/rai/layers/torso.png",
-          "width": 234,
+          "width": 340,
           "height": 461,
-          "x": 3.0,
+          "x": 4.0,
           "y": -43.5
         }
       }
@@ -367,8 +367,8 @@
         "bow": {
           "name": "bow",
           "path": "spine/rai/layers/bow.png",
-          "width": 136,
-          "height": 115,
+          "width": 140,
+          "height": 119,
           "x": 0.0,
           "y": 0.5
         }
@@ -472,9 +472,9 @@
         "brow": {
           "name": "brow",
           "path": "spine/rai/layers/brow.png",
-          "width": 152,
-          "height": 24,
-          "x": -1.0,
+          "width": 201,
+          "height": 54,
+          "x": 1.5,
           "y": 2.0
         }
       }
@@ -511,9 +511,9 @@
           "name": "hair_front",
           "path": "spine/rai/layers/hair_front.png",
           "width": 385,
-          "height": 364,
+          "height": 383,
           "x": 4.5,
-          "y": 40.0
+          "y": 35.5
         }
       }
     },
