@@ -5,7 +5,13 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import { speakable } from "./companion.ts";
 import { CALL_MODE_SOURCE, RAI_SYSTEM } from "./generated/star-rai-artifacts.ts";
-import { layersFor, namedPoseFromText, poseResetDelayMs, resolveSpokenPose } from "./rai.ts";
+import {
+  layersFor,
+  namedPoseFromText,
+  POSE_HOLD_AFTER_TALK_MS,
+  poseResetDelayMs,
+  resolveSpokenPose,
+} from "./rai.ts";
 import {
   CALL_AUDIO_CONSTRAINTS,
   CALL_AUDIO_CONSTRAINTS_CHROME,
@@ -381,17 +387,36 @@ describe("pose commands + tint still apply on a voice turn", () => {
     })[0]!.src;
     assert.match(src, /talk_official/);
     assert.doesNotMatch(src, /\/idle\.png$/);
-    // Same Call bubble stays on that sheet. Idle is the next rest.
+    // Mid-line: still speaking, stay off idle.
     assert.equal(
       poseResetDelayMs({
         pose,
         emotion: "bratty",
-        talking: false,
+        talking: true,
         actLandedAt: 0,
         now: 20_000,
-        spokenBubbleActive: true,
       }),
       null,
+    );
+    // Line over: a few seconds, then idle.png so rest blink can run.
+    const restDelay = poseResetDelayMs({
+      pose,
+      emotion: "bratty",
+      talking: false,
+      actLandedAt: 1_000,
+      now: 61_000,
+    });
+    assert.equal(restDelay, POSE_HOLD_AFTER_TALK_MS);
+    assert.ok((restDelay ?? Infinity) < 10_000);
+    assert.match(
+      layersFor({
+        pose: "idle",
+        emotion: "bratty",
+        talking: false,
+        amplitude: 0,
+        angle: 0,
+      })[0]!.src,
+      /\/idle\.png$/,
     );
   });
 });

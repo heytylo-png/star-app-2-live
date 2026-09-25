@@ -650,7 +650,7 @@ describe("pose tint", () => {
     assert.notEqual(pose, "idle");
   });
 
-  it("keeps a playful spoken line off the idle glare sheet until the next rest", () => {
+  it("holds talk on a playful line, then idle.png a few seconds after the line ends", () => {
     const pose = resolveSpokenPose({
       namedPose: null,
       modelPose: null,
@@ -671,37 +671,40 @@ describe("pose tint", () => {
     assert.doesNotMatch(src, /\/idle\.png$/);
     assert.doesNotMatch(src, /idle_blink/);
 
-    // Bubble still up, long after speech — do not settle to idle.png.
+    // Still saying the line — do not snap to frown idle.
     assert.equal(
       poseResetDelayMs({
         pose,
         emotion: "bratty",
-        talking: false,
+        talking: true,
         actLandedAt: 1_000,
         now: 30_000,
-        spokenBubbleActive: true,
       }),
       null,
     );
 
-    // Next rest (bubble gone) may settle. Idle blink stays rest-only.
+    // Line over, even a minute later: a few seconds, not stuck on talk.
     const restDelay = poseResetDelayMs({
       pose,
       emotion: "bratty",
       talking: false,
       actLandedAt: 1_000,
-      now: 30_000,
-      spokenBubbleActive: false,
+      now: 61_000,
     });
     assert.equal(restDelay, POSE_HOLD_AFTER_TALK_MS);
+    assert.ok((restDelay ?? Infinity) < 10_000);
     const restSrc = layersFor({
       pose: "idle",
-      emotion: "bratty",
+      emotion: DEFAULT_EMOTION,
       talking: false,
       amplitude: 0,
       angle: 0,
     })[0]!.src;
     assert.match(restSrc, /\/idle\.png$/);
+    assert.equal(
+      canIdleBlink({ pose: "idle", emotion: DEFAULT_EMOTION, talking: false }),
+      true,
+    );
   });
 
   it("Music Set omitted pose is talk, content, or smug — not idle, even if emotion is tired", () => {

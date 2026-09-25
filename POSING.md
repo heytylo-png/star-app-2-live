@@ -98,4 +98,4 @@ Live chat keys use the **morning official pack** under `public/rai/`. Do not poi
 
 ## Act pose hold
 
-A spoken bubble keeps its talk or mood sheet for as long as that line is the current assistant bubble. Frown `idle.png` is not that bubble. Idle is the **next rest** — when no spoken bubble is up — and only then do the ~3.4s / ~2.8s settle timers apply. Body-sheet crossfade ~380ms. Talking does not snap a dedicated pose (including `talk`) to frown idle.
+A spoken line keeps its talk or mood sheet while she is saying it. Frown `idle.png` is not that line. Once the line is over (speech finished, not still sending), the next rest is the ~3.4s / ~2.8s settle — then `idle.png`, so rest blink can run. The transcript row staying on screen does not hold the sheet. Body-sheet crossfade ~380ms. Talking does not snap a dedicated pose (including `talk`) to frown idle.
