@@ -650,6 +650,107 @@ describe("pose tint", () => {
     assert.notEqual(pose, "idle");
   });
 
+  it("keeps a playful spoken line off the idle glare sheet until the next rest", () => {
+    const pose = resolveSpokenPose({
+      namedPose: null,
+      modelPose: null,
+      emotion: "bratty",
+      spoken: true,
+      currentPose: "idle",
+      seed: "you're cute. Yeah, I heard that~",
+    });
+    assert.equal(pose, "talk");
+    const src = layersFor({
+      pose,
+      emotion: "bratty",
+      talking: false,
+      amplitude: 0,
+      angle: 0,
+    })[0]!.src;
+    assert.match(src, /talk_official/);
+    assert.doesNotMatch(src, /\/idle\.png$/);
+    assert.doesNotMatch(src, /idle_blink/);
+
+    // Bubble still up, long after speech — do not settle to idle.png.
+    assert.equal(
+      poseResetDelayMs({
+        pose,
+        emotion: "bratty",
+        talking: false,
+        actLandedAt: 1_000,
+        now: 30_000,
+        spokenBubbleActive: true,
+      }),
+      null,
+    );
+
+    // Next rest (bubble gone) may settle. Idle blink stays rest-only.
+    const restDelay = poseResetDelayMs({
+      pose,
+      emotion: "bratty",
+      talking: false,
+      actLandedAt: 1_000,
+      now: 30_000,
+      spokenBubbleActive: false,
+    });
+    assert.equal(restDelay, POSE_HOLD_AFTER_TALK_MS);
+    const restSrc = layersFor({
+      pose: "idle",
+      emotion: "bratty",
+      talking: false,
+      amplitude: 0,
+      angle: 0,
+    })[0]!.src;
+    assert.match(restSrc, /\/idle\.png$/);
+  });
+
+  it("Music Set omitted pose is talk, content, or smug — not idle, even if emotion is tired", () => {
+    for (const tint of NOW_PLAYING_TINT_POSES) {
+      const pose = resolveSpokenPose({
+        namedPose: null,
+        modelPose: "idle",
+        emotion: "tired",
+        spoken: true,
+        nowPlayingJustSet: true,
+        lifeTintPose: tint,
+        currentPose: "idle",
+        seed: "Super Shy",
+      });
+      assert.equal(pose, tint);
+      assert.notEqual(pose, "idle");
+      const src = layersFor({
+        pose,
+        emotion: "tired",
+        talking: false,
+        amplitude: 0,
+        angle: 0,
+      })[0]!.src;
+      assert.doesNotMatch(src, /\/idle\.png$/);
+      assert.doesNotMatch(src, /tired_official/);
+    }
+
+    const named = resolveSpokenPose({
+      namedPose: "wink",
+      modelPose: "talk",
+      emotion: "tired",
+      spoken: true,
+      nowPlayingJustSet: true,
+      lifeTintPose: "content",
+      currentPose: "idle",
+    });
+    assert.equal(named, "wink");
+
+    const kiss = resolveSpokenPose({
+      namedPose: false,
+      modelPose: null,
+      emotion: "bratty",
+      spoken: true,
+      currentPose: "wave",
+    });
+    assert.equal(kiss, "wave");
+    assert.equal("kiss" in SPRITES.poses, false);
+  });
+
   it("tints as soon as the spoken line streams — before pose/emotion keys", () => {
     assert.equal(streamSpokenAct("{"), null);
     const lineFirst = streamSpokenAct('{"line":"Facing you. Front and center~"', {

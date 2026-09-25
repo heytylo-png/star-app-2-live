@@ -8,7 +8,13 @@
 
 import { detectChartIntent, localDateKey } from "./chart.ts";
 import type { ClockBand } from "./clock.ts";
-import { namedPoseFromText, type EmotionId, type PoseId } from "./rai.ts";
+import {
+  NOW_PLAYING_TINT_POSES,
+  namedPoseFromText,
+  type EmotionId,
+  type NowPlayingTintPose,
+  type PoseId,
+} from "./rai.ts";
 import type { SkyFacts } from "./sky.ts";
 
 export const LIFE_MOOD_TAGS = ["bratty", "smug", "tired", "soft"] as const;
@@ -504,6 +510,11 @@ export function pickLifeTintPose(seed: string): LifeTintPose {
   return LIFE_TINT_POSES[hashString(seed) % LIFE_TINT_POSES.length]!;
 }
 
+/** Music Set / now_playing just set. Spec: talk | content | smug. Not idle, tired, or wave. */
+export function pickNowPlayingTintPose(seed: string): NowPlayingTintPose {
+  return NOW_PLAYING_TINT_POSES[hashString(seed) % NOW_PLAYING_TINT_POSES.length]!;
+}
+
 export function resolveLifeTurn(input: {
   userText: string;
   before?: LifeSlots;
@@ -559,7 +570,7 @@ export function resolveLifeTurn(input: {
     nowPlaying !== after?.commented_track;
 
   if (changed && nowPlaying) {
-    const tintPose = pickLifeTintPose(nowPlaying);
+    const tintPose = pickNowPlayingTintPose(nowPlaying);
     return {
       kind: "track_change",
       localOnly: false,

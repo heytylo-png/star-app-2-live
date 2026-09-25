@@ -102,9 +102,13 @@ export function canIdleBlink(state: {
 }
 
 /**
- * Delay before easing back to idle after an act. `null` = do not reset
- * (still speaking). Dedicated poses hold at least POSE_HOLD_MIN_MS from
- * landing, and at least POSE_HOLD_AFTER_TALK_MS after speech ends.
+ * Delay before easing back to idle after an act. `null` = do not reset.
+ *
+ * Still speaking, or the spoken reply's bubble is still the current line:
+ * stay on the tint. Idle is the next rest — after that bubble is gone —
+ * not a snap on the line she just said. Once rest starts, dedicated poses
+ * hold at least POSE_HOLD_MIN_MS from landing, and at least
+ * POSE_HOLD_AFTER_TALK_MS after speech ends.
  */
 export function poseResetDelayMs(opts: {
   pose: PoseId;
@@ -112,8 +116,11 @@ export function poseResetDelayMs(opts: {
   talking: boolean;
   actLandedAt: number;
   now?: number;
+  /** Spoken reply bubble is still up. Do not snap to frown idle on it. */
+  spokenBubbleActive?: boolean;
 }): number | null {
   if (opts.talking) return null;
+  if (opts.spokenBubbleActive) return null;
   const now = opts.now ?? Date.now();
   const elapsed = Math.max(0, now - (opts.actLandedAt || now));
   const holdPose =
@@ -621,28 +628,36 @@ export type ResolveSpokenPoseOpts = {
  * Pose for a spoken bubble.
  *
  * 1. User-named pose command wins (sheet already swapped).
- * 2. Emotion tired always tints to the tired sheet — never grin / peace / wave.
- * 3. Live model key (not idle / kiss) is used as-is.
- * 4. Omitted / unknown / kiss / idle → context tint, else keep a dedicated
+ * 2. now_playing just set (Music Set), when the pose was omitted / idle / kiss
+ *    or is the tint we stamped → talk | content | smug. A different live model
+ *    key still falls through.
+ * 3. Emotion tired tints to the tired sheet — never grin / peace / wave —
+ *    unless step 2 already placed a Music Set sheet.
+ * 4. Live model key (not idle / kiss) is used as-is.
+ * 5. Omitted / unknown / kiss / idle → context tint, else keep a dedicated
  *    current body, else infer from emotion. Never leave frown idle under
- *    a spoken line. Rest may still settle to idle after the hold timer.
+ *    a spoken line. Idle is the next rest, after that bubble.
  */
 export function resolveSpokenPose(opts: ResolveSpokenPoseOpts): PoseId {
   if (opts.namedPose) return opts.namedPose;
+
+  const seed = opts.seed?.trim() || opts.emotion;
+
+  // Music Set: omitted / idle / kiss, or the tint already on the act.
+  // A different live key (wink, wave, …) is priority 2 and falls through.
+  if (opts.nowPlayingJustSet) {
+    const tint =
+      opts.lifeTintPose && (NOW_PLAYING_TINT_POSES as readonly string[]).includes(opts.lifeTintPose)
+        ? opts.lifeTintPose
+        : null;
+    if (tint && (needsPoseTint(opts.modelPose) || opts.modelPose === tint)) return tint;
+    if (!tint && needsPoseTint(opts.modelPose)) return pickTint(NOW_PLAYING_TINT_POSES, seed);
+  }
 
   // Tired is a rest face. Model/context keys like talk/peace/wave land as grins.
   if (opts.emotion === "tired") return EMOTION_TO_POSE.tired;
 
   if (opts.modelPose && isDedicatedPose(opts.modelPose)) return opts.modelPose;
-
-  const seed = opts.seed?.trim() || opts.emotion;
-
-  if (opts.nowPlayingJustSet) {
-    if (opts.lifeTintPose && (NOW_PLAYING_TINT_POSES as readonly string[]).includes(opts.lifeTintPose)) {
-      return opts.lifeTintPose;
-    }
-    return pickTint(NOW_PLAYING_TINT_POSES, seed);
-  }
 
   if (opts.chartBeat) {
     if (opts.chartTintPose && (CHART_BEAT_TINT_POSES as readonly string[]).includes(opts.chartTintPose)) {

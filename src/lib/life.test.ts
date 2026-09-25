@@ -164,7 +164,10 @@ describe("Life turns", () => {
     assert.match(first.factsBlock!, /^LIFE$/m);
     assert.match(first.factsBlock!, /^now_playing: Super Shy$/m);
     assert.match(first.factsBlock!, /One comment on this track change/);
-    assert.ok(LIFE_TINT_POSES.includes(first.tintPose!));
+    assert.ok(["talk", "content", "smug"].includes(first.tintPose!));
+    assert.notEqual(first.tintPose, "idle");
+    assert.notEqual(first.tintPose, "tired");
+    assert.notEqual(first.tintPose, "wave");
 
     const same = resolveLifeTurn({
       userText: "still here",
@@ -348,6 +351,33 @@ describe("Grok request composition — session on vs off", () => {
     assert.match(act.line, /Super Shy/);
     assert.doesNotMatch(act.line, /ETA|Cool With You|How Sweet|1\.|2\./);
     assert.equal(act.pose, "talk");
+  });
+
+  it("Music Set is talk, content, or smug even when her mood is tired", () => {
+    const titles = ["Super Shy", "ETA", "Pink + White", "Good Days", "Snooze", "Getaway"];
+    const seen = new Set<string>();
+    for (const title of titles) {
+      const turn = resolveLifeTurn({
+        userText: `I'm listening to ${title}.`,
+        before: { on: true },
+        after: { on: true, now_playing: title, mood_tag: "tired" },
+      });
+      assert.equal(turn.kind, "track_change");
+      assert.ok(turn.tintPose === "talk" || turn.tintPose === "content" || turn.tintPose === "smug");
+      const act = composeAct(
+        [{ role: "user", content: `I'm listening to ${title}.` }],
+        "",
+        "idle",
+        undefined,
+        turn,
+      );
+      assert.ok(act.pose === "talk" || act.pose === "content" || act.pose === "smug");
+      assert.notEqual(act.pose, "idle");
+      assert.notEqual(act.pose, "tired");
+      assert.notEqual(act.pose, "shy");
+      seen.add(act.pose!);
+    }
+    assert.ok(seen.size >= 1);
   });
 
   it("does not let Super Shy steal the track-change sheet", () => {

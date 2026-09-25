@@ -182,6 +182,8 @@ function RaiReady() {
   const [caption, setCaption] = useState("");
   const [emotion, setEmotion] = useState<EmotionId>(DEFAULT_EMOTION);
   const [pose, setPose] = useState<PoseId>("idle");
+  /** Latest assistant line is still the spoken bubble — idle waits for the next rest. */
+  const [spokenBubble, setSpokenBubble] = useState(false);
   const [talking, setTalking] = useState(false);
   const [holding, setHolding] = useState(false);
   const [pttSupported, setPttSupported] = useState(true);
@@ -214,6 +216,9 @@ function RaiReady() {
   const callSubmittedRef = useRef(false);
   const startCallListenRef = useRef<(opts?: { continueUtterance?: boolean }) => void>(() => {});
   const poseRef = useRef<PoseId>("idle");
+  /** Pose at the start of this turn. Inferred tint must not stick as "current body". */
+  const poseAtTurnRef = useRef<PoseId>("idle");
+  const restoredBubbleRef = useRef(false);
   const tabRef = useRef<ShellTab>(DEFAULT_SHELL_TAB);
   /** When the last act pose/emotion landed — drives the hold timer. */
   const actLandedAt = useRef(0);
@@ -339,6 +344,18 @@ function RaiReady() {
       source: "return",
     });
     setCaption(offer.line);
+    const nextPose = resolveSpokenPose({
+      namedPose: null,
+      modelPose: null,
+      emotion: DEFAULT_EMOTION,
+      spoken: true,
+      currentPose: poseRef.current,
+      seed: offer.line,
+    });
+    setPose(nextPose);
+    poseRef.current = nextPose;
+    setSpokenBubble(true);
+    actLandedAt.current = Date.now();
   }
   deliverReturnRef.current = deliverReturnBeat;
 
@@ -413,6 +430,7 @@ function RaiReady() {
       emotion,
       talking: false,
       actLandedAt: actLandedAt.current,
+      spokenBubbleActive: spokenBubble,
     });
     if (delay == null) return;
     const id = window.setTimeout(() => {
@@ -420,7 +438,54 @@ function RaiReady() {
       setEmotion(DEFAULT_EMOTION);
     }, delay);
     return () => window.clearTimeout(id);
-  }, [draft, sending, talking, holding, callListening, pose, emotion]);
+  }, [draft, sending, talking, holding, callListening, pose, emotion, spokenBubble]);
+
+  // Next rest: no spoken assistant line left. Idle may settle then — not on the bubble.
+  useEffect(() => {
+    if (!chatHydrated || sending || talking) return;
+    const lastSpoken = [...(thread?.messages ?? [])]
+      .reverse()
+      .find((m) => m.role === "assistant" && m.content.trim() && !m.error);
+    if (!lastSpoken) setSpokenBubble(false);
+  }, [chatHydrated, thread, sending, talking]);
+
+  // Reload keeps the transcript. Don't put frown idle back under that bubble.
+  useEffect(() => {
+    if (!chatHydrated || restoredBubbleRef.current) return;
+    restoredBubbleRef.current = true;
+    if (sendingRef.current || actLandedAt.current) return;
+    const msgs = thread?.messages ?? [];
+    let lastIdx = -1;
+    for (let i = msgs.length - 1; i >= 0; i--) {
+      const m = msgs[i];
+      if (m?.role === "assistant" && m.content.trim() && !m.error) {
+        lastIdx = i;
+        break;
+      }
+    }
+    const last = lastIdx >= 0 ? msgs[lastIdx] : undefined;
+    if (!last) return;
+    const prevUser =
+      msgs
+        .slice(0, lastIdx)
+        .reverse()
+        .find((m) => m.role === "user")?.content ?? "";
+    const lifeTitle = parseTrackTitle(prevUser);
+    const named = lifeTitle ? null : namedPoseFromText(prevUser);
+    const nextPose = resolveSpokenPose({
+      namedPose: named,
+      modelPose: null,
+      emotion: DEFAULT_EMOTION,
+      spoken: true,
+      nowPlayingJustSet: Boolean(lifeTitle),
+      currentPose: poseRef.current,
+      seed: last.content,
+    });
+    setPose(nextPose);
+    poseRef.current = nextPose;
+    setSpokenBubble(true);
+    actLandedAt.current = Date.now();
+  }, [chatHydrated, thread]);
 
   function clearCallListenTimers() {
     if (listenRestartTimerRef.current) {
@@ -660,6 +725,7 @@ function RaiReady() {
     store.appendMessage(threadId, assistant);
     sendingRef.current = true;
     talkingRef.current = false;
+    poseAtTurnRef.current = poseRef.current;
     listenPausedForTtsRef.current = false;
     callListenGenRef.current += 1;
     setSending(true);
@@ -780,12 +846,13 @@ function RaiReady() {
             chartTintPose: chartTurn.tintPose,
             lifeTintPose: lifeTurn.tintPose,
             seed: live || lastUser,
-            currentPose: poseRef.current,
+            currentPose: poseAtTurnRef.current,
           });
           if (streamed) {
             setEmotion(streamed.emotion);
             setPose(streamed.pose);
             poseRef.current = streamed.pose;
+            if (live) setSpokenBubble(true);
             actLandedAt.current = Date.now();
           }
           if (live) {
@@ -814,10 +881,11 @@ function RaiReady() {
         chartTintPose: chartTurn.tintPose,
         lifeTintPose: lifeTurn.tintPose,
         seed: line,
-        currentPose: poseRef.current,
+        currentPose: poseAtTurnRef.current,
       });
       setPose(next);
       poseRef.current = next;
+      if (line.trim()) setSpokenBubble(true);
       actLandedAt.current = Date.now();
       if (act.memories.length) useMemoryStore.getState().addMany(act.memories);
 
