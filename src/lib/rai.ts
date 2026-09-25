@@ -102,13 +102,14 @@ export function canIdleBlink(state: {
 }
 
 /**
- * Delay before easing back to idle after an act. `null` = do not reset.
+ * Delay before easing back to idle after an act. `null` = do not reset
+ * (still speaking).
  *
- * Still speaking, or the spoken reply's bubble is still the current line:
- * stay on the tint. Idle is the next rest — after that bubble is gone —
- * not a snap on the line she just said. Once rest starts, dedicated poses
- * hold at least POSE_HOLD_MIN_MS from landing, and at least
- * POSE_HOLD_AFTER_TALK_MS after speech ends.
+ * The talk/mood sheet stays on the line she is saying. Once that line is
+ * over, the next rest is a few seconds — not the life of the transcript
+ * row. Dedicated poses hold at least POSE_HOLD_MIN_MS from landing, and
+ * at least POSE_HOLD_AFTER_TALK_MS after speech ends, then idle.png so
+ * rest blink can run.
  */
 export function poseResetDelayMs(opts: {
   pose: PoseId;
@@ -116,11 +117,8 @@ export function poseResetDelayMs(opts: {
   talking: boolean;
   actLandedAt: number;
   now?: number;
-  /** Spoken reply bubble is still up. Do not snap to frown idle on it. */
-  spokenBubbleActive?: boolean;
 }): number | null {
   if (opts.talking) return null;
-  if (opts.spokenBubbleActive) return null;
   const now = opts.now ?? Date.now();
   const elapsed = Math.max(0, now - (opts.actLandedAt || now));
   const holdPose =
