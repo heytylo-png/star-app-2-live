@@ -5,7 +5,7 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import { speakable } from "./companion.ts";
 import { CALL_MODE_SOURCE, RAI_SYSTEM } from "./generated/star-rai-artifacts.ts";
-import { namedPoseFromText, resolveSpokenPose } from "./rai.ts";
+import { layersFor, namedPoseFromText, poseResetDelayMs, resolveSpokenPose } from "./rai.ts";
 import {
   CALL_AUDIO_CONSTRAINTS,
   CALL_AUDIO_CONSTRAINTS_CHROME,
@@ -372,5 +372,26 @@ describe("pose commands + tint still apply on a voice turn", () => {
     });
     assert.notEqual(pose, "idle");
     assert.equal(pose, "talk");
+    const src = layersFor({
+      pose,
+      emotion: "bratty",
+      talking: false,
+      amplitude: 0,
+      angle: 0,
+    })[0]!.src;
+    assert.match(src, /talk_official/);
+    assert.doesNotMatch(src, /\/idle\.png$/);
+    // Same Call bubble stays on that sheet. Idle is the next rest.
+    assert.equal(
+      poseResetDelayMs({
+        pose,
+        emotion: "bratty",
+        talking: false,
+        actLandedAt: 0,
+        now: 20_000,
+        spokenBubbleActive: true,
+      }),
+      null,
+    );
   });
 });

@@ -96,6 +96,6 @@ Live chat keys use the **morning official pack** under `public/rai/`. Do not poi
 2. Wire it in `src/lib/rai.ts`: `POSES`, `LIVE_POSE_FILES` / `SPRITES.poses`, `POSE_ALIASES`. Mention it in `artifacts/star-rai-voice-card.txt` only if Grok may pick it, then run `npm run sync:artifacts`. Add pose-keyed lines to `artifacts/star-rai-local-brain.txt` for the offline fallback. Memory slots live in `artifacts/star-rai-memory-slots.txt` (facts after the voice card — not pose art). Clock / NOW is `artifacts/star-rai-clock.txt` (compact fact, not a pose).
 3. Redeploy (`npm run build`, push `main`, deploy `dist` to `gh-pages`). Hard-refresh the live app.
 
-## Act pose hold (unchanged from PR #1)
+## Act pose hold
 
-Dedicated poses stay on screen at least **~3.4s** after they land (and **~2.8s after speech ends**, whichever is later). Body-sheet crossfade ~380ms. Talking does not snap a dedicated pose (including `talk`) to frown idle. Idle is the next rest after the bubble.
+A spoken bubble keeps its talk or mood sheet for as long as that line is the current assistant bubble. Frown `idle.png` is not that bubble. Idle is the **next rest** — when no spoken bubble is up — and only then do the ~3.4s / ~2.8s settle timers apply. Body-sheet crossfade ~380ms. Talking does not snap a dedicated pose (including `talk`) to frown idle.
