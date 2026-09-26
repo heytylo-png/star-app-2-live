@@ -10,6 +10,11 @@ export type ShellTab = (typeof SHELL_TABS)[number];
 
 export const DEFAULT_SHELL_TAB: ShellTab = "chat";
 
+/** App boots on Chat. Birthday stays a skippable overlay, not a tab. */
+export function launchChrome(): { tab: ShellTab; birthdayCard: "skippable-overlay" } {
+  return { tab: DEFAULT_SHELL_TAB, birthdayCard: "skippable-overlay" };
+}
+
 export const SHELL_TAB_LABEL: Record<ShellTab, string> = {
   chat: "Chat",
   chart: "Chart",

@@ -3,9 +3,10 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
-import { resolveChartTurn } from "./chart.ts";
-import { resolveLifeTurn } from "./life.ts";
+import { chartPaneOnOpen, chartReadingRequested, resolveChartTurn } from "./chart.ts";
+import { LIFE_SHOWS_LOGIN, lifeNowPlayingChrome, resolveLifeTurn } from "./life.ts";
 import { RAI_SYSTEM, SHELL_SOURCE } from "./generated/star-rai-artifacts.ts";
+import { SPOTIFY_TOKEN_STORAGE } from "./spotify.ts";
 import {
   DEFAULT_SHELL_TAB,
   SHELL_TABS,
@@ -13,6 +14,7 @@ import {
   chatOpenForTab,
   isShellTab,
   lastDiaryEntry,
+  launchChrome,
 } from "./shell.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -94,6 +96,51 @@ describe("tab chrome", () => {
     assert.equal(birthDateInputValue("1994-04-12"), "1994-04-12");
     assert.equal(birthDateInputValue("09-29"), "2000-09-29");
     assert.equal(birthDateInputValue(undefined), "");
+  });
+
+  it("launches on Chat with a skippable birthday overlay", () => {
+    assert.equal(launchChrome().tab, "chat");
+    assert.equal(launchChrome().tab, DEFAULT_SHELL_TAB);
+    assert.equal(launchChrome().birthdayCard, "skippable-overlay");
+    const app = readFileSync(join(root, "src/components/rai-app.tsx"), "utf8");
+    const card = readFileSync(join(root, "src/components/chart-setup-card.tsx"), "utf8");
+    assert.match(app, /useState<ShellTab>\(DEFAULT_SHELL_TAB\)/);
+    assert.match(app, /<ChartSetupCard/);
+    assert.match(app, /onSkip=/);
+    assert.match(card, /onClick=\{onSkip\}/);
+    assert.match(card, /\bSkip\b/);
+    assert.doesNotMatch(app, /tab === "birthday"/);
+  });
+
+  it("Chart open has no wheel and no auto reading", () => {
+    const open = chartPaneOnOpen();
+    assert.equal(open.wheel, false);
+    assert.equal(open.autoReading, false);
+    assert.equal(open.layout, "sparse-daily-facts");
+    assert.equal(chartReadingRequested(false), false);
+    assert.equal(chartReadingRequested(true), true);
+    const panel = readFileSync(join(root, "src/components/chart-panel.tsx"), "utf8");
+    assert.doesNotMatch(panel, /requestHerDayCopy|ZodiacWheel|<svg/);
+    assert.match(panel, /dash\.view\.labels/);
+    assert.match(panel, /her\.heading/);
+  });
+
+  it("Life now-playing is the title and Stop, with no login wall", () => {
+    const chrome = lifeNowPlayingChrome({ sessionOn: true, title: "Super Shy" });
+    assert.equal(chrome.title, "Super Shy");
+    assert.equal(chrome.showStop, true);
+    assert.equal(chrome.showLogin, false);
+    assert.equal(chrome.showConnect, false);
+    assert.equal(LIFE_SHOWS_LOGIN, false);
+    assert.equal(lifeNowPlayingChrome({ sessionOn: false, title: "Super Shy" }).showStop, false);
+    const panel = readFileSync(join(root, "src/components/life-panel.tsx"), "utf8");
+    const bar = readFileSync(join(root, "src/components/now-playing-bar.tsx"), "utf8");
+    const spotify = readFileSync(join(root, "src/lib/spotify.ts"), "utf8");
+    assert.doesNotMatch(panel, /SpotifyLifePlayer|Connect Spotify|beginSpotifyLogin/);
+    assert.doesNotMatch(bar, /Connect Spotify|Log in|placeholder=/);
+    assert.match(bar, /onClick=\{onStop\}/);
+    assert.match(bar, /\bStop\b/);
+    assert.match(spotify, new RegExp(SPOTIFY_TOKEN_STORAGE));
   });
 
   it("lets a Life track change comment fire without dumping Chart on the Life pane", () => {

@@ -435,6 +435,23 @@ export function applyHerDayGrokRaw(
   return herDayFromBeats(beats, { natal: HER_CHART.her_sun, sky, source: "grok" });
 }
 
+/**
+ * Chart tab chrome on open. Sparse daily facts only.
+ * No zodiac wheel. No reading until the user asks for one.
+ */
+export function chartPaneOnOpen(): {
+  wheel: false;
+  autoReading: false;
+  layout: "sparse-daily-facts";
+} {
+  return { wheel: false, autoReading: false, layout: "sparse-daily-facts" };
+}
+
+/** A reading is a user ask. Opening the Chart tab is not one. */
+export function chartReadingRequested(userAsked: boolean): boolean {
+  return userAsked;
+}
+
 export function detectChartIntent(userText: string): ChartTurnKind {
   const t = userText.replace(/\s+/g, " ").trim();
   if (!t) return "none";

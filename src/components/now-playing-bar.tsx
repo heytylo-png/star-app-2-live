@@ -1,74 +1,33 @@
-import { useState } from "react";
-import { Music2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { lifeNowPlayingChrome } from "@/lib/life";
 import { cn } from "@/lib/utils";
 
 type NowPlayingBarProps = {
   sessionOn: boolean;
   nowPlaying?: string;
-  moodTag?: string;
-  onSetTitle: (title: string) => void;
   onStop: () => void;
   className?: string;
 };
 
 /**
- * Life pane Set/Stop — paste a title without Spotify.
- * Chat has no music strip; comments still fire in the Chat thread.
+ * Life now-playing: the track title and a Stop button.
+ * No paste field and no connect prompt.
  */
-export function NowPlayingBar({
-  sessionOn,
-  nowPlaying,
-  moodTag,
-  onSetTitle,
-  onStop,
-  className,
-}: NowPlayingBarProps) {
-  const [title, setTitle] = useState("");
+export function NowPlayingBar({ sessionOn, nowPlaying, onStop, className }: NowPlayingBarProps) {
+  const chrome = lifeNowPlayingChrome({ sessionOn, title: nowPlaying });
+  if (!chrome.title || !chrome.showStop || chrome.showLogin || chrome.showConnect) return null;
 
   return (
     <div
       className={cn(
-        "mx-auto mb-2 w-full max-w-lg rounded-xl bg-elevated/92 px-3 py-2 shadow-[var(--shadow-border)] backdrop-blur-[2px]",
+        "mx-auto mb-2 flex w-full max-w-lg items-center justify-between gap-3 rounded-xl bg-elevated/92 px-3 py-2 shadow-[var(--shadow-border)] backdrop-blur-[2px]",
         className,
       )}
     >
-      {sessionOn && nowPlaying ? (
-        <p className="mb-1.5 truncate text-xs text-muted">
-          On · <span className="text-fg">{nowPlaying}</span>
-          {moodTag ? <span className="text-subtle"> · {moodTag}</span> : null}
-        </p>
-      ) : null}
-      <form
-        className="flex items-center gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const next = title.trim();
-          if (!next) return;
-          onSetTitle(next);
-          setTitle("");
-        }}
-      >
-        <Music2 className="size-3.5 shrink-0 text-muted" aria-hidden />
-        <input
-          type="text"
-          autoComplete="off"
-          spellCheck={false}
-          aria-label="Now playing title"
-          placeholder={sessionOn ? "Next title" : "Paste a title — no login"}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="min-w-0 flex-1 bg-transparent text-sm text-fg outline-none placeholder:text-subtle"
-        />
-        <Button type="submit" variant="ghost" size="sm" disabled={!title.trim()}>
-          Set
-        </Button>
-        {sessionOn ? (
-          <Button type="button" variant="ghost" size="sm" onClick={onStop}>
-            Stop
-          </Button>
-        ) : null}
-      </form>
+      <p className="min-w-0 truncate text-sm text-fg">{chrome.title}</p>
+      <Button type="button" variant="ghost" size="sm" onClick={onStop}>
+        Stop
+      </Button>
     </div>
   );
 }

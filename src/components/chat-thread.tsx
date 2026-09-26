@@ -21,6 +21,10 @@ type ChatThreadProps = {
   talking: boolean;
   listening: boolean;
   showSetup: boolean;
+  /** Her display name on Call transcript bubbles. Omitted off-call. */
+  herName?: string;
+  /** Listen line. Call passes her display name; hold-to-talk stays generic. */
+  listenLabel?: string;
 };
 
 function lastMessageContent(messages: ChatMessage[]): string {
@@ -102,6 +106,8 @@ export function ChatThread({
   talking,
   listening,
   showSetup,
+  herName,
+  listenLabel = "Listening…",
 }: ChatThreadProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const nearBottomRef = useRef(true);
@@ -111,9 +117,10 @@ export function ChatThread({
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
   const lastStored = lastMessageContent(messages);
   const captionText = caption.trim();
-  const showCaption =
-    Boolean(captionText) && captionText !== lastStored && captionText !== "Listening…";
-  const showListening = listening && (captionText === "Listening…" || !captionText);
+  const listeningCaption = listenLabel.trim() || "Listening…";
+  const isListenCaption = captionText === "Listening…" || captionText === listeningCaption;
+  const showCaption = Boolean(captionText) && captionText !== lastStored && !isListenCaption;
+  const showListening = listening && (isListenCaption || !captionText);
 
   useLayoutEffect(() => {
     const el = scrollerRef.current;
@@ -197,6 +204,9 @@ export function ChatThread({
                   m.error && "chat-bubble-error",
                 )}
               >
+                {herName && isAssistant ? (
+                  <p className="mb-0.5 text-[0.6rem] tracking-wide text-subtle">{herName}</p>
+                ) : null}
                 <p className="whitespace-pre-wrap break-words">{body}</p>
                 {liveTalk ? (
                   <span className="chat-bubble-hint">Tap to interrupt</span>
@@ -205,7 +215,7 @@ export function ChatThread({
             );
           })}
           {showListening ? (
-            <p className="px-1 text-center text-xs text-muted">Listening…</p>
+            <p className="px-1 text-center text-xs text-muted">{listeningCaption}</p>
           ) : null}
           {showCaption ? (
             <div
