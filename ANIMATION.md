@@ -43,25 +43,18 @@ Amplitude still drives a small talk bob on the rig. Dedicated poses (`talk`, `wa
 
 ### Idle blink
 
-**On.** Rest idle plays the eyes-only baked sheets (`IDLE_BLINK_ENABLED` is true). `idle_blink_01_open.png` is a byte copy of `public/rai/idle.png`, so rest and open are the same body.
+**Parked.** Rest idle paints `public/rai/idle.png` only (`IDLE_BLINK_ENABLED` is false). The blink timer does not cycle frames live.
 
-Rest idle only: pose `idle`, not talking, not a dedicated pose, not an emotion sheet (smug, shy, tired, soft, hype, and the named pose keys). The first blink starts about **0.9s** after rest idle, then every **4.5–7s**.
+TyLo lock is better but not live. Keep the flag false until Maker delivers a new pack with `01` byte-locked to live `idle.png`, no skip of `02`, and a standing full-body clip `01→02→03→04` with zero hair, skirt, or shoes drift.
 
-Source of truth: `artifacts/star-rai-blink-frames/baked/`. Runtime files under `public/rai/` are byte copies:
+The four baked sheets stay on disk (source `artifacts/star-rai-blink-frames/baked/`, runtime copies under `public/rai/`) and are not the rest body:
 
-- `idle_blink_01_open.png` — byte copy of `idle.png`
+- `idle_blink_01_open.png`
 - `idle_blink_02_closing.png`
 - `idle_blink_03_half.png`
 - `idle_blink_04_closed.png`
 
-Each file is a full **1008×1792** frame on the `idle.png` canvas. Outside the eye box `(420, 185, 210, 70)` the pixels match `idle.png`; only the lids change. Blink swaps the main girl sprite through those full frames, one image at a time, with a hard cut (`transition: none` on the rest layer). There is no second `<img>`, no canvas, no eye-hole paste, and no DEST_RECT. Old hole plates and L/R crops are not in `public/rai/`.
-
-Cycle: **01 → 02 → 03 → 04 → 03 → 02 → 01**, then rest on 01. Open and closing hold **160ms** each (at least two frames at 24fps, ~83ms). Half holds **640ms** each way and closed holds **1000ms**, so a long-shot glance can read them.
-
-- A pose command, talk flap, or emotion-sheet swap mid-blink clears blink immediately and snaps to that sheet.
-- `prefers-reduced-motion: reduce` disables blink and stays on the open rest sheet (01, same bytes as `idle.png`).
-
-Named poses, talk, and emotion sheets still do not blink. Spoken `talk` / mood is a single body sheet.
+Named poses, talk, and emotion sheets still do not blink. `prefers-reduced-motion: reduce` stays on `idle.png` as well. Spoken `talk` / mood is a single body sheet.
 
 ## Track 2 — Spine / cutout (foothold)
 
