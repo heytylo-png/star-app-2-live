@@ -83,6 +83,26 @@ describe("composeAct local-brain path", () => {
     assert.equal(localBrainKeyFor({ userText: "kiss", currentPose: "wave" }).keepCurrent, true);
   });
 
+  it("does not read a track title as a pose command", () => {
+    resetLocalBrainLastLine();
+    const act = composeAct(
+      [{ role: "user", content: "I'm listening to Super Shy" }],
+      undefined,
+      "idle",
+    );
+    assert.notEqual(act.pose, "shy");
+    assert.notEqual(act.pose, "idle");
+    assert.equal(
+      localBrainKeyFor({
+        userText: "I'm listening to Super Shy",
+        currentPose: "idle",
+        ignoreNamedPose: true,
+      }).named,
+      null,
+    );
+    assert.equal(localBrainKeyFor({ userText: "shy", currentPose: "idle" }).named, "shy");
+  });
+
   it("tints generic chat off frown idle onto the spoken bubble", () => {
     resetLocalBrainLastLine();
     const act = composeAct([{ role: "user", content: "Hey. Just got here." }], undefined, "idle");

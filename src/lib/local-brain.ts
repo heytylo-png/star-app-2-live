@@ -85,8 +85,13 @@ export function resetLocalBrainLastLine(): void {
 export function localBrainKeyFor(opts: {
   userText: string;
   currentPose?: PoseId | null;
+  /**
+   * Track-title sentences ("I'm listening to Super Shy") are not pose commands.
+   * "shy" inside the title must not swap the sheet.
+   */
+  ignoreNamedPose?: boolean;
 }): { poseKey: string; named: PoseId | false | null; keepCurrent: boolean } {
-  const named = namedPoseFromText(opts.userText);
+  const named = opts.ignoreNamedPose ? null : namedPoseFromText(opts.userText);
   if (named === false) {
     return {
       poseKey: opts.currentPose ?? "idle",

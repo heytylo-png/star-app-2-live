@@ -83,8 +83,8 @@ Live chat keys use the **morning official pack** under `public/rai/`. Do not poi
 
 ## Talking
 
-- Live key `talk` uses `talk_official.png` (dedicated; holds ~3.4s / ~2.8s after speech like other non-idle poses).
-- Spoken bubble → talk/mood sheet. Idle is rest-only: never frown idle mid-line or on the spoken bubble. The live `talk` key holds `talk_official` through speech (no idle body underneath).
+- Live key `talk` uses `talk_official.png` (dedicated). It stays on that spoken bubble. Idle.png is the next rest, after the caption is no longer that reply.
+- Spoken bubble → talk/mood sheet. Idle is rest-only: never frown idle mid-line or on the spoken bubble. The live `talk` key holds `talk_official` through that bubble (no idle body underneath).
 - Other dedicated poses still hold their own PNG through speech (PR #1). No mouth overlay on those sheets.
 - Rest idle + speaking (pose still idle, no mood pin) uses `talk_official` as the body — not Helix `idle-talk`, not Expo mouth busts.
 - Reduced motion: same talk/mood sheets (no flap).
@@ -98,4 +98,4 @@ Live chat keys use the **morning official pack** under `public/rai/`. Do not poi
 
 ## Act pose hold
 
-A spoken line keeps its talk or mood sheet while she is saying it. Frown `idle.png` is not that line. Once the line is over (speech finished, not still sending), the next rest is the ~3.4s / ~2.8s settle — then `idle.png`. Rest blink is parked (`IDLE_BLINK_ENABLED` is false) until TyLo says pass. The transcript row staying on screen does not hold the sheet. Body-sheet crossfade ~380ms. Talking does not snap a dedicated pose (including `talk`) to frown idle.
+A spoken line keeps its talk or mood sheet on that bubble, including while the caption is still the reply. Frown `idle.png` is not that line. The next rest — caption cleared, no spoken bubble — may settle to `idle.png` after the usual hold (~3.4s from landing, at least ~2.8s). Rest blink is parked (`IDLE_BLINK_ENABLED` is false) until TyLo says pass. Body-sheet crossfade ~380ms. Talking does not snap a dedicated pose (including `talk`) to frown idle.

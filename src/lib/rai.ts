@@ -156,10 +156,12 @@ export function poseResetDelayMs(opts: {
 /**
  * Settle delay for the pose just put on a spoken bubble.
  *
- * `lifeKind` is the Life turn that produced the line (`track_change` when
- * Music Set / now_playing just changed). A normal line still settles a few
- * seconds after speech. A Music Set line whose pose is talk | content | smug
- * stays on that bubble — idle.png is the next rest, not this reply.
+ * While `captionLive` is set, that reply is still the bubble — do not snap
+ * to frown idle under it. Music Set (`track_change` + talk | content | smug)
+ * stays too, even if the caller forgets the caption flag.
+ *
+ * The next rest is when that caption is gone. Then a normal line may settle
+ * a few seconds later onto idle.png. Blink stays parked.
  */
 export function spokenBubbleResetDelay(opts: {
   pose: PoseId;
@@ -168,7 +170,10 @@ export function spokenBubbleResetDelay(opts: {
   actLandedAt: number;
   now?: number;
   lifeKind?: string | null;
+  /** Caption is still the reply on stage. Idle is the next rest, not this line. */
+  captionLive?: boolean;
 }): number | null {
+  if (opts.captionLive) return null;
   const nowPlayingBubble =
     opts.lifeKind === "track_change" &&
     (NOW_PLAYING_TINT_POSES as readonly string[]).includes(opts.pose);

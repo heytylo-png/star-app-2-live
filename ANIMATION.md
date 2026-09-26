@@ -27,7 +27,7 @@ Body sheets swap by stable layer id (`body:<src>`). Incoming starts at opacity 0
 
 ### Talk / mouth
 
-Idle is rest-only (pose tint). The live `talk` key and other mood sheets hold their PNG through the spoken bubble — frown `idle.png` is not the body mid-line.
+Idle is rest-only (pose tint). The live `talk` key and other mood sheets hold their PNG through the spoken bubble — frown `idle.png` is not the body under that line. Idle.png is the next rest, after the caption is no longer that reply.
 
 While speaking on rest idle (no dedicated/mood sheet yet):
 
