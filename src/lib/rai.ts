@@ -87,21 +87,19 @@ export function isExpressiveEmotion(emotion: EmotionId): boolean {
 }
 
 /**
- * Rest blink is on.
+ * Rest blink is parked.
  *
- * The four baked sheets are full 1008×1792 frames on the idle.png canvas.
- * Only the eyes change; outside the eye box (420, 185, 210, 70) the pixels
- * match idle.png. 01 open is a byte copy of public/rai/idle.png, so rest
- * may use that sheet. The cycle is 01 → 02 → 03 → 04 → 03 → 02 → 01
- * (02 closing is not skipped). The draw path swaps one full frame at a
- * time (no eye strip, no hole, no DEST_RECT, no crossfade between blink
- * frames). CoS PASS on proof_standing_full.gif.
+ * TyLo FAIL: double — two PNGs up at once (ghost / second body during blink).
+ * Keep this false until a standing clip shows one body, lids only, no ghost.
+ * While parked, rest paints public/rai/idle.png only. The blink timer does
+ * not cycle frames. Do not turn this back on in the park PR.
  */
-export const IDLE_BLINK_ENABLED = true;
+export const IDLE_BLINK_ENABLED = false;
 
 /**
- * Official PNG blink window: rest idle on the open sheet.
+ * Official PNG blink window: rest idle on the frown sheet.
  * Named poses, talk flap, and emotion-named sheets do not blink.
+ * The feature is parked — see IDLE_BLINK_ENABLED.
  */
 export function canIdleBlink(state: {
   pose: PoseId;
@@ -124,8 +122,8 @@ export function canIdleBlink(state: {
  * The talk/mood sheet stays on the line she is saying. Once that line is
  * over, the next rest is a few seconds — not the life of the transcript
  * row. Dedicated poses hold at least POSE_HOLD_MIN_MS from landing, and
- * at least POSE_HOLD_AFTER_TALK_MS after speech ends, then the open rest
- * sheet (01, a byte copy of idle.png) so the eyes-only blink can run.
+ * at least POSE_HOLD_AFTER_TALK_MS after speech ends, then idle.png.
+ * Rest blink is parked (IDLE_BLINK_ENABLED).
  */
 export function poseResetDelayMs(opts: {
   pose: PoseId;
@@ -262,9 +260,9 @@ export const SPRITES = {
   /**
    * Baked full-frame rest blink. Byte copies of
    * artifacts/star-rai-blink-frames/baked/. Each file is 1008×1792 on the
-   * idle.png canvas (eyes only). 01 open is the idle.png file itself.
-   * Rest swaps these one full frame at a time, including 02 closing
-   * (01 → 02 → 03 → 04 → 03 → 02 → 01). Hard cut. No hole, no DEST_RECT.
+   * idle.png canvas. Not mounted while IDLE_BLINK_ENABLED is false —
+   * rest paints idle.png only until a standing clip shows one body,
+   * lids only, no ghost.
    */
   idleBlinkOpen: ASSET("rai/idle_blink_01_open.png"),
   idleBlinkClosing: ASSET("rai/idle_blink_02_closing.png"),
@@ -343,9 +341,8 @@ export function isRetiredBlinkSrc(src: string): boolean {
 
 /**
  * Full frame for one rest-blink step.
- * 0 rest and 1 are both 01 open (byte copy of idle.png).
- * 2 = 02 closing, 3 = 03 half, 4 = 04 closed.
- * 02 is part of the cycle; do not skip the closing sheet.
+ * 0 rest and 1 are both 01 open. 2 = 02 closing, 3 = 03 half, 4 = 04 closed.
+ * Unused while IDLE_BLINK_ENABLED is false — rest is idle.png.
  */
 export function idleBlinkFrameSrc(blink: number): string {
   if (blink === 2) return SPRITES.idleBlinkClosing;
@@ -354,7 +351,7 @@ export function idleBlinkFrameSrc(blink: number): string {
   return SPRITES.idleBlinkOpen;
 }
 
-/** Rest body. 01 open while blink is on; idle.png only if the flag is off. */
+/** Rest body. idle.png while blink is parked. 01 open when the flag is on. */
 export function idleRestSrc(): string {
   return IDLE_BLINK_ENABLED ? SPRITES.idleBlinkOpen : SPRITES.poses.idle;
 }
@@ -544,9 +541,9 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     return [body(SPRITES.poses.talk)];
   }
 
-  // One full frame. The layer id stays IDLE_REST_LAYER_ID so blink swaps
-  // a single image and never stacks a second figure. Hard cut: no hole,
-  // no DEST_RECT, no crossfade between blink frames.
+  // One full frame. The layer id stays IDLE_REST_LAYER_ID so a blink, when
+  // enabled, swaps a single image and never stacks a second figure.
+  // Parked: rest paints idle.png only. No blink cycle, no second body.
   void reducedMotion;
   if (!IDLE_BLINK_ENABLED) {
     return [body(SPRITES.poses.idle, 1, IDLE_REST_LAYER_ID)];
