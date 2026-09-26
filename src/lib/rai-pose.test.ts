@@ -1113,7 +1113,7 @@ describe("pose tint", () => {
     });
     assert.equal(held, null);
 
-    // A normal playful line still settles onto idle.png. Blink stays parked.
+    // Next rest (caption gone) still settles a playful line onto idle.png. Blink stays parked.
     const playful = spokenBubbleResetDelay({
       pose: "talk",
       emotion: "bratty",
@@ -1124,9 +1124,23 @@ describe("pose tint", () => {
     });
     assert.equal(playful, POSE_HOLD_AFTER_TALK_MS);
 
+    // The line she just said is still the bubble. Do not snap to frown idle under it.
+    const onBubble = spokenBubbleResetDelay({
+      pose: "talk",
+      emotion: "bratty",
+      talking: false,
+      actLandedAt: 1_000,
+      now: 61_000,
+      lifeKind: "none",
+      captionLive: true,
+    });
+    assert.equal(onBubble, null);
+
     // The Life Set path in the app must pass that turn into the settle, not only tint.
     const app = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../components/rai-app.tsx"), "utf8");
     assert.match(app, /spokenBubbleResetDelay\(\{[\s\S]*lifeKind:\s*bubbleLifeKind/);
+    assert.match(app, /captionLive/);
     assert.match(app, /setBubbleLifeKind\(lifeTurn\.kind\)/);
+    assert.match(app, /!namedThisTurn && !isDedicatedPose\(poseAtTurnRef\.current\)/);
   });
 });

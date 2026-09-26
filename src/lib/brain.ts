@@ -158,6 +158,7 @@ export function composeAct(
   const { poseKey, named: keyed } = localBrainKeyFor({
     userText: lastUser,
     currentPose,
+    ignoreNamedPose: Boolean(lifeTitle),
   });
   const mem = extractMemCandidate(lastUser);
 

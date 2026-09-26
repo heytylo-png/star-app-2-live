@@ -26,6 +26,7 @@ import {
 import { useChatStore } from "@/lib/chat-store";
 import {
   DEFAULT_EMOTION,
+  isDedicatedPose,
   namedPoseFromText,
   parseAct,
   resolveSpokenPose,
@@ -427,14 +428,17 @@ function RaiReady() {
       setEmotion("glance");
       return;
     }
-    // A normal line settles a few seconds after speech onto idle.png. Blink stays parked.
-    // Music Set (track_change → talk|content|smug) stays on that bubble.
+    // That caption is still her reply. Frown idle is the next rest, after
+    // this bubble is gone — not under the line she just said. Blink stays parked.
+    // Music Set (track_change → talk|content|smug) also stays if the caption flag drops.
+    const captionLive = Boolean(caption.trim()) && caption !== "Listening…";
     const delay = spokenBubbleResetDelay({
       pose,
       emotion,
       talking: false,
       actLandedAt: actLandedAt.current,
       lifeKind: bubbleLifeKind,
+      captionLive,
     });
     if (delay == null) return;
     const id = window.setTimeout(() => {
@@ -443,7 +447,7 @@ function RaiReady() {
       setEmotion(DEFAULT_EMOTION);
     }, delay);
     return () => window.clearTimeout(id);
-  }, [draft, sending, talking, holding, callListening, pose, emotion, bubbleLifeKind]);
+  }, [draft, sending, talking, holding, callListening, pose, emotion, bubbleLifeKind, caption]);
 
   function clearCallListenTimers() {
     if (listenRestartTimerRef.current) {
@@ -680,10 +684,23 @@ function RaiReady() {
       createdAt: Date.now(),
       model: current.model,
     };
-    store.appendMessage(threadId, assistant);
     sendingRef.current = true;
     talkingRef.current = false;
     poseAtTurnRef.current = poseRef.current;
+    const lastUserForTint =
+      [...current.messages].reverse().find((m) => m.role === "user")?.content ?? "";
+    const namedThisTurn = parseTrackTitle(lastUserForTint)
+      ? null
+      : namedPoseFromText(lastUserForTint);
+    // Frown idle is rest only. Leave it before the empty "…" bubble paints so
+    // that in-progress line is not the glare sheet. Named poses already swapped.
+    // A dedicated body stays until tint inference. Kiss does not invent a sheet.
+    if (!namedThisTurn && !isDedicatedPose(poseAtTurnRef.current)) {
+      setPose("talk");
+      poseRef.current = "talk";
+      actLandedAt.current = Date.now();
+    }
+    store.appendMessage(threadId, assistant);
     listenPausedForTtsRef.current = false;
     callListenGenRef.current += 1;
     setSending(true);
