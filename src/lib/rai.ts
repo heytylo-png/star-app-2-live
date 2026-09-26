@@ -92,11 +92,11 @@ export function isExpressiveEmotion(emotion: EmotionId): boolean {
  * TyLo FAIL: two PNGs up at once (ghost / second body during blink).
  * Rest paints public/rai/idle.png only. The four eyes-only sheets stay
  * on disk (01 is a byte copy of idle.png; 02–04 change lids only).
- * proof_standing_full.gif is the art gate: one 1008×1792 sheet at a time,
- * cycle 01 → 02 → 03 → 04 → 03 → 02 → 01 (do not skip 02), hard cut.
- * Do not turn this back on here. Re-enable only when TyLo says pass
- * (CoS alone is not enough), and only by hard-swapping a single <img>
- * / texture — never a dual-layer opacity blend.
+ * proof_standing_full.gif is the art gate: one 1008×1792 sheet at a time.
+ * Lid pass is 02 → 03 → 04 → 03 → 02 in ~300ms (do not skip 02), then hold
+ * 01. Hard cut on one image. Do not turn this back on here. Re-enable only
+ * when TyLo says pass (CoS alone is not enough), and only by hard-swapping
+ * a single <img> / texture — never a stack or a dual PNG.
  */
 export const IDLE_BLINK_ENABLED = false;
 
@@ -271,8 +271,8 @@ export const SPRITES = {
    * artifacts/star-rai-blink-frames/baked/. Each file is 1008×1792 on the
    * idle.png canvas (eyes only). 01 open is the idle.png file itself.
    * Not mounted while IDLE_BLINK_ENABLED is false — rest paints idle.png.
-   * Future wire: hard-swap one of these per step, including 02 closing
-   * (01 → 02 → 03 → 04 → 03 → 02 → 01). Never blend two sheets.
+   * Future wire: one <img>, hard cuts 02 → 03 → 04 → 03 → 02 in ~300ms,
+   * then hold 01. Never a stack, never two PNGs, never a blend.
    */
   idleBlinkOpen: ASSET("rai/idle_blink_01_open.png"),
   idleBlinkClosing: ASSET("rai/idle_blink_02_closing.png"),
@@ -353,7 +353,7 @@ export function isRetiredBlinkSrc(src: string): boolean {
  * Full frame for one rest-blink step.
  * 0 rest and 1 are both 01 open (byte copy of idle.png).
  * 2 = 02 closing, 3 = 03 half, 4 = 04 closed.
- * 02 is part of the cycle; do not skip the closing sheet.
+ * The pass is 02 → 03 → 04 → 03 → 02, then hold 01. Do not skip 02.
  * Unused while IDLE_BLINK_ENABLED is false — rest is idle.png.
  * Hard cut only. Never an opacity blend of two of these sheets.
  */

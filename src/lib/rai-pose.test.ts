@@ -630,10 +630,13 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(gif.readUInt16LE(6), IDLE_FRAME_SIZE.width);
     assert.equal(gif.readUInt16LE(8), IDLE_FRAME_SIZE.height);
     const note = readFileSync(join(bakedRoot, "README.md"), "utf8");
-    assert.match(note, /01 → 02 → 03 → 04 → 03 → 02 → 01/);
+    assert.match(note, /02 → 03 → 04 → 03 → 02/);
+    assert.match(note, /300ms/);
+    assert.match(note, /hold 01/);
     assert.match(note, /Do not skip 02/);
-    assert.match(note, /hard-swap a single/);
-    assert.match(note, /no dual-layer opacity/);
+    assert.match(note, /one `<img>`/);
+    assert.match(note, /no stack/);
+    assert.match(note, /no dual PNG/);
     assert.match(note, /IDLE_BLINK_ENABLED` is false/);
     assert.match(note, /TyLo says pass/);
     assert.match(note, /CoS alone is not enough/);

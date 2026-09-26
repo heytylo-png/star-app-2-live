@@ -54,9 +54,9 @@ TyLo FAIL: two PNGs up at once (ghost / second body during blink). The four eyes
 
 Each file is a full **1008×1792** frame on the `idle.png` canvas. Outside the eye box `(420, 185, 210, 70)` max abs RGB delta versus `idle.png` is 0. Only the lids change.
 
-Cycle map for a future hard-cut wire (not live): **01 → 02 → 03 → 04 → 03 → 02 → 01**. Do not skip 02. Hard cuts only — never opacity-blend two full sheets. Open and closing holds in the schedule are **160ms** each, half **640ms**, closed **1000ms**. Those timings are not running while the flag is false.
+Cycle map for a future hard-cut wire (not live): **02 → 03 → 04 → 03 → 02** in **~300ms** total (60ms a cut), then **hold 01**. Do not skip 02. One `<img>` only — no stack, no dual PNG, no opacity blend of two sheets. Those timings are not running while the flag is false.
 
-Art gate: `artifacts/star-rai-blink-frames/baked/proof_standing_full.gif` and `proof_standing_strip.png`. The gif composites exactly one full frame at a time (hard replace, no crossfade). One body throughout; only the lids change. Runtime must hard-swap a single `<img>` / texture (no dual-layer opacity). This proof is the art gate before re-enable.
+Art gate: `artifacts/star-rai-blink-frames/baked/proof_standing_full.gif` and `proof_standing_strip.png`. The gif composites exactly one full frame at a time (hard replace, no crossfade). One body throughout; only the lids change. Runtime must hard-swap a single `<img>` / texture (no stack, no dual PNG). This proof is the art gate before re-enable.
 
 Named poses, talk, and emotion sheets still do not blink. `prefers-reduced-motion: reduce` stays on `idle.png`. Spoken `talk` / mood is a single body sheet.
 
