@@ -87,16 +87,19 @@ export function isExpressiveEmotion(emotion: EmotionId): boolean {
 }
 
 /**
- * Rest blink is on.
+ * Rest blink is parked.
  *
  * The four baked sheets are full 1008×1792 frames on the idle.png canvas.
  * Only the eyes change; outside the eye box the pixels match idle.png.
- * The draw path swaps one full frame at a time (no eye strip, no hole, no
- * DEST_RECT, no crossfade between blink frames). CoS PASS on the standing
- * clip — rest plays these eyes-only same-body sheets. 01 open is a byte
- * copy of public/rai/idle.png.
+ * 01 open is a byte copy of public/rai/idle.png. The cycle, when it runs,
+ * is 01 → 02 → 03 → 04 → 03 → 02 → 01 (02 closing is not skipped). The
+ * draw path swaps one full frame at a time (no eye strip, no hole, no
+ * DEST_RECT, no crossfade between blink frames).
+ *
+ * Stay off until a standing full-body clip of that cycle PASSes. While
+ * this is false, rest is public/rai/idle.png only.
  */
-export const IDLE_BLINK_ENABLED = true;
+export const IDLE_BLINK_ENABLED = false;
 
 /**
  * Official PNG blink window: rest idle on the frown sheet.
@@ -123,8 +126,8 @@ export function canIdleBlink(state: {
  * The talk/mood sheet stays on the line she is saying. Once that line is
  * over, the next rest is a few seconds — not the life of the transcript
  * row. Dedicated poses hold at least POSE_HOLD_MIN_MS from landing, and
- * at least POSE_HOLD_AFTER_TALK_MS after speech ends, then the open rest
- * sheet so the eyes-only blink can run.
+ * at least POSE_HOLD_AFTER_TALK_MS after speech ends, then idle.png.
+ * Rest blink stays off (IDLE_BLINK_ENABLED) until a standing clip PASSes.
  */
 export function poseResetDelayMs(opts: {
   pose: PoseId;
@@ -261,7 +264,10 @@ export const SPRITES = {
   /**
    * Baked full-frame rest blink. Byte copies of
    * artifacts/star-rai-blink-frames/baked/. Each file is 1008×1792 on the
-   * idle.png canvas (eyes only). Rest swaps these one full frame at a time.
+   * idle.png canvas (eyes only). 01 open is the idle.png file itself.
+   * Not mounted while IDLE_BLINK_ENABLED is false — rest is idle.png.
+   * When the flag is on, rest swaps these one full frame at a time,
+   * including 02 closing (01 → 02 → 03 → 04 → 03 → 02 → 01).
    */
   idleBlinkOpen: ASSET("rai/idle_blink_01_open.png"),
   idleBlinkClosing: ASSET("rai/idle_blink_02_closing.png"),
@@ -342,6 +348,8 @@ export function isRetiredBlinkSrc(src: string): boolean {
  * Full frame for one rest-blink step.
  * 0 rest and 1 are both 01 open (byte copy of idle.png).
  * 2 = 02 closing, 3 = 03 half, 4 = 04 closed.
+ * Unused while IDLE_BLINK_ENABLED is false — rest is idle.png.
+ * 02 is part of the cycle; do not skip the closing sheet.
  */
 export function idleBlinkFrameSrc(blink: number): string {
   if (blink === 2) return SPRITES.idleBlinkClosing;
@@ -350,7 +358,7 @@ export function idleBlinkFrameSrc(blink: number): string {
   return SPRITES.idleBlinkOpen;
 }
 
-/** Rest body. 01 open while blink is on; idle.png only if the flag is off. */
+/** Rest body. idle.png while blink is parked; 01 open only if the flag is on. */
 export function idleRestSrc(): string {
   return IDLE_BLINK_ENABLED ? SPRITES.idleBlinkOpen : SPRITES.poses.idle;
 }

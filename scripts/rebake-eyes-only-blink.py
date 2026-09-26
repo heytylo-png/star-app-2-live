@@ -216,6 +216,95 @@ def build_frames(idle: np.ndarray) -> dict[str, np.ndarray]:
     }
 
 
+def write_standing_proof(idle: np.ndarray, frames: dict[str, np.ndarray]) -> None:
+    """Full-body cycle gif plus a standing strip with a diff row.
+
+    Holds are longer than the runtime dwells so 02 closing is obvious.
+    The gif uses one palette and no dither: identical body pixels stay
+    identical across frames. The diff row is computed from the PNG sheets.
+    """
+    order_names = [
+        "idle_blink_01_open.png",
+        "idle_blink_02_closing.png",
+        "idle_blink_03_half.png",
+        "idle_blink_04_closed.png",
+        "idle_blink_03_half.png",
+        "idle_blink_02_closing.png",
+        "idle_blink_01_open.png",
+    ]
+    # Review holds. Runtime dwells stay 160/160/640/1000 in rai-motion.ts.
+    durations = [400, 480, 720, 960, 720, 480, 400]
+    order = [frames[name] for name in order_names]
+    base = Image.fromarray(idle).quantize(colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
+    gif_frames = [
+        Image.fromarray(im).quantize(palette=base, dither=Image.Dither.NONE) for im in order
+    ]
+    gif_path = BAKED / "proof_standing_full.gif"
+    gif_frames[0].save(
+        gif_path,
+        save_all=True,
+        append_images=gif_frames[1:],
+        duration=durations,
+        loop=0,
+        disposal=1,
+        optimize=False,
+    )
+
+    gif = Image.open(gif_path)
+    gif.seek(0)
+    ref = np.array(gif.convert("RGB"))
+    x, y, w, h = EYE_BOX
+    for index in range(1, gif.n_frames):
+        gif.seek(index)
+        arr = np.array(gif.convert("RGB"))
+        outside = max_abs_outside(arr, ref, EYE_BOX)
+        if outside != 0:
+            raise SystemExit(f"standing gif frame {index} drifted outside the eye box (max {outside})")
+    print(f"standing gif {gif.n_frames} frames {gif.size[0]}x{gif.size[1]} outside_max_vs_01=0")
+
+    # Standing strip: idle | 01 | 02 | 03 | 04, then the same frames as a
+    # diff against idle.png (red = any channel changed). Full body, not an eye crop.
+    panels = [("idle", idle)] + [
+        (label, frames[name])
+        for label, name in (
+            ("01", "idle_blink_01_open.png"),
+            ("02", "idle_blink_02_closing.png"),
+            ("03", "idle_blink_03_half.png"),
+            ("04", "idle_blink_04_closed.png"),
+        )
+    ]
+    target_h = 720
+    scale = target_h / idle.shape[0]
+    target_w = int(round(idle.shape[1] * scale))
+    gap = 8
+    label_h = 28
+    from PIL import ImageDraw
+
+    thumbs = []
+    diffs = []
+    for _, im in panels:
+        thumb = Image.fromarray(im).resize((target_w, target_h), Image.Resampling.BOX)
+        thumbs.append(thumb)
+        delta = np.abs(im.astype(np.int16) - idle.astype(np.int16)).max(axis=2)
+        heat = np.zeros_like(im)
+        heat[delta > 0] = (220, 48, 48)
+        diffs.append(Image.fromarray(heat).resize((target_w, target_h), Image.Resampling.BOX))
+
+    sheet_w = len(thumbs) * target_w + (len(thumbs) - 1) * gap
+    sheet_h = label_h + target_h + gap + label_h + target_h
+    sheet = Image.new("RGB", (sheet_w, sheet_h), (28, 24, 32))
+    draw = ImageDraw.Draw(sheet)
+    captions = ["idle.png", "01 open", "02 closing", "03 half", "04 closed"]
+    for i, thumb in enumerate(thumbs):
+        x0 = i * (target_w + gap)
+        draw.text((x0 + 8, 6), captions[i], fill=(236, 228, 214))
+        sheet.paste(thumb, (x0, label_h))
+        draw.text((x0 + 8, label_h + target_h + gap + 6), "diff vs idle", fill=(236, 228, 214))
+        sheet.paste(diffs[i], (x0, label_h + target_h + gap + label_h))
+    sheet.save(BAKED / "proof_standing_strip.png", format="PNG", optimize=True)
+    print(f"standing strip {sheet.size[0]}x{sheet.size[1]}")
+
+
 def write_proofs(idle: np.ndarray, frames: dict[str, np.ndarray]) -> None:
     # Face strip: idle | 01 | 02 | 03 | 04
     face = (360, 120, 700, 460)  # x0,y0,x1,y1
@@ -264,6 +353,7 @@ def write_proofs(idle: np.ndarray, frames: dict[str, np.ndarray]) -> None:
         disposal=2,
         optimize=False,
     )
+    write_standing_proof(idle, frames)
 
 
 def assert_lock(idle: np.ndarray, frames: dict[str, np.ndarray]) -> None:
@@ -286,7 +376,32 @@ def assert_lock(idle: np.ndarray, frames: dict[str, np.ndarray]) -> None:
     print(f"eye box x={x} y={y} w={w} h={h}")
 
 
+def load_locked_frames() -> tuple[np.ndarray, dict[str, np.ndarray]]:
+    """Read the sheets already on disk. 01 must be the idle.png file bytes."""
+    idle_bytes = IDLE_PATH.read_bytes()
+    for folder in (BAKED, PUBLIC):
+        got = (folder / FRAMES[0]).read_bytes()
+        if got != idle_bytes:
+            raise SystemExit(f"{folder / FRAMES[0]} is not a byte copy of idle.png")
+    for name in FRAMES:
+        if (BAKED / name).read_bytes() != (PUBLIC / name).read_bytes():
+            raise SystemExit(f"{name} bytes differ between baked/ and public/rai/")
+    idle = np.array(Image.open(IDLE_PATH).convert("RGB"))
+    frames = {name: np.array(Image.open(BAKED / name).convert("RGB")) for name in FRAMES}
+    assert_lock(idle, frames)
+    return idle, frames
+
+
 def main() -> None:
+    import sys
+
+    proof_only = "--proof-only" in sys.argv[1:]
+    if proof_only:
+        idle, frames = load_locked_frames()
+        write_standing_proof(idle, frames)
+        print("locked 01; wrote standing proof without re-encoding 02–04")
+        return
+
     idle = np.array(Image.open(IDLE_PATH).convert("RGB"))
     if idle.shape != (1792, 1008, 3):
         raise SystemExit(f"idle.png is {idle.shape}, expected 1008×1792 RGB")

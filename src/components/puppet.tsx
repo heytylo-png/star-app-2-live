@@ -79,10 +79,12 @@ function fadeMsFor(layer: SpriteLayer, talking: boolean, blinkMode: BlinkFadeMod
  * Star Rai 2D puppet — planted idle life, look-at lean, talk/mood sheets.
  * Studio-white cards are punched to alpha. Layers crossfade by stable id.
  * Spoken bubble holds talk/mood through the line; frown idle is rest-only.
- * Rest idle is one full-frame image. Blink swaps that image through the
- * eyes-only baked cycle (same body as idle.png). Hard cut, no crossfade
- * between blink frames. No eye strip, no hole overlay. Expo bust mouth/eye
- * crops stay off. Dedicated poses do not blink.
+ * Rest idle is one full-frame image. While IDLE_BLINK_ENABLED is false,
+ * that image is idle.png and the blink timer does not run. When the flag
+ * is on, blink swaps that image through the eyes-only baked cycle
+ * (01 → 02 → 03 → 04 → 03 → 02 → 01, same body as idle.png). Hard cut,
+ * no crossfade between blink frames. No eye strip, no hole overlay.
+ * Expo bust mouth/eye crops stay off. Dedicated poses do not blink.
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
   const stageRef = useRef<HTMLDivElement>(null);
