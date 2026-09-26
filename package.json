@@ -12,7 +12,7 @@
     "predev": "node scripts/sync-star-rai-artifacts.js",
     "prebuild": "node scripts/sync-star-rai-artifacts.js",
     "pretest": "node scripts/sync-star-rai-artifacts.js",
-    "test": "node --experimental-strip-types --test src/lib/rai-pose.test.ts src/lib/rai-motion.test.ts src/lib/local-brain.test.ts src/lib/track.test.ts src/lib/memory-slots.test.ts src/lib/chart.test.ts src/lib/life.test.ts src/lib/shell.test.ts src/lib/call.test.ts src/lib/clock.test.ts src/lib/chat-thread-height.test.ts src/lib/punch-white.test.ts src/lib/stage-menu.test.ts src/lib/rai-shot.test.ts src/lib/sky.test.ts src/lib/her-day.test.ts src/lib/rai-engine.test.ts src/lib/cutout-runtime.test.ts src/lib/spotify.test.ts src/lib/her-music.test.ts src/lib/return-memory.test.ts src/lib/idle-blink-paint.test.ts"
+    "test": "node --experimental-strip-types --test src/lib/rai-pose.test.ts src/lib/rai-motion.test.ts src/lib/local-brain.test.ts src/lib/track.test.ts src/lib/memory-slots.test.ts src/lib/chart.test.ts src/lib/life.test.ts src/lib/shell.test.ts src/lib/call.test.ts src/lib/clock.test.ts src/lib/chat-thread-height.test.ts src/lib/punch-white.test.ts src/lib/stage-menu.test.ts src/lib/rai-shot.test.ts src/lib/sky.test.ts src/lib/her-day.test.ts src/lib/rai-engine.test.ts src/lib/cutout-runtime.test.ts src/lib/spotify.test.ts src/lib/her-music.test.ts src/lib/return-memory.test.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",

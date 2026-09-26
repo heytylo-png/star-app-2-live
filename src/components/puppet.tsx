@@ -1,16 +1,13 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { applyIdleCanvasPlan, planIdleCanvasDraws } from "@/lib/idle-blink-paint";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   allSpriteUrls,
   canIdleBlink,
-  IDLE_BLINK_CANVAS,
-  IDLE_BLINK_DEST_RECT,
-  idleBlinkPatchSrc,
-  idleBlinkPatchUrls,
-  isFullBlinkPlate,
+  IDLE_REST_LAYER_ID,
+  idleBlinkFrameUrls,
+  idleRestSrc,
+  isRetiredBlinkSrc,
   layersFor,
   POSE_CROSSFADE_MS,
-  SPRITES,
   USE_EXPO_TALK_BUST,
   type EmotionId,
   type PoseId,
@@ -22,6 +19,7 @@ import {
   IDLE_BLINK_GAP_MAX_MS,
   IDLE_BLINK_GAP_MIN_MS,
   idleBlinkSchedule,
+  idleBlinkStepName,
   puppetIdleMotion,
   puppetRigTransform,
   type IdleBlinkFrame,
@@ -60,19 +58,18 @@ function syntheticJaw(t: number): number {
 }
 
 function isInstantLayer(layer: SpriteLayer, talking: boolean): boolean {
-  // Lid holes cut in. Fading them would dissolve a second image over the body.
   if (layer.role === "eyes") return true;
   return talking && (layer.id === "talk" || layer.role === "talk");
 }
 
-/** off = pose timing. snap = drop lids and cut to the new sheet. */
+/** off = pose timing. snap = cut to the new sheet when a blink is cancelled. */
 type BlinkFadeMode = "off" | "snap";
 
 function fadeMsFor(layer: SpriteLayer, talking: boolean, blinkMode: BlinkFadeMode): number {
   if (isInstantLayer(layer, talking)) return 0;
   if (layer.id.startsWith("idle-beat")) return IDLE_BEAT_FADE_MS;
   if (layer.id === "expo-talk") return 180;
-  // Pose / talk / emotion swap mid-blink: cut, don't ease the closed lids out.
+  // Pose / talk / emotion swap mid-blink: cut, don't ease the closed frame out.
   if (blinkMode === "snap") return 0;
   return POSE_CROSSFADE_MS;
 }
@@ -81,8 +78,8 @@ function fadeMsFor(layer: SpriteLayer, talking: boolean, blinkMode: BlinkFadeMod
  * Star Rai 2D puppet — planted idle life, look-at lean, talk/mood sheets.
  * Studio-white cards are punched to alpha. Layers crossfade by stable id.
  * Spoken bubble holds talk/mood through the line; frown idle is rest-only.
- * Rest idle keeps one idle.png bitmap. Blink pastes one TyLo patch at (424, 193).
- * Expo bust mouth/eye crops stay off. Dedicated poses hold their own sheet and do not blink.
+ * Rest idle is one full-frame image. Blink swaps that image through the baked
+ * cycle. Expo bust mouth/eye crops stay off. Dedicated poses do not blink.
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -100,10 +97,6 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
 
   const [ampLive, setAmpLive] = useState(0);
   const [blink, setBlink] = useState<IdleBlinkFrame>(0);
-  /** Four TyLo dest patches decoded. Until then blink stays off — no full-plate fallback. */
-  const [eyesReady, setEyesReady] = useState(false);
-  /** Punched idle bitmap decoded. The canvas draws this and never swaps it out. */
-  const [idleBitmapUrl, setIdleBitmapUrl] = useState<string | null>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [display, setDisplay] = useState<DisplayLayer[]>([]);
   const [sheets, setSheets] = useState<Record<string, string>>({});
@@ -113,30 +106,28 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const fadeRaf = useRef(0);
   const [blinkMode, setBlinkMode] = useState<BlinkFadeMode>("off");
   const blinkRef = useRef<IdleBlinkFrame>(0);
-  const idleCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const paintedCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const paintedUrlRef = useRef<string | null>(null);
-  const lidsOnCanvasRef = useRef(false);
-  const idleBitmapRef = useRef<HTMLImageElement | null>(null);
-  const eyeImageRef = useRef<Record<string, HTMLImageElement>>({});
-  const paintStateRef = useRef({
-    blinkShown: 0,
-    eyesReady: false,
-    idleReady: false,
-    idleSheetUrl: null as string | null,
-    restingBlink: false,
-  });
 
   // Punch studio-white cards to alpha, then decode so pose swaps never flash a plate.
+  // Blink frames are decoded before they enter `sheets`, so a src swap is one image.
   useEffect(() => {
     let cancelled = false;
+    const blinkFrames = idleBlinkFrameUrls();
+    const blinkSet = new Set(blinkFrames);
     const urls = allSpriteUrls();
-    const idle = SPRITES.poses.idle;
-    const eyeCrops = new Set(idleBlinkPatchUrls());
-    const ordered = [idle, ...urls.filter((src) => src !== idle && !eyeCrops.has(src))];
+    const ordered = [...blinkFrames, ...urls.filter((src) => !blinkSet.has(src))];
     for (const src of ordered) {
-      if (isFullBlinkPlate(src)) continue;
-      void punchedSpriteUrl(src).then((url) => {
+      if (isRetiredBlinkSrc(src)) continue;
+      void punchedSpriteUrl(src).then(async (url) => {
+        if (blinkSet.has(src)) {
+          const img = new Image();
+          img.decoding = "async";
+          img.src = url;
+          try {
+            await img.decode();
+          } catch {
+            // Store the URL anyway. The blink timer stays off until every frame lands.
+          }
+        }
         if (cancelled) return;
         setSheets((prev) => (prev[src] === url ? prev : { ...prev, [src]: url }));
       });
@@ -145,54 +136,6 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       cancelled = true;
     };
   }, []);
-
-  // Decode the four TyLo v2 patches. Failure leaves blink off — no full-plate fallback.
-  useEffect(() => {
-    let cancelled = false;
-    const urls = idleBlinkPatchUrls();
-    const hole = IDLE_BLINK_DEST_RECT;
-    void Promise.all(
-      urls.map(async (src) => {
-        const img = new Image();
-        img.decoding = "async";
-        img.src = src;
-        await img.decode();
-        if (img.naturalWidth !== hole.w || img.naturalHeight !== hole.h) {
-          throw new Error("tylo blink patch does not match DEST_RECT");
-        }
-        eyeImageRef.current[src] = img;
-      }),
-    )
-      .then(() => {
-        if (!cancelled) setEyesReady(true);
-      })
-      .catch(() => {
-        // Crops are not ready. Blink stays off. Do not draw a blink plate.
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const idleSheetUrl = sheets[SPRITES.poses.idle];
-  useEffect(() => {
-    if (!idleSheetUrl) return;
-    let cancelled = false;
-    const img = new Image();
-    img.decoding = "async";
-    img.src = idleSheetUrl;
-    void img.decode().then(() => {
-      if (cancelled) return;
-      if (img.naturalWidth !== IDLE_BLINK_CANVAS.width || img.naturalHeight !== IDLE_BLINK_CANVAS.height) {
-        return;
-      }
-      idleBitmapRef.current = img;
-      setIdleBitmapUrl(idleSheetUrl);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [idleSheetUrl]);
 
   useEffect(() => {
     const mq =
@@ -256,13 +199,14 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     };
   }, []);
 
-  // Dest-rect blink on rest idle only, and only after the TyLo patches decode.
-  // The idle.png body stays the only full texture. Pose, talk, and emotion cancel it.
-  // Keyed on the rest gate, not the emotion id: bratty and glance both show idle.png,
-  // and flipping between them must not throw away a cycle that is about to step.
+  // Full-frame blink on rest idle only, after the four baked sheets have decoded.
+  // Pose, talk, and emotion cancel it. Keyed on the rest gate, not the emotion id:
+  // bratty and glance both show the rest sheet, and flipping between them must not
+  // throw away a cycle that is about to step.
   const restingBlink = canIdleBlink({ pose, emotion, talking, reducedMotion });
+  const framesReady = idleBlinkFrameUrls().every((src) => sheets[src] != null);
   useEffect(() => {
-    if (USE_EXPO_TALK_BUST || !eyesReady || !restingBlink) return;
+    if (USE_EXPO_TALK_BUST || !framesReady || !restingBlink) return;
 
     let cancelled = false;
     let timer = 0;
@@ -275,7 +219,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     const gapMs = () =>
       IDLE_BLINK_GAP_MIN_MS + Math.random() * (IDLE_BLINK_GAP_MAX_MS - IDLE_BLINK_GAP_MIN_MS);
 
-    // Chain one timeout per step, measured from when that lid is shown.
+    // Chain one timeout per step, measured from when that frame is shown.
     // A 50ms half on this long shot is over before the eye band can be read.
     const runCycle = () => {
       if (cancelled || reducedRef.current || talkingRef.current) return;
@@ -305,7 +249,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       setBlink(0);
       if (midBlink) setBlinkMode("snap");
     };
-  }, [restingBlink, eyesReady]);
+  }, [restingBlink, framesReady]);
 
   // Pointer → look target (normalized -1..1), deadzone kills micro-jitter.
   useEffect(() => {
@@ -383,16 +327,14 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     return () => cancelAnimationFrame(raf.current);
   }, []);
 
-  const blinkShown = eyesReady ? blink : 0;
+  const blinkShown = USE_EXPO_TALK_BUST ? blink : framesReady ? blink : 0;
   // Pose / talk / emotion can change a frame before the blink timer cleans up.
-  // Derive snap in that render so the next sheet cuts in instead of easing from closed lids.
+  // Derive snap in that render so the next sheet cuts in instead of easing from a closed frame.
   let blinkModeLive: BlinkFadeMode = blinkMode;
   if (!USE_EXPO_TALK_BUST && !restingBlink && blinkShown > 0) {
     blinkModeLive = "snap";
   }
 
-  // Blink must not change the layer list. A new layer remounts the body.
-  const sheetBlink = USE_EXPO_TALK_BUST ? blink : 0;
   const desired = useMemo(
     () =>
       layersFor({
@@ -402,14 +344,14 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
         amplitude: ampLive,
         angle: 0,
         talkPhase: 0,
-        blink: sheetBlink,
+        blink: blinkShown,
         idleBeat: "none",
         reducedMotion,
       }),
-    [pose, emotion, talking, ampLive, sheetBlink, reducedMotion],
+    [pose, emotion, talking, ampLive, blinkShown, reducedMotion],
   );
   const plates = useMemo(
-    () => desired.filter((layer) => layer.role !== "eyes" && !isFullBlinkPlate(layer.src)),
+    () => desired.filter((layer) => layer.role !== "eyes" && !isRetiredBlinkSrc(layer.src)),
     [desired],
   );
 
@@ -423,6 +365,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   }, [blinkMode]);
 
   // Crossfade pool: incoming fades from 0, outgoing fades to 0, overlap both.
+  // Rest blink keeps IDLE_REST_LAYER_ID, so a frame step updates that one layer.
   useEffect(() => {
     if (fadeRaf.current) {
       window.clearTimeout(fadeRaf.current);
@@ -509,84 +452,10 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     };
   }, []);
 
-  const stageReady = Boolean(idleSheetUrl && idleBitmapUrl === idleSheetUrl);
+  const restPunched = sheets[idleRestSrc()];
+  const stageReady = Boolean(restPunched);
   const talkOverlay = display.find((layer) => layer.role === "talk");
-  const idleReady = Boolean(idleSheetUrl && idleBitmapUrl === idleSheetUrl);
-
-  const paintIdleCanvas = useCallback(() => {
-    const state = paintStateRef.current;
-    const canvas = idleCanvasRef.current;
-    const idleImg = idleBitmapRef.current;
-    const bodyPainted =
-      canvas != null &&
-      paintedCanvasRef.current === canvas &&
-      paintedUrlRef.current === state.idleSheetUrl;
-    const plan = planIdleCanvasDraws({
-      canvasMounted: canvas != null,
-      idleReady: state.idleReady,
-      bodyPainted,
-      canvasWidth: canvas?.width ?? 0,
-      canvasHeight: canvas?.height ?? 0,
-      blink: state.blinkShown,
-      eyesReady: state.eyesReady,
-      lidsOnCanvas: lidsOnCanvasRef.current,
-      allowLids: state.restingBlink,
-    });
-    if (!canvas || !idleImg || plan.length === 0) return;
-    const drawsBody = plan.some((step) => step.kind === "body");
-    if (drawsBody) {
-      // Reset once so a remount cannot source-over idle.png onto itself.
-      // Blink frames must not reach this — resizing clears the body.
-      canvas.width = IDLE_BLINK_CANVAS.width;
-      canvas.height = IDLE_BLINK_CANVAS.height;
-    } else if (canvas.width !== IDLE_BLINK_CANVAS.width || canvas.height !== IDLE_BLINK_CANVAS.height) {
-      return;
-    }
-    const ctx = canvas.getContext("2d", { alpha: true });
-    if (!ctx) return;
-    const patchSrc = idleBlinkPatchSrc(state.blinkShown);
-    const lid = patchSrc ? (eyeImageRef.current[patchSrc] ?? null) : null;
-    applyIdleCanvasPlan(plan, ctx, { idle: idleImg, lid });
-    if (drawsBody) {
-      paintedCanvasRef.current = canvas;
-      paintedUrlRef.current = state.idleSheetUrl;
-      lidsOnCanvasRef.current = false;
-    }
-    const eyeStep = plan.find((step) => step.kind === "eyes");
-    if (eyeStep?.kind === "eyes") {
-      if (eyeStep.mode === "lid" && lid) lidsOnCanvasRef.current = true;
-      if (eyeStep.mode === "glare") lidsOnCanvasRef.current = false;
-    }
-  }, []);
-
-  const bindIdleCanvas = useCallback(
-    (node: HTMLCanvasElement | null) => {
-      idleCanvasRef.current = node;
-      if (!node) {
-        paintedCanvasRef.current = null;
-        paintedUrlRef.current = null;
-        lidsOnCanvasRef.current = false;
-        return;
-      }
-      // Mount: draw idle.png before the browser shows the canvas.
-      paintIdleCanvas();
-    },
-    [paintIdleCanvas],
-  );
-
-  // idle.png becoming ready, and each blink frame. The canvas mounts in the
-  // idleBitmapUrl commit — that has to be a dependency, or the bitmap stays
-  // the browser default 300×150 and the dest rect (y=193) never lands.
-  useLayoutEffect(() => {
-    paintStateRef.current = {
-      blinkShown,
-      eyesReady,
-      idleReady,
-      idleSheetUrl: idleSheetUrl ?? null,
-      restingBlink,
-    };
-    paintIdleCanvas();
-  }, [blinkShown, eyesReady, idleBitmapUrl, idleSheetUrl, idleReady, restingBlink, paintIdleCanvas]);
+  const blinkFrame = restingBlink ? idleBlinkStepName(blinkShown) : "off";
 
   return (
     <div
@@ -598,11 +467,12 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       data-rai-emotion={emotion}
       data-rai-talking={talking ? "1" : "0"}
       data-rai-blink={blinkShown > 0 && restingBlink ? "1" : "0"}
+      data-rai-blink-frame={blinkFrame}
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
     >
       <div data-rai-rig className="rai-rig">
         {display.map((layer) => {
-          if (layer.role === "eyes" || isFullBlinkPlate(layer.src)) return null;
+          if (layer.role === "eyes" || isRetiredBlinkSrc(layer.src)) return null;
           const src = sheets[layer.src];
           if (!src) return null;
           const style = {
@@ -612,21 +482,6 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
               ? "none"
               : `opacity ${fadeMsFor(layer, talking, blinkModeLive)}ms var(--ease-smooth-out)`,
           };
-          if (layer.role === "body" && layer.src === SPRITES.poses.idle) {
-            if (idleBitmapUrl !== src) return null;
-            return (
-              <canvas
-                key={layer.id}
-                ref={bindIdleCanvas}
-                width={IDLE_BLINK_CANVAS.width}
-                height={IDLE_BLINK_CANVAS.height}
-                className="rai-layer"
-                data-rai-role="body"
-                data-rai-sheet="idle"
-                style={style}
-              />
-            );
-          }
           return (
             <img
               key={layer.id}
@@ -636,7 +491,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
               decoding="async"
               className="rai-layer"
               data-rai-role={layer.role}
-              data-rai-sheet={undefined}
+              data-rai-sheet={layer.id === IDLE_REST_LAYER_ID ? blinkFrame : undefined}
               style={style}
             />
           );
