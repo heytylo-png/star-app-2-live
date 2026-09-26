@@ -7,8 +7,9 @@ clip from the locked sheets and does not re-encode 02–04. The standing
 gif hard-replaces exactly one 1008×1792 sheet per frame (no crossfade).
 Runtime blink stays parked: IDLE_BLINK_ENABLED is false in src/lib/rai.ts.
 
-Lid paint is the TyLo v2 eye-band art (791 half, 789 closed), sampled only
-inside the idle eye sockets. Those patches are not stamped as full sheets.
+Lids are painted on the idle.png canvas. A GIF palette is not the source.
+02 drops the upper lid and leaves the lower iris. 03 sits between 02 and 04.
+04 shuts the lid: no sclera and no iris inside the sockets.
 """
 
 from __future__ import annotations
@@ -35,157 +36,254 @@ FRAMES = (
     "idle_blink_04_closed.png",
 )
 
-# Closing lid covers this fraction of each socket column (top → down).
-CLOSING_FRAC = 0.48
+# How far the upper lid travels down each socket, top → bottom.
+# 02 leaves the lower iris. 03 is the step between that and fully shut.
+CLOSING_FRAC = 0.50
+HALF_FRAC = 0.74
+
+# Each socket window. Highlights outside the fitted contour still get absorbed
+# if they sit in here. Cheek blush below y=229 is not an iris.
+SOCKETS = (
+    (448, 512, 205, 229),
+    (530, 602, 202, 229),
+)
 
 
-def dilate(mask: np.ndarray, rad: int) -> np.ndarray:
-    out = mask.copy()
-    ys, xs = np.where(mask)
-    h, w = mask.shape
-    for y, x in zip(ys.tolist(), xs.tolist()):
-        y1 = y - rad if y - rad > 0 else 0
-        y2 = y + rad + 1 if y + rad + 1 < h else h
-        x1 = x - rad if x - rad > 0 else 0
-        x2 = x + rad + 1 if x + rad + 1 < w else w
-        out[y1:y2, x1:x2] = True
-    return out
+def is_sclera_px(p: np.ndarray) -> bool:
+    r, g, b = int(p[0]), int(p[1]), int(p[2])
+    return r >= 236 and g >= 218 and b >= 198 and (r - b) < 85
 
 
-def erode(mask: np.ndarray, rad: int) -> np.ndarray:
-    """Erode inside the mask's own bbox so the inverse is not the full frame."""
-    ys, xs = np.where(mask)
-    out = np.zeros_like(mask)
-    if ys.size == 0:
-        return out
-    y0, y1 = int(ys.min()), int(ys.max()) + 1
-    x0, x1 = int(xs.min()), int(xs.max()) + 1
-    sub = mask[y0:y1, x0:x1]
-    grown = dilate(~sub, rad)
-    out[y0:y1, x0:x1] = sub & ~grown
-    return out
+def is_iris_px(p: np.ndarray) -> bool:
+    """Amber iris. Cheek peach fails the green-minus-blue test."""
+    r, g, b = int(p[0]), int(p[1]), int(p[2])
+    if r < 150 or g < 55 or b > 145:
+        return False
+    if (g - b) < 50 or (r - b) < 78:
+        return False
+    if r + 8 < g:
+        return False
+    return True
 
 
-def eye_socket_mask(idle: np.ndarray) -> np.ndarray:
-    """Almonds around idle's catchlights and the iris sitting on them."""
-    r = idle[:, :, 0].astype(np.int16)
-    g = idle[:, :, 1].astype(np.int16)
-    b = idle[:, :, 2].astype(np.int16)
-    white = (r > 240) & (g > 230) & (b > 215)
-    white[:200, :] = False
-    white[245:, :] = False
-    white[:, :430] = False
-    white[:, 620:] = False
-    near = dilate(white, 12)
-    iris = (
-        (r > 160)
-        & (r < 225)
-        & (g > 50)
-        & (g < 140)
-        & (b < 85)
-        & ((r - b) > 95)
-        & ((r - g) > 40)
-        & near
-    )
-    iris[:205, :] = False
-    iris[236:, :] = False
-    iris[:, :440] = False
-    iris[:, 610:] = False
-    seed = white | iris
-    cols = seed.sum(axis=0)
-    for x in range(seed.shape[1]):
-        if 0 < int(cols[x]) < 3:
-            seed[:, x] = False
-    left = np.zeros_like(seed)
-    right = np.zeros_like(seed)
-    left[:, 440:515] = seed[:, 440:515]
-    right[:, 515:610] = seed[:, 515:610]
-    left = dilate(left, 5)
-    right = dilate(right, 5)
-    left[:, 515:] = False
-    right[:, :515] = False
-    left[:196, :] = False
-    left[238:, :] = False
-    right[:196, :] = False
-    right[240:, :] = False
-    return left | right
+def is_dark(p: np.ndarray) -> bool:
+    return int(max(int(p[0]), int(p[1]), int(p[2]))) < 80
 
 
-def load_band(path: Path, idle: np.ndarray) -> np.ndarray:
-    """Place a 196×57 eye-band patch on a copy of idle. Outside the band, idle."""
-    patch = np.array(Image.open(path).convert("RGB"))
-    if patch.shape[0] != 57 or patch.shape[1] != 196:
-        raise SystemExit(f"{path} is {patch.shape[1]}×{patch.shape[0]}, expected 196×57")
-    out = idle.copy()
-    out[193:250, 424:620] = patch
-    return out
-
-
-def blend_into(dst: np.ndarray, src: np.ndarray, mask: np.ndarray, weight: int) -> None:
-    """weight 0..255. 255 copies src exactly. Only touches mask pixels."""
-    if weight <= 0:
-        return
-    if weight >= 255:
-        dst[mask] = src[mask]
-        return
-    s = src[mask].astype(np.uint16)
-    d = dst[mask].astype(np.uint16)
-    dst[mask] = ((s * weight + d * (255 - weight) + 127) // 255).astype(np.uint8)
-
-
-def paint_socket(idle: np.ndarray, src: np.ndarray, mask: np.ndarray, partial: float | None) -> np.ndarray:
-    """Copy src into the sockets. Optional top-fraction for the closing frame.
-
-    The outer two pixels of the socket ease back to idle so the lid does not
-    leave a hard skin seam. The interior (lash line, iris cover) stays solid.
-    """
-    out = idle.copy()
-    inner = erode(mask, 2)
-    ring2 = erode(mask, 1) & ~inner
-    ring1 = mask & ~erode(mask, 1)
-    layers = ((inner, 255), (ring2, 200), (ring1, 110))
-
-    if partial is None:
-        for sel, weight in layers:
-            blend_into(out, src, sel, weight)
-        return out
-
-    height, width = mask.shape
-    cut_at = np.full(width, -1, np.int32)
-    for x in range(width):
+def build_eye(idle: np.ndarray, x0: int, x1: int, y0: int, y1: int) -> np.ndarray:
+    """Sclera seeds, grown through the amber iris, plus the dark pupil gaps."""
+    h, w, _ = idle.shape
+    mask = np.zeros((h, w), dtype=bool)
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            if is_sclera_px(idle[y, x]):
+                mask[y, x] = True
+    for _ in range(14):
+        ys, xs = np.where(mask[y0:y1, x0:x1])
+        if xs.size == 0:
+            break
+        grown = mask.copy()
+        added = 0
+        for y, x in zip((ys + y0).tolist(), (xs + x0).tolist()):
+            for dy in range(-2, 3):
+                for dx in range(-2, 3):
+                    ny, nx = y + dy, x + dx
+                    if ny < y0 or ny >= y1 or nx < x0 or nx >= x1 or grown[ny, nx]:
+                        continue
+                    if is_iris_px(idle[ny, nx]) or is_sclera_px(idle[ny, nx]):
+                        grown[ny, nx] = True
+                        added += 1
+        mask = grown
+        if added == 0:
+            break
+    for x in range(x0, x1):
         ys = np.where(mask[:, x])[0]
-        if ys.size < 3:
+        if ys.size < 2:
             continue
-        y0 = int(ys.min())
-        y1 = int(ys.max())
-        cut_at[x] = y0 + max(1, int(round(partial * (y1 - y0 + 1))))
-
-    for sel, weight in layers:
-        chosen = np.zeros_like(sel)
-        ys, xs = np.where(sel)
-        for y, x in zip(ys.tolist(), xs.tolist()):
-            cut = int(cut_at[x])
-            if cut >= 0 and y <= cut:
-                chosen[y, x] = True
-        blend_into(out, src, chosen, weight)
-
-    # Soft leading edge of the descending lid, interior of the socket only.
-    for x in range(width):
-        cut = int(cut_at[x])
-        if cut < 0:
+        lo, hi = int(ys.min()), int(ys.max())
+        if hi - lo > 22:
             continue
-        for dy, weight in ((1, 165), (2, 80)):
-            y = cut + dy
-            if 0 <= y < height and inner[y, x]:
-                out[y, x] = (
-                    (
-                        src[y, x].astype(np.uint16) * weight
-                        + idle[y, x].astype(np.uint16) * (255 - weight)
-                        + 127
-                    )
-                    // 255
-                ).astype(np.uint8)
+        for y in range(lo, hi + 1):
+            if mask[y, x]:
+                continue
+            if is_dark(idle[y, x]) or is_iris_px(idle[y, x]) or is_sclera_px(idle[y, x]):
+                mask[y, x] = True
+    return mask
+
+
+def contours_from_mask(mask: np.ndarray, x0: int, x1: int) -> tuple[dict[int, int], dict[int, int]]:
+    tops: dict[int, int] = {}
+    bots: dict[int, int] = {}
+    for x in range(x0, x1):
+        ys = np.where(mask[:, x])[0]
+        if ys.size >= 3:
+            tops[x] = int(ys.min())
+            bots[x] = int(ys.max())
+    if not tops:
+        return tops, bots
+    xs = sorted(tops)
+    x = xs[0]
+    while x <= xs[-1]:
+        if x not in tops:
+            prev = max(k for k in tops if k < x)
+            later = [k for k in tops if k > x]
+            nxt = min(later) if later else None
+            if nxt is not None and nxt - prev <= 4:
+                span = nxt - prev
+                t = (x - prev) / span
+                tops[x] = int(round(tops[prev] * (1 - t) + tops[nxt] * t))
+                bots[x] = int(round(bots[prev] * (1 - t) + bots[nxt] * t))
+        x += 1
+    keys = sorted(tops)
+    smooth_top: dict[int, int] = {}
+    smooth_bot: dict[int, int] = {}
+    for i, x in enumerate(keys):
+        win = keys[max(0, i - 1) : i + 2]
+        smooth_top[x] = int(np.median([tops[k] for k in win]))
+        smooth_bot[x] = int(np.median([bots[k] for k in win]))
+    return smooth_top, smooth_bot
+
+
+def absorb_highlights(
+    idle: np.ndarray,
+    tops: dict[int, int],
+    bots: dict[int, int],
+    x0: int,
+    x1: int,
+    y0: int,
+    y1: int,
+) -> None:
+    """Stretch the contour so every socket highlight is inside it.
+
+    Smoothing can shave a catchlight off the edge. Closed lids have to cover
+    those pixels or the iris still reads as open.
+    """
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            if not (is_sclera_px(idle[y, x]) or is_iris_px(idle[y, x])):
+                continue
+            if x in tops:
+                tops[x] = min(tops[x], y)
+                bots[x] = max(bots[x], y)
+            else:
+                tops[x] = y
+                bots[x] = y
+
+
+def sample_skin(idle: np.ndarray, x: int, top: int, bot: int) -> np.ndarray:
+    samples = []
+    h = idle.shape[0]
+    for y in range(max(185, top - 18), max(185, top - 1)):
+        r, g, b = (int(v) for v in idle[y, x])
+        if r > 155 and g > 95 and b > 70 and max(r, g, b) < 248 and min(r, g, b) > 60 and (g - b) < 75:
+            samples.append(idle[y, x].astype(np.float64))
+    if len(samples) >= 2:
+        return np.median(np.stack(samples), axis=0)
+    samples = []
+    for y in range(bot + 2, min(h, bot + 8)):
+        r, g, b = (int(v) for v in idle[y, x])
+        if r > 170 and g > 110 and b > 85 and int(max(r, g, b)) < 255:
+            samples.append(idle[y, x].astype(np.float64))
+    if samples:
+        return np.median(np.stack(samples), axis=0)
+    return np.array([214.0, 154.0, 122.0])
+
+
+def sample_lash(idle: np.ndarray, x: int, top: int) -> np.ndarray:
+    samples = []
+    for y in range(max(185, top - 10), top):
+        if int(max(int(v) for v in idle[y, x])) < 60:
+            samples.append(idle[y, x].astype(np.float64))
+    if len(samples) >= 2:
+        return np.median(np.stack(samples), axis=0)
+    return np.array([32.0, 8.0, 2.0])
+
+
+def socket_contours(idle: np.ndarray) -> list[tuple[dict[int, int], dict[int, int]]]:
+    found = []
+    for x0, x1, y0, y1 in SOCKETS:
+        mask = build_eye(idle, x0, x1, y0, y1)
+        tops, bots = contours_from_mask(mask, x0, x1)
+        absorb_highlights(idle, tops, bots, x0, x1, y0, y1)
+        if not tops:
+            raise SystemExit(f"no eye socket in {(x0, x1, y0, y1)}")
+        found.append((tops, bots))
+    return found
+
+
+def lid_cut(top: int, bot: int, iris_ys: list[int], frac: float, lash_px: int) -> int:
+    """First row the lid does not paint. Iris rows past the cut stay the original eye."""
+    if frac >= 0.999:
+        return bot + 1
+    if iris_ys:
+        take = int(frac * len(iris_ys) + 0.5)
+        take = min(max(take, 1), len(iris_ys) - 1)
+        return iris_ys[take]
+    return min(bot, top + max(lash_px + 1, int(frac * (bot - top + 1) + 0.5)))
+
+
+def paint_lids(idle: np.ndarray, frac: float, contours: list[tuple[dict[int, int], dict[int, int]]]) -> np.ndarray:
+    """Drop the upper lid. frac 1 fills the socket: skin, then a lash where the lids meet."""
+    out = idle.copy()
+    ex, ey, ew, eh = EYE_BOX
+    lash_px = 3 if frac >= 0.999 else 2
+    for tops, bots in contours:
+        columns: list[tuple[int, int, int, int]] = []
+        for x, top in tops.items():
+            bot = bots[x]
+            if bot < top:
+                continue
+            if x < ex or x >= ex + ew or top < ey or bot >= ey + eh:
+                raise SystemExit(f"lid column x={x} y={top}-{bot} escapes the eye box")
+            iris_ys = [y for y in range(top, bot + 1) if is_iris_px(idle[y, x])]
+            cut = lid_cut(top, bot, iris_ys, frac, lash_px)
+            columns.append((x, top, bot, cut))
+        by_x = {col[0]: col for col in columns}
+        smooth: dict[int, int] = {}
+        for x, top, bot, cut in columns:
+            if frac >= 0.999:
+                # Shut lids cover the whole socket. Smoothing would uncover the last rows.
+                smooth[x] = cut
+                continue
+            neigh = [by_x[k][3] for k in range(x - 2, x + 3) if k in by_x]
+            # Never paint past this column's own cut: that row is reserved iris.
+            smooth[x] = min(cut, max(top + 1, int(np.median(neigh))))
+        for x, top, bot, _cut in columns:
+            cut = smooth[x]
+            upper = sample_skin(idle, x, top, bot)
+            lower_samples = []
+            for y in range(bot + 1, min(idle.shape[0], bot + 6)):
+                r, g, b = (int(v) for v in idle[y, x])
+                if r > 160 and g > 100 and b > 80:
+                    lower_samples.append(idle[y, x].astype(np.float64))
+            lower = np.median(np.stack(lower_samples), axis=0) if lower_samples else upper
+            lash = sample_lash(idle, x, top)
+            span = max(cut - top - 1, 1)
+            for y in range(top, cut):
+                dist = (cut - 1) - y
+                if dist < lash_px:
+                    out[y, x] = np.clip(lash, 0, 255).astype(np.uint8)
+                elif dist == lash_px:
+                    out[y, x] = np.clip(lash * 0.45 + upper * 0.55, 0, 255).astype(np.uint8)
+                else:
+                    t = (y - top) / span
+                    skin = upper * (1.0 - t) + lower * t
+                    out[y, x] = np.clip(skin, 0, 255).astype(np.uint8)
     return out
+
+
+def count_socket_features(img: np.ndarray) -> tuple[int, int]:
+    """Sclera and iris inside the socket windows. Cheek below the windows is ignored."""
+    iris = 0
+    sclera = 0
+    for x0, x1, y0, y1 in SOCKETS:
+        for y in range(y0, y1):
+            for x in range(x0, x1):
+                if is_sclera_px(img[y, x]):
+                    sclera += 1
+                elif is_iris_px(img[y, x]):
+                    iris += 1
+    return iris, sclera
 
 
 def max_abs_outside(a: np.ndarray, b: np.ndarray, box: tuple[int, int, int, int]) -> int:
@@ -208,15 +306,55 @@ def save_rgb(path: Path, rgb: np.ndarray) -> None:
 
 
 def build_frames(idle: np.ndarray) -> dict[str, np.ndarray]:
-    mask = eye_socket_mask(idle)
-    half = load_band(ROOT / "artifacts/star-rai-blink-frames/tylo-holes-v2/791-half.png", idle)
-    closed = load_band(ROOT / "artifacts/star-rai-blink-frames/tylo-holes-v2/789-closed.png", idle)
+    contours = socket_contours(idle)
     return {
         "idle_blink_01_open.png": idle.copy(),
-        "idle_blink_02_closing.png": paint_socket(idle, half, mask, CLOSING_FRAC),
-        "idle_blink_03_half.png": paint_socket(idle, half, mask, None),
-        "idle_blink_04_closed.png": paint_socket(idle, closed, mask, None),
+        "idle_blink_02_closing.png": paint_lids(idle, CLOSING_FRAC, contours),
+        "idle_blink_03_half.png": paint_lids(idle, HALF_FRAC, contours),
+        "idle_blink_04_closed.png": paint_lids(idle, 1.0, contours),
     }
+
+
+def assert_art(idle: np.ndarray, frames: dict[str, np.ndarray]) -> None:
+    """02 still shows iris. 04 does not. 03 sits between them."""
+    open_iris, open_sclera = count_socket_features(idle)
+    closing_iris, closing_sclera = count_socket_features(frames["idle_blink_02_closing.png"])
+    half_iris, half_sclera = count_socket_features(frames["idle_blink_03_half.png"])
+    closed_iris, closed_sclera = count_socket_features(frames["idle_blink_04_closed.png"])
+    print(
+        f"socket features open iris={open_iris} sclera={open_sclera} "
+        f"02 iris={closing_iris} sclera={closing_sclera} "
+        f"03 iris={half_iris} sclera={half_sclera} "
+        f"04 iris={closed_iris} sclera={closed_sclera}"
+    )
+    if open_iris < 80 or open_sclera < 80:
+        raise SystemExit("open eye lost its iris or sclera before the lid paint")
+    if not (open_iris * 0.30 <= closing_iris <= open_iris * 0.75):
+        raise SystemExit(f"02 iris {closing_iris} is not a readable partial of open {open_iris}")
+    if closing_iris <= half_iris:
+        raise SystemExit("03 is not a further close than 02")
+    if half_iris < 12:
+        raise SystemExit("03 closed the iris; it should stay a slit between 02 and 04")
+    if closed_iris != 0 or closed_sclera != 0:
+        raise SystemExit(f"04 still shows the eye (iris={closed_iris} sclera={closed_sclera})")
+    # The bottom of each iris stays the original idle paint, so 02 is still her eye.
+    closing = frames["idle_blink_02_closing.png"]
+    for x0, x1, y0, y1 in SOCKETS:
+        iris_ys = [y for y in range(y0, y1) for x in range(x0, x1) if is_iris_px(idle[y, x])]
+        kept = 0
+        for x in range(x0, x1):
+            ys = [y for y in range(y0, y1) if is_iris_px(idle[y, x])]
+            if len(ys) < 8:
+                continue
+            take = int(CLOSING_FRAC * len(ys) + 0.5)
+            take = min(max(take, 1), len(ys) - 1)
+            for y in ys[take:]:
+                if not np.array_equal(closing[y, x], idle[y, x]):
+                    raise SystemExit(f"02 covered the lower iris at {x},{y}")
+                kept += 1
+        if kept < 12:
+            raise SystemExit(f"02 kept only {kept} lower-iris pixels in x {x0}-{x1}")
+        print(f"02 lower iris kept {kept} original pixels in x {x0}-{x1}")
 
 
 def composite_hard_replace(sheet: np.ndarray) -> np.ndarray:
@@ -468,6 +606,7 @@ def main() -> None:
         raise SystemExit(f"idle.png is {idle.shape}, expected 1008×1792 RGB")
     frames = build_frames(idle)
     assert_lock(idle, frames)
+    assert_art(idle, frames)
     BAKED.mkdir(parents=True, exist_ok=True)
     # 01 is the idle file itself, not a re-encode.
     for folder in (BAKED, PUBLIC):
