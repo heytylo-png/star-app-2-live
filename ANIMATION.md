@@ -52,7 +52,7 @@ TyLo FAIL: two PNGs up at once (ghost / second body during blink). The four eyes
 - `idle_blink_03_half.png`
 - `idle_blink_04_closed.png`
 
-Each file is a full **1008×1792** frame on the `idle.png` canvas. Outside the eye box `(420, 185, 210, 70)` max abs RGB delta versus `idle.png` is 0. Only the lids change.
+Each file is a full **1008×1792** frame on the `idle.png` canvas. Outside the eye box `(420, 185, 210, 70)` max abs RGB delta versus `idle.png` is 0. Only the lids change. The lids are the 807 video registered onto idle's eyes (7s half, 8s shut); 02 is that same 7s lid set a few pixels higher.
 
 Cycle map for a future hard-cut wire (not live): **02 → 03 → 04 → 03 → 02** in **~300ms** total (60ms a cut), then **hold 01**. Do not skip 02. One `<img>` only — no stack, no dual PNG, no opacity blend of two sheets. Those timings are not running while the flag is false.
 

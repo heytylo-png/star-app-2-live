@@ -6,22 +6,24 @@ Body pixels are locked. Hair, skirt, shoes, torso, bow, and hands match `idle.pn
 
 `IDLE_BLINK_ENABLED` is false. Rest paints `public/rai/idle.png` only. Do not turn the flag on in this pack. TyLo FAIL: two PNGs up at once (a ghost body). The standing clip below is the art gate: one body, lids only, no ghost. Re-enable only when TyLo says pass. CoS alone is not enough.
 
-No file named 807, and no sheet tagged 7s or 8s, is in this repo, git history, Pages, or the agent attachments. The poses those timecodes name are painted on the live idle opening: 03 is the half close, 04 is fully shut. Not the PR #65 lower-iris smudge, and not a GIF palette.
+The lids are the real 807 video, registered onto idle's eyes and feathered into the socket. 03 is 807 at 7s (half, iris still readable). 04 is 807 at 8s (shut: painted lashes, no iris, no sclera). The source snaps from open to that half in one frame, so 02 is the same 7s lid set a few pixels higher — the real lash, less travel — not a hand-painted lid and not a GIF palette.
 
 ## Files
 - `idle_blink_01_open.png` — byte copy of `public/rai/idle.png` (open glare). This is the hold.
-- `idle_blink_02_closing.png` — upper lid dropped between open and half. Lower iris is still the idle paint.
-- `idle_blink_03_half.png` — half close. A slit of iris remains.
-- `idle_blink_04_closed.png` — lids shut. Socket sclera 0, iris 0.
+- `idle_blink_02_closing.png` — light drop. Upper lid lowered, iris still readable.
+- `idle_blink_03_half.png` — 807 at 7s. Half close. A slit of iris remains.
+- `idle_blink_04_closed.png` — 807 at 8s. Lids shut, lashes painted. Socket sclera 0, iris 0.
 
 The same four files are byte-copied into `public/rai/`. They are not the rest body while blink is parked.
+
+Source stills used to bake: `artifacts/star-rai-blink-frames/source/807_{0,7,8}s.png`.
 
 ## Eye box
 Outside this box, max abs RGB delta versus `idle.png` is 0 on every frame:
 
 `(x, y, w, h) = (420, 185, 210, 70)`
 
-Lid paint is the idle socket, top down. Nothing outside the eye box is rewritten.
+Nothing outside the eye box is rewritten.
 
 ## Cycle
 `02 → 03 → 04 → 03 → 02` in **300ms** total (60ms a cut), then **hold 01**.
@@ -30,10 +32,11 @@ Lid paint is the idle socket, top down. Nothing outside the eye box is rewritten
 
 ## Proof
 - `proof_standing_full.gif` — standing full-body cycle. 01 holds, then `02 → 03 → 04 → 03 → 02` at 60ms (300ms), then hold 01 (1008×1792). Each frame is exactly one full sheet, hard-replaced onto a fresh canvas (disposal restores to background before the next frame, no transparency, no crossfade, no second body). One shared palette, no dither: outside the eye box, max abs RGB delta versus frame 01 is 0.
+- `proof_eyes_strip.png` — 2× eye-box crop of 01, 02, 03, 04 side by side.
 - `proof_standing_strip.png` — standing full body, idle | 01 | 02 | 03 | 04, plus a diff row versus `idle.png`. Each panel is one sheet. Red is any changed pixel. Hair, skirt, and shoes stay black on the diff row.
 - `proof_strip.png` — idle | 01 | 02 | 03 | 04 face crops
 - `proof_eyes.png` — eye-box crop of 01–04
-- `proof_blink.gif` — earlier standing cycle at 120ms per step
+- `proof_blink.gif` — earlier standing cycle at the same cuts
 
 `idle_blink_01_open.png` is a byte copy of `public/rai/idle.png` in both `baked/` and `public/rai/`. A GIF palette is not those PNG bytes; compare the sheets, or the gif frames to each other, for the drift lock.
 
@@ -42,4 +45,3 @@ Lid paint is the idle socket, top down. Nothing outside the eye box is rewritten
 Runtime must hard-swap a single `<img>` / texture (no stack, no dual PNG). This proof is the art gate before re-enable. Blink stays parked until TyLo says pass. CoS alone is not enough. Do not flip the flag on from this pack.
 
 Rebuild sheets: `python3 scripts/rebake-eyes-only-blink.py`
-Refresh the standing proof from the locked sheets (does not re-encode 02–04): `python3 scripts/rebake-eyes-only-blink.py --proof-only`
