@@ -436,6 +436,7 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(blink[0]!.role, "body");
     assert.match(blink[0]!.src, /rai\/idle\.png$/);
     assert.doesNotMatch(blink.map((l) => l.src).join(" "), /idle_blink|face_eyes|mouth_speak|mouth_oh/);
+    assert.equal(idleBlinkPatchSrc(4), SPRITES.idleBlinkOpenBrow);
     assert.equal(idleBlinkPatchSrc(1), SPRITES.idleBlinkOpen);
     assert.equal(idleBlinkPatchSrc(2), SPRITES.idleBlinkHalf);
     assert.equal(idleBlinkPatchSrc(3), SPRITES.idleBlinkClosed);
@@ -447,6 +448,7 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(isFullBlinkPlate("/rai/idle_blink_01_l.png"), true);
     assert.equal(isFullBlinkPlate("artifacts/star-rai-blink-frames/eyes/01-open_L.png"), true);
     assert.equal(isFullBlinkPlate("scrap/01-open-brow.png"), true);
+    assert.equal(isFullBlinkPlate(SPRITES.idleBlinkOpenBrow), false);
     assert.equal(isFullBlinkPlate(SPRITES.idleBlinkOpen), false);
     assert.equal(isFullBlinkPlate(SPRITES.idleBlinkHalf), false);
     assert.equal(isFullBlinkPlate(SPRITES.idleBlinkClosed), false);
@@ -483,14 +485,21 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(canIdleBlink({ ...rest, pose: "wave" }), false);
     assert.equal(canIdleBlink({ ...rest, reducedMotion: true }), false);
     assert.equal(USE_EXPO_TALK_BUST, false);
-    for (const src of [SPRITES.idleBlinkOpen, SPRITES.idleBlinkHalf, SPRITES.idleBlinkClosed]) {
+    for (const src of [
+      SPRITES.idleBlinkOpenBrow,
+      SPRITES.idleBlinkOpen,
+      SPRITES.idleBlinkHalf,
+      SPRITES.idleBlinkClosed,
+    ]) {
       assert.ok(allSpriteUrls().includes(src));
       assert.equal(isFullBlinkPlate(src), false);
-      assert.doesNotMatch(src, /_l\.png|_r\.png|blink-frames\/eyes|01-open-brow/);
+      assert.doesNotMatch(src, /_l\.png|_r\.png|blink-frames\/eyes|01-open-brow|tylo-holes\//);
     }
     assert.ok(allSpriteUrls().every((src) => !isFullBlinkPlate(src)));
     assert.ok(
-      allSpriteUrls().every((src) => !/_l\.png|_r\.png|blink-frames\/eyes|01-open-brow/.test(src)),
+      allSpriteUrls().every(
+        (src) => !/_l\.png|_r\.png|blink-frames\/eyes|01-open-brow|tylo-holes\//.test(src),
+      ),
     );
 
     const idle = decodePng(readFileSync(join(publicRoot, "rai/idle.png")));
@@ -499,19 +508,25 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(idle.colorType, 2);
     const hole = IDLE_BLINK_DEST_RECT;
     const holes = destMask(idle.width, idle.height);
-    const artifactRoot = join(publicRoot, "../artifacts/star-rai-blink-frames/tylo-holes");
+    const artifactRoot = join(publicRoot, "../artifacts/star-rai-blink-frames/tylo-holes-v2");
+    const retiredRoot = join(publicRoot, "../artifacts/star-rai-blink-frames/tylo-holes");
     for (const proof of ["proof_strip.png", "proof_dest_band.png", "proof_blink.gif"]) {
       assert.equal(existsSync(join(artifactRoot, proof)), true, proof);
     }
     const patches = [
-      ["rai/idle_blink_02_open.png", "02-open.png"],
-      ["rai/idle_blink_03_half.png", "03-half.png"],
-      ["rai/idle_blink_04_closed.png", "04-closed.png"],
+      ["rai/idle_blink_open_brow.png", "790-open-brow.png", null],
+      ["rai/idle_blink_02_open.png", "788-open.png", "02-open.png"],
+      ["rai/idle_blink_03_half.png", "791-half.png", "03-half.png"],
+      ["rai/idle_blink_04_closed.png", "789-closed.png", "04-closed.png"],
     ] as const;
-    for (const [cropRel, artifactName] of patches) {
+    for (const [cropRel, artifactName, retiredName] of patches) {
       const runtime = readFileSync(join(publicRoot, cropRel));
       const artifact = readFileSync(join(artifactRoot, artifactName));
-      assert.deepEqual(runtime, artifact, `${cropRel} drifted from tylo-holes/${artifactName}`);
+      assert.deepEqual(runtime, artifact, `${cropRel} drifted from tylo-holes-v2/${artifactName}`);
+      if (retiredName) {
+        const retired = readFileSync(join(retiredRoot, retiredName));
+        assert.notDeepEqual(runtime, retired, `${cropRel} is still the old tylo-holes/${retiredName} pack`);
+      }
       const crop = decodePng(runtime);
       assert.equal(crop.width, hole.w, cropRel);
       assert.equal(crop.height, hole.h, cropRel);

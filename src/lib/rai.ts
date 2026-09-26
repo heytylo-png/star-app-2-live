@@ -1,3 +1,7 @@
+import { POSE_CROSSFADE_MS, type IdleBlinkFrame } from "./rai-motion.ts";
+
+export { POSE_CROSSFADE_MS, type IdleBlinkFrame };
+
 export const POSES = [
   "idle",
   "talk",
@@ -45,8 +49,6 @@ export const POSE_HOLD_MIN_MS = 3400;
 export const POSE_HOLD_AFTER_TALK_MS = 2800;
 /** Emotion-only (idle pose) reset after activity stops (ms). */
 export const EMOTION_HOLD_MS = 2200;
-
-export { POSE_CROSSFADE_MS } from "./rai-motion.ts";
 
 /** Idle smile/grin: longer gap so beats don't chatter. */
 export const IDLE_BEAT_GAP_MIN_MS = 16000;
@@ -245,10 +247,12 @@ export const SPRITES = {
   } satisfies Record<PoseId, string>,
   /**
    * TyLo one-rect blink patches. Opaque 196×57.
-   * Byte copies of artifacts/star-rai-blink-frames/tylo-holes/.
-   * Pasted at IDLE_BLINK_DEST_RECT. Not the L/R 80×40 ovals, not eyes/,
-   * and not scrap 790 / 01-open-brow. Full plates stay unmounted.
+   * Byte copies of artifacts/star-rai-blink-frames/tylo-holes-v2/.
+   * Pasted at IDLE_BLINK_DEST_RECT. Not the old tylo-holes/ three-frame pack,
+   * not the L/R 80×40 ovals, not eyes/, and not a full-plate 01-open-brow.
+   * Full plates stay unmounted.
    */
+  idleBlinkOpenBrow: ASSET("rai/idle_blink_open_brow.png"),
   idleBlinkOpen: ASSET("rai/idle_blink_02_open.png"),
   idleBlinkHalf: ASSET("rai/idle_blink_03_half.png"),
   idleBlinkClosed: ASSET("rai/idle_blink_04_closed.png"),
@@ -296,7 +300,7 @@ export type TalkViseme = "closed" | "speak" | "oh" | "grin" | "kiss";
 
 /**
  * One dest rect on the 1008×1792 live idle canvas.
- * Maker lock: artifacts/star-rai-blink-frames/tylo-holes/.
+ * Maker lock: artifacts/star-rai-blink-frames/tylo-holes-v2/.
  * Paste each opaque 196×57 patch here. Outside this rect, idle delta stays 0.
  */
 export const IDLE_BLINK_DEST_RECT = { x: 424, y: 193, w: 196, h: 57 } as const;
@@ -306,8 +310,9 @@ export const IDLE_BLINK_CANVAS = { width: 1008, height: 1792 } as const;
 
 /**
  * Sheets that must never mount as the blink body.
- * Full plates, the old L/R oval crops, the eyes/ pack, and scrap 790.
- * TyLo dest patches are not in this set — they are pasted into DEST_RECT.
+ * Full plates, the old L/R oval crops, the eyes/ pack, and scrap 01-open-brow.
+ * TyLo dest patches (including 790 open-brow) are not in this set — they are
+ * pasted into DEST_RECT.
  */
 export function isFullBlinkPlate(src: string): boolean {
   return (
@@ -323,18 +328,20 @@ export function isFullBlinkPlate(src: string): boolean {
 
 /**
  * One dest-rect patch for rest blink.
- * 1 = 02-open (788), 2 = 03-half (791), ≥3 = 04-closed (789).
+ * 4 = 790 open-brow, 1 = 788 open, 2 = 791 half, 3 = 789 closed.
  * Null at rest: the painter copies this rect back from idle.png.
+ * 4 is checked before 3 so open-brow is not treated as closed.
  */
 export function idleBlinkPatchSrc(blink: number): string | null {
+  if (blink === 4) return SPRITES.idleBlinkOpenBrow;
   if (blink === 1) return SPRITES.idleBlinkOpen;
   if (blink === 2) return SPRITES.idleBlinkHalf;
-  if (blink >= 3) return SPRITES.idleBlinkClosed;
+  if (blink === 3) return SPRITES.idleBlinkClosed;
   return null;
 }
 
 export function idleBlinkPatchUrls(): string[] {
-  return [1, 2, 3].map((frame) => {
+  return [4, 1, 2, 3].map((frame) => {
     const src = idleBlinkPatchSrc(frame);
     if (!src) throw new Error("blink patch missing");
     return src;
@@ -380,11 +387,12 @@ export type PuppetState = {
   /** Seconds — drives official talk-sheet opacity flap (sin phase). */
   talkPhase?: number;
   /**
-   * 0 rest (idle dest rect). TyLo cycle: 1 = 02-open, 2 = 03-half, 3 = 04-closed.
-   * The idle layer list does not change — `idleBlinkPatchSrc` is pasted at
-   * IDLE_BLINK_DEST_RECT. Expo talk bust (flag on) still uses 1/2 with face_eyes_*.
+   * 0 rest (idle dest rect). TyLo v2 cycle: 4 = 790 open-brow, 1 = 788 open,
+   * 2 = 791 half, 3 = 789 closed. The idle layer list does not change —
+   * `idleBlinkPatchSrc` is pasted at IDLE_BLINK_DEST_RECT. Expo talk bust
+   * (flag on) still uses 1/2 with face_eyes_*.
    */
-  blink?: 0 | 1 | 2 | 3;
+  blink?: IdleBlinkFrame;
   /** Brief idle variety beat from puppet timer (smile/grin). Official pack ignores Expo alts. */
   idleBeat?: IdleBeat;
   /** Skip mouth flap; show a static talk sheet. */

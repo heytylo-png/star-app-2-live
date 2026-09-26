@@ -4,11 +4,13 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
+  IDLE_BLINK_BROW_MS,
   IDLE_BLINK_FIRST_MS,
   IDLE_BLINK_GAP_MAX_MS,
   IDLE_BLINK_GAP_MIN_MS,
   IDLE_BLINK_HALF_MS,
   IDLE_BLINK_HOLD_MS,
+  IDLE_BLINK_MIN_STEP_MS,
   IDLE_BLINK_OPEN_MS,
   idleBlinkSchedule,
   idleBlinkStepName,
@@ -51,10 +53,13 @@ describe("official PNG puppet motion", () => {
   it("crossfades pose sheets and plants the rig on the hips", () => {
     assert.equal(POSE_CROSSFADE_MS, 380);
     assert.ok(POSE_CROSSFADE_MS >= 300 && POSE_CROSSFADE_MS <= 480);
-    // Half and closed have to stay up long enough to read on the long shot.
+    // Twos at 24fps are ~83ms. Half and closed stay up longer so a glance can read them.
+    assert.equal(IDLE_BLINK_MIN_STEP_MS, 83);
+    assert.ok(IDLE_BLINK_BROW_MS >= IDLE_BLINK_MIN_STEP_MS);
+    assert.ok(IDLE_BLINK_OPEN_MS >= IDLE_BLINK_MIN_STEP_MS && IDLE_BLINK_OPEN_MS < IDLE_BLINK_HALF_MS);
+    assert.ok(IDLE_BLINK_BROW_MS < IDLE_BLINK_HALF_MS);
     assert.ok(IDLE_BLINK_HALF_MS >= 500);
     assert.ok(IDLE_BLINK_HOLD_MS >= 800);
-    assert.ok(IDLE_BLINK_OPEN_MS >= 120 && IDLE_BLINK_OPEN_MS < IDLE_BLINK_HALF_MS);
     assert.equal(IDLE_BLINK_FIRST_MS, 900);
     assert.ok(IDLE_BLINK_FIRST_MS <= 2000);
     assert.equal(IDLE_BLINK_GAP_MIN_MS, 4500);
@@ -63,20 +68,35 @@ describe("official PNG puppet motion", () => {
     const blink = idleBlinkSchedule();
     assert.deepEqual(
       blink.map((step) => step.blink),
-      [1, 2, 3, 2, 1, 0],
+      [4, 1, 2, 3, 2, 1, 4, 0],
     );
     assert.deepEqual(
       blink.map((step) => idleBlinkStepName(step.blink)),
-      ["02-open", "03-half", "04-closed", "03-half", "02-open", "idle"],
+      [
+        "790-open-brow",
+        "788-open",
+        "791-half",
+        "789-closed",
+        "791-half",
+        "788-open",
+        "790-open-brow",
+        "idle",
+      ],
     );
     assert.equal(blink[0]!.at, 0);
-    assert.equal(blink[1]!.at, IDLE_BLINK_OPEN_MS);
-    assert.equal(blink[2]!.at - blink[1]!.at, IDLE_BLINK_HALF_MS);
-    assert.equal(blink[3]!.at - blink[2]!.at, IDLE_BLINK_HOLD_MS);
-    assert.equal(blink[4]!.at - blink[3]!.at, IDLE_BLINK_HALF_MS);
-    assert.equal(blink[5]!.at - blink[4]!.at, IDLE_BLINK_OPEN_MS);
-    assert.equal(blink[5]!.blink, 0);
-    assert.ok(blink[5]!.at >= 1500 && blink[5]!.at <= 3200);
+    assert.equal(blink[1]!.at, IDLE_BLINK_BROW_MS);
+    assert.equal(blink[2]!.at - blink[1]!.at, IDLE_BLINK_OPEN_MS);
+    assert.equal(blink[3]!.at - blink[2]!.at, IDLE_BLINK_HALF_MS);
+    assert.equal(blink[4]!.at - blink[3]!.at, IDLE_BLINK_HOLD_MS);
+    assert.equal(blink[5]!.at - blink[4]!.at, IDLE_BLINK_HALF_MS);
+    assert.equal(blink[6]!.at - blink[5]!.at, IDLE_BLINK_OPEN_MS);
+    assert.equal(blink[7]!.at - blink[6]!.at, IDLE_BLINK_BROW_MS);
+    assert.equal(blink[7]!.blink, 0);
+    for (let i = 0; i < blink.length - 1; i++) {
+      const dwell = blink[i + 1]!.at - blink[i]!.at;
+      assert.ok(dwell >= IDLE_BLINK_MIN_STEP_MS, `step ${i} dwell ${dwell}ms is under two 24fps frames`);
+    }
+    assert.ok(blink[7]!.at >= 1500 && blink[7]!.at <= 3600);
     assert.match(css, /\.rai-rig\s*\{/);
     assert.match(css, /transform-origin:\s*50%\s*72%/);
     assert.doesNotMatch(css, /perspective\(1400px\)/);

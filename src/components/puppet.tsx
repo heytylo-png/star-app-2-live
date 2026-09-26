@@ -24,6 +24,7 @@ import {
   idleBlinkSchedule,
   puppetIdleMotion,
   puppetRigTransform,
+  type IdleBlinkFrame,
 } from "@/lib/rai-motion";
 import { punchedSpriteUrl } from "@/lib/punch-white";
 import { cn } from "@/lib/utils";
@@ -98,8 +99,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   talkingRef.current = talking;
 
   const [ampLive, setAmpLive] = useState(0);
-  const [blink, setBlink] = useState<0 | 1 | 2 | 3>(0);
-  /** Three TyLo dest patches decoded. Until then blink stays off — no full-plate fallback. */
+  const [blink, setBlink] = useState<IdleBlinkFrame>(0);
+  /** Four TyLo dest patches decoded. Until then blink stays off — no full-plate fallback. */
   const [eyesReady, setEyesReady] = useState(false);
   /** Punched idle bitmap decoded. The canvas draws this and never swaps it out. */
   const [idleBitmapUrl, setIdleBitmapUrl] = useState<string | null>(null);
@@ -111,7 +112,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const fadingIn = useRef<Set<string>>(new Set());
   const fadeRaf = useRef(0);
   const [blinkMode, setBlinkMode] = useState<BlinkFadeMode>("off");
-  const blinkRef = useRef<0 | 1 | 2 | 3>(0);
+  const blinkRef = useRef<IdleBlinkFrame>(0);
   const idleCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const paintedCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const paintedUrlRef = useRef<string | null>(null);
@@ -145,7 +146,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     };
   }, []);
 
-  // Decode the three TyLo patches. Failure leaves blink off — no full-plate fallback.
+  // Decode the four TyLo v2 patches. Failure leaves blink off — no full-plate fallback.
   useEffect(() => {
     let cancelled = false;
     const urls = idleBlinkPatchUrls();
