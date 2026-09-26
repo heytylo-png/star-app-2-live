@@ -25,7 +25,8 @@ export const IDLE_BLINK_GAP_MAX_MS = 6000;
 export type IdleBlinkStep = { blink: 0 | 1 | 2 | 3; at: number };
 
 /**
- * One rest blink: early lid → mid → closed hold → mid → early → glare eyes.
+ * One rest blink. The body is already open. Then closing → half → closed
+ * hold → half → closing → open (7 steps, glare at both ends).
  * `at` is ms from the start of the blink. Frame 0 restores `idle.png` eyes.
  */
 export function idleBlinkSchedule(): IdleBlinkStep[] {

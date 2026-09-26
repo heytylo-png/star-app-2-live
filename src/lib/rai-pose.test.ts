@@ -487,60 +487,31 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(idle.height, IDLE_BLINK_CANVAS.height);
     assert.equal(idle.colorType, 2);
     const holes = holeMask(idle.width, idle.height);
-    const plates: Array<[string, readonly [string, string]]> = [
-      ["rai/idle_blink.png", ["rai/idle_blink_l.png", "rai/idle_blink_r.png"]],
-      ["rai/idle_blink_01.png", ["rai/idle_blink_01_l.png", "rai/idle_blink_01_r.png"]],
-      ["rai/idle_blink_02.png", ["rai/idle_blink_02_l.png", "rai/idle_blink_02_r.png"]],
-    ];
-    for (const [rel, crops] of plates) {
-      const frame = decodePng(readFileSync(join(publicRoot, rel)));
-      assert.equal(frame.width, idle.width);
-      assert.equal(frame.height, idle.height);
-      assert.equal(frame.colorType, 6, `${rel} is the eye-hole proof plate`);
-      let outsideMax = 0;
-      let outsideAlpha = 0;
-      let inside = 0;
-      let insideOpaque = 0;
-      let insideChanged = 0;
-      for (let i = 0; i < holes.length; i++) {
-        const dr = Math.abs(frame.rgba[i * 4]! - idle.rgba[i * 4]!);
-        const dg = Math.abs(frame.rgba[i * 4 + 1]! - idle.rgba[i * 4 + 1]!);
-        const db = Math.abs(frame.rgba[i * 4 + 2]! - idle.rgba[i * 4 + 2]!);
-        const delta = dr > dg ? (dr > db ? dr : db) : dg > db ? dg : db;
-        if (!holes[i]) {
-          if (delta > outsideMax) outsideMax = delta;
-          if (frame.rgba[i * 4 + 3]! > outsideAlpha) outsideAlpha = frame.rgba[i * 4 + 3]!;
-        } else {
-          inside++;
-          if (frame.rgba[i * 4 + 3] === 255) insideOpaque++;
-          if (delta > 0) insideChanged++;
-        }
+    const crops = [
+      "rai/idle_blink_01_l.png",
+      "rai/idle_blink_01_r.png",
+      "rai/idle_blink_02_l.png",
+      "rai/idle_blink_02_r.png",
+      "rai/idle_blink_l.png",
+      "rai/idle_blink_r.png",
+    ] as const;
+    for (const cropRel of crops) {
+      const eye = cropRel.endsWith("_l.png") ? 0 : 1;
+      const hole = IDLE_BLINK_EYE_HOLES[eye]!;
+      const crop = decodePng(readFileSync(join(publicRoot, cropRel)));
+      assert.equal(crop.width, hole.w, cropRel);
+      assert.equal(crop.height, hole.h, cropRel);
+      assert.equal(crop.colorType, 6, `${cropRel} is an RGBA soft lid`);
+      assert.ok(crop.width < idle.width && crop.height < idle.height);
+      assert.equal(crop.rgba[3], 0, `${cropRel} corner stays transparent`);
+      const center = ((hole.h >> 1) * crop.width + (hole.w >> 1)) * 4 + 3;
+      assert.equal(crop.rgba[center], 255, `${cropRel} covers the iris`);
+      let partial = 0;
+      for (let i = 3; i < crop.rgba.length; i += 4) {
+        const a = crop.rgba[i]!;
+        if (a > 0 && a < 255) partial++;
       }
-      assert.equal(outsideMax, 0, `${rel} RGB drifted outside the eye holes`);
-      assert.equal(outsideAlpha, 0, `${rel} alpha leaked outside the eye holes`);
-      assert.ok(inside > 0);
-      assert.equal(insideOpaque, inside, `${rel} eye holes are fully opaque`);
-      if (rel === "rai/idle_blink.png") {
-        assert.ok(insideChanged > 0, "closed lids change pixels inside the eye holes");
-      }
-      crops.forEach((cropRel, eye) => {
-        const hole = IDLE_BLINK_EYE_HOLES[eye]!;
-        const crop = decodePng(readFileSync(join(publicRoot, cropRel)));
-        assert.equal(crop.width, hole.w, cropRel);
-        assert.equal(crop.height, hole.h, cropRel);
-        assert.equal(crop.colorType, 6, cropRel);
-        assert.ok(crop.width < idle.width && crop.height < idle.height);
-        for (let y = 0; y < hole.h; y++) {
-          for (let x = 0; x < hole.w; x++) {
-            const pi = ((hole.y + y) * frame.width + (hole.x + x)) * 4;
-            const ci = (y * crop.width + x) * 4;
-            assert.equal(crop.rgba[ci], frame.rgba[pi], `${cropRel} r ${x},${y}`);
-            assert.equal(crop.rgba[ci + 1], frame.rgba[pi + 1], `${cropRel} g ${x},${y}`);
-            assert.equal(crop.rgba[ci + 2], frame.rgba[pi + 2], `${cropRel} b ${x},${y}`);
-            assert.equal(crop.rgba[ci + 3], 255, `${cropRel} a ${x},${y}`);
-          }
-        }
-      });
+      assert.ok(partial > 0, `${cropRel} has a soft edge`);
     }
 
     const painted = new Uint8ClampedArray(idle.rgba);
@@ -548,7 +519,17 @@ describe("layersFor talking vs pose hold", () => {
     closedCrops.forEach((cropRel, eye) => {
       const hole = IDLE_BLINK_EYE_HOLES[eye]!;
       const crop = decodePng(readFileSync(join(publicRoot, cropRel)));
+      const before = new Uint8ClampedArray(painted);
       copyEyeRect(painted, idle.width, crop.rgba, hole);
+      for (let y = 0; y < hole.h; y++) {
+        for (let x = 0; x < hole.w; x++) {
+          if (crop.rgba[(y * hole.w + x) * 4 + 3] !== 0) continue;
+          const pi = ((hole.y + y) * idle.width + (hole.x + x)) * 4;
+          for (let c = 0; c < 4; c++) {
+            assert.equal(painted[pi + c], before[pi + c], `${cropRel} punched ${x},${y}`);
+          }
+        }
+      }
     });
     let outsideMax = 0;
     let insideChanged = 0;

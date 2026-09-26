@@ -1,0 +1,18 @@
+Star Rai soft-blink eye holes v4 (re-cut after mushy reject)
+
+Paste onto live idle.png only. 782/783 never mount as full idle.
+Body outside holes must stay delta 0.
+
+Rects (canvas 1008×1792):
+  L  432,202  80×40
+  R  508,202  80×40
+Ovals (soft full-cover, covers iris — no open-eye leak):
+  L  cx=472 cy=222 rx=38 ry=18
+  R  cx=548 cy=222 rx=38 ry=18
+
+Crops (RGBA soft ellipse):
+  idle_blink_01_l/r.png  closing 782
+  idle_blink_02_l/r.png  half 783
+  idle_blink_l/r.png     closed (idle_blink)
+
+7-step ~2 frames each: open → 01 → 02 → closed → 02 → 01 → open
