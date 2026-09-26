@@ -1,5 +1,5 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { copyEyeRect } from "@/lib/idle-blink-paint";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { applyIdleCanvasPlan, planIdleCanvasDraws } from "@/lib/idle-blink-paint";
 import {
   allSpriteUrls,
   canIdleBlink,
@@ -55,16 +55,6 @@ function expApproach(current: number, target: number, rate: number, dt: number):
 /** Synthetic jaw so visemes cycle even when TTS amp is flat/near-zero. */
 function syntheticJaw(t: number): number {
   return 0.25 + 0.55 * Math.abs(Math.sin(t * 11)) * Math.abs(Math.sin(t * 3.3));
-}
-
-function blitEyeRect(
-  ctx: CanvasRenderingContext2D,
-  hole: { x: number; y: number; w: number; h: number },
-  pixels: Uint8ClampedArray,
-) {
-  const view = ctx.getImageData(hole.x, hole.y, hole.w, hole.h);
-  copyEyeRect(view.data, hole.w, pixels, { x: 0, y: 0, w: hole.w, h: hole.h });
-  ctx.putImageData(view, hole.x, hole.y);
 }
 
 function isInstantLayer(layer: SpriteLayer, talking: boolean): boolean {
@@ -124,9 +114,16 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const idleCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const paintedCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const paintedUrlRef = useRef<string | null>(null);
+  const lidsOnCanvasRef = useRef(false);
   const idleBitmapRef = useRef<HTMLImageElement | null>(null);
-  const glareEyesRef = useRef<Uint8ClampedArray[] | null>(null);
-  const eyePixelsRef = useRef<Record<string, Uint8ClampedArray>>({});
+  const eyeImageRef = useRef<Record<string, HTMLImageElement>>({});
+  const paintStateRef = useRef({
+    blinkShown: 0,
+    eyesReady: false,
+    idleReady: false,
+    idleSheetUrl: null as string | null,
+    restingBlink: false,
+  });
 
   // Punch studio-white cards to alpha, then decode so pose swaps never flash a plate.
   useEffect(() => {
@@ -147,7 +144,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     };
   }, []);
 
-  // Decode the six eye-rect crops into pixel buffers. Failure leaves blink off.
+  // Decode the six eye-rect crops. Failure leaves blink off — no full-plate fallback.
   useEffect(() => {
     let cancelled = false;
     const urls = idleBlinkEyeUrls();
@@ -161,15 +158,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
         if (img.naturalWidth !== hole.w || img.naturalHeight !== hole.h) {
           throw new Error("eye crop does not match the idle hole");
         }
-        const scratch = document.createElement("canvas");
-        scratch.width = img.naturalWidth;
-        scratch.height = img.naturalHeight;
-        const ctx = scratch.getContext("2d", { willReadFrequently: true });
-        if (!ctx) throw new Error("eye crop canvas");
-        ctx.drawImage(img, 0, 0);
-        eyePixelsRef.current[src] = new Uint8ClampedArray(
-          ctx.getImageData(0, 0, scratch.width, scratch.height).data,
-        );
+        eyeImageRef.current[src] = img;
       }),
     )
       .then(() => {
@@ -518,59 +507,86 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
 
   const stageReady = Boolean(idleSheetUrl && idleBitmapUrl === idleSheetUrl);
   const talkOverlay = display.find((layer) => layer.role === "talk");
+  const idleReady = Boolean(idleSheetUrl && idleBitmapUrl === idleSheetUrl);
 
-  // Copy eye pixels onto the live idle bitmap. Never clear the canvas.
-  // Never draw the blink plate. A new canvas gets one idle.png paint, then
-  // only the two holes change for the rest of its life.
-  useLayoutEffect(() => {
+  const paintIdleCanvas = useCallback(() => {
+    const state = paintStateRef.current;
     const canvas = idleCanvasRef.current;
     const idleImg = idleBitmapRef.current;
-    if (!canvas || !idleImg || !idleSheetUrl || idleImg.src !== idleSheetUrl) return;
-    if (paintedCanvasRef.current !== canvas || paintedUrlRef.current !== idleSheetUrl) {
-      // Setting the bitmap size clears a new canvas. Do it once, then paint
-      // idle.png before the browser shows it. Blink frames must not reach this.
-      if (canvas.width !== IDLE_BLINK_CANVAS.width || canvas.height !== IDLE_BLINK_CANVAS.height) {
-        canvas.width = IDLE_BLINK_CANVAS.width;
-        canvas.height = IDLE_BLINK_CANVAS.height;
-      }
+    const bodyPainted =
+      canvas != null &&
+      paintedCanvasRef.current === canvas &&
+      paintedUrlRef.current === state.idleSheetUrl;
+    const plan = planIdleCanvasDraws({
+      canvasMounted: canvas != null,
+      idleReady: state.idleReady,
+      bodyPainted,
+      canvasWidth: canvas?.width ?? 0,
+      canvasHeight: canvas?.height ?? 0,
+      blink: state.blinkShown,
+      eyesReady: state.eyesReady,
+      lidsOnCanvas: lidsOnCanvasRef.current,
+      allowLids: state.restingBlink,
+    });
+    if (!canvas || !idleImg || plan.length === 0) return;
+    const drawsBody = plan.some((step) => step.kind === "body");
+    if (drawsBody) {
+      // Reset once so a remount cannot source-over idle.png onto itself.
+      // Blink frames must not reach this — resizing clears the body.
+      canvas.width = IDLE_BLINK_CANVAS.width;
+      canvas.height = IDLE_BLINK_CANVAS.height;
+    } else if (canvas.width !== IDLE_BLINK_CANVAS.width || canvas.height !== IDLE_BLINK_CANVAS.height) {
+      return;
     }
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
-
-    if (paintedCanvasRef.current !== canvas || paintedUrlRef.current !== idleSheetUrl) {
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(idleImg, 0, 0);
+    const pair = idleBlinkEyeSrcs(state.blinkShown);
+    const lidImages = pair?.map((src) => eyeImageRef.current[src]);
+    const lids =
+      lidImages && lidImages[0] && lidImages[1]
+        ? ([lidImages[0], lidImages[1]] as const)
+        : null;
+    applyIdleCanvasPlan(plan, ctx, { idle: idleImg, lids });
+    if (drawsBody) {
       paintedCanvasRef.current = canvas;
-      paintedUrlRef.current = idleSheetUrl;
-      glareEyesRef.current = IDLE_BLINK_EYE_HOLES.map(
-        (hole) => new Uint8ClampedArray(ctx.getImageData(hole.x, hole.y, hole.w, hole.h).data),
-      );
+      paintedUrlRef.current = state.idleSheetUrl;
+      lidsOnCanvasRef.current = false;
     }
+    const eyeStep = plan.find((step) => step.kind === "eyes");
+    if (eyeStep?.kind === "eyes") {
+      if (eyeStep.mode === "lid" && lids) lidsOnCanvasRef.current = true;
+      if (eyeStep.mode === "glare") lidsOnCanvasRef.current = false;
+    }
+  }, []);
 
-    const restore = () => {
-      const saved = glareEyesRef.current;
-      if (!saved) return;
-      IDLE_BLINK_EYE_HOLES.forEach((hole, i) => {
-        const pixels = saved[i];
-        if (!pixels) return;
-        blitEyeRect(ctx, hole, pixels);
-      });
+  const bindIdleCanvas = useCallback(
+    (node: HTMLCanvasElement | null) => {
+      idleCanvasRef.current = node;
+      if (!node) {
+        paintedCanvasRef.current = null;
+        paintedUrlRef.current = null;
+        lidsOnCanvasRef.current = false;
+        return;
+      }
+      // Mount: draw idle.png before the browser shows the canvas.
+      paintIdleCanvas();
+    },
+    [paintIdleCanvas],
+  );
+
+  // idle.png becoming ready, and each blink frame. The canvas mounts in the
+  // idleBitmapUrl commit — that has to be a dependency, or the bitmap stays
+  // the browser default 300×150 and the lids (y=208) never land.
+  useLayoutEffect(() => {
+    paintStateRef.current = {
+      blinkShown,
+      eyesReady,
+      idleReady,
+      idleSheetUrl: idleSheetUrl ?? null,
+      restingBlink,
     };
-
-    if (!eyesReady || blinkShown === 0) {
-      restore();
-      return;
-    }
-    const pair = idleBlinkEyeSrcs(blinkShown);
-    const buffers = pair?.map((src) => eyePixelsRef.current[src]);
-    if (!pair || !buffers || buffers.some((buf) => !buf)) {
-      restore();
-      return;
-    }
-    IDLE_BLINK_EYE_HOLES.forEach((hole, i) => {
-      blitEyeRect(ctx, hole, buffers[i]!);
-    });
-  }, [blinkShown, eyesReady, idleSheetUrl]);
+    paintIdleCanvas();
+  }, [blinkShown, eyesReady, idleBitmapUrl, idleSheetUrl, idleReady, restingBlink, paintIdleCanvas]);
 
   return (
     <div
@@ -601,7 +617,9 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
             return (
               <canvas
                 key={layer.id}
-                ref={idleCanvasRef}
+                ref={bindIdleCanvas}
+                width={IDLE_BLINK_CANVAS.width}
+                height={IDLE_BLINK_CANVAS.height}
                 className="rai-layer"
                 data-rai-role="body"
                 data-rai-sheet="idle"

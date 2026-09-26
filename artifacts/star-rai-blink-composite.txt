@@ -45,7 +45,8 @@ Frames (full plates are the bake proof: RGB matches idle.png outside the holes, 
 
 Runtime
 - One body texture the whole blink: live public/rai/idle.png, never unloaded.
-- The blink sheet is only a source. After register onto 1008×1792, copy the two eye rects onto that idle bitmap. Do not draw the rest of the blink PNG.
+- The idle canvas is 1008×1792. On mount, and when idle.png is ready, draw that full bitmap once. Do not leave the canvas at the browser default 300×150.
+- Blink only drawImages the two eye rects (L 434,208 80×28; R 514,208 98×30) from the crop sheets. Do not draw the rest of the blink PNG. Do not redraw the full sheet on a blink frame.
 - No second <img>. No opacity crossfade of two full figures. No canvas clear between blink frames.
 - Crops copied in: idle_blink_01_l/r (40%), idle_blink_02_l/r (75%), idle_blink_l/r (closed hold).
 - If those crops are not ready, blink stays off. Do not swap in a full plate.
