@@ -395,6 +395,11 @@ body.chat-thread-resizing {
   }
 }
 
+/* Lid overlay is transparent outside the two eye holes. No drop-shadow — that would box the holes. */
+.rai-layer.rai-eye-lid {
+  filter: none;
+}
+
 .rai-ahoge {
   pointer-events: none;
   position: absolute;

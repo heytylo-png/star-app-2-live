@@ -43,13 +43,18 @@ Amplitude still drives a small talk bob on the rig. Dedicated poses (`talk`, `wa
 
 ### Idle blink
 
-Rest idle only: pose `idle`, not talking, not a dedicated pose, not an emotion sheet (smug, shy, tired, soft, hype, and the named pose keys). Every **3–6s** (random), crossfade `idle.png` → `public/rai/idle_blink.png` (official 462 closed-lid full body, same crop) and back.
+Rest idle only: pose `idle`, not talking, not a dedicated pose, not an emotion sheet (smug, shy, tired, soft, hype, and the named pose keys). Every **3–6s** (random), the glare body stays `idle.png`. Lid frames overlay **only the two eye holes** (`IDLE_BLINK_EYE_HOLES` in `src/lib/rai.ts`). Alpha is 0 outside those rects, so two full PNGs never crossfade or clip.
 
-- Fade **100ms** (`IDLE_BLINK_FADE_MS`) — inside 80–120ms and under `POSE_CROSSFADE_MS` (380).
-- Closed hold **100ms** (`IDLE_BLINK_HOLD_MS`) after that fade-in, then the same 100ms fade back to `idle.png`.
+Frames (baked by `scripts/bake-idle-blink.py`, RGB matches `idle.png` outside the holes):
+
+- `idle_blink_01.png` — 40% closed
+- `idle_blink_02.png` — 75% closed
+- `idle_blink.png` — official closed lids
+
+- Close phase **100ms** (`IDLE_BLINK_FADE_MS`) across the early and mid frames, then closed hold **100ms** (`IDLE_BLINK_HOLD_MS`), then the same 100ms open phase back to glare eyes. Not an opacity crossfade.
 - A pose command, talk flap, or emotion-sheet swap mid-blink clears blink immediately and snaps to that sheet.
 - `prefers-reduced-motion: reduce` disables blink.
-- `idle_blink.png` is preloaded with the other sprites and punched with the same studio-white pipeline as `idle.png`.
+- Lid frames are preloaded with the other sprites and shown as baked (they already have alpha outside the holes, so they skip the studio-white punch).
 
 Fallback: spoken `talk` / mood sheet as a single body. Reduced motion matches that (no flap over frown idle, no blink).
 

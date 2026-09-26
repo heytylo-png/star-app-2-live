@@ -11,15 +11,35 @@ export const POSE_CROSSFADE_MS = 380;
 export const IDLE_BEAT_FADE_MS = 400;
 
 /**
- * Rest-idle blink on `idle_blink.png`.
- * Fade stays inside 80–120ms and under the pose crossfade so lids read as a
- * blink. Hold is the fully-closed dwell after that fade-in.
+ * Rest-idle blink timing. Not an opacity crossfade of two full sheets.
+ * `IDLE_BLINK_FADE_MS` is the close phase and the open phase (split across
+ * the early/mid lid frames). `IDLE_BLINK_HOLD_MS` is the fully-closed dwell.
+ * Both stay inside 80–120ms and under the pose crossfade.
  */
 export const IDLE_BLINK_FADE_MS = 100;
 export const IDLE_BLINK_HOLD_MS = 100;
 /** Random gap between blinks, inclusive range ~3–6s. */
 export const IDLE_BLINK_GAP_MIN_MS = 3000;
 export const IDLE_BLINK_GAP_MAX_MS = 6000;
+
+export type IdleBlinkStep = { blink: 0 | 1 | 2 | 3; at: number };
+
+/**
+ * One rest blink: early lid → mid → closed hold → mid → early → glare eyes.
+ * `at` is ms from the start of the blink. Frame 0 restores `idle.png` eyes.
+ */
+export function idleBlinkSchedule(): IdleBlinkStep[] {
+  const step = IDLE_BLINK_FADE_MS / 2;
+  const hold = IDLE_BLINK_HOLD_MS;
+  return [
+    { blink: 1, at: 0 },
+    { blink: 2, at: step },
+    { blink: 3, at: step * 2 },
+    { blink: 2, at: step * 2 + hold },
+    { blink: 1, at: step * 3 + hold },
+    { blink: 0, at: step * 4 + hold },
+  ];
+}
 
 /** Idle vertical travel stays under this so the sheet does not float. */
 export const IDLE_MAX_TRANSLATE_Y_PX = 1.2;

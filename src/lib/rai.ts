@@ -209,10 +209,14 @@ export const SPRITES = {
     three_quarter: ASSET(LIVE_POSE_FILES.three_quarter),
   } satisfies Record<PoseId, string>,
   /**
-   * Official 462 closed-lid full body. Same crop as poses.idle.
-   * Not a pose key — rest blink only. Punched like every other plate.
+   * Rest-idle lid frames on the live idle canvas (1008×1792).
+   * Not pose keys. RGB outside IDLE_BLINK_EYE_HOLES matches idle.png;
+   * alpha is 0 there so the puppet overlays lids and never stacks a second body.
+   * 01 = 40% close, 02 = 75%, idleBlink = official closed lids (hold).
    */
   idleBlink: ASSET("rai/idle_blink.png"),
+  idleBlink01: ASSET("rai/idle_blink_01.png"),
+  idleBlink02: ASSET("rai/idle_blink_02.png"),
   angles: {
     front: ASSET("star-rai/angles/front.png"),
     threeQuarter: ASSET("star-rai/angles/three-quarter.png"),
@@ -255,10 +259,31 @@ export const SPRITES = {
 
 export type TalkViseme = "closed" | "speak" | "oh" | "grin" | "kiss";
 
+/**
+ * Two eye holes on the 1008×1792 live idle canvas.
+ * Same x,y,w,h cut from glare (`idle.png`) and from the registered closed-lid
+ * sheet. Bangs above y=208, ahoge, mouth, and collar stay outside.
+ * Keep in sync with scripts/bake-idle-blink.py.
+ */
+export const IDLE_BLINK_EYE_HOLES = [
+  { x: 434, y: 208, w: 80, h: 28 },
+  { x: 514, y: 208, w: 98, h: 30 },
+] as const;
+
+/** Lid overlay for rest blink. 1 early, 2 mid, ≥3 fully closed. Null when open. */
+export function idleBlinkLidSrc(blink: number): string | null {
+  if (blink === 1) return SPRITES.idleBlink01;
+  if (blink === 2) return SPRITES.idleBlink02;
+  if (blink >= 3) return SPRITES.idleBlink;
+  return null;
+}
+
 /** Flat list of every sprite URL referenced by SPRITES — use for preload. */
 export function allSpriteUrls(): string[] {
   return [
     SPRITES.idleBlink,
+    SPRITES.idleBlink01,
+    SPRITES.idleBlink02,
     ...Object.values(SPRITES.poses),
     ...Object.values(SPRITES.angles),
     SPRITES.talk,
@@ -273,8 +298,11 @@ export type SpriteLayer = {
   id: string;
   src: string;
   opacity: number;
-  /** body under talk; talk overlays without replacing body */
-  role: "body" | "talk";
+  /**
+   * body = full sheet. talk = viseme overlay.
+   * eyes = lid holes only (alpha 0 outside). Never a second full body.
+   */
+  role: "body" | "talk" | "eyes";
 };
 
 /** When true, SPEAKING uses Expo bust visemes (zoomed crop). Default off. */
@@ -289,11 +317,11 @@ export type PuppetState = {
   /** Seconds — drives official talk-sheet opacity flap (sin phase). */
   talkPhase?: number;
   /**
-   * 0 open, 1 half, 2 closed.
-   * Expo talk bust (flag on) uses 1/2 with face_eyes_* while speaking.
-   * Official PNG uses any non-zero only on rest idle → idle_blink.png.
+   * 0 open. Official rest blink: 1 early lid, 2 mid, 3 closed hold
+   * (`idleBlinkLidSrc`) — eye overlay on idle.png, not a body swap.
+   * Expo talk bust (flag on) still uses 1/2 with face_eyes_* while speaking.
    */
-  blink?: 0 | 1 | 2;
+  blink?: 0 | 1 | 2 | 3;
   /** Brief idle variety beat from puppet timer (smile/grin). Official pack ignores Expo alts. */
   idleBeat?: IdleBeat;
   /** Skip mouth flap; show a static talk sheet. */
@@ -430,9 +458,14 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     return [body(SPRITES.poses.talk)];
   }
 
-  // Closed-lid full body. Same punch path as idle. Not an Expo eye bust.
-  if (blink > 0 && canIdleBlink({ pose, emotion, talking, reducedMotion })) {
-    return [body(SPRITES.idleBlink)];
+  // Eye-hole lids on the glare body. The idle sheet stays mounted; the lid
+  // frame is alpha outside the two holes so it cannot clip a second full PNG.
+  const lid = idleBlinkLidSrc(blink);
+  if (lid && canIdleBlink({ pose, emotion, talking, reducedMotion })) {
+    return [
+      body(SPRITES.poses.idle),
+      { id: `idle-eyes:${lid}`, src: lid, opacity: 1, role: "eyes" },
+    ];
   }
 
   return [body(SPRITES.poses.idle)];

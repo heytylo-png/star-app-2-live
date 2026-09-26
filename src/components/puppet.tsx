@@ -12,10 +12,9 @@ import {
 } from "@/lib/rai";
 import {
   IDLE_BEAT_FADE_MS,
-  IDLE_BLINK_FADE_MS,
   IDLE_BLINK_GAP_MAX_MS,
   IDLE_BLINK_GAP_MIN_MS,
-  IDLE_BLINK_HOLD_MS,
+  idleBlinkSchedule,
   puppetIdleMotion,
   puppetRigTransform,
 } from "@/lib/rai-motion";
@@ -53,25 +52,18 @@ function syntheticJaw(t: number): number {
 }
 
 function isInstantLayer(layer: SpriteLayer, talking: boolean): boolean {
+  // Lid holes cut in. Fading them would dissolve a second image over the body.
+  if (layer.role === "eyes") return true;
   return talking && (layer.id === "talk" || layer.role === "talk");
 }
 
-/** off = pose timing. fade/out = idle ↔ blink. snap = drop blink and cut to the new sheet. */
-type BlinkFadeMode = "off" | "fade" | "out" | "snap";
+/** off = pose timing. snap = drop lids and cut to the new sheet. */
+type BlinkFadeMode = "off" | "snap";
 
 function fadeMsFor(layer: SpriteLayer, talking: boolean, blinkMode: BlinkFadeMode): number {
   if (isInstantLayer(layer, talking)) return 0;
   if (layer.id.startsWith("idle-beat")) return IDLE_BEAT_FADE_MS;
   if (layer.id === "expo-talk") return 180;
-  if (layer.src === SPRITES.idleBlink) {
-    return blinkMode === "snap" ? 0 : IDLE_BLINK_FADE_MS;
-  }
-  if (
-    (blinkMode === "fade" || blinkMode === "out") &&
-    layer.src === SPRITES.poses.idle
-  ) {
-    return IDLE_BLINK_FADE_MS;
-  }
   // Pose / talk / emotion swap mid-blink: cut, don't ease the closed lids out.
   if (blinkMode === "snap") return 0;
   return POSE_CROSSFADE_MS;
@@ -81,8 +73,8 @@ function fadeMsFor(layer: SpriteLayer, talking: boolean, blinkMode: BlinkFadeMod
  * Star Rai 2D puppet — planted idle life, look-at lean, talk/mood sheets.
  * Studio-white cards are punched to alpha. Layers crossfade by stable id.
  * Spoken bubble holds talk/mood through the line; frown idle is rest-only.
- * Rest idle blinks with idle_blink.png. Expo bust mouth/eye crops stay off.
- * Dedicated poses hold their own sheet and do not blink.
+ * Rest idle blinks by overlaying eye-hole frames on idle.png.
+ * Expo bust mouth/eye crops stay off. Dedicated poses hold their own sheet and do not blink.
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -99,7 +91,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   talkingRef.current = talking;
 
   const [ampLive, setAmpLive] = useState(0);
-  const [blink, setBlink] = useState<0 | 1 | 2>(0);
+  const [blink, setBlink] = useState<0 | 1 | 2 | 3>(0);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [display, setDisplay] = useState<DisplayLayer[]>([]);
   const [sheets, setSheets] = useState<Record<string, string>>({});
@@ -108,14 +100,23 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const fadingIn = useRef<Set<string>>(new Set());
   const fadeRaf = useRef(0);
   const [blinkMode, setBlinkMode] = useState<BlinkFadeMode>("off");
+  const blinkRef = useRef<0 | 1 | 2 | 3>(0);
 
   // Punch studio-white cards to alpha, then decode so pose swaps never flash a plate.
   useEffect(() => {
     let cancelled = false;
     const urls = allSpriteUrls();
     const idle = SPRITES.poses.idle;
+    const eyeLids = new Set<string>([SPRITES.idleBlink, SPRITES.idleBlink01, SPRITES.idleBlink02]);
     const ordered = [idle, ...urls.filter((src) => src !== idle)];
     for (const src of ordered) {
+      if (eyeLids.has(src)) {
+        const img = new Image();
+        img.decoding = "async";
+        img.src = src;
+        void img.decode().catch(() => {});
+        continue;
+      }
       void punchedSpriteUrl(src).then((url) => {
         if (cancelled) return;
         setSheets((prev) => (prev[src] === url ? prev : { ...prev, [src]: url }));
@@ -188,41 +189,51 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     };
   }, []);
 
-  // Official full-body blink on rest idle only. Pose, talk, and emotion sheets cancel it.
+  // Eye-hole blink on rest idle only. The glare body stays up; lid frames swap
+  // with no opacity crossfade. Pose, talk, and emotion sheets cancel it.
   useEffect(() => {
     if (USE_EXPO_TALK_BUST) return;
     const resting = canIdleBlink({ pose, emotion, talking, reducedMotion });
-    // Leaving rest cancels in the previous effect's cleanup (snap blink off).
     if (!resting) return;
 
     let cancelled = false;
-    let sleepTimer = 0;
-    let holdTimer = 0;
+    const timers: number[] = [];
 
-    const schedule = () => {
+    const clearTimers = () => {
+      for (const timer of timers) window.clearTimeout(timer);
+      timers.length = 0;
+    };
+
+    const arm = () => {
+      clearTimers();
       const wait =
         IDLE_BLINK_GAP_MIN_MS +
         Math.random() * (IDLE_BLINK_GAP_MAX_MS - IDLE_BLINK_GAP_MIN_MS);
-      sleepTimer = window.setTimeout(() => {
-        if (cancelled || reducedRef.current || talkingRef.current) return;
-        setBlink(2);
-        setBlinkMode("fade");
-        holdTimer = window.setTimeout(() => {
-          if (cancelled) return;
-          setBlink(0);
-          setBlinkMode("out");
-          schedule();
-        }, IDLE_BLINK_FADE_MS + IDLE_BLINK_HOLD_MS);
-      }, wait);
+      timers.push(
+        window.setTimeout(() => {
+          if (cancelled || reducedRef.current || talkingRef.current) return;
+          for (const step of idleBlinkSchedule()) {
+            timers.push(
+              window.setTimeout(() => {
+                if (cancelled || reducedRef.current || talkingRef.current) return;
+                blinkRef.current = step.blink;
+                setBlink(step.blink);
+                if (step.blink === 0) arm();
+              }, step.at),
+            );
+          }
+        }, wait),
+      );
     };
 
-    schedule();
+    arm();
     return () => {
       cancelled = true;
-      window.clearTimeout(sleepTimer);
-      window.clearTimeout(holdTimer);
+      clearTimers();
+      const midBlink = blinkRef.current > 0;
+      blinkRef.current = 0;
       setBlink(0);
-      setBlinkMode((mode) => (mode === "fade" || mode === "out" ? "snap" : mode));
+      if (midBlink) setBlinkMode("snap");
     };
   }, [pose, emotion, talking, reducedMotion]);
 
@@ -306,14 +317,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   // Pose / talk / emotion can change a frame before the blink timer cleans up.
   // Derive snap in that render so the next sheet cuts in instead of easing from closed lids.
   let blinkModeLive: BlinkFadeMode = blinkMode;
-  if (!USE_EXPO_TALK_BUST) {
-    if (!restingBlink && (blink > 0 || blinkMode === "fade" || blinkMode === "out")) {
-      blinkModeLive = "snap";
-    } else if (blink > 0 && restingBlink) {
-      blinkModeLive = "fade";
-    } else if (restingBlink && blink === 0 && blinkMode === "fade") {
-      blinkModeLive = "out";
-    }
+  if (!USE_EXPO_TALK_BUST && !restingBlink && blink > 0) {
+    blinkModeLive = "snap";
   }
 
   const desired = useMemo(
@@ -332,13 +337,12 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     [pose, emotion, talking, ampLive, blink, reducedMotion],
   );
 
-  // Drop snap/out timing once the blink cut or return fade has finished.
+  // Drop snap timing once the cancelled blink has cut to the new sheet.
   useEffect(() => {
-    if (blinkMode !== "snap" && blinkMode !== "out") return;
-    const delay = blinkMode === "snap" ? 0 : IDLE_BLINK_FADE_MS + 40;
+    if (blinkMode !== "snap") return;
     const timer = window.setTimeout(() => {
-      setBlinkMode((mode) => (mode === blinkMode ? "off" : mode));
-    }, delay);
+      setBlinkMode((mode) => (mode === "snap" ? "off" : mode));
+    }, 0);
     return () => window.clearTimeout(timer);
   }, [blinkMode]);
 
@@ -352,7 +356,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     const next = new Map<string, DisplayLayer>();
     desired.forEach((layer, i) => {
       // Body starts at 1 so sheets sit above .rai-rig::after (contact shadow at z 0).
-      next.set(layer.id, { ...layer, z: layer.role === "talk" ? 20 + i : i + 1 });
+      const z = layer.role === "talk" ? 20 + i : layer.role === "eyes" ? 6 : i + 1;
+      next.set(layer.id, { ...layer, z });
     });
 
     const merged = new Map(prevIds.current);
@@ -392,11 +397,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
         const existingTimer = fadeTimers.current.get(id);
         if (existingTimer) window.clearTimeout(existingTimer);
         const fadeMs = fadeMsFor(layer, talking, blinkModeLive);
-        // Keep frown idle mounted through the closed hold so the return can crossfade.
-        const removeAfter =
-          blinkModeLive === "fade" && layer.src === SPRITES.poses.idle
-            ? IDLE_BLINK_FADE_MS + IDLE_BLINK_HOLD_MS + IDLE_BLINK_FADE_MS
-            : fadeMs + 40;
+        const removeAfter = fadeMs + 40;
         const timer = window.setTimeout(() => {
           prevIds.current.delete(id);
           fadeTimers.current.delete(id);
@@ -412,8 +413,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     if (incoming.length) {
       if (fadeRaf.current) window.clearTimeout(fadeRaf.current);
       // Wait one paint at opacity 0 so CSS can interpolate 0 → target (not a hard cut in).
-      // Blink fades are short, so start on the next frame instead of the pose delay.
-      const incomingDelay = blinkModeLive === "fade" || blinkModeLive === "out" ? 16 : 48;
+      const incomingDelay = 48;
       fadeRaf.current = window.setTimeout(() => {
         for (const [id, layer] of incoming) {
           if (!prevIds.current.has(id)) continue;
@@ -450,7 +450,9 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     >
       <div data-rai-rig className="rai-rig">
         {display.map((layer) => {
-          const src = sheets[layer.src];
+          // Lid frames are already alpha outside the eye holes. Skip punch —
+          // it would fringe highlights that touch that clear margin.
+          const src = layer.role === "eyes" ? layer.src : sheets[layer.src];
           if (!src) return null;
           return (
             <img
@@ -459,10 +461,10 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
               alt=""
               draggable={false}
               decoding="async"
-              className="rai-layer"
+              className={layer.role === "eyes" ? "rai-layer rai-eye-lid" : "rai-layer"}
               data-rai-role={layer.role}
               data-rai-sheet={
-                layer.src === SPRITES.idleBlink
+                layer.role === "eyes"
                   ? "idle-blink"
                   : layer.src === SPRITES.poses.idle
                     ? "idle"
