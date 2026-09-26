@@ -43,7 +43,7 @@ Amplitude still drives a small talk bob on the rig. Dedicated poses (`talk`, `wa
 
 ### Idle blink
 
-Rest idle only: pose `idle`, not talking, not a dedicated pose, not an emotion sheet (smug, shy, tired, soft, hype, and the named pose keys). Every **3–6s** (random), the glare body stays one live `idle.png` bitmap. Blink does not add an `<img>` and does not opacity-crossfade a second figure.
+Rest idle only: pose `idle`, not talking, not a dedicated pose, not an emotion sheet (smug, shy, tired, soft, hype, and the named pose keys). The first blink starts about **0.9s** after rest idle, then every **4.5–7s**. The glare body stays one live `idle.png` bitmap. Blink does not add an `<img>` and does not opacity-crossfade a second figure.
 
 The idle `<canvas>` is created at 1008×1792 (not the browser default 300×150). On mount, and when `idle.png` is decoded, that canvas is painted once with the full idle bitmap. Blink then `drawImage`s one opaque patch into `IDLE_BLINK_DEST_RECT` `(x, y, w, h) = (424, 193, 196, 57)`. Nothing outside that rect is drawn. The canvas is not cleared between frames, and the idle body is not unloaded. If the patches are not ready, blink stays off.
 
@@ -53,7 +53,7 @@ Source of truth: `artifacts/star-rai-blink-frames/tylo-holes/`. Runtime files ar
 - `idle_blink_03_half.png` — 03-half (791)
 - `idle_blink_04_closed.png` — 04-closed (789)
 
-Cycle: **02-open → 03-half → 04-closed → reverse** (03-half → 02-open), then the dest rect is copied back from `idle.png`. Close phase **100ms** (`IDLE_BLINK_FADE_MS`) across open and half, closed hold **100ms** (`IDLE_BLINK_HOLD_MS`), then the same 100ms back through half and open.
+Cycle: **02-open → 03-half → 04-closed → reverse** (03-half → 02-open), then the dest rect is copied back from `idle.png`. 02-open holds **160ms**, 03-half **640ms** each way, 04-closed **1000ms**. A 50ms step on this long shot never reads as half or closed.
 - A pose command, talk flap, or emotion-sheet swap mid-blink clears blink immediately and snaps to that sheet.
 - `prefers-reduced-motion: reduce` disables blink.
 

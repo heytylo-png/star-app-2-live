@@ -18,6 +18,7 @@ import {
 } from "@/lib/rai";
 import {
   IDLE_BEAT_FADE_MS,
+  IDLE_BLINK_FIRST_MS,
   IDLE_BLINK_GAP_MAX_MS,
   IDLE_BLINK_GAP_MIN_MS,
   idleBlinkSchedule,
@@ -256,51 +257,54 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
 
   // Dest-rect blink on rest idle only, and only after the TyLo patches decode.
   // The idle.png body stays the only full texture. Pose, talk, and emotion cancel it.
+  // Keyed on the rest gate, not the emotion id: bratty and glance both show idle.png,
+  // and flipping between them must not throw away a cycle that is about to step.
+  const restingBlink = canIdleBlink({ pose, emotion, talking, reducedMotion });
   useEffect(() => {
-    if (USE_EXPO_TALK_BUST || !eyesReady) return;
-    const resting = canIdleBlink({ pose, emotion, talking, reducedMotion });
-    if (!resting) return;
+    if (USE_EXPO_TALK_BUST || !eyesReady || !restingBlink) return;
 
     let cancelled = false;
-    const timers: number[] = [];
+    let timer = 0;
 
-    const clearTimers = () => {
-      for (const timer of timers) window.clearTimeout(timer);
-      timers.length = 0;
+    const stop = () => {
+      if (timer) window.clearTimeout(timer);
+      timer = 0;
     };
 
-    const arm = () => {
-      clearTimers();
-      const wait =
-        IDLE_BLINK_GAP_MIN_MS +
-        Math.random() * (IDLE_BLINK_GAP_MAX_MS - IDLE_BLINK_GAP_MIN_MS);
-      timers.push(
-        window.setTimeout(() => {
-          if (cancelled || reducedRef.current || talkingRef.current) return;
-          for (const step of idleBlinkSchedule()) {
-            timers.push(
-              window.setTimeout(() => {
-                if (cancelled || reducedRef.current || talkingRef.current) return;
-                blinkRef.current = step.blink;
-                setBlink(step.blink);
-                if (step.blink === 0) arm();
-              }, step.at),
-            );
-          }
-        }, wait),
-      );
+    const gapMs = () =>
+      IDLE_BLINK_GAP_MIN_MS + Math.random() * (IDLE_BLINK_GAP_MAX_MS - IDLE_BLINK_GAP_MIN_MS);
+
+    // Chain one timeout per step, measured from when that lid is shown.
+    // A 50ms half on this long shot is over before the eye band can be read.
+    const runCycle = () => {
+      if (cancelled || reducedRef.current || talkingRef.current) return;
+      const steps = idleBlinkSchedule();
+      const show = (index: number) => {
+        if (cancelled || reducedRef.current || talkingRef.current) return;
+        const step = steps[index];
+        if (!step) return;
+        blinkRef.current = step.blink;
+        setBlink(step.blink);
+        const upcoming = steps[index + 1];
+        if (!upcoming) {
+          timer = window.setTimeout(runCycle, gapMs());
+          return;
+        }
+        timer = window.setTimeout(show, upcoming.at - step.at, index + 1);
+      };
+      show(0);
     };
 
-    arm();
+    timer = window.setTimeout(runCycle, IDLE_BLINK_FIRST_MS);
     return () => {
       cancelled = true;
-      clearTimers();
+      stop();
       const midBlink = blinkRef.current > 0;
       blinkRef.current = 0;
       setBlink(0);
       if (midBlink) setBlinkMode("snap");
     };
-  }, [pose, emotion, talking, reducedMotion, eyesReady]);
+  }, [restingBlink, eyesReady]);
 
   // Pointer → look target (normalized -1..1), deadzone kills micro-jitter.
   useEffect(() => {
@@ -378,7 +382,6 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     return () => cancelAnimationFrame(raf.current);
   }, []);
 
-  const restingBlink = canIdleBlink({ pose, emotion, talking, reducedMotion });
   const blinkShown = eyesReady ? blink : 0;
   // Pose / talk / emotion can change a frame before the blink timer cleans up.
   // Derive snap in that render so the next sheet cuts in instead of easing from closed lids.
