@@ -26,14 +26,14 @@ export const IDLE_BLINK_GAP_MAX_MS = 6000;
 export type IdleBlinkStep = { blink: 0 | 1 | 2 | 3; at: number };
 
 /**
- * Seven-step rest blink. The leading open is the idle.png glare already on
- * the canvas, so the schedule starts at closing and ends by putting those
- * glare eyes back.
+ * Seven-step rest blink on Maker's v4 holes (L 432,202 80×40 · R 508,202 80×40).
+ * The leading open is the idle.png glare already on the canvas, so the
+ * schedule starts at closing and ends by putting those glare eyes back.
  *
  * 1 open (rest) · 2 closing · 3 half · 4 closed · 5 half · 6 closing · 7 open
  *
  * `at` is ms from the start of the blink. blink 0 restores `idle.png` eyes.
- * 1 = closing crops, 2 = half crops, 3 = closed crops.
+ * 1 = closing crops, 2 = half crops, 3 = closed crops. About two frames each.
  */
 export const IDLE_BLINK_SEQUENCE = [
   "open",

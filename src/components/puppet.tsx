@@ -577,7 +577,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
 
   // idle.png becoming ready, and each blink frame. The canvas mounts in the
   // idleBitmapUrl commit — that has to be a dependency, or the bitmap stays
-  // the browser default 300×150 and the lids (y=208) never land.
+  // the browser default 300×150 and the lids (y=202) never land.
   useLayoutEffect(() => {
     paintStateRef.current = {
       blinkShown,

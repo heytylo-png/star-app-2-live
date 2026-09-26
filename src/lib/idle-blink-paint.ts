@@ -38,7 +38,7 @@ export function idleCanvasBitmapReady(canvas: { width: number; height: number })
  * schedule that full draw again.
  *
  * Eye draws are omitted until the body is on the canvas. A 300×150 default
- * bitmap cannot take the holes (left 434,208 80×28; right 514,208 98×30).
+ * bitmap cannot take the holes (left 432,202 80×40; right 508,202 80×40).
  */
 export function planIdleCanvasDraws(input: {
   canvasMounted: boolean;
@@ -77,6 +77,7 @@ export function planIdleCanvasDraws(input: {
 
 type DrawImageCtx = {
   imageSmoothingEnabled: boolean;
+  globalCompositeOperation: string;
   save(): void;
   restore(): void;
   beginPath(): void;
@@ -111,6 +112,7 @@ function clipHole(
   ctx.rect(hole.x, hole.y, hole.w, hole.h);
   ctx.clip();
   ctx.imageSmoothingEnabled = false;
+  ctx.globalCompositeOperation = "source-over";
   draw();
   ctx.restore();
 }
@@ -121,7 +123,11 @@ export function drawIdleBody(ctx: DrawImageCtx, image: CanvasImageSource): void 
   ctx.drawImage(image, 0, 0);
 }
 
-/** Crop sheet → one eye hole. Source is the crop's own pixels, not the full plate. */
+/**
+ * Crop sheet → one eye hole. Source is the crop's own pixels, not the full plate.
+ * Source-over keeps the RGBA ellipse: transparent corners leave the glare,
+ * partial alpha blends once. Caller restores the glare rect first.
+ */
 export function drawEyeRect(
   ctx: DrawImageCtx,
   crop: CanvasImageSource,
@@ -173,15 +179,18 @@ export function applyIdleCanvasPlan(
     IDLE_BLINK_EYE_HOLES.forEach((hole, index) => {
       const crop = images.lids?.[index];
       if (!crop) return;
+      // Soft alpha must blend with glare, not with the lid already in the hole.
+      drawGlareEyeRect(ctx, images.idle, hole);
       drawEyeRect(ctx, crop, hole);
-      draws += 1;
+      draws += 2;
     });
   }
   return draws;
 }
 
 /**
- * Copy one eye-rect into an idle bitmap. Touches only x..x+w, y..y+h.
+ * Source-over one eye-rect onto an idle bitmap. Touches only x..x+w, y..y+h.
+ * Transparent crop pixels leave the glare in place (soft ellipse corners).
  * Callers must not clear the destination. Pixels outside the rect stay put.
  */
 export function copyEyeRect(
@@ -193,10 +202,27 @@ export function copyEyeRect(
   const { x, y, w, h } = hole;
   if (w <= 0 || h <= 0) throw new Error("eye rect is empty");
   if (pixels.length !== w * h * 4) throw new Error("eye rect pixel count");
-  const rowBytes = w * 4;
   for (let row = 0; row < h; row++) {
     const d = ((y + row) * destWidth + x) * 4;
-    const s = row * rowBytes;
-    dest.set(pixels.subarray(s, s + rowBytes), d);
+    const s = row * w * 4;
+    for (let col = 0; col < w; col++) {
+      const si = s + col * 4;
+      const di = d + col * 4;
+      const sa = pixels[si + 3]! / 255;
+      const da = dest[di + 3]! / 255;
+      const outA = sa + da * (1 - sa);
+      if (outA === 0) {
+        dest[di] = 0;
+        dest[di + 1] = 0;
+        dest[di + 2] = 0;
+        dest[di + 3] = 0;
+        continue;
+      }
+      const inv = 1 - sa;
+      dest[di] = Math.round((pixels[si]! * sa + dest[di]! * da * inv) / outA);
+      dest[di + 1] = Math.round((pixels[si + 1]! * sa + dest[di + 1]! * da * inv) / outA);
+      dest[di + 2] = Math.round((pixels[si + 2]! * sa + dest[di + 2]! * da * inv) / outA);
+      dest[di + 3] = Math.round(outA * 255);
+    }
   }
 }

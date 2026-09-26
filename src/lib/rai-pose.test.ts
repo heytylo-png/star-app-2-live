@@ -503,63 +503,43 @@ describe("layersFor talking vs pose hold", () => {
     }
     assert.ok(allSpriteUrls().every((src) => !isFullBlinkPlate(src)));
 
+    assert.deepEqual(
+      IDLE_BLINK_EYE_HOLES.map((hole) => ({ x: hole.x, y: hole.y, w: hole.w, h: hole.h })),
+      [
+        { x: 432, y: 202, w: 80, h: 40 },
+        { x: 508, y: 202, w: 80, h: 40 },
+      ],
+    );
     const idle = decodePng(readFileSync(join(publicRoot, "rai/idle.png")));
     assert.equal(idle.width, IDLE_BLINK_CANVAS.width);
     assert.equal(idle.height, IDLE_BLINK_CANVAS.height);
     assert.equal(idle.colorType, 2);
     const holes = holeMask(idle.width, idle.height);
-    const plates: Array<[string, readonly [string, string]]> = [
-      ["rai/idle_blink.png", ["rai/idle_blink_l.png", "rai/idle_blink_r.png"]],
-      ["rai/idle_blink_01.png", ["rai/idle_blink_01_l.png", "rai/idle_blink_01_r.png"]],
-      ["rai/idle_blink_02.png", ["rai/idle_blink_02_l.png", "rai/idle_blink_02_r.png"]],
-    ];
-    for (const [rel, crops] of plates) {
-      const frame = decodePng(readFileSync(join(publicRoot, rel)));
-      assert.equal(frame.width, idle.width);
-      assert.equal(frame.height, idle.height);
-      assert.equal(frame.colorType, 6, `${rel} is the eye-hole proof plate`);
-      let outsideMax = 0;
-      let outsideAlpha = 0;
-      let inside = 0;
-      let insideOpaque = 0;
-      let insideChanged = 0;
-      for (let i = 0; i < holes.length; i++) {
-        const dr = Math.abs(frame.rgba[i * 4]! - idle.rgba[i * 4]!);
-        const dg = Math.abs(frame.rgba[i * 4 + 1]! - idle.rgba[i * 4 + 1]!);
-        const db = Math.abs(frame.rgba[i * 4 + 2]! - idle.rgba[i * 4 + 2]!);
-        const delta = dr > dg ? (dr > db ? dr : db) : dg > db ? dg : db;
-        if (!holes[i]) {
-          if (delta > outsideMax) outsideMax = delta;
-          if (frame.rgba[i * 4 + 3]! > outsideAlpha) outsideAlpha = frame.rgba[i * 4 + 3]!;
-        } else {
-          inside++;
-          if (frame.rgba[i * 4 + 3] === 255) insideOpaque++;
-          if (delta > 0) insideChanged++;
-        }
+    const crops = [
+      "rai/idle_blink_01_l.png",
+      "rai/idle_blink_01_r.png",
+      "rai/idle_blink_02_l.png",
+      "rai/idle_blink_02_r.png",
+      "rai/idle_blink_l.png",
+      "rai/idle_blink_r.png",
+    ] as const;
+    for (const cropRel of crops) {
+      const eye = cropRel.endsWith("_l.png") ? 0 : 1;
+      const hole = IDLE_BLINK_EYE_HOLES[eye]!;
+      const crop = decodePng(readFileSync(join(publicRoot, cropRel)));
+      assert.equal(crop.width, hole.w, cropRel);
+      assert.equal(crop.height, hole.h, cropRel);
+      assert.equal(crop.colorType, 6, `${cropRel} is an RGBA soft lid`);
+      assert.ok(crop.width < idle.width && crop.height < idle.height);
+      assert.equal(crop.rgba[3], 0, `${cropRel} corner stays transparent`);
+      const center = ((hole.h >> 1) * crop.width + (hole.w >> 1)) * 4 + 3;
+      assert.equal(crop.rgba[center], 255, `${cropRel} covers the iris`);
+      let partial = 0;
+      for (let i = 3; i < crop.rgba.length; i += 4) {
+        const a = crop.rgba[i]!;
+        if (a > 0 && a < 255) partial++;
       }
-      assert.equal(outsideMax, 0, `${rel} RGB drifted outside the eye holes`);
-      assert.equal(outsideAlpha, 0, `${rel} alpha leaked outside the eye holes`);
-      assert.ok(inside > 0);
-      assert.equal(insideOpaque, inside, `${rel} eye holes are fully opaque`);
-      assert.ok(insideChanged > 0, `${rel} lids change pixels inside the eye holes`);
-      crops.forEach((cropRel, eye) => {
-        const hole = IDLE_BLINK_EYE_HOLES[eye]!;
-        const crop = decodePng(readFileSync(join(publicRoot, cropRel)));
-        assert.equal(crop.width, hole.w, cropRel);
-        assert.equal(crop.height, hole.h, cropRel);
-        assert.equal(crop.colorType, 6, cropRel);
-        assert.ok(crop.width < idle.width && crop.height < idle.height);
-        for (let y = 0; y < hole.h; y++) {
-          for (let x = 0; x < hole.w; x++) {
-            const pi = ((hole.y + y) * frame.width + (hole.x + x)) * 4;
-            const ci = (y * crop.width + x) * 4;
-            assert.equal(crop.rgba[ci], frame.rgba[pi], `${cropRel} r ${x},${y}`);
-            assert.equal(crop.rgba[ci + 1], frame.rgba[pi + 1], `${cropRel} g ${x},${y}`);
-            assert.equal(crop.rgba[ci + 2], frame.rgba[pi + 2], `${cropRel} b ${x},${y}`);
-            assert.equal(crop.rgba[ci + 3], 255, `${cropRel} a ${x},${y}`);
-          }
-        }
-      });
+      assert.ok(partial > 0, `${cropRel} has a soft edge`);
     }
 
     const painted = new Uint8ClampedArray(idle.rgba);
@@ -567,7 +547,17 @@ describe("layersFor talking vs pose hold", () => {
     closedCrops.forEach((cropRel, eye) => {
       const hole = IDLE_BLINK_EYE_HOLES[eye]!;
       const crop = decodePng(readFileSync(join(publicRoot, cropRel)));
+      const before = new Uint8ClampedArray(painted);
       copyEyeRect(painted, idle.width, crop.rgba, hole);
+      for (let y = 0; y < hole.h; y++) {
+        for (let x = 0; x < hole.w; x++) {
+          if (crop.rgba[(y * hole.w + x) * 4 + 3] !== 0) continue;
+          const pi = ((hole.y + y) * idle.width + (hole.x + x)) * 4;
+          for (let c = 0; c < 4; c++) {
+            assert.equal(painted[pi + c], before[pi + c], `${cropRel} punched ${x},${y}`);
+          }
+        }
+      }
     });
     let outsideMax = 0;
     let insideChanged = 0;
@@ -587,46 +577,41 @@ describe("layersFor talking vs pose hold", () => {
 
   it("steps closing and half lids through the eye holes without moving the body", () => {
     const idle = decodePng(readFileSync(join(publicRoot, "rai/idle.png")));
-    const closing = decodePng(readFileSync(join(publicRoot, "rai/idle_blink_01.png")));
-    const half = decodePng(readFileSync(join(publicRoot, "rai/idle_blink_02.png")));
-    const closed = decodePng(readFileSync(join(publicRoot, "rai/idle_blink.png")));
     const holes = holeMask(idle.width, idle.height);
+    const artifactRoot = join(publicRoot, "../artifacts/star-rai-blink-frames/eyes");
+    const pack = [
+      ["rai/idle_blink_01_l.png", "02-closing_L.png"],
+      ["rai/idle_blink_01_r.png", "02-closing_R.png"],
+      ["rai/idle_blink_02_l.png", "03-half_L.png"],
+      ["rai/idle_blink_02_r.png", "03-half_R.png"],
+      ["rai/idle_blink_l.png", "04-462-blink_L.png"],
+      ["rai/idle_blink_r.png", "04-462-blink_R.png"],
+    ] as const;
+    for (const [cropRel, packName] of pack) {
+      const runtime = readFileSync(join(publicRoot, cropRel));
+      const source = readFileSync(join(artifactRoot, packName));
+      assert.ok(runtime.equals(source), `${cropRel} must match Maker pack ${packName}`);
+    }
 
-    const meanInside = (a: Uint8Array, b: Uint8Array) => {
+    const opaqueMean = (a: Uint8Array, b: Uint8Array) => {
       let sum = 0;
       let n = 0;
-      for (let i = 0; i < holes.length; i++) {
-        if (!holes[i]) continue;
-        const o = i * 4;
-        sum += Math.abs(a[o]! - b[o]!);
-        sum += Math.abs(a[o + 1]! - b[o + 1]!);
-        sum += Math.abs(a[o + 2]! - b[o + 2]!);
+      const len = Math.min(a.length, b.length);
+      for (let i = 0; i < len; i += 4) {
+        if (a[i + 3] === 0 && b[i + 3] === 0) continue;
+        sum += Math.abs(a[i]! - b[i]!);
+        sum += Math.abs(a[i + 1]! - b[i + 1]!);
+        sum += Math.abs(a[i + 2]! - b[i + 2]!);
         n += 3;
       }
-      return sum / n;
+      return n === 0 ? 0 : sum / n;
     };
-
-    // Three different lid drawings. A blend of open and closed is not one of them.
-    assert.ok(meanInside(closing.rgba, half.rgba) > 12);
-    assert.ok(meanInside(closing.rgba, closed.rgba) > 12);
-    assert.ok(meanInside(half.rgba, closed.rgba) > 12);
-    const mix = new Uint8Array(idle.rgba);
-    for (let i = 0; i < holes.length; i++) {
-      if (!holes[i]) continue;
-      const o = i * 4;
-      for (let c = 0; c < 3; c++) {
-        mix[o + c] = Math.round(idle.rgba[o + c]! * 0.6 + closed.rgba[o + c]! * 0.4);
-      }
-    }
-    assert.ok(meanInside(closing.rgba, mix) > 12, "closing is the 782 lids, not a 40% blend");
-    for (let i = 0; i < holes.length; i++) {
-      if (!holes[i]) continue;
-      const o = i * 4;
-      for (let c = 0; c < 3; c++) {
-        mix[o + c] = Math.round(idle.rgba[o + c]! * 0.25 + closed.rgba[o + c]! * 0.75);
-      }
-    }
-    assert.ok(meanInside(half.rgba, mix) > 12, "half is the 783 lids, not a 75% blend");
+    const closingL = decodePng(readFileSync(join(publicRoot, "rai/idle_blink_01_l.png")));
+    const halfL = decodePng(readFileSync(join(publicRoot, "rai/idle_blink_02_l.png")));
+    const closedL = decodePng(readFileSync(join(publicRoot, "rai/idle_blink_l.png")));
+    assert.ok(opaqueMean(closingL.rgba, halfL.rgba) > 4, "closing and half are different lids");
+    assert.ok(opaqueMean(closingL.rgba, closedL.rgba) > 4, "closing and closed are different lids");
+    assert.ok(opaqueMean(halfL.rgba, closedL.rgba) > 4, "half and closed are different lids");
 
     for (const [lid, crops] of [
       ["closing", ["rai/idle_blink_01_l.png", "rai/idle_blink_01_r.png"]],

@@ -45,13 +45,13 @@ Amplitude still drives a small talk bob on the rig. Dedicated poses (`talk`, `wa
 
 Rest idle only: pose `idle`, not talking, not a dedicated pose, not an emotion sheet (smug, shy, tired, soft, hype, and the named pose keys). Every **3–6s** (random), the glare body stays one live `idle.png` bitmap. Blink does not add an `<img>` and does not opacity-crossfade a second figure.
 
-The idle `<canvas>` is created at 1008×1792 (not the browser default 300×150). On mount, and when `idle.png` is decoded, that canvas is painted once with the full idle bitmap. Blink then `drawImage`s only the two eye rects (`IDLE_BLINK_EYE_HOLES`: left 434,208 80×28; right 514,208 98×30) from the crop sheets. The rest of the blink PNG is not drawn. The canvas is not cleared between frames, and the idle body is not unloaded. If the crops are not ready, blink stays off.
+The idle `<canvas>` is created at 1008×1792 (not the browser default 300×150). On mount, and when `idle.png` is decoded, that canvas is painted once with the full idle bitmap. Blink then `drawImage`s only the two eye rects (`IDLE_BLINK_EYE_HOLES`: left 432,202 80×40; right 508,202 80×40) from the crop sheets. The rest of the blink PNG is not drawn. The canvas is not cleared between frames, and the idle body is not unloaded. If the crops are not ready, blink stays off.
 
-Baked by `scripts/bake-idle-blink.py`. Full plates stay on disk so pixels outside the holes match `idle.png` (max delta 0). They are not mounted. The raw 782/783 JPGs are not body-locked (outside-hole delta 255) and are not in the tree. The copied rects are:
+The crops are Maker's v4 RGBA soft ellipses (`artifacts/star-rai-blink-frames/eyes/`), copied into the runtime files. Each lid step restores the glare rect from `idle.png`, then `drawImage`s the crop with source-over so the edge blends once and the transparent corners do not punch the body. Full plates and the 782/783 JPGs stay unmounted. The copied rects are:
 
-- `idle_blink_01_l.png` / `idle_blink_01_r.png` — closing lids (782)
-- `idle_blink_02_l.png` / `idle_blink_02_r.png` — half lids (783)
-- `idle_blink_l.png` / `idle_blink_r.png` — official closed lids
+- `idle_blink_01_l.png` / `idle_blink_01_r.png` — `02-closing`
+- `idle_blink_02_l.png` / `idle_blink_02_r.png` — `03-half`
+- `idle_blink_l.png` / `idle_blink_r.png` — `04-462-blink`
 
 Seven steps, about two frames each (`IDLE_BLINK_STEP_MS`, 24fps twos): open glare → closing → half → closed → half → closing → open glare. The body bitmap stays `idle.png` the whole way.
 - A pose command, talk flap, or emotion-sheet swap mid-blink clears blink immediately and snaps to that sheet.

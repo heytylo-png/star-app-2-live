@@ -244,10 +244,9 @@ export const SPRITES = {
     three_quarter: ASSET(LIVE_POSE_FILES.three_quarter),
   } satisfies Record<PoseId, string>,
   /**
-   * Rest-idle lid crops — one file per eye hole, not full plates.
-   * 01 = closing (TyLo 782), 02 = half (TyLo 783), closed = official lids.
-   * Full-canvas proofs live at public/rai/idle_blink*.png and are not mounted.
-   * The 782/783 jpg sheets are bake inputs, not a second body.
+   * Rest-idle lid crops — Maker v4 RGBA ellipses, one file per eye hole.
+   * 01 = closing, 02 = half, closed = 04-462-blink. Pixels match
+   * artifacts/star-rai-blink-frames/eyes/. Full sheets are not mounted.
    */
   idleBlink01L: ASSET("rai/idle_blink_01_l.png"),
   idleBlink01R: ASSET("rai/idle_blink_01_r.png"),
@@ -299,13 +298,13 @@ export type TalkViseme = "closed" | "speak" | "oh" | "grin" | "kiss";
 
 /**
  * Two eye holes on the 1008×1792 live idle canvas.
- * Same x,y,w,h cut from glare (`idle.png`) and from the registered closed-lid
- * sheet. Bangs above y=208, ahoge, mouth, and collar stay outside.
- * Keep in sync with scripts/bake-idle-blink.py.
+ * Soft RGBA ellipses composite here. Both holes are 80×40 so the right
+ * rect stops before the ear. Bangs above y=202, ahoge, mouth, and collar
+ * stay outside. Keep in sync with scripts/bake-idle-blink.py.
  */
 export const IDLE_BLINK_EYE_HOLES = [
-  { x: 434, y: 208, w: 80, h: 28 },
-  { x: 514, y: 208, w: 98, h: 30 },
+  { x: 432, y: 202, w: 80, h: 40 },
+  { x: 508, y: 202, w: 80, h: 40 },
 ] as const;
 
 /** Live idle canvas the holes are registered onto. */
@@ -335,8 +334,8 @@ export function idleBlinkLid(blink: number): IdleBlinkLid {
 }
 
 /**
- * Two eye-rect crops for rest blink. 1 closing (782), 2 half (783), ≥3 closed.
- * Null when open. Not the full-canvas plates and not the blink-frames jpgs.
+ * Two eye-rect crops for rest blink. 1 closing, 2 half, ≥3 closed.
+ * Null when open. Not the full-canvas plates and not the 782/783 jpgs.
  */
 export function idleBlinkEyeSrcs(blink: number): readonly [string, string] | null {
   if (blink === 1) return [SPRITES.idleBlink01L, SPRITES.idleBlink01R];

@@ -107,14 +107,15 @@ describe("planIdleCanvasDraws", () => {
       assert.equal(eyeRectFitsCanvas(hole, BROWSER_DEFAULT_CANVAS), false);
       assert.equal(eyeRectFitsCanvas(hole, IDLE_BLINK_CANVAS), true);
     }
-    assert.deepEqual(IDLE_BLINK_EYE_HOLES[0], { x: 434, y: 208, w: 80, h: 28 });
-    assert.deepEqual(IDLE_BLINK_EYE_HOLES[1], { x: 514, y: 208, w: 98, h: 30 });
+    assert.deepEqual(IDLE_BLINK_EYE_HOLES[0], { x: 432, y: 202, w: 80, h: 40 });
+    assert.deepEqual(IDLE_BLINK_EYE_HOLES[1], { x: 508, y: 202, w: 80, h: 40 });
   });
 });
 
 function fakeCtx(calls: unknown[][]) {
   return {
     imageSmoothingEnabled: true,
+    globalCompositeOperation: "source-over",
     save() {},
     restore() {},
     beginPath() {},
@@ -141,10 +142,13 @@ describe("idle canvas drawImage", () => {
       ctx,
       { idle: idle as CanvasImageSource, lids: [left, right] as unknown as [CanvasImageSource, CanvasImageSource] },
     );
-    assert.equal(draws, 3);
+    const [holeL, holeR] = IDLE_BLINK_EYE_HOLES;
+    assert.equal(draws, 5);
     assert.deepEqual(calls[0], [idle, 0, 0]);
-    assert.deepEqual(calls[1], [left, 0, 0, 80, 28, 434, 208, 80, 28]);
-    assert.deepEqual(calls[2], [right, 0, 0, 98, 30, 514, 208, 98, 30]);
+    assert.deepEqual(calls[1], [idle, holeL.x, holeL.y, holeL.w, holeL.h, holeL.x, holeL.y, holeL.w, holeL.h]);
+    assert.deepEqual(calls[2], [left, 0, 0, holeL.w, holeL.h, holeL.x, holeL.y, holeL.w, holeL.h]);
+    assert.deepEqual(calls[3], [idle, holeR.x, holeR.y, holeR.w, holeR.h, holeR.x, holeR.y, holeR.w, holeR.h]);
+    assert.deepEqual(calls[4], [right, 0, 0, holeR.w, holeR.h, holeR.x, holeR.y, holeR.w, holeR.h]);
     assert.equal(
       calls.filter((args) => args.length === 3).length,
       1,
@@ -160,9 +164,10 @@ describe("idle canvas drawImage", () => {
     calls.length = 0;
     drawGlareEyeRect(ctx, idle as CanvasImageSource, IDLE_BLINK_EYE_HOLES[0]);
     drawEyeRect(ctx, { name: "crop" } as CanvasImageSource, IDLE_BLINK_EYE_HOLES[1]);
-    assert.deepEqual(calls[0], [idle, 434, 208, 80, 28, 434, 208, 80, 28]);
-    assert.equal(calls[1]?.[5], 514);
-    assert.equal(calls[1]?.[6], 208);
+    const [holeL, holeR] = IDLE_BLINK_EYE_HOLES;
+    assert.deepEqual(calls[0], [idle, holeL.x, holeL.y, holeL.w, holeL.h, holeL.x, holeL.y, holeL.w, holeL.h]);
+    assert.equal(calls[1]?.[5], holeR.x);
+    assert.equal(calls[1]?.[6], holeR.y);
     assert.ok(calls.every((args) => args.length === 9));
   });
 });

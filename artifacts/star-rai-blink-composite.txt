@@ -32,37 +32,39 @@ Lids close on rest idle and the body does not punch / flash.
 Out of scope
 Spine flag, 3D, generated lids, Expo face_eyes_* busts, Chat tint/tabs/copy, Pages deploy.
 
-Eye holes (1008×1792 idle canvas — same rects on glare and the closed-lid sheet)
-Bangs above y=208, ahoge, mouth, and collar are outside these rects.
-left:  x=434 y=208 w=80 h=28
-right: x=514 y=208 w=98 h=30
-Constants: IDLE_BLINK_EYE_HOLES in src/lib/rai.ts. Bake: scripts/bake-idle-blink.py.
+Eye holes (1008×1792 idle canvas — v4 soft ellipses)
+The earlier rects (L 434,208 80×28; R 514,208 98×30) are wrong: the right hole ate the ear and the iris leaked. Hold these only.
+Bangs above y=202, ahoge, mouth, and collar are outside these rects.
+left:  x=432 y=202 w=80 h=40
+right: x=508 y=202 w=80 h=40
+Ovals: L cx=472 cy=222 rx=38 ry=18 · R cx=548 cy=222 rx=38 ry=18
+Constants: IDLE_BLINK_EYE_HOLES in src/lib/rai.ts.
+Source of truth: artifacts/star-rai-blink-frames/eyes/ (RGBA hole crops + proof strip).
+scripts/bake-idle-blink.py still knows the rects, but re-running it overwrites the v4 ellipses with an opaque mix. Do not run it over those crops.
 
-Frames (full plates are the bake proof: RGB matches idle.png outside the holes, max delta 0; alpha 0 outside)
-Seven steps, about two frames each (24fps twos, IDLE_BLINK_STEP_MS). Open is glare eyes on the live idle bitmap.
-1 open     idle.png
-2 closing  eye holes from TyLo 782 (blink-02-closing), pasted into idle_blink_01
-3 half     eye holes from TyLo 783 (blink-03-half), pasted into idle_blink_02
-4 closed   public/rai/idle_blink.png (existing closed lid)
-5 half     783
-6 closing  782
-7 open     idle.png
+Frames
+Seven steps, about two frames each (24fps twos, IDLE_BLINK_STEP_MS). Open is glare eyes on the live idle bitmap (the pack's 01-open is the open reference, not a second body).
+1 open     idle.png glare
+2 closing  artifacts/star-rai-blink-frames/eyes/02-closing_L.png + _R.png
+3 half     03-half_L.png + _R.png
+4 closed   04-462-blink_L.png + _R.png
+5 half     03-half
+6 closing  02-closing
+7 open     idle.png glare
 The raw 782/783 sheets are not body-locked: outside the eye holes their delta
-vs idle.png is 255. Paste the holes only. Never mount those JPGs as idle or
-as a full-body blink plate. Hole-only composites must match idle.png outside
-the holes (max delta 0). Maker-dropped L/R cuts (blink-frames/closing_l.png
-and closing_r.png, half_l.png and half_r.png) are preferred over slicing the
-raw JPG. The JPGs themselves are not shipped.
-- public/rai/idle_blink_01.png — closing lids (782), eye holes only
-- public/rai/idle_blink_02.png — half lids (783), eye holes only
-- public/rai/idle_blink.png — official closed lids (hold), then glare eyes return
+vs idle.png is 255. Never mount those JPGs as idle or as a full-body blink plate.
+Hole-only composites must match idle.png outside the holes (max delta 0).
+Runtime copies of the pack (byte-identical):
+- public/rai/idle_blink_01_l.png / idle_blink_01_r.png — 02-closing
+- public/rai/idle_blink_02_l.png / idle_blink_02_r.png — 03-half
+- public/rai/idle_blink_l.png / idle_blink_r.png — 04-462-blink
+Full plates idle_blink.png / idle_blink_01.png / idle_blink_02.png stay unmounted.
 
 Runtime
 - One body texture the whole blink: live public/rai/idle.png, never unloaded.
 - The idle canvas is 1008×1792. On mount, and when idle.png is ready, draw that full bitmap once. Do not leave the canvas at the browser default 300×150.
-- Blink only drawImages the two eye rects (L 434,208 80×28; R 514,208 98×30) from the crop sheets. Do not draw the rest of the blink PNG. Do not redraw the full sheet on a blink frame.
+- Blink only drawImages the two eye rects (L 432,202 80×40; R 508,202 80×40). Each lid step restores the glare rect from idle.png, then source-over draws the soft ellipse so transparent corners do not punch the body.
 - No second <img>. No opacity crossfade of two full figures. No canvas clear between blink frames.
-- Crops copied in: idle_blink_01_l/r (closing), idle_blink_02_l/r (half), idle_blink_l/r (closed hold).
-- Each of those lid steps holds about two frames. Close and open are steps, not an open↔closed pop.
-- If those crops are not ready, blink stays off. Do not swap in a full plate.
+- Each lid step holds about two frames. Close and open are steps, not an open↔closed pop.
+- If those crops are not ready, blink stays off. Do not swap in a full plate or a 782/783 sheet.
 - Proof: pixels outside the two rects stay byte-identical to the idle bitmap through close and open.
