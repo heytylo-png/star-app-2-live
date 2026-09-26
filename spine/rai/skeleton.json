@@ -1,0 +1,868 @@
+{
+  "name": "star-rai-cutout",
+  "width": 1008,
+  "height": 1792,
+  "fps": 30,
+  "demo": false,
+  "bones": [
+    {
+      "name": "root",
+      "x": 504,
+      "y": 810
+    },
+    {
+      "name": "hip",
+      "parent": "root",
+      "x": 0,
+      "y": 0,
+      "length": 20
+    },
+    {
+      "name": "torso",
+      "parent": "hip",
+      "x": 0,
+      "y": -190,
+      "length": 20
+    },
+    {
+      "name": "chest",
+      "parent": "torso",
+      "x": 0,
+      "y": -150,
+      "length": 20
+    },
+    {
+      "name": "bow",
+      "parent": "chest",
+      "x": 9,
+      "y": -67,
+      "length": 20
+    },
+    {
+      "name": "neck",
+      "parent": "chest",
+      "x": 4,
+      "y": -132,
+      "length": 20
+    },
+    {
+      "name": "head",
+      "parent": "neck",
+      "x": 9,
+      "y": -110,
+      "length": 20
+    },
+    {
+      "name": "jaw",
+      "parent": "head",
+      "x": 0,
+      "y": 40,
+      "length": 20
+    },
+    {
+      "name": "brow",
+      "parent": "head",
+      "x": 0,
+      "y": -36,
+      "length": 20
+    },
+    {
+      "name": "hairBack",
+      "parent": "head",
+      "x": -7,
+      "y": -28,
+      "length": 20
+    },
+    {
+      "name": "hairFront",
+      "parent": "head",
+      "x": 0,
+      "y": -18,
+      "length": 20
+    },
+    {
+      "name": "ahoge",
+      "parent": "head",
+      "x": -29,
+      "y": -100,
+      "length": 20
+    },
+    {
+      "name": "shoulderL",
+      "parent": "chest",
+      "x": 144,
+      "y": -25,
+      "length": 20
+    },
+    {
+      "name": "upperArmL",
+      "parent": "shoulderL",
+      "x": 7,
+      "y": 75,
+      "length": 20
+    },
+    {
+      "name": "forearmL",
+      "parent": "upperArmL",
+      "x": 20,
+      "y": 160,
+      "length": 20
+    },
+    {
+      "name": "handL",
+      "parent": "forearmL",
+      "x": 13,
+      "y": 240,
+      "length": 20
+    },
+    {
+      "name": "shoulderR",
+      "parent": "chest",
+      "x": -144,
+      "y": -25,
+      "length": 20
+    },
+    {
+      "name": "upperArmR",
+      "parent": "shoulderR",
+      "x": -10,
+      "y": 75,
+      "length": 20
+    },
+    {
+      "name": "forearmR",
+      "parent": "upperArmR",
+      "x": -12,
+      "y": 160,
+      "length": 20
+    },
+    {
+      "name": "handR",
+      "parent": "forearmR",
+      "x": -13,
+      "y": 240,
+      "length": 20
+    },
+    {
+      "name": "skirt",
+      "parent": "hip",
+      "x": 0,
+      "y": 70,
+      "length": 20
+    },
+    {
+      "name": "thighL",
+      "parent": "hip",
+      "x": 71,
+      "y": 240,
+      "length": 20
+    },
+    {
+      "name": "calfL",
+      "parent": "thighL",
+      "x": 2,
+      "y": 330,
+      "length": 20
+    },
+    {
+      "name": "footL",
+      "parent": "calfL",
+      "x": -2,
+      "y": 295,
+      "length": 20
+    },
+    {
+      "name": "thighR",
+      "parent": "hip",
+      "x": -74,
+      "y": 240,
+      "length": 20
+    },
+    {
+      "name": "calfR",
+      "parent": "thighR",
+      "x": 8,
+      "y": 330,
+      "length": 20
+    },
+    {
+      "name": "footR",
+      "parent": "calfR",
+      "x": 7,
+      "y": 295,
+      "length": 20
+    }
+  ],
+  "slots": [
+    {
+      "name": "hairBack",
+      "bone": "hairBack",
+      "attachment": "hair_back",
+      "attachments": {
+        "hair_back": {
+          "name": "hair_back",
+          "path": "spine/rai/layers/hair_back.png",
+          "width": 328,
+          "height": 326,
+          "x": 8.0,
+          "y": 39.0
+        }
+      }
+    },
+    {
+      "name": "upperArmR",
+      "bone": "upperArmR",
+      "attachment": "upper_arm_r",
+      "attachments": {
+        "upper_arm_r": {
+          "name": "upper_arm_r",
+          "path": "spine/rai/layers/upper_arm_r.png",
+          "width": 96,
+          "height": 294,
+          "x": 16.0,
+          "y": 25.0
+        }
+      }
+    },
+    {
+      "name": "upperArmL",
+      "bone": "upperArmL",
+      "attachment": "upper_arm_l",
+      "attachments": {
+        "upper_arm_l": {
+          "name": "upper_arm_l",
+          "path": "spine/rai/layers/upper_arm_l.png",
+          "width": 126,
+          "height": 294,
+          "x": 4.0,
+          "y": 25.0
+        }
+      }
+    },
+    {
+      "name": "thighR",
+      "bone": "thighR",
+      "attachment": "thigh_r",
+      "attachments": {
+        "thigh_r": {
+          "name": "thigh_r",
+          "path": "spine/rai/layers/thigh_r.png",
+          "width": 161,
+          "height": 345,
+          "x": 3.5,
+          "y": 88.5
+        }
+      }
+    },
+    {
+      "name": "thighL",
+      "bone": "thighL",
+      "attachment": "thigh_l",
+      "attachments": {
+        "thigh_l": {
+          "name": "thigh_l",
+          "path": "spine/rai/layers/thigh_l.png",
+          "width": 154,
+          "height": 346,
+          "x": 8.0,
+          "y": 89.0
+        }
+      }
+    },
+    {
+      "name": "calfR",
+      "bone": "calfR",
+      "attachment": "calf_r",
+      "attachments": {
+        "calf_r": {
+          "name": "calf_r",
+          "path": "spine/rai/layers/calf_r.png",
+          "width": 114,
+          "height": 391,
+          "x": -1.0,
+          "y": 81.5
+        }
+      }
+    },
+    {
+      "name": "calfL",
+      "bone": "calfL",
+      "attachment": "calf_l",
+      "attachments": {
+        "calf_l": {
+          "name": "calf_l",
+          "path": "spine/rai/layers/calf_l.png",
+          "width": 106,
+          "height": 391,
+          "x": 4.0,
+          "y": 81.5
+        }
+      }
+    },
+    {
+      "name": "footR",
+      "bone": "footR",
+      "attachment": "foot_r",
+      "attachments": {
+        "foot_r": {
+          "name": "foot_r",
+          "path": "spine/rai/layers/foot_r.png",
+          "width": 134,
+          "height": 173,
+          "x": 10.0,
+          "y": 3.5
+        }
+      }
+    },
+    {
+      "name": "footL",
+      "bone": "footL",
+      "attachment": "foot_l",
+      "attachments": {
+        "foot_l": {
+          "name": "foot_l",
+          "path": "spine/rai/layers/foot_l.png",
+          "width": 140,
+          "height": 173,
+          "x": -11.0,
+          "y": 3.5
+        }
+      }
+    },
+    {
+      "name": "skirt",
+      "bone": "skirt",
+      "attachment": "skirt",
+      "attachments": {
+        "skirt": {
+          "name": "skirt",
+          "path": "spine/rai/layers/skirt.png",
+          "width": 401,
+          "height": 262,
+          "x": -8.5,
+          "y": -15.0
+        }
+      }
+    },
+    {
+      "name": "torso",
+      "bone": "torso",
+      "attachment": "torso",
+      "attachments": {
+        "torso": {
+          "name": "torso",
+          "path": "spine/rai/layers/torso.png",
+          "width": 340,
+          "height": 461,
+          "x": 4.0,
+          "y": -43.5
+        }
+      }
+    },
+    {
+      "name": "bow",
+      "bone": "bow",
+      "attachment": "bow",
+      "attachments": {
+        "bow": {
+          "name": "bow",
+          "path": "spine/rai/layers/bow.png",
+          "width": 140,
+          "height": 119,
+          "x": 0.0,
+          "y": 0.5
+        }
+      }
+    },
+    {
+      "name": "forearmR",
+      "bone": "forearmR",
+      "attachment": "forearm_r",
+      "attachments": {
+        "forearm_r": {
+          "name": "forearm_r",
+          "path": "spine/rai/layers/forearm_r.png",
+          "width": 113,
+          "height": 256,
+          "x": -1.5,
+          "y": 104.0
+        }
+      }
+    },
+    {
+      "name": "forearmL",
+      "bone": "forearmL",
+      "attachment": "forearm_l",
+      "attachments": {
+        "forearm_l": {
+          "name": "forearm_l",
+          "path": "spine/rai/layers/forearm_l.png",
+          "width": 91,
+          "height": 256,
+          "x": 0.5,
+          "y": 104.0
+        }
+      }
+    },
+    {
+      "name": "handR",
+      "bone": "handR",
+      "attachment": "hand_r",
+      "attachments": {
+        "hand_r": {
+          "name": "hand_r",
+          "path": "spine/rai/layers/hand_r.png",
+          "width": 102,
+          "height": 208,
+          "x": 0.0,
+          "y": 35.0
+        }
+      }
+    },
+    {
+      "name": "handL",
+      "bone": "handL",
+      "attachment": "hand_l",
+      "attachments": {
+        "hand_l": {
+          "name": "hand_l",
+          "path": "spine/rai/layers/hand_l.png",
+          "width": 91,
+          "height": 203,
+          "x": -6.5,
+          "y": 25.5
+        }
+      }
+    },
+    {
+      "name": "neck",
+      "bone": "neck",
+      "attachment": "neck",
+      "attachments": {
+        "neck": {
+          "name": "neck",
+          "path": "spine/rai/layers/neck.png",
+          "width": 128,
+          "height": 121,
+          "x": 5.0,
+          "y": 8.5
+        }
+      }
+    },
+    {
+      "name": "head",
+      "bone": "head",
+      "attachment": "head",
+      "attachments": {
+        "head": {
+          "name": "head",
+          "path": "spine/rai/layers/head.png",
+          "width": 264,
+          "height": 123,
+          "x": 1.0,
+          "y": -3.5
+        }
+      }
+    },
+    {
+      "name": "brow",
+      "bone": "brow",
+      "attachment": "brow",
+      "attachments": {
+        "brow": {
+          "name": "brow",
+          "path": "spine/rai/layers/brow.png",
+          "width": 201,
+          "height": 54,
+          "x": 1.5,
+          "y": 2.0
+        }
+      }
+    },
+    {
+      "name": "mouth",
+      "bone": "jaw",
+      "attachment": "mouth_closed",
+      "attachments": {
+        "mouth_closed": {
+          "name": "mouth_closed",
+          "path": "spine/rai/layers/mouth_closed.png",
+          "width": 100,
+          "height": 74,
+          "x": -3.0,
+          "y": 15.0
+        },
+        "mouth_open": {
+          "name": "mouth_open",
+          "path": "spine/rai/layers/mouth_open.png",
+          "width": 100,
+          "height": 74,
+          "x": -3.0,
+          "y": 15.0
+        }
+      }
+    },
+    {
+      "name": "hairFront",
+      "bone": "hairFront",
+      "attachment": "hair_front",
+      "attachments": {
+        "hair_front": {
+          "name": "hair_front",
+          "path": "spine/rai/layers/hair_front.png",
+          "width": 385,
+          "height": 383,
+          "x": 4.5,
+          "y": 35.5
+        }
+      }
+    },
+    {
+      "name": "ahoge",
+      "bone": "ahoge",
+      "attachment": "ahoge",
+      "attachments": {
+        "ahoge": {
+          "name": "ahoge",
+          "path": "spine/rai/layers/ahoge.png",
+          "width": 236,
+          "height": 155,
+          "x": 5.0,
+          "y": -41.5
+        }
+      }
+    }
+  ],
+  "animations": {
+    "idle": {
+      "duration": 3.2,
+      "loop": true,
+      "bones": {
+        "hip": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 0.8, "value": -0.55 },
+            { "time": 1.6, "value": 0.2 },
+            { "time": 2.4, "value": 0.5 },
+            { "time": 3.2, "value": 0 }
+          ],
+          "x": [
+            { "time": 0, "value": 0 },
+            { "time": 1.6, "value": 3.2 },
+            { "time": 3.2, "value": 0 }
+          ]
+        },
+        "torso": {
+          "scaleY": [
+            { "time": 0, "value": 1 },
+            { "time": 1.55, "value": 1.018 },
+            { "time": 3.2, "value": 1 }
+          ],
+          "scaleX": [
+            { "time": 0, "value": 1 },
+            { "time": 1.55, "value": 0.992 },
+            { "time": 3.2, "value": 1 }
+          ]
+        },
+        "chest": {
+          "y": [
+            { "time": 0, "value": -150 },
+            { "time": 1.55, "value": -153 },
+            { "time": 3.2, "value": -150 }
+          ]
+        },
+        "ahoge": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 0.9, "value": 10 },
+            { "time": 1.8, "value": -6 },
+            { "time": 2.6, "value": 6 },
+            { "time": 3.2, "value": 0 }
+          ]
+        },
+        "hairFront": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 1.6, "value": 1.4 },
+            { "time": 3.2, "value": 0 }
+          ]
+        },
+        "upperArmL": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 1.6, "value": -4 },
+            { "time": 3.2, "value": 0 }
+          ]
+        },
+        "upperArmR": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 1.6, "value": 4 },
+            { "time": 3.2, "value": 0 }
+          ]
+        }
+      }
+    },
+    "talk": {
+      "duration": 3.2,
+      "loop": true,
+      "bones": {
+        "hip": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 0.8, "value": -0.55 },
+            { "time": 1.6, "value": 0.2 },
+            { "time": 2.4, "value": 0.5 },
+            { "time": 3.2, "value": 0 }
+          ],
+          "x": [
+            { "time": 0, "value": 0 },
+            { "time": 1.6, "value": 3.2 },
+            { "time": 3.2, "value": 0 }
+          ]
+        },
+        "torso": {
+          "scaleY": [
+            { "time": 0, "value": 1 },
+            { "time": 1.55, "value": 1.018 },
+            { "time": 3.2, "value": 1 }
+          ],
+          "scaleX": [
+            { "time": 0, "value": 1 },
+            { "time": 1.55, "value": 0.992 },
+            { "time": 3.2, "value": 1 }
+          ],
+          "y": [
+            { "time": 0, "value": -190 },
+            { "time": 0.18, "value": -188 },
+            { "time": 0.4, "value": -191 },
+            { "time": 3.2, "value": -190 }
+          ]
+        },
+        "chest": {
+          "y": [
+            { "time": 0, "value": -150 },
+            { "time": 1.55, "value": -153 },
+            { "time": 3.2, "value": -150 }
+          ]
+        },
+        "ahoge": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 0.9, "value": 10 },
+            { "time": 1.8, "value": -6 },
+            { "time": 2.6, "value": 6 },
+            { "time": 3.2, "value": 0 }
+          ]
+        },
+        "hairFront": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 1.6, "value": 1.4 },
+            { "time": 3.2, "value": 0 }
+          ]
+        },
+        "upperArmL": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 1.6, "value": -4 },
+            { "time": 3.2, "value": 0 }
+          ]
+        },
+        "upperArmR": {
+          "rotate": [
+            { "time": 0, "value": 0 },
+            { "time": 1.6, "value": 4 },
+            { "time": 3.2, "value": 0 }
+          ]
+        }
+      }
+    },
+    "wave": {
+      "duration": 1.6,
+      "loop": true,
+      "bones": {
+        "hip": {
+          "rotate": [{ "time": 0, "value": 2 }]
+        },
+        "torso": {
+          "rotate": [{ "time": 0, "value": 4 }]
+        },
+        "head": {
+          "rotate": [{ "time": 0, "value": 6 }]
+        },
+        "upperArmR": {
+          "rotate": [
+            { "time": 0, "value": 128 },
+            { "time": 0.4, "value": 148 },
+            { "time": 0.8, "value": 118 },
+            { "time": 1.2, "value": 150 },
+            { "time": 1.6, "value": 128 }
+          ]
+        },
+        "forearmR": {
+          "rotate": [
+            { "time": 0, "value": 18 },
+            { "time": 0.4, "value": 38 },
+            { "time": 0.8, "value": 10 },
+            { "time": 1.2, "value": 36 },
+            { "time": 1.6, "value": 18 }
+          ]
+        },
+        "handR": {
+          "rotate": [
+            { "time": 0, "value": 8 },
+            { "time": 0.4, "value": 18 },
+            { "time": 0.8, "value": 4 },
+            { "time": 1.6, "value": 8 }
+          ]
+        },
+        "upperArmL": {
+          "rotate": [{ "time": 0, "value": 38 }]
+        },
+        "forearmL": {
+          "rotate": [{ "time": 0, "value": 44 }]
+        },
+        "handL": {
+          "rotate": [{ "time": 0, "value": 10 }]
+        },
+        "ahoge": {
+          "rotate": [
+            { "time": 0, "value": -22 },
+            { "time": 0.8, "value": -10 },
+            { "time": 1.6, "value": -22 }
+          ]
+        }
+      }
+    },
+    "scold": {
+      "duration": 1.4,
+      "loop": true,
+      "bones": {
+        "hip": {
+          "rotate": [{ "time": 0, "value": -2 }],
+          "y": [{ "time": 0, "value": 0 }]
+        },
+        "torso": {
+          "rotate": [{ "time": 0, "value": 8 }],
+          "scaleY": [{ "time": 0, "value": 1.02 }]
+        },
+        "chest": {
+          "rotate": [{ "time": 0, "value": 6 }]
+        },
+        "head": {
+          "rotate": [{ "time": 0, "value": 4 }]
+        },
+        "upperArmR": {
+          "rotate": [
+            { "time": 0, "value": 96 },
+            { "time": 0.7, "value": 104 },
+            { "time": 1.4, "value": 96 }
+          ]
+        },
+        "forearmR": {
+          "rotate": [{ "time": 0, "value": 12 }]
+        },
+        "handR": {
+          "rotate": [{ "time": 0, "value": 6 }]
+        },
+        "upperArmL": {
+          "rotate": [{ "time": 0, "value": 40 }]
+        },
+        "forearmL": {
+          "rotate": [{ "time": 0, "value": 46 }]
+        },
+        "thighL": {
+          "rotate": [{ "time": 0, "value": -8 }]
+        },
+        "thighR": {
+          "rotate": [{ "time": 0, "value": 8 }]
+        },
+        "ahoge": {
+          "rotate": [{ "time": 0, "value": -20 }]
+        }
+      }
+    },
+    "pout": {
+      "duration": 2.4,
+      "loop": true,
+      "bones": {
+        "hip": {
+          "rotate": [{ "time": 0, "value": 3 }]
+        },
+        "torso": {
+          "rotate": [{ "time": 0, "value": -3 }]
+        },
+        "head": {
+          "rotate": [
+            { "time": 0, "value": -8 },
+            { "time": 1.2, "value": -6 },
+            { "time": 2.4, "value": -8 }
+          ]
+        },
+        "upperArmL": {
+          "rotate": [{ "time": 0, "value": -8 }]
+        },
+        "upperArmR": {
+          "rotate": [{ "time": 0, "value": 8 }]
+        },
+        "ahoge": {
+          "rotate": [
+            { "time": 0, "value": -36 },
+            { "time": 1.2, "value": -30 },
+            { "time": 2.4, "value": -36 }
+          ]
+        }
+      }
+    },
+    "shy": {
+      "duration": 2.6,
+      "loop": true,
+      "bones": {
+        "hip": {
+          "rotate": [{ "time": 0, "value": -4 }]
+        },
+        "torso": {
+          "rotate": [{ "time": 0, "value": 6 }],
+          "scaleY": [{ "time": 0, "value": 0.985 }]
+        },
+        "chest": {
+          "rotate": [{ "time": 0, "value": 4 }]
+        },
+        "head": {
+          "rotate": [{ "time": 0, "value": 12 }]
+        },
+        "upperArmL": {
+          "rotate": [{ "time": 0, "value": 28 }]
+        },
+        "forearmL": {
+          "rotate": [{ "time": 0, "value": 48 }]
+        },
+        "upperArmR": {
+          "rotate": [{ "time": 0, "value": -24 }]
+        },
+        "forearmR": {
+          "rotate": [{ "time": 0, "value": -42 }]
+        },
+        "ahoge": {
+          "rotate": [{ "time": 0, "value": -8 }]
+        }
+      }
+    }
+  },
+  "poseToAnimation": {
+    "idle": "idle",
+    "talk": "talk",
+    "wave": "wave",
+    "scold": "scold",
+    "pout": "pout",
+    "shy": "shy"
+  },
+  "talk": {
+    "bone": "jaw",
+    "slot": "mouth",
+    "closed": "mouth_closed",
+    "open": "mouth_open",
+    "maxDeg": 10
+  }
+}
