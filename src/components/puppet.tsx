@@ -79,11 +79,11 @@ function fadeMsFor(layer: SpriteLayer, talking: boolean, blinkMode: BlinkFadeMod
  * Star Rai 2D puppet — planted idle life, look-at lean, talk/mood sheets.
  * Studio-white cards are punched to alpha. Layers crossfade by stable id.
  * Spoken bubble holds talk/mood through the line; frown idle is rest-only.
- * Rest idle is one full-frame image. Blink swaps that image through the
- * eyes-only baked cycle (01 → 02 → 03 → 04 → 03 → 02 → 01, same body as
- * idle.png). Hard cut, no crossfade between blink frames. No eye strip,
- * no hole overlay. Expo bust mouth/eye crops stay off. Dedicated poses
- * do not blink.
+ * Rest idle is one full-frame image: public/rai/idle.png.
+ * Blink is parked (IDLE_BLINK_ENABLED). The timer does not cycle frames.
+ * The baked sheets stay on disk but are not swapped in. No eye strip,
+ * no hole overlay, no second body. Expo bust mouth/eye crops stay off.
+ * Dedicated poses do not blink.
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -204,12 +204,14 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   }, []);
 
   // Full-frame blink on rest idle only, after the four baked sheets have decoded.
-  // Pose, talk, and emotion cancel it. Keyed on the rest gate, not the emotion id:
-  // bratty and glance both show the rest sheet, and flipping between them must not
-  // throw away a cycle that is about to step.
+  // Parked (IDLE_BLINK_ENABLED false): this effect returns before any timeout,
+  // so the timer does not cycle frames. TyLo FAIL was two PNGs at once
+  // (ghost / second body). Stay parked until a standing clip shows one body,
+  // lids only, no ghost.
   const restingBlink = canIdleBlink({ pose, emotion, talking, reducedMotion });
   const framesReady = idleBlinkFrameUrls().every((src) => sheets[src] != null);
   useEffect(() => {
+    if (!IDLE_BLINK_ENABLED) return;
     if (USE_EXPO_TALK_BUST || !framesReady || !restingBlink) return;
 
     let cancelled = false;

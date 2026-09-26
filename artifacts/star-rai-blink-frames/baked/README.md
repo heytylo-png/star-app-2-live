@@ -4,7 +4,7 @@ Eyes-only rebake on the live `public/rai/idle.png` canvas (1008×1792).
 
 Body pixels are locked. Hair, skirt, shoes, torso, bow, and hands match `idle.png`. Only the eyes change across the cycle. These are full baked sheets — no hole overlay, no DEST_RECT stamp, no tylo-holes paste, and no L/R oval composite at runtime.
 
-`IDLE_BLINK_ENABLED` is true. CoS PASS on `proof_standing_full.gif` (standing full body, not an eye crop). Rest plays these eyes-only same-body sheets. `idle_blink_01_open.png` is a byte copy of `public/rai/idle.png`, so rest and open are the same body.
+`IDLE_BLINK_ENABLED` is false. Rest paints `public/rai/idle.png` only. The blink timer does not cycle these frames. Parked until a standing clip shows one body, lids only, no ghost (TyLo FAIL: two PNGs up at once). `idle_blink_01_open.png` is a byte copy of `public/rai/idle.png`. The sheets stay on disk and are not the live rest body.
 
 ## Files
 - `idle_blink_01_open.png` — byte copy of `public/rai/idle.png` (open glare)
