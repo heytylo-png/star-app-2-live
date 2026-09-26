@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Bake rest-idle blink frames: glare body + two eye holes from the closed-lid sheet.
+"""Retired L/R oval baker.
 
-Source of truth for the hole rects is this script. Keep src/lib/rai.ts
-IDLE_BLINK_EYE_HOLES in sync.
+Source of truth is artifacts/star-rai-blink-frames/tylo-holes/.
+DEST_RECT on public/rai/idle.png is (424, 193, 196, 57).
+Do not bake the old 80×40 ovals back into the runtime.
 
 Reads public/rai/idle.png (live glare, 1008×1792) and the closed-lid sheet.
 If the lid source is not already on that canvas (e.g. 720×1280), it is scaled
@@ -73,40 +74,11 @@ def bake(idle: np.ndarray, lid: np.ndarray, t: float) -> np.ndarray:
 
 
 def main() -> None:
-    idle_img = Image.open(IDLE_PATH).convert("RGB")
-    if idle_img.size != CANVAS:
-        raise SystemExit(f"live idle is {idle_img.size}, expected {CANVAS}")
-    lid_img = register(Image.open(LID_PATH), CANVAS)
-    idle = np.asarray(idle_img)
-    lid = np.asarray(lid_img)
-    out_dir = ROOT / "public/rai"
-    for name, t in FRAMES:
-        frame = bake(idle, lid, t)
-        rgb = frame[:, :, :3].astype(np.int16)
-        alpha = frame[:, :, 3]
-        holes = np.zeros(alpha.shape, dtype=bool)
-        for x, y, w, h in EYE_HOLES:
-            holes[y : y + h, x : x + w] = True
-        outside = ~holes
-        delta = np.abs(rgb - idle.astype(np.int16)).max(axis=2)
-        if int(delta[outside].max()) != 0:
-            raise SystemExit(f"{name} RGB drifted outside eye holes")
-        if int(alpha[outside].max()) != 0:
-            raise SystemExit(f"{name} alpha leaked outside eye holes")
-        if t == 1.0 and int(delta[holes].max()) == 0:
-            raise SystemExit(f"{name} closed frame did not change the eyes")
-        Image.fromarray(frame, "RGBA").save(out_dir / name, optimize=True)
-        print(f"wrote {name} mix={t} outside_max={int(delta[outside].max())} hole_max={int(delta[holes].max())}")
-        # Runtime mounts these crops only — never the full plate.
-        for (x, y, w, h), tag in zip(EYE_HOLES, ("l", "r"), strict=True):
-            crop = frame[y : y + h, x : x + w]
-            if crop.shape[1] != w or crop.shape[0] != h:
-                raise SystemExit(f"{name} crop {tag} is {crop.shape}")
-            if int(crop[:, :, 3].min()) != 255:
-                raise SystemExit(f"{name} crop {tag} is not opaque")
-            crop_name = name.replace(".png", f"_{tag}.png")
-            Image.fromarray(crop, "RGBA").save(out_dir / crop_name, optimize=True)
-            print(f"  crop {crop_name} {w}x{h}")
+    raise SystemExit(
+        "Retired. Paste artifacts/star-rai-blink-frames/tylo-holes/ "
+        "at DEST_RECT (424, 193, 196, 57) on idle.png. "
+        "Do not bake L/R 80×40 ovals."
+    )
 
 
 if __name__ == "__main__":

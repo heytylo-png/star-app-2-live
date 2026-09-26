@@ -32,22 +32,19 @@ Lids close on rest idle and the body does not punch / flash.
 Out of scope
 Spine flag, 3D, generated lids, Expo face_eyes_* busts, Chat tint/tabs/copy, Pages deploy.
 
-Eye holes (1008×1792 idle canvas — same rects on glare and the closed-lid sheet)
-Bangs above y=208, ahoge, mouth, and collar are outside these rects.
-left:  x=434 y=208 w=80 h=28
-right: x=514 y=208 w=98 h=30
-Constants: IDLE_BLINK_EYE_HOLES in src/lib/rai.ts. Bake: scripts/bake-idle-blink.py.
-
-Frames (full plates are the bake proof: RGB matches idle.png outside the holes, max delta 0; alpha 0 outside)
-- public/rai/idle_blink_01.png — 40% closed
-- public/rai/idle_blink_02.png — 75% closed
-- public/rai/idle_blink.png — official closed lids (hold), then glare eyes return
+DEST_RECT (1008×1792 idle canvas) — superseded the two eye holes.
+(x, y, w, h) = (424, 193, 196, 57)
+Constant: IDLE_BLINK_DEST_RECT in src/lib/rai.ts.
+Wire source: artifacts/star-rai-blink-frames/tylo-holes/ (02-open, 03-half, 04-closed).
+Do not wire L/R 80×40 ovals, artifacts/star-rai-blink-frames/eyes/, or 01-open-brow.
+scripts/bake-idle-blink.py must not recut those ovals.
 
 Runtime
 - One body texture the whole blink: live public/rai/idle.png, never unloaded.
 - The idle canvas is 1008×1792. On mount, and when idle.png is ready, draw that full bitmap once. Do not leave the canvas at the browser default 300×150.
-- Blink only drawImages the two eye rects (L 434,208 80×28; R 514,208 98×30) from the crop sheets. Do not draw the rest of the blink PNG. Do not redraw the full sheet on a blink frame.
+- Blink pastes one opaque 196×57 patch at (424, 193). Do not draw the rest of a blink PNG. Do not redraw the full sheet on a blink frame.
+- Cycle: 02-open → 03-half → 04-closed → reverse, then copy the dest rect back from idle.png.
 - No second <img>. No opacity crossfade of two full figures. No canvas clear between blink frames.
-- Crops copied in: idle_blink_01_l/r (40%), idle_blink_02_l/r (75%), idle_blink_l/r (closed hold).
-- If those crops are not ready, blink stays off. Do not swap in a full plate.
-- Proof: pixels outside the two rects stay byte-identical to the idle bitmap through close and open.
+- Patches: idle_blink_02_open.png, idle_blink_03_half.png, idle_blink_04_closed.png. Byte copies of the tylo-holes pack.
+- If those patches are not ready, blink stays off. Do not swap in a full plate.
+- Proof: pixels outside DEST_RECT stay byte-identical to the idle bitmap through close and open.

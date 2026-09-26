@@ -4,9 +4,9 @@ import {
   allSpriteUrls,
   canIdleBlink,
   IDLE_BLINK_CANVAS,
-  IDLE_BLINK_EYE_HOLES,
-  idleBlinkEyeSrcs,
-  idleBlinkEyeUrls,
+  IDLE_BLINK_DEST_RECT,
+  idleBlinkPatchSrc,
+  idleBlinkPatchUrls,
   isFullBlinkPlate,
   layersFor,
   POSE_CROSSFADE_MS,
@@ -79,7 +79,7 @@ function fadeMsFor(layer: SpriteLayer, talking: boolean, blinkMode: BlinkFadeMod
  * Star Rai 2D puppet — planted idle life, look-at lean, talk/mood sheets.
  * Studio-white cards are punched to alpha. Layers crossfade by stable id.
  * Spoken bubble holds talk/mood through the line; frown idle is rest-only.
- * Rest idle keeps one idle.png bitmap. Blink copies two eye rects onto it.
+ * Rest idle keeps one idle.png bitmap. Blink pastes one TyLo patch at (424, 193).
  * Expo bust mouth/eye crops stay off. Dedicated poses hold their own sheet and do not blink.
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
@@ -98,7 +98,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
 
   const [ampLive, setAmpLive] = useState(0);
   const [blink, setBlink] = useState<0 | 1 | 2 | 3>(0);
-  /** Six eye-rect crops decoded. Until then blink stays off — no full-plate fallback. */
+  /** Three TyLo dest patches decoded. Until then blink stays off — no full-plate fallback. */
   const [eyesReady, setEyesReady] = useState(false);
   /** Punched idle bitmap decoded. The canvas draws this and never swaps it out. */
   const [idleBitmapUrl, setIdleBitmapUrl] = useState<string | null>(null);
@@ -130,7 +130,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     let cancelled = false;
     const urls = allSpriteUrls();
     const idle = SPRITES.poses.idle;
-    const eyeCrops = new Set(idleBlinkEyeUrls());
+    const eyeCrops = new Set(idleBlinkPatchUrls());
     const ordered = [idle, ...urls.filter((src) => src !== idle && !eyeCrops.has(src))];
     for (const src of ordered) {
       if (isFullBlinkPlate(src)) continue;
@@ -144,19 +144,19 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     };
   }, []);
 
-  // Decode the six eye-rect crops. Failure leaves blink off — no full-plate fallback.
+  // Decode the three TyLo patches. Failure leaves blink off — no full-plate fallback.
   useEffect(() => {
     let cancelled = false;
-    const urls = idleBlinkEyeUrls();
+    const urls = idleBlinkPatchUrls();
+    const hole = IDLE_BLINK_DEST_RECT;
     void Promise.all(
       urls.map(async (src) => {
         const img = new Image();
         img.decoding = "async";
         img.src = src;
         await img.decode();
-        const hole = IDLE_BLINK_EYE_HOLES[urls.indexOf(src) % 2]!;
         if (img.naturalWidth !== hole.w || img.naturalHeight !== hole.h) {
-          throw new Error("eye crop does not match the idle hole");
+          throw new Error("tylo blink patch does not match DEST_RECT");
         }
         eyeImageRef.current[src] = img;
       }),
@@ -254,8 +254,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     };
   }, []);
 
-  // Eye-rect blink on rest idle only, and only after the crops decode.
-  // The glare body stays the only full texture. Pose, talk, and emotion cancel it.
+  // Dest-rect blink on rest idle only, and only after the TyLo patches decode.
+  // The idle.png body stays the only full texture. Pose, talk, and emotion cancel it.
   useEffect(() => {
     if (USE_EXPO_TALK_BUST || !eyesReady) return;
     const resting = canIdleBlink({ pose, emotion, talking, reducedMotion });
@@ -540,13 +540,9 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     }
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
-    const pair = idleBlinkEyeSrcs(state.blinkShown);
-    const lidImages = pair?.map((src) => eyeImageRef.current[src]);
-    const lids =
-      lidImages && lidImages[0] && lidImages[1]
-        ? ([lidImages[0], lidImages[1]] as const)
-        : null;
-    applyIdleCanvasPlan(plan, ctx, { idle: idleImg, lids });
+    const patchSrc = idleBlinkPatchSrc(state.blinkShown);
+    const lid = patchSrc ? (eyeImageRef.current[patchSrc] ?? null) : null;
+    applyIdleCanvasPlan(plan, ctx, { idle: idleImg, lid });
     if (drawsBody) {
       paintedCanvasRef.current = canvas;
       paintedUrlRef.current = state.idleSheetUrl;
@@ -554,7 +550,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     }
     const eyeStep = plan.find((step) => step.kind === "eyes");
     if (eyeStep?.kind === "eyes") {
-      if (eyeStep.mode === "lid" && lids) lidsOnCanvasRef.current = true;
+      if (eyeStep.mode === "lid" && lid) lidsOnCanvasRef.current = true;
       if (eyeStep.mode === "glare") lidsOnCanvasRef.current = false;
     }
   }, []);
@@ -576,7 +572,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
 
   // idle.png becoming ready, and each blink frame. The canvas mounts in the
   // idleBitmapUrl commit — that has to be a dependency, or the bitmap stays
-  // the browser default 300×150 and the lids (y=202) never land.
+  // the browser default 300×150 and the dest rect (y=193) never lands.
   useLayoutEffect(() => {
     paintStateRef.current = {
       blinkShown,

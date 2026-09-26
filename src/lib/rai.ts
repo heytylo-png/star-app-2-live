@@ -244,16 +244,14 @@ export const SPRITES = {
     three_quarter: ASSET(LIVE_POSE_FILES.three_quarter),
   } satisfies Record<PoseId, string>,
   /**
-   * Rest-idle lid crops — one file per eye hole, not full plates.
-   * RGBA soft ellipses: 01 closing, 02 half, closed = official lids (hold).
-   * Full-canvas 782/783 plates live at public/rai/idle_blink*.png and are not mounted.
+   * TyLo one-rect blink patches. Opaque 196×57.
+   * Byte copies of artifacts/star-rai-blink-frames/tylo-holes/.
+   * Pasted at IDLE_BLINK_DEST_RECT. Not the L/R 80×40 ovals, not eyes/,
+   * and not scrap 790 / 01-open-brow. Full plates stay unmounted.
    */
-  idleBlink01L: ASSET("rai/idle_blink_01_l.png"),
-  idleBlink01R: ASSET("rai/idle_blink_01_r.png"),
-  idleBlink02L: ASSET("rai/idle_blink_02_l.png"),
-  idleBlink02R: ASSET("rai/idle_blink_02_r.png"),
-  idleBlinkL: ASSET("rai/idle_blink_l.png"),
-  idleBlinkR: ASSET("rai/idle_blink_r.png"),
+  idleBlinkOpen: ASSET("rai/idle_blink_02_open.png"),
+  idleBlinkHalf: ASSET("rai/idle_blink_03_half.png"),
+  idleBlinkClosed: ASSET("rai/idle_blink_04_closed.png"),
   angles: {
     front: ASSET("star-rai/angles/front.png"),
     threeQuarter: ASSET("star-rai/angles/three-quarter.png"),
@@ -297,46 +295,56 @@ export const SPRITES = {
 export type TalkViseme = "closed" | "speak" | "oh" | "grin" | "kiss";
 
 /**
- * Two eye holes on the 1008×1792 live idle canvas.
- * Soft RGBA ellipses composite here. Both holes are 80×40 so the right
- * rect stops before the ear. Bangs above y=202, ahoge, mouth, and collar
- * stay outside. Keep in sync with scripts/bake-idle-blink.py.
+ * One dest rect on the 1008×1792 live idle canvas.
+ * Maker lock: artifacts/star-rai-blink-frames/tylo-holes/.
+ * Paste each opaque 196×57 patch here. Outside this rect, idle delta stays 0.
  */
-export const IDLE_BLINK_EYE_HOLES = [
-  { x: 432, y: 202, w: 80, h: 40 },
-  { x: 508, y: 202, w: 80, h: 40 },
-] as const;
+export const IDLE_BLINK_DEST_RECT = { x: 424, y: 193, w: 196, h: 57 } as const;
 
-/** Live idle canvas the holes are registered onto. */
+/** Live idle canvas the dest rect is registered onto. */
 export const IDLE_BLINK_CANVAS = { width: 1008, height: 1792 } as const;
 
-/** Full-plate blink files. Never drawn. Eye crops are copied onto idle. */
+/**
+ * Sheets that must never mount as the blink body.
+ * Full plates, the old L/R oval crops, the eyes/ pack, and scrap 790.
+ * TyLo dest patches are not in this set — they are pasted into DEST_RECT.
+ */
 export function isFullBlinkPlate(src: string): boolean {
-  return /\/idle_blink(?:_0[12])?\.png(?:\?|$)/.test(src);
+  return (
+    /\/idle_blink(?:_0[12])?\.png(?:\?|$)/.test(src) ||
+    /\/idle_blink_(?:open|0[12])_[lr]\.png(?:\?|$)/.test(src) ||
+    /\/idle_blink_[lr]\.png(?:\?|$)/.test(src) ||
+    /star-rai-blink-frames\/eyes\//.test(src) ||
+    /01-open-brow/.test(src) ||
+    /blink-0[23][^\s"'?#]*\.jpe?g(?:\?|#|$)/i.test(src) ||
+    /\/blink-frames\/.+\.jpe?g(?:\?|#|$)/i.test(src)
+  );
 }
 
 /**
- * Two eye-rect crops for rest blink. 1 closing, 2 half, ≥3 closed.
- * Null when open. Not the full-canvas plates.
+ * One dest-rect patch for rest blink.
+ * 1 = 02-open (788), 2 = 03-half (791), ≥3 = 04-closed (789).
+ * Null at rest: the painter copies this rect back from idle.png.
  */
-export function idleBlinkEyeSrcs(blink: number): readonly [string, string] | null {
-  if (blink === 1) return [SPRITES.idleBlink01L, SPRITES.idleBlink01R];
-  if (blink === 2) return [SPRITES.idleBlink02L, SPRITES.idleBlink02R];
-  if (blink >= 3) return [SPRITES.idleBlinkL, SPRITES.idleBlinkR];
+export function idleBlinkPatchSrc(blink: number): string | null {
+  if (blink === 1) return SPRITES.idleBlinkOpen;
+  if (blink === 2) return SPRITES.idleBlinkHalf;
+  if (blink >= 3) return SPRITES.idleBlinkClosed;
   return null;
 }
 
-export function idleBlinkEyeUrls(): string[] {
-  return [1, 2, 3].flatMap((frame) => {
-    const pair = idleBlinkEyeSrcs(frame);
-    return pair ? [...pair] : [];
+export function idleBlinkPatchUrls(): string[] {
+  return [1, 2, 3].map((frame) => {
+    const src = idleBlinkPatchSrc(frame);
+    if (!src) throw new Error("blink patch missing");
+    return src;
   });
 }
 
 /** Flat list of every sprite URL referenced by SPRITES — use for preload. */
 export function allSpriteUrls(): string[] {
   return [
-    ...idleBlinkEyeUrls(),
+    ...idleBlinkPatchUrls(),
     ...Object.values(SPRITES.poses),
     ...Object.values(SPRITES.angles),
     SPRITES.talk,
@@ -372,9 +380,9 @@ export type PuppetState = {
   /** Seconds — drives official talk-sheet opacity flap (sin phase). */
   talkPhase?: number;
   /**
-   * 0 open. Official rest blink: 1 closing, 2 half, 3 closed. The idle layer
-   * list does not change — `idleBlinkEyeSrcs` is copied onto the live bitmap.
-   * Expo talk bust (flag on) still uses 1/2 with face_eyes_* while speaking.
+   * 0 rest (idle dest rect). TyLo cycle: 1 = 02-open, 2 = 03-half, 3 = 04-closed.
+   * The idle layer list does not change — `idleBlinkPatchSrc` is pasted at
+   * IDLE_BLINK_DEST_RECT. Expo talk bust (flag on) still uses 1/2 with face_eyes_*.
    */
   blink?: 0 | 1 | 2 | 3;
   /** Brief idle variety beat from puppet timer (smile/grin). Official pack ignores Expo alts. */
@@ -514,8 +522,8 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
   }
 
   // Rest blink does not add a layer and does not swap this sheet. The mounted
-  // idle bitmap stays up; the painter copies two eye rects onto it. A second
-  // image, or drawing the rest of the blink plate, moves the body.
+  // idle bitmap stays up; the painter pastes one 196×57 patch at (424, 193).
+  // A second image, or drawing the rest of a blink plate, moves the body.
   void reducedMotion;
   void blink;
   return [body(SPRITES.poses.idle)];

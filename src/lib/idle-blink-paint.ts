@@ -3,9 +3,9 @@
  *
  * One canvas holds idle.png for the whole blink. The full sheet is drawn once
  * when that canvas mounts and when the bitmap is ready. Blink frames only
- * drawImage the two eye rects — never a second full figure, never a clear.
+ * paste one opaque patch into DEST_RECT — never a second full figure, never a clear.
  */
-import { IDLE_BLINK_CANVAS, IDLE_BLINK_EYE_HOLES } from "./rai.ts";
+import { IDLE_BLINK_CANVAS, IDLE_BLINK_DEST_RECT } from "./rai.ts";
 
 /** What a fresh <canvas> uses before width/height are set. Eye holes sit outside it. */
 export const BROWSER_DEFAULT_CANVAS = { width: 300, height: 150 } as const;
@@ -37,8 +37,8 @@ export function idleCanvasBitmapReady(canvas: { width: number; height: number })
  * ready, and only if this canvas has not been painted yet. Blink does not
  * schedule that full draw again.
  *
- * Eye draws are omitted until the body is on the canvas. A 300×150 default
- * bitmap cannot take the holes (left 432,202 80×40; right 508,202 80×40).
+ * The dest paste is omitted until the body is on the canvas. A 300×150 default
+ * bitmap cannot take DEST_RECT (424, 193, 196×57).
  */
 export function planIdleCanvasDraws(input: {
   canvasMounted: boolean;
@@ -124,9 +124,8 @@ export function drawIdleBody(ctx: DrawImageCtx, image: CanvasImageSource): void 
 }
 
 /**
- * Crop sheet → one eye hole. Source is the crop's own pixels, not the full plate.
- * Source-over keeps the RGBA ellipse: transparent corners leave the glare,
- * partial alpha blends once. Caller restores the glare rect first.
+ * Opaque TyLo patch → DEST_RECT. Source is the patch's own pixels, not a full plate.
+ * Caller restores the idle dest rect first so the paste lands on idle.png.
  */
 export function drawEyeRect(
   ctx: DrawImageCtx,
@@ -138,7 +137,7 @@ export function drawEyeRect(
   });
 }
 
-/** Glare eyes back from the same idle.png. Source rect only — not a second full draw. */
+/** Dest rect back from the same idle.png. Source rect only — not a second full draw. */
 export function drawGlareEyeRect(
   ctx: DrawImageCtx,
   idle: CanvasImageSource,
@@ -150,18 +149,20 @@ export function drawGlareEyeRect(
 }
 
 /**
- * Run a plan. Body is one drawImage(idle, 0, 0). Eyes are the two holes only.
- * Returns how many drawImage calls landed.
+ * Run a plan. Body is one drawImage(idle, 0, 0). A lid step pastes one patch
+ * into DEST_RECT after copying that rect back from idle.png. Returns how many
+ * drawImage calls landed.
  */
 export function applyIdleCanvasPlan(
   plan: readonly IdleCanvasDraw[],
   ctx: DrawImageCtx,
   images: {
     idle: CanvasImageSource;
-    lids: readonly [CanvasImageSource, CanvasImageSource] | null;
+    lid: CanvasImageSource | null;
   },
 ): number {
   let draws = 0;
+  const hole = IDLE_BLINK_DEST_RECT;
   for (const step of plan) {
     if (step.kind === "body") {
       drawIdleBody(ctx, images.idle);
@@ -169,29 +170,23 @@ export function applyIdleCanvasPlan(
       continue;
     }
     if (step.mode === "glare") {
-      for (const hole of IDLE_BLINK_EYE_HOLES) {
-        drawGlareEyeRect(ctx, images.idle, hole);
-        draws += 1;
-      }
+      drawGlareEyeRect(ctx, images.idle, hole);
+      draws += 1;
       continue;
     }
-    if (!images.lids) continue;
-    IDLE_BLINK_EYE_HOLES.forEach((hole, index) => {
-      const crop = images.lids?.[index];
-      if (!crop) return;
-      // Soft alpha must blend with glare, not with the lid already in the hole.
-      drawGlareEyeRect(ctx, images.idle, hole);
-      drawEyeRect(ctx, crop, hole);
-      draws += 2;
-    });
+    if (!images.lid) continue;
+    // Paste onto idle pixels in the dest rect, not onto the previous patch.
+    drawGlareEyeRect(ctx, images.idle, hole);
+    drawEyeRect(ctx, images.lid, hole);
+    draws += 2;
   }
   return draws;
 }
 
 /**
- * Source-over one eye-rect onto an idle bitmap. Touches only x..x+w, y..y+h.
- * Transparent crop pixels leave the glare in place (soft ellipse corners).
- * Callers must not clear the destination. Pixels outside the rect stay put.
+ * Source-over one dest rect onto an idle bitmap. Touches only x..x+w, y..y+h.
+ * Opaque TyLo patches replace those pixels. Callers must not clear the
+ * destination. Pixels outside the rect stay put.
  */
 export function copyEyeRect(
   dest: Uint8ClampedArray,
