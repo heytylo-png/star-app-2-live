@@ -316,7 +316,7 @@ describe("layersFor talking vs pose hold", () => {
     assert.doesNotMatch(layers[0]!.src, /idle_blink/);
   });
 
-  it("keeps idle.png as the only rest body while the eyes blink", () => {
+  it("keeps idle.png as the only rest body and does not blink", () => {
     const rest = {
       ...base,
       pose: "idle" as const,
@@ -346,12 +346,12 @@ describe("layersFor talking vs pose hold", () => {
     assert.match(layersFor({ ...rest, emotion: "glance" })[0]!.src, /rai\/idle\.png$/);
     assert.doesNotMatch(layersFor({ ...rest, emotion: "glance" })[0]!.src, /idle_blink/);
 
-    assert.equal(canIdleBlink(rest), true);
+    assert.equal(canIdleBlink(rest), false);
     assert.equal(canIdleBlink({ ...rest, talking: true }), false);
     assert.equal(canIdleBlink({ ...rest, pose: "wave" }), false);
     assert.equal(canIdleBlink({ ...rest, reducedMotion: true }), false);
     assert.equal(USE_EXPO_TALK_BUST, false);
-    assert.ok(allSpriteUrls().includes(SPRITES.idleBlink));
+    assert.equal(allSpriteUrls().includes(SPRITES.idleBlink), false);
     assert.match(SPRITES.idleBlink, /rai\/idle_blink\.png/);
 
     const ihdr = (rel: string) => {
@@ -704,7 +704,7 @@ describe("pose tint", () => {
     assert.match(restSrc, /\/idle\.png$/);
     assert.equal(
       canIdleBlink({ pose: "idle", emotion: DEFAULT_EMOTION, talking: false }),
-      true,
+      false,
     );
   });
 

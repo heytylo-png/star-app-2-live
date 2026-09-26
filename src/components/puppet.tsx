@@ -1,8 +1,6 @@
-import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { eyeOverlayRect, IDLE_EYE_RECTS, IDLE_PLATE_HEIGHT, IDLE_PLATE_WIDTH } from "@/lib/idle-blink";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   allSpriteUrls,
-  canIdleBlink,
   layersFor,
   POSE_CROSSFADE_MS,
   SPRITES,
@@ -11,15 +9,7 @@ import {
   type PoseId,
   type SpriteLayer,
 } from "@/lib/rai";
-import {
-  IDLE_BEAT_FADE_MS,
-  IDLE_BLINK_FADE_MS,
-  IDLE_BLINK_GAP_MAX_MS,
-  IDLE_BLINK_GAP_MIN_MS,
-  IDLE_BLINK_HOLD_MS,
-  puppetIdleMotion,
-  puppetRigTransform,
-} from "@/lib/rai-motion";
+import { IDLE_BEAT_FADE_MS, puppetIdleMotion, puppetRigTransform } from "@/lib/rai-motion";
 import { punchedSpriteUrl } from "@/lib/punch-white";
 import { cn } from "@/lib/utils";
 
@@ -65,103 +55,11 @@ function fadeMsFor(layer: SpriteLayer, talking: boolean): number {
 }
 
 /**
- * Eye-only lid overlay. The idle <img> stays mounted and fully opaque.
- * This canvas receives putImageData of the two eye rects and nothing else.
- */
-function IdleEyes({
-  blinkUrl,
-  opacity,
-  zIndex,
-  transition,
-  paintRef,
-}: {
-  blinkUrl: string | undefined;
-  opacity: number;
-  zIndex: number;
-  transition: string;
-  paintRef: { current: (alpha: number) => boolean };
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const blinkRef = useRef<Uint8ClampedArray | null>(null);
-
-  useLayoutEffect(() => {
-    const canvas = canvasRef.current;
-    let cancelled = false;
-    blinkRef.current = null;
-    paintRef.current = () => false;
-    if (!canvas || !blinkUrl) {
-      return () => {
-        paintRef.current = () => false;
-      };
-    }
-
-    const img = new Image();
-    img.decoding = "async";
-    img.src = blinkUrl;
-    void img
-      .decode()
-      .then(() => {
-        if (cancelled) return;
-        const plate = document.createElement("canvas");
-        plate.width = IDLE_PLATE_WIDTH;
-        plate.height = IDLE_PLATE_HEIGHT;
-        const ctx = plate.getContext("2d", { willReadFrequently: true });
-        if (!ctx || img.naturalWidth <= 0 || img.naturalHeight <= 0) return;
-        if (img.naturalWidth === IDLE_PLATE_WIDTH && img.naturalHeight === IDLE_PLATE_HEIGHT) {
-          ctx.drawImage(img, 0, 0);
-        } else {
-          ctx.drawImage(img, 0, 0, IDLE_PLATE_WIDTH, IDLE_PLATE_HEIGHT);
-        }
-        blinkRef.current = new Uint8ClampedArray(
-          ctx.getImageData(0, 0, IDLE_PLATE_WIDTH, IDLE_PLATE_HEIGHT).data,
-        );
-        paintRef.current = (alpha: number) => {
-          const blink = blinkRef.current;
-          const node = canvasRef.current;
-          if (!blink || !node) return false;
-          const dest = node.getContext("2d", { alpha: true });
-          if (!dest) return false;
-          for (const rect of IDLE_EYE_RECTS) {
-            const pixels = eyeOverlayRect(blink, IDLE_PLATE_WIDTH, rect, alpha);
-            const image = new ImageData(rect.width, rect.height);
-            image.data.set(pixels);
-            dest.putImageData(image, rect.x, rect.y);
-          }
-          return true;
-        };
-      })
-      .catch(() => {
-        if (!cancelled) paintRef.current = () => false;
-      });
-
-    return () => {
-      cancelled = true;
-      paintRef.current(0);
-      paintRef.current = () => false;
-      blinkRef.current = null;
-    };
-  }, [blinkUrl, paintRef]);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      width={IDLE_PLATE_WIDTH}
-      height={IDLE_PLATE_HEIGHT}
-      className="rai-layer rai-eye-overlay"
-      data-rai-role="eyes"
-      data-rai-sheet="idle-eyes"
-      aria-hidden="true"
-      style={{ opacity, zIndex, transition }}
-    />
-  );
-}
-
-/**
  * Star Rai 2D puppet — planted idle life, look-at lean, talk/mood sheets.
  * Studio-white cards are punched to alpha. Layers crossfade by stable id.
  * Spoken bubble holds talk/mood through the line; frown idle is rest-only.
- * Rest idle keeps one idle.png body. Blink copies two eye rects from
- * idle_blink.png and does not draw the rest of that plate.
+ * Rest blink is off until Maker's eye-rect composite. idle.png is the only
+ * rest body — do not load idle_blink.png as a second figure.
  * Expo bust mouth/eye crops stay off. Dedicated poses hold their own sheet.
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
@@ -180,7 +78,6 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
 
   const [ampLive, setAmpLive] = useState(0);
   const [blink, setBlink] = useState<0 | 1 | 2>(0);
-  const [eyesClosed, setEyesClosed] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [display, setDisplay] = useState<DisplayLayer[]>([]);
   const [sheets, setSheets] = useState<Record<string, string>>({});
@@ -188,7 +85,6 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const fadeTimers = useRef<Map<string, number>>(new Map());
   const fadingIn = useRef<Set<string>>(new Set());
   const fadeRaf = useRef(0);
-  const paintLids = useRef<(alpha: number) => boolean>(() => false);
 
   // Punch studio-white cards to alpha, then decode so pose swaps never flash a plate.
   useEffect(() => {
@@ -269,81 +165,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     };
   }, []);
 
-  // Rest-idle blink: lid alpha inside the eye rects. The idle body img never swaps.
-  // Layout cleanup so leaving rest opens the eyes before the next paint.
-  useLayoutEffect(() => {
-    if (USE_EXPO_TALK_BUST) return;
-    const resting = canIdleBlink({ pose, emotion, talking, reducedMotion });
-    if (!resting) return;
-
-    let cancelled = false;
-    let sleepTimer = 0;
-    let rafId = 0;
-    let wake = () => {};
-
-    const sleep = (ms: number) =>
-      new Promise<void>((resolve) => {
-        wake = resolve;
-        sleepTimer = window.setTimeout(resolve, ms);
-      });
-
-    const tween = (from: number, to: number, ms: number) =>
-      new Promise<boolean>((resolve) => {
-        const t0 = performance.now();
-        const frame = (now: number) => {
-          if (cancelled) {
-            resolve(false);
-            return;
-          }
-          const u = ms <= 0 ? 1 : Math.min(1, (now - t0) / ms);
-          const ok = paintLids.current(from + (to - from) * u);
-          if (!ok) {
-            resolve(false);
-            return;
-          }
-          if (u >= 1) resolve(true);
-          else rafId = requestAnimationFrame(frame);
-        };
-        rafId = requestAnimationFrame(frame);
-      });
-
-    const run = async () => {
-      while (!cancelled) {
-        const wait =
-          IDLE_BLINK_GAP_MIN_MS +
-          Math.random() * (IDLE_BLINK_GAP_MAX_MS - IDLE_BLINK_GAP_MIN_MS);
-        await sleep(wait);
-        if (cancelled || reducedRef.current || talkingRef.current) break;
-        if (!paintLids.current(0)) continue;
-        if (cancelled) break;
-        setEyesClosed(true);
-        const closed = await tween(0, 1, IDLE_BLINK_FADE_MS);
-        if (!closed || cancelled) {
-          if (!cancelled) {
-            paintLids.current(0);
-            setEyesClosed(false);
-          }
-          if (cancelled) break;
-          continue;
-        }
-        await sleep(IDLE_BLINK_HOLD_MS);
-        if (cancelled) break;
-        const opened = await tween(1, 0, IDLE_BLINK_FADE_MS);
-        if (!cancelled) setEyesClosed(false);
-        if (!opened && !cancelled) paintLids.current(0);
-      }
-    };
-
-    void run();
-    return () => {
-      cancelled = true;
-      window.clearTimeout(sleepTimer);
-      cancelAnimationFrame(rafId);
-      wake();
-      paintLids.current(0);
-      setEyesClosed(false);
-    };
-  }, [pose, emotion, talking, reducedMotion]);
+  // Rest blink timer is intentionally absent. Maker's eye-rect composite
+  // will re-enable it later. Do not swap or fade idle_blink.png in the meantime.
 
   // Pointer → look target (normalized -1..1), deadzone kills micro-jitter.
   useEffect(() => {
@@ -420,8 +243,6 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     raf.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf.current);
   }, []);
-
-  const restingBlink = canIdleBlink({ pose, emotion, talking, reducedMotion });
 
   const desired = useMemo(
     () =>
@@ -534,45 +355,13 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       data-rai-pose={pose}
       data-rai-emotion={emotion}
       data-rai-talking={talking ? "1" : "0"}
-      data-rai-blink={eyesClosed && restingBlink ? "1" : "0"}
+      data-rai-blink="0"
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
     >
       <div data-rai-rig className="rai-rig">
         {display.map((layer) => {
           const src = sheets[layer.src];
           if (!src) return null;
-          const transition = isInstantLayer(layer, talking)
-            ? "none"
-            : `opacity ${fadeMsFor(layer, talking)}ms var(--ease-smooth-out)`;
-          const style = {
-            opacity: layer.opacity,
-            zIndex: layer.z,
-            transition,
-          };
-          const idleBody = !USE_EXPO_TALK_BUST && layer.src === SPRITES.poses.idle;
-          if (idleBody) {
-            return (
-              <Fragment key={layer.id}>
-                <img
-                  src={src}
-                  alt=""
-                  draggable={false}
-                  decoding="async"
-                  className="rai-layer"
-                  data-rai-role={layer.role}
-                  data-rai-sheet="idle"
-                  style={style}
-                />
-                <IdleEyes
-                  blinkUrl={sheets[SPRITES.idleBlink]}
-                  opacity={layer.opacity}
-                  zIndex={layer.z + 1}
-                  transition={transition}
-                  paintRef={paintLids}
-                />
-              </Fragment>
-            );
-          }
           return (
             <img
               key={layer.id}
@@ -582,7 +371,15 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
               decoding="async"
               className="rai-layer"
               data-rai-role={layer.role}
-              style={style}
+              data-rai-sheet={layer.src === SPRITES.poses.idle ? "idle" : undefined}
+              style={{
+                opacity: layer.opacity,
+                zIndex: layer.z,
+                // Talk flap tracks sin immediately; pose sheets ease across.
+                transition: isInstantLayer(layer, talking)
+                  ? "none"
+                  : `opacity ${fadeMsFor(layer, talking)}ms var(--ease-smooth-out)`,
+              }}
             />
           );
         })}

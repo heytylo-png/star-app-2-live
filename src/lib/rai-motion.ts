@@ -11,9 +11,9 @@ export const POSE_CROSSFADE_MS = 380;
 export const IDLE_BEAT_FADE_MS = 400;
 
 /**
- * Rest-idle blink timing. The fade is lid alpha inside the eye rects only —
- * not an opacity crossfade of idle.png against idle_blink.png.
- * Hold is the fully-closed dwell after that fade-in.
+ * Timing for Maker's later eye-rect blink. Rest blink is off, so nothing
+ * reads these on the live official PNG. Do not use them to crossfade
+ * idle_blink.png over idle.png.
  */
 export const IDLE_BLINK_FADE_MS = 100;
 export const IDLE_BLINK_HOLD_MS = 100;
