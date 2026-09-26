@@ -47,9 +47,12 @@ Seven steps, about two frames each (24fps twos, IDLE_BLINK_STEP_MS). Open is gla
 5 half     783
 6 closing  782
 7 open     idle.png
-The 782/783 sheets are registered on the 1008×1792 canvas at bake time
-(public/rai/blink-frames/*.jpg, or IDLE_BLINK_CLOSING / IDLE_BLINK_HALF).
-They are not shipped as idle and they are not drawn. Only the eye holes are.
+The raw 782/783 sheets are not body-locked: outside the eye holes their delta
+vs idle.png is 255. Paste the holes only. Never mount those JPGs as idle or
+as a full-body blink plate. Hole-only composites must match idle.png outside
+the holes (max delta 0). Maker-dropped L/R cuts (blink-frames/closing_l.png
+and closing_r.png, half_l.png and half_r.png) are preferred over slicing the
+raw JPG. The JPGs themselves are not shipped.
 - public/rai/idle_blink_01.png — closing lids (782), eye holes only
 - public/rai/idle_blink_02.png — half lids (783), eye holes only
 - public/rai/idle_blink.png — official closed lids (hold), then glare eyes return

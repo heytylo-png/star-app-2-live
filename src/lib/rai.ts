@@ -313,12 +313,14 @@ export const IDLE_BLINK_CANVAS = { width: 1008, height: 1792 } as const;
 
 /**
  * Full-plate blink files. Never drawn. Eye crops are copied onto idle.
- * blink-frames jpgs are the registered 782/783 sheets — sources, not idle.
+ * 782/783 are not body-locked (outside-hole delta 255). A jpg of either
+ * sheet is a full idle and must not mount, wherever it sits.
  */
 export function isFullBlinkPlate(src: string): boolean {
   return (
     /\/idle_blink(?:_0[12])?\.png(?:\?|$)/.test(src) ||
-    /\/blink-frames\/.+\.jpe?g(?:\?|$)/.test(src)
+    /blink-0[23][^\s"'?#]*\.jpe?g(?:\?|#|$)/i.test(src) ||
+    /\/blink-frames\/.+\.jpe?g(?:\?|#|$)/i.test(src)
   );
 }
 

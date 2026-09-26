@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { inflateSync } from "node:zlib";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
@@ -120,6 +120,16 @@ function decodePng(buf: Buffer): {
     }
   }
   return { width, height, colorType, rgba };
+}
+
+function listPublicFiles(dir: string): string[] {
+  const out: string[] = [];
+  for (const ent of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, ent.name);
+    if (ent.isDirectory()) out.push(...listPublicFiles(path));
+    else out.push(path);
+  }
+  return out;
 }
 
 function holeMask(width: number, height: number): Uint8Array {
@@ -441,6 +451,8 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(isFullBlinkPlate("/rai/idle_blink_02.png"), true);
     assert.equal(isFullBlinkPlate("/rai/blink-frames/blink-02-closing.jpg"), true);
     assert.equal(isFullBlinkPlate("/rai/blink-frames/blink-03-half.jpg"), true);
+    assert.equal(isFullBlinkPlate("/rai/blink-02-closing.jpg"), true);
+    assert.equal(isFullBlinkPlate("blink-03-half.JPG"), true);
     assert.equal(isFullBlinkPlate(SPRITES.idleBlinkL), false);
     assert.equal(isFullBlinkPlate(SPRITES.idleBlinkR), false);
     assert.ok(allSpriteUrls().every((src) => !src.includes("blink-frames")));
@@ -647,20 +659,21 @@ describe("layersFor talking vs pose hold", () => {
       assert.ok(insideChanged > 0, `${lid} eye paint did not change the holes`);
     }
 
-    // 782/783 stay bake inputs. A full-sheet jpg must not become idle or a sprite.
-    for (const rel of [
-      "rai/blink-frames/blink-02-closing.jpg",
-      "rai/blink-frames/blink-03-half.jpg",
-    ]) {
-      assert.equal(isFullBlinkPlate(`/${rel}`), true);
-      assert.equal(
-        allSpriteUrls().some((src) => src.includes(rel) || src.includes("blink-frames")),
-        false,
-      );
+    // 782/783 are not body-locked. They must not ship as jpg full sheets.
+    const shipped = listPublicFiles(publicRoot);
+    const jpgs = shipped.filter((file) => /\.jpe?g$/i.test(file));
+    assert.deepEqual(jpgs, [], `full jpg sheets in public: ${jpgs.join(", ")}`);
+    assert.equal(
+      shipped.some((file) => /blink-0[23]/i.test(file)),
+      false,
+      "782/783 filenames must not be in the public tree",
+    );
+    for (const src of allSpriteUrls()) {
+      assert.equal(isFullBlinkPlate(src), false, src);
+      assert.doesNotMatch(src, /blink-0[23]|blink-frames|\.jpe?g/i);
     }
     assert.match(SPRITES.poses.idle, /rai\/idle\.png$/);
     assert.doesNotMatch(SPRITES.poses.idle, /blink-frames|idle_blink/);
-    assert.equal(existsSync(join(publicRoot, "rai/idle.png")), true);
   });
 
   it("pins soft/hype off frown idle even when pose is still idle", () => {

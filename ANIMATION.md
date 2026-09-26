@@ -47,7 +47,7 @@ Rest idle only: pose `idle`, not talking, not a dedicated pose, not an emotion s
 
 The idle `<canvas>` is created at 1008×1792 (not the browser default 300×150). On mount, and when `idle.png` is decoded, that canvas is painted once with the full idle bitmap. Blink then `drawImage`s only the two eye rects (`IDLE_BLINK_EYE_HOLES`: left 434,208 80×28; right 514,208 98×30) from the crop sheets. The rest of the blink PNG is not drawn. The canvas is not cleared between frames, and the idle body is not unloaded. If the crops are not ready, blink stays off.
 
-Baked by `scripts/bake-idle-blink.py`. Full plates stay on disk so pixels outside the holes match `idle.png` (max delta 0). They are not mounted. TyLo 782 (closing) and 783 (half) are registered at bake time and are not shipped as a second idle. The copied rects are:
+Baked by `scripts/bake-idle-blink.py`. Full plates stay on disk so pixels outside the holes match `idle.png` (max delta 0). They are not mounted. The raw 782/783 JPGs are not body-locked (outside-hole delta 255) and are not in the tree. The copied rects are:
 
 - `idle_blink_01_l.png` / `idle_blink_01_r.png` — closing lids (782)
 - `idle_blink_02_l.png` / `idle_blink_02_r.png` — half lids (783)

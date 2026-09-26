@@ -74,6 +74,39 @@ def register(lid: Image.Image, canvas: tuple[int, int]) -> Image.Image:
     return plate
 
 
+def cuts_for(name: str) -> tuple[Path, Path] | None:
+    """Maker-dropped hole PNGs win over slicing a full JPG."""
+    stem = {
+        "idle_blink_01.png": "closing",
+        "idle_blink_02.png": "half",
+    }.get(name)
+    if stem is None:
+        return None
+    env_l = os.environ.get(f"IDLE_BLINK_{stem.upper()}_L")
+    env_r = os.environ.get(f"IDLE_BLINK_{stem.upper()}_R")
+    if env_l and env_r:
+        return Path(env_l), Path(env_r)
+    folder = ROOT / "public/rai/blink-frames"
+    left = folder / f"{stem}_l.png"
+    right = folder / f"{stem}_r.png"
+    if left.is_file() and right.is_file():
+        return left, right
+    return None
+
+
+def lid_from_cuts(idle: np.ndarray, left: Path, right: Path) -> np.ndarray:
+    lid = idle.copy()
+    for path, (x, y, w, h) in zip((left, right), EYE_HOLES, strict=True):
+        cut = Image.open(path).convert("RGBA")
+        if cut.size != (w, h):
+            raise SystemExit(f"{path.name} is {cut.size}, expected {(w, h)}")
+        px = np.asarray(cut)
+        if int(px[:, :, 3].min()) != 255:
+            raise SystemExit(f"{path.name} is not an opaque eye cut")
+        lid[y : y + h, x : x + w] = px[:, :, :3]
+    return lid
+
+
 def paste_eyes(idle: np.ndarray, lid: np.ndarray) -> np.ndarray:
     """Idle body everywhere. Lid pixels only inside the two eye holes."""
     out = np.zeros((idle.shape[0], idle.shape[1], 4), dtype=np.uint8)
@@ -101,10 +134,16 @@ def main() -> None:
     holes = hole_mask(idle.shape[:2])
     written: list[np.ndarray] = []
     for name, src in STEPS:
-        if not src.is_file():
-            raise SystemExit(f"missing lid sheet {src}")
-        lid_img = register(Image.open(src), CANVAS)
-        lid = np.asarray(lid_img)
+        cuts = cuts_for(name)
+        if cuts is not None:
+            lid = lid_from_cuts(idle, cuts[0], cuts[1])
+            origin = f"cuts {cuts[0].name}+{cuts[1].name}"
+        else:
+            if not src.is_file():
+                raise SystemExit(f"missing lid sheet {src}")
+            # The raw sheet is not body-locked. Read it, then keep only the holes.
+            lid = np.asarray(register(Image.open(src), CANVAS))
+            origin = src.name
         frame = paste_eyes(idle, lid)
         rgb = frame[:, :, :3].astype(np.int16)
         alpha = frame[:, :, 3]
@@ -119,11 +158,11 @@ def main() -> None:
         # Source holes must land unchanged — a blend would not match the sheet.
         src_delta = np.abs(rgb - lid.astype(np.int16)).max(axis=2)
         if int(src_delta[holes].max()) != 0:
-            raise SystemExit(f"{name} eye holes do not match {src.name}")
+            raise SystemExit(f"{name} eye holes do not match {origin}")
         Image.fromarray(frame, "RGBA").save(out_dir / name, optimize=True)
         hole_mean = float(delta[holes].mean())
         print(
-            f"wrote {name} from {src.name} outside_max={int(delta[outside].max())} "
+            f"wrote {name} from {origin} outside_max={int(delta[outside].max())} "
             f"hole_max={int(delta[holes].max())} hole_mean={hole_mean:.1f}"
         )
         written.append(rgb)
@@ -143,6 +182,17 @@ def main() -> None:
         if int(diff[holes].max()) == 0:
             raise SystemExit(f"{STEPS[i][0]} and {STEPS[j][0]} share the same eyelids")
         print(f"distinct {STEPS[i][0]} vs {STEPS[j][0]} hole_mean={float(diff[holes].mean()):.1f}")
+    # 782/783 must not land in the shipped tree as full sheets.
+    public = ROOT / "public"
+    leftover = [
+        path
+        for path in public.rglob("*")
+        if path.suffix.lower() in {".jpg", ".jpeg"} or "blink-02" in path.name or "blink-03" in path.name
+    ]
+    if leftover:
+        raise SystemExit(
+            "refusing to ship 782/783 as full sheets: " + ", ".join(str(path) for path in leftover)
+        )
 
 
 if __name__ == "__main__":
