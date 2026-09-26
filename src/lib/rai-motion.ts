@@ -11,24 +11,19 @@ export const POSE_CROSSFADE_MS = 380;
 export const IDLE_BEAT_FADE_MS = 400;
 
 /**
- * Rest-idle blink timing. One full frame replaces the last. Not an opacity
- * crossfade of two sheets, and not a second image over the body.
+ * Rest-idle blink timing. One full frame replaces the last on a single
+ * image. Not an opacity crossfade of two sheets, and not a second image
+ * over the body.
  *
- * The long shot shows the eye band at about 80×23 CSS pixels. A 50ms half
- * and a 100ms closed dwell are over before a glance can register the step.
- * Twos at 24fps are ~83ms; every lid step holds at least that. 01 open and
- * 02 closing are the short lead-in. 03 half and 04 closed stay up long
- * enough to read. The first blink starts soon after rest idle; later gaps
- * still land another cycle inside a 10–20s watch.
+ * The lid pass is five hard cuts — 02 → 03 → 04 → 03 → 02 — in 300ms,
+ * then hold 01. The first blink starts soon after rest idle; later gaps
+ * still land another cycle inside a 10–20s watch. Not scheduled while
+ * IDLE_BLINK_ENABLED is false.
  */
-/** Two frames at 24fps. Shorter than this (the old 50ms half) does not read. */
-export const IDLE_BLINK_MIN_STEP_MS = Math.round(2000 / 24);
-/** 01 open. Visible step, not a one-frame smear. */
-export const IDLE_BLINK_OPEN_MS = 160;
-/** 02 closing. Same open-ish hold so the step reads on the long shot. */
-export const IDLE_BLINK_CLOSING_MS = 160;
-export const IDLE_BLINK_HALF_MS = 640;
-export const IDLE_BLINK_HOLD_MS = 1000;
+/** One lid cut. Five of these are the whole close-and-open. */
+export const IDLE_BLINK_STEP_MS = 60;
+/** 02 → 03 → 04 → 03 → 02. Hold 01 after this, not during it. */
+export const IDLE_BLINK_PASS_MS = IDLE_BLINK_STEP_MS * 5;
 /** Delay before the first blink once rest idle is allowed. */
 export const IDLE_BLINK_FIRST_MS = 900;
 /** Random gap after a cycle finishes, before the next one. */
@@ -40,8 +35,8 @@ export type IdleBlinkFrame = 0 | 1 | 2 | 3 | 4;
 
 export type IdleBlinkStep = { blink: IdleBlinkFrame; at: number };
 
-/** Baked full frames, forward order. 1 open → 2 closing → 3 half → 4 closed. */
-const IDLE_BLINK_FORWARD = [1, 2, 3, 4] as const;
+/** Lid pass only. 01 is the hold after this, not a step inside it. */
+const IDLE_BLINK_LIDS = [2, 3, 4, 3, 2] as const;
 
 /** Step name for a schedule frame. `rest` is the same sheet as 01 open. */
 export function idleBlinkStepName(
@@ -55,28 +50,19 @@ export function idleBlinkStepName(
 }
 
 /**
- * One rest blink: 01 → 02 → 03 → 04 → 03 → 02 → 01, then rest.
+ * One rest blink: 02 → 03 → 04 → 03 → 02 in 300ms, then hold 01.
  * Do not skip 02. `at` is ms from the start of the blink. The last step
- * is rest, which is the 01 open sheet again. Each step is a hard cut of
- * one full frame. Never opacity-blend two sheets. Not scheduled while
- * IDLE_BLINK_ENABLED is false — rest stays on idle.png.
+ * is 01 open and stays up until the next gap. Each step is a hard cut of
+ * one full frame on one image. Never opacity-blend two sheets. Not
+ * scheduled while IDLE_BLINK_ENABLED is false — rest stays on idle.png.
  */
-function idleBlinkDwellMs(blink: IdleBlinkFrame): number {
-  if (blink === 4) return IDLE_BLINK_HOLD_MS;
-  if (blink === 3) return IDLE_BLINK_HALF_MS;
-  if (blink === 2) return IDLE_BLINK_CLOSING_MS;
-  return IDLE_BLINK_OPEN_MS;
-}
-
 export function idleBlinkSchedule(): IdleBlinkStep[] {
-  const forward: IdleBlinkFrame[] = [...IDLE_BLINK_FORWARD];
-  const reverse = forward.slice(0, -1).reverse();
-  const frames: IdleBlinkFrame[] = [...forward, ...reverse, 0];
+  const frames: IdleBlinkFrame[] = [...IDLE_BLINK_LIDS, 1];
   let at = 0;
   return frames.map((blink) => {
     const entry: IdleBlinkStep = { blink, at };
-    // The idle restore has no lid dwell. The gap timer starts when it lands.
-    if (blink !== 0) at += idleBlinkDwellMs(blink);
+    // 01 is the hold. The gap timer starts when it lands.
+    if (blink !== 1) at += IDLE_BLINK_STEP_MS;
     return entry;
   });
 }
