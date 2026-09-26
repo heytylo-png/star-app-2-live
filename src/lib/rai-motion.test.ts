@@ -8,6 +8,7 @@ import {
   IDLE_BLINK_GAP_MAX_MS,
   IDLE_BLINK_GAP_MIN_MS,
   IDLE_BLINK_HOLD_MS,
+  idleBlinkSchedule,
   IDLE_BREATHE_MAX,
   IDLE_BREATHE_MIN,
   IDLE_MAX_ROCK_DEG,
@@ -52,6 +53,15 @@ describe("official PNG puppet motion", () => {
     assert.ok(IDLE_BLINK_HOLD_MS >= 80 && IDLE_BLINK_HOLD_MS <= 120);
     assert.equal(IDLE_BLINK_GAP_MIN_MS, 3000);
     assert.equal(IDLE_BLINK_GAP_MAX_MS, 6000);
+    const blink = idleBlinkSchedule();
+    assert.deepEqual(
+      blink.map((step) => step.blink),
+      [1, 2, 3, 2, 1, 0],
+    );
+    assert.equal(blink[2]!.at, IDLE_BLINK_FADE_MS);
+    assert.equal(blink[3]!.at - blink[2]!.at, IDLE_BLINK_HOLD_MS);
+    assert.equal(blink[5]!.at - blink[3]!.at, IDLE_BLINK_FADE_MS);
+    assert.equal(blink[5]!.blink, 0);
     assert.match(css, /\.rai-rig\s*\{/);
     assert.match(css, /transform-origin:\s*50%\s*72%/);
     assert.doesNotMatch(css, /perspective\(1400px\)/);

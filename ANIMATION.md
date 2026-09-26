@@ -43,11 +43,19 @@ Amplitude still drives a small talk bob on the rig. Dedicated poses (`talk`, `wa
 
 ### Idle blink
 
-**Off.** `canIdleBlink` is false. There is no rest-blink timer and no `idle_blink` layer. Live rest stays on `idle.png` only.
+Rest idle only: pose `idle`, not talking, not a dedicated pose, not an emotion sheet (smug, shy, tired, soft, hype, and the named pose keys). Every **3–6s** (random), the glare body stays one live `idle.png` bitmap. Blink does not add an `<img>` and does not opacity-crossfade a second figure.
 
-A full-plate swap of `public/rai/idle_blink.png` flashes the standing body, and the eye rects are not ready to composite. Maker's eye-rect composite will re-enable blink later: keep this same `idle.png` body, and copy only the closed-lid rects from the blink sheet. Do not crossfade two full figures in the meantime.
+The blink sheet is a source. After it is registered onto the 1008×1792 idle canvas, only the two eye rects (`IDLE_BLINK_EYE_HOLES`) are copied onto that bitmap (`copyEyeRect`). The rest of the blink PNG is not drawn. The canvas is not cleared between frames. If the crops are not ready, blink stays off.
 
-`idle_blink.png` stays on disk for that follow-up. It is not preloaded and not drawn.
+Baked by `scripts/bake-idle-blink.py`. Full plates stay on disk so pixels outside the holes match `idle.png` (max delta 0). They are not mounted. The copied rects are:
+
+- `idle_blink_01_l.png` / `idle_blink_01_r.png` — 40% closed
+- `idle_blink_02_l.png` / `idle_blink_02_r.png` — 75% closed
+- `idle_blink_l.png` / `idle_blink_r.png` — official closed lids
+
+- Close phase **100ms** (`IDLE_BLINK_FADE_MS`) across the early and mid frames, then closed hold **100ms** (`IDLE_BLINK_HOLD_MS`), then the same 100ms open phase back to glare eyes.
+- A pose command, talk flap, or emotion-sheet swap mid-blink clears blink immediately and snaps to that sheet.
+- `prefers-reduced-motion: reduce` disables blink.
 
 Fallback: spoken `talk` / mood sheet as a single body. Reduced motion matches that (no flap over frown idle, no blink).
 

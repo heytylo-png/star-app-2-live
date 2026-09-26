@@ -1,6 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { copyEyeRect } from "@/lib/idle-blink-paint";
 import {
   allSpriteUrls,
+  canIdleBlink,
+  IDLE_BLINK_CANVAS,
+  IDLE_BLINK_EYE_HOLES,
+  idleBlinkEyeSrcs,
+  idleBlinkEyeUrls,
+  isFullBlinkPlate,
   layersFor,
   POSE_CROSSFADE_MS,
   SPRITES,
@@ -9,7 +16,14 @@ import {
   type PoseId,
   type SpriteLayer,
 } from "@/lib/rai";
-import { IDLE_BEAT_FADE_MS, puppetIdleMotion, puppetRigTransform } from "@/lib/rai-motion";
+import {
+  IDLE_BEAT_FADE_MS,
+  IDLE_BLINK_GAP_MAX_MS,
+  IDLE_BLINK_GAP_MIN_MS,
+  idleBlinkSchedule,
+  puppetIdleMotion,
+  puppetRigTransform,
+} from "@/lib/rai-motion";
 import { punchedSpriteUrl } from "@/lib/punch-white";
 import { cn } from "@/lib/utils";
 
@@ -43,14 +57,31 @@ function syntheticJaw(t: number): number {
   return 0.25 + 0.55 * Math.abs(Math.sin(t * 11)) * Math.abs(Math.sin(t * 3.3));
 }
 
+function blitEyeRect(
+  ctx: CanvasRenderingContext2D,
+  hole: { x: number; y: number; w: number; h: number },
+  pixels: Uint8ClampedArray,
+) {
+  const view = ctx.getImageData(hole.x, hole.y, hole.w, hole.h);
+  copyEyeRect(view.data, hole.w, pixels, { x: 0, y: 0, w: hole.w, h: hole.h });
+  ctx.putImageData(view, hole.x, hole.y);
+}
+
 function isInstantLayer(layer: SpriteLayer, talking: boolean): boolean {
+  // Lid holes cut in. Fading them would dissolve a second image over the body.
+  if (layer.role === "eyes") return true;
   return talking && (layer.id === "talk" || layer.role === "talk");
 }
 
-function fadeMsFor(layer: SpriteLayer, talking: boolean): number {
+/** off = pose timing. snap = drop lids and cut to the new sheet. */
+type BlinkFadeMode = "off" | "snap";
+
+function fadeMsFor(layer: SpriteLayer, talking: boolean, blinkMode: BlinkFadeMode): number {
   if (isInstantLayer(layer, talking)) return 0;
   if (layer.id.startsWith("idle-beat")) return IDLE_BEAT_FADE_MS;
   if (layer.id === "expo-talk") return 180;
+  // Pose / talk / emotion swap mid-blink: cut, don't ease the closed lids out.
+  if (blinkMode === "snap") return 0;
   return POSE_CROSSFADE_MS;
 }
 
@@ -58,9 +89,8 @@ function fadeMsFor(layer: SpriteLayer, talking: boolean): number {
  * Star Rai 2D puppet — planted idle life, look-at lean, talk/mood sheets.
  * Studio-white cards are punched to alpha. Layers crossfade by stable id.
  * Spoken bubble holds talk/mood through the line; frown idle is rest-only.
- * Rest blink is off until Maker's eye-rect composite. idle.png is the only
- * rest body — do not load idle_blink.png as a second figure.
- * Expo bust mouth/eye crops stay off. Dedicated poses hold their own sheet.
+ * Rest idle keeps one idle.png bitmap. Blink copies two eye rects onto it.
+ * Expo bust mouth/eye crops stay off. Dedicated poses hold their own sheet and do not blink.
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -77,7 +107,11 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   talkingRef.current = talking;
 
   const [ampLive, setAmpLive] = useState(0);
-  const [blink, setBlink] = useState<0 | 1 | 2>(0);
+  const [blink, setBlink] = useState<0 | 1 | 2 | 3>(0);
+  /** Six eye-rect crops decoded. Until then blink stays off — no full-plate fallback. */
+  const [eyesReady, setEyesReady] = useState(false);
+  /** Punched idle bitmap decoded. The canvas draws this and never swaps it out. */
+  const [idleBitmapUrl, setIdleBitmapUrl] = useState<string | null>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [display, setDisplay] = useState<DisplayLayer[]>([]);
   const [sheets, setSheets] = useState<Record<string, string>>({});
@@ -85,14 +119,24 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const fadeTimers = useRef<Map<string, number>>(new Map());
   const fadingIn = useRef<Set<string>>(new Set());
   const fadeRaf = useRef(0);
+  const [blinkMode, setBlinkMode] = useState<BlinkFadeMode>("off");
+  const blinkRef = useRef<0 | 1 | 2 | 3>(0);
+  const idleCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const paintedCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const paintedUrlRef = useRef<string | null>(null);
+  const idleBitmapRef = useRef<HTMLImageElement | null>(null);
+  const glareEyesRef = useRef<Uint8ClampedArray[] | null>(null);
+  const eyePixelsRef = useRef<Record<string, Uint8ClampedArray>>({});
 
   // Punch studio-white cards to alpha, then decode so pose swaps never flash a plate.
   useEffect(() => {
     let cancelled = false;
     const urls = allSpriteUrls();
     const idle = SPRITES.poses.idle;
-    const ordered = [idle, ...urls.filter((src) => src !== idle)];
+    const eyeCrops = new Set(idleBlinkEyeUrls());
+    const ordered = [idle, ...urls.filter((src) => src !== idle && !eyeCrops.has(src))];
     for (const src of ordered) {
+      if (isFullBlinkPlate(src)) continue;
       void punchedSpriteUrl(src).then((url) => {
         if (cancelled) return;
         setSheets((prev) => (prev[src] === url ? prev : { ...prev, [src]: url }));
@@ -102,6 +146,62 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       cancelled = true;
     };
   }, []);
+
+  // Decode the six eye-rect crops into pixel buffers. Failure leaves blink off.
+  useEffect(() => {
+    let cancelled = false;
+    const urls = idleBlinkEyeUrls();
+    void Promise.all(
+      urls.map(async (src) => {
+        const img = new Image();
+        img.decoding = "async";
+        img.src = src;
+        await img.decode();
+        const hole = IDLE_BLINK_EYE_HOLES[urls.indexOf(src) % 2]!;
+        if (img.naturalWidth !== hole.w || img.naturalHeight !== hole.h) {
+          throw new Error("eye crop does not match the idle hole");
+        }
+        const scratch = document.createElement("canvas");
+        scratch.width = img.naturalWidth;
+        scratch.height = img.naturalHeight;
+        const ctx = scratch.getContext("2d", { willReadFrequently: true });
+        if (!ctx) throw new Error("eye crop canvas");
+        ctx.drawImage(img, 0, 0);
+        eyePixelsRef.current[src] = new Uint8ClampedArray(
+          ctx.getImageData(0, 0, scratch.width, scratch.height).data,
+        );
+      }),
+    )
+      .then(() => {
+        if (!cancelled) setEyesReady(true);
+      })
+      .catch(() => {
+        // Crops are not ready. Blink stays off. Do not draw a blink plate.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const idleSheetUrl = sheets[SPRITES.poses.idle];
+  useEffect(() => {
+    if (!idleSheetUrl) return;
+    let cancelled = false;
+    const img = new Image();
+    img.decoding = "async";
+    img.src = idleSheetUrl;
+    void img.decode().then(() => {
+      if (cancelled) return;
+      if (img.naturalWidth !== IDLE_BLINK_CANVAS.width || img.naturalHeight !== IDLE_BLINK_CANVAS.height) {
+        return;
+      }
+      idleBitmapRef.current = img;
+      setIdleBitmapUrl(idleSheetUrl);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [idleSheetUrl]);
 
   useEffect(() => {
     const mq =
@@ -165,8 +265,53 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     };
   }, []);
 
-  // Rest blink timer is intentionally absent. Maker's eye-rect composite
-  // will re-enable it later. Do not swap or fade idle_blink.png in the meantime.
+  // Eye-rect blink on rest idle only, and only after the crops decode.
+  // The glare body stays the only full texture. Pose, talk, and emotion cancel it.
+  useEffect(() => {
+    if (USE_EXPO_TALK_BUST || !eyesReady) return;
+    const resting = canIdleBlink({ pose, emotion, talking, reducedMotion });
+    if (!resting) return;
+
+    let cancelled = false;
+    const timers: number[] = [];
+
+    const clearTimers = () => {
+      for (const timer of timers) window.clearTimeout(timer);
+      timers.length = 0;
+    };
+
+    const arm = () => {
+      clearTimers();
+      const wait =
+        IDLE_BLINK_GAP_MIN_MS +
+        Math.random() * (IDLE_BLINK_GAP_MAX_MS - IDLE_BLINK_GAP_MIN_MS);
+      timers.push(
+        window.setTimeout(() => {
+          if (cancelled || reducedRef.current || talkingRef.current) return;
+          for (const step of idleBlinkSchedule()) {
+            timers.push(
+              window.setTimeout(() => {
+                if (cancelled || reducedRef.current || talkingRef.current) return;
+                blinkRef.current = step.blink;
+                setBlink(step.blink);
+                if (step.blink === 0) arm();
+              }, step.at),
+            );
+          }
+        }, wait),
+      );
+    };
+
+    arm();
+    return () => {
+      cancelled = true;
+      clearTimers();
+      const midBlink = blinkRef.current > 0;
+      blinkRef.current = 0;
+      setBlink(0);
+      if (midBlink) setBlinkMode("snap");
+    };
+  }, [pose, emotion, talking, reducedMotion, eyesReady]);
 
   // Pointer → look target (normalized -1..1), deadzone kills micro-jitter.
   useEffect(() => {
@@ -244,6 +389,17 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     return () => cancelAnimationFrame(raf.current);
   }, []);
 
+  const restingBlink = canIdleBlink({ pose, emotion, talking, reducedMotion });
+  const blinkShown = eyesReady ? blink : 0;
+  // Pose / talk / emotion can change a frame before the blink timer cleans up.
+  // Derive snap in that render so the next sheet cuts in instead of easing from closed lids.
+  let blinkModeLive: BlinkFadeMode = blinkMode;
+  if (!USE_EXPO_TALK_BUST && !restingBlink && blinkShown > 0) {
+    blinkModeLive = "snap";
+  }
+
+  // Blink must not change the layer list. A new layer remounts the body.
+  const sheetBlink = USE_EXPO_TALK_BUST ? blink : 0;
   const desired = useMemo(
     () =>
       layersFor({
@@ -253,12 +409,25 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
         amplitude: ampLive,
         angle: 0,
         talkPhase: 0,
-        blink,
+        blink: sheetBlink,
         idleBeat: "none",
         reducedMotion,
       }),
-    [pose, emotion, talking, ampLive, blink, reducedMotion],
+    [pose, emotion, talking, ampLive, sheetBlink, reducedMotion],
   );
+  const plates = useMemo(
+    () => desired.filter((layer) => layer.role !== "eyes" && !isFullBlinkPlate(layer.src)),
+    [desired],
+  );
+
+  // Drop snap timing once the cancelled blink has cut to the new sheet.
+  useEffect(() => {
+    if (blinkMode !== "snap") return;
+    const timer = window.setTimeout(() => {
+      setBlinkMode((mode) => (mode === "snap" ? "off" : mode));
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [blinkMode]);
 
   // Crossfade pool: incoming fades from 0, outgoing fades to 0, overlap both.
   useEffect(() => {
@@ -268,9 +437,10 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     }
 
     const next = new Map<string, DisplayLayer>();
-    desired.forEach((layer, i) => {
+    plates.forEach((layer, i) => {
       // Body starts at 1 so sheets sit above .rai-rig::after (contact shadow at z 0).
-      next.set(layer.id, { ...layer, z: layer.role === "talk" ? 20 + i : i + 1 });
+      const z = layer.role === "talk" ? 20 + i : i + 1;
+      next.set(layer.id, { ...layer, z });
     });
 
     const merged = new Map(prevIds.current);
@@ -285,8 +455,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       }
       const prev = merged.get(id);
       if (!prev) {
-        if (isInstantLayer(layer, talking) || firstPaint) {
-          // First paint snaps on — fading from empty left the stage blank.
+        if (isInstantLayer(layer, talking) || firstPaint || blinkModeLive === "snap") {
+          // First paint and cancelled blinks snap on — fading from empty left a blank or a stuck lid.
           merged.set(id, layer);
         } else {
           // Incoming on top at 0 so the outgoing PNG stays visible until the fade starts.
@@ -294,10 +464,11 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
           fadingIn.current.add(id);
           incoming.push([id, layer]);
         }
-      } else if (fadingIn.current.has(id)) {
+      } else if (fadingIn.current.has(id) && blinkModeLive !== "snap") {
         // Keep the fade-in; don't snap to target when talkPhase retriggers.
         merged.set(id, { ...layer, opacity: prev.opacity });
       } else {
+        if (blinkModeLive === "snap") fadingIn.current.delete(id);
         merged.set(id, layer);
       }
     }
@@ -308,12 +479,13 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
         merged.set(id, { ...layer, opacity: 0 });
         const existingTimer = fadeTimers.current.get(id);
         if (existingTimer) window.clearTimeout(existingTimer);
-        const fadeMs = fadeMsFor(layer, talking);
+        const fadeMs = fadeMsFor(layer, talking, blinkModeLive);
+        const removeAfter = fadeMs + 40;
         const timer = window.setTimeout(() => {
           prevIds.current.delete(id);
           fadeTimers.current.delete(id);
           setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
-        }, fadeMs + 40);
+        }, removeAfter);
         fadeTimers.current.set(id, timer);
       }
     }
@@ -324,6 +496,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     if (incoming.length) {
       if (fadeRaf.current) window.clearTimeout(fadeRaf.current);
       // Wait one paint at opacity 0 so CSS can interpolate 0 → target (not a hard cut in).
+      const incomingDelay = 48;
       fadeRaf.current = window.setTimeout(() => {
         for (const [id, layer] of incoming) {
           if (!prevIds.current.has(id)) continue;
@@ -331,9 +504,9 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
           fadingIn.current.delete(id);
         }
         setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
-      }, 48);
+      }, incomingDelay);
     }
-  }, [desired, talking]);
+  }, [plates, talking, blinkModeLive]);
 
   useEffect(() => {
     return () => {
@@ -343,8 +516,61 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     };
   }, []);
 
-  const stageReady = Boolean(sheets[SPRITES.poses.idle]);
+  const stageReady = Boolean(idleSheetUrl && idleBitmapUrl === idleSheetUrl);
   const talkOverlay = display.find((layer) => layer.role === "talk");
+
+  // Copy eye pixels onto the live idle bitmap. Never clear the canvas.
+  // Never draw the blink plate. A new canvas gets one idle.png paint, then
+  // only the two holes change for the rest of its life.
+  useLayoutEffect(() => {
+    const canvas = idleCanvasRef.current;
+    const idleImg = idleBitmapRef.current;
+    if (!canvas || !idleImg || !idleSheetUrl || idleImg.src !== idleSheetUrl) return;
+    if (paintedCanvasRef.current !== canvas || paintedUrlRef.current !== idleSheetUrl) {
+      // Setting the bitmap size clears a new canvas. Do it once, then paint
+      // idle.png before the browser shows it. Blink frames must not reach this.
+      if (canvas.width !== IDLE_BLINK_CANVAS.width || canvas.height !== IDLE_BLINK_CANVAS.height) {
+        canvas.width = IDLE_BLINK_CANVAS.width;
+        canvas.height = IDLE_BLINK_CANVAS.height;
+      }
+    }
+    const ctx = canvas.getContext("2d", { alpha: true });
+    if (!ctx) return;
+
+    if (paintedCanvasRef.current !== canvas || paintedUrlRef.current !== idleSheetUrl) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(idleImg, 0, 0);
+      paintedCanvasRef.current = canvas;
+      paintedUrlRef.current = idleSheetUrl;
+      glareEyesRef.current = IDLE_BLINK_EYE_HOLES.map(
+        (hole) => new Uint8ClampedArray(ctx.getImageData(hole.x, hole.y, hole.w, hole.h).data),
+      );
+    }
+
+    const restore = () => {
+      const saved = glareEyesRef.current;
+      if (!saved) return;
+      IDLE_BLINK_EYE_HOLES.forEach((hole, i) => {
+        const pixels = saved[i];
+        if (!pixels) return;
+        blitEyeRect(ctx, hole, pixels);
+      });
+    };
+
+    if (!eyesReady || blinkShown === 0) {
+      restore();
+      return;
+    }
+    const pair = idleBlinkEyeSrcs(blinkShown);
+    const buffers = pair?.map((src) => eyePixelsRef.current[src]);
+    if (!pair || !buffers || buffers.some((buf) => !buf)) {
+      restore();
+      return;
+    }
+    IDLE_BLINK_EYE_HOLES.forEach((hole, i) => {
+      blitEyeRect(ctx, hole, buffers[i]!);
+    });
+  }, [blinkShown, eyesReady, idleSheetUrl]);
 
   return (
     <div
@@ -355,13 +581,34 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       data-rai-pose={pose}
       data-rai-emotion={emotion}
       data-rai-talking={talking ? "1" : "0"}
-      data-rai-blink="0"
+      data-rai-blink={blinkShown > 0 && restingBlink ? "1" : "0"}
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
     >
       <div data-rai-rig className="rai-rig">
         {display.map((layer) => {
+          if (layer.role === "eyes" || isFullBlinkPlate(layer.src)) return null;
           const src = sheets[layer.src];
           if (!src) return null;
+          const style = {
+            opacity: layer.opacity,
+            zIndex: layer.z,
+            transition: isInstantLayer(layer, talking)
+              ? "none"
+              : `opacity ${fadeMsFor(layer, talking, blinkModeLive)}ms var(--ease-smooth-out)`,
+          };
+          if (layer.role === "body" && layer.src === SPRITES.poses.idle) {
+            if (idleBitmapUrl !== src) return null;
+            return (
+              <canvas
+                key={layer.id}
+                ref={idleCanvasRef}
+                className="rai-layer"
+                data-rai-role="body"
+                data-rai-sheet="idle"
+                style={style}
+              />
+            );
+          }
           return (
             <img
               key={layer.id}
@@ -371,15 +618,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
               decoding="async"
               className="rai-layer"
               data-rai-role={layer.role}
-              data-rai-sheet={layer.src === SPRITES.poses.idle ? "idle" : undefined}
-              style={{
-                opacity: layer.opacity,
-                zIndex: layer.z,
-                // Talk flap tracks sin immediately; pose sheets ease across.
-                transition: isInstantLayer(layer, talking)
-                  ? "none"
-                  : `opacity ${fadeMsFor(layer, talking)}ms var(--ease-smooth-out)`,
-              }}
+              data-rai-sheet={undefined}
+              style={style}
             />
           );
         })}

@@ -85,20 +85,20 @@ export function isExpressiveEmotion(emotion: EmotionId): boolean {
 }
 
 /**
- * Rest idle blink is off.
- *
- * Swapping or fading the full `idle_blink.png` plate flashes the standing
- * body. Maker's eye-rect composite — copy only the closed lids onto the
- * live `idle.png`, never a second full figure — will re-enable this later.
- * Until those rects ship, do not blink.
+ * Official PNG blink window: rest idle on the frown sheet.
+ * Named poses, talk flap, and emotion-named sheets do not blink.
  */
-export function canIdleBlink(_state: {
+export function canIdleBlink(state: {
   pose: PoseId;
   emotion: EmotionId;
   talking: boolean;
   reducedMotion?: boolean;
 }): boolean {
-  return false;
+  if (state.reducedMotion) return false;
+  if (state.talking) return false;
+  if (isDedicatedPose(state.pose)) return false;
+  if (isExpressiveEmotion(state.emotion)) return false;
+  return true;
 }
 
 /**
@@ -209,11 +209,16 @@ export const SPRITES = {
     three_quarter: ASSET(LIVE_POSE_FILES.three_quarter),
   } satisfies Record<PoseId, string>,
   /**
-   * Closed-lid plate kept on disk for Maker's later eye-rect composite.
-   * Not a live layer and not preloaded — rest blink is off, so this must
-   * not load as a second full figure.
+   * Rest-idle lid crops — one file per eye hole, not full plates.
+   * 01 = 40% close, 02 = 75%, closed = official lids (hold).
+   * Full-canvas proofs live at public/rai/idle_blink*.png and are not mounted.
    */
-  idleBlink: ASSET("rai/idle_blink.png"),
+  idleBlink01L: ASSET("rai/idle_blink_01_l.png"),
+  idleBlink01R: ASSET("rai/idle_blink_01_r.png"),
+  idleBlink02L: ASSET("rai/idle_blink_02_l.png"),
+  idleBlink02R: ASSET("rai/idle_blink_02_r.png"),
+  idleBlinkL: ASSET("rai/idle_blink_l.png"),
+  idleBlinkR: ASSET("rai/idle_blink_r.png"),
   angles: {
     front: ASSET("star-rai/angles/front.png"),
     threeQuarter: ASSET("star-rai/angles/three-quarter.png"),
@@ -256,9 +261,47 @@ export const SPRITES = {
 
 export type TalkViseme = "closed" | "speak" | "oh" | "grin" | "kiss";
 
+/**
+ * Two eye holes on the 1008×1792 live idle canvas.
+ * Same x,y,w,h cut from glare (`idle.png`) and from the registered closed-lid
+ * sheet. Bangs above y=208, ahoge, mouth, and collar stay outside.
+ * Keep in sync with scripts/bake-idle-blink.py.
+ */
+export const IDLE_BLINK_EYE_HOLES = [
+  { x: 434, y: 208, w: 80, h: 28 },
+  { x: 514, y: 208, w: 98, h: 30 },
+] as const;
+
+/** Live idle canvas the holes are registered onto. */
+export const IDLE_BLINK_CANVAS = { width: 1008, height: 1792 } as const;
+
+/** Full-plate blink files. Never drawn. Eye crops are copied onto idle. */
+export function isFullBlinkPlate(src: string): boolean {
+  return /\/idle_blink(?:_0[12])?\.png(?:\?|$)/.test(src);
+}
+
+/**
+ * Two eye-rect crops for rest blink. 1 early, 2 mid, ≥3 closed.
+ * Null when open. Not the full-canvas plates.
+ */
+export function idleBlinkEyeSrcs(blink: number): readonly [string, string] | null {
+  if (blink === 1) return [SPRITES.idleBlink01L, SPRITES.idleBlink01R];
+  if (blink === 2) return [SPRITES.idleBlink02L, SPRITES.idleBlink02R];
+  if (blink >= 3) return [SPRITES.idleBlinkL, SPRITES.idleBlinkR];
+  return null;
+}
+
+export function idleBlinkEyeUrls(): string[] {
+  return [1, 2, 3].flatMap((frame) => {
+    const pair = idleBlinkEyeSrcs(frame);
+    return pair ? [...pair] : [];
+  });
+}
+
 /** Flat list of every sprite URL referenced by SPRITES — use for preload. */
 export function allSpriteUrls(): string[] {
   return [
+    ...idleBlinkEyeUrls(),
     ...Object.values(SPRITES.poses),
     ...Object.values(SPRITES.angles),
     SPRITES.talk,
@@ -273,8 +316,13 @@ export type SpriteLayer = {
   id: string;
   src: string;
   opacity: number;
-  /** body under talk; talk overlays without replacing body */
-  role: "body" | "talk";
+  /**
+   * body = one full sheet. talk = viseme overlay.
+   * eyes = one eye-rect crop (see `eye`). Never a second full plate.
+   */
+  role: "body" | "talk" | "eyes";
+  /** Present only for role "eyes". Pixel rect on the 1008×1792 idle canvas. */
+  eye?: { x: number; y: number; w: number; h: number };
 };
 
 /** When true, SPEAKING uses Expo bust visemes (zoomed crop). Default off. */
@@ -289,11 +337,11 @@ export type PuppetState = {
   /** Seconds — drives official talk-sheet opacity flap (sin phase). */
   talkPhase?: number;
   /**
-   * 0 open, 1 half, 2 closed.
-   * Expo talk bust (flag on) uses 1/2 with face_eyes_* while speaking.
-   * Official PNG ignores this — rest blink is off until the eye-rect composite.
+   * 0 open. Official rest blink: 1 early, 2 mid, 3 closed. The idle layer
+   * list does not change — `idleBlinkEyeSrcs` is copied onto the live bitmap.
+   * Expo talk bust (flag on) still uses 1/2 with face_eyes_* while speaking.
    */
-  blink?: 0 | 1 | 2;
+  blink?: 0 | 1 | 2 | 3;
   /** Brief idle variety beat from puppet timer (smile/grin). Official pack ignores Expo alts. */
   idleBeat?: IdleBeat;
   /** Skip mouth flap; show a static talk sheet. */
@@ -392,6 +440,7 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     talking,
     amplitude,
     blink = 0,
+    reducedMotion = false,
   } = state;
 
   // Dedicated act poses own the stage — hold talk/mood through the line.
@@ -429,7 +478,11 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     return [body(SPRITES.poses.talk)];
   }
 
-  // Rest blink is off. idle.png is the only rest body — never idle_blink.png.
+  // Rest blink does not add a layer and does not swap this sheet. The mounted
+  // idle bitmap stays up; the painter copies two eye rects onto it. A second
+  // image, or drawing the rest of the blink plate, moves the body.
+  void reducedMotion;
+  void blink;
   return [body(SPRITES.poses.idle)];
 }
 

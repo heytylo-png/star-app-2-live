@@ -70,6 +70,21 @@ describe("punchStudioWhite", () => {
     assert.deepEqual(getRgb(data, w, 4, 4), [255, 255, 255]);
   });
 
+  it("does not flood a transparent margin, but fringes white that touches it", () => {
+    const w = 8;
+    const h = 8;
+    const data = px(w, h, [250, 248, 246, 0]);
+    set(data, w, 3, 3, [40, 30, 28, 255]);
+    set(data, w, 4, 3, [255, 255, 255, 255]);
+    punchStudioWhite(data, w, h);
+    assert.equal(getA(data, w, 0, 0), 0);
+    assert.equal(getA(data, w, 7, 7), 0);
+    assert.equal(getA(data, w, 3, 3), 255);
+    assert.deepEqual(getRgb(data, w, 3, 3), [40, 30, 28]);
+    // Near-white touching alpha 0 is fringe, not a connected card flood.
+    assert.equal(getA(data, w, 4, 3), 0);
+  });
+
   it("punches white between the legs when it still touches the card", () => {
     const w = 9;
     const h = 10;

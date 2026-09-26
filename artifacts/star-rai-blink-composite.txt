@@ -1,0 +1,52 @@
+Star Rai — idle blink composite (no full-PNG clip)
+
+Problem
+Blink flash = two full PNGs clipping / crossfading over each other.
+Stop that. Body must not punch.
+
+Composite only (authoritative steps)
+1. Register blink sheet onto the LIVE idle canvas (public/rai/idle.png, 1008×1792).
+   Scale/letterbox first if the blink source is 720×1280 (or any other size).
+2. Cut the same two eye holes from glare (live idle) and from the registered blink
+   (same x,y,w,h per eye for both sheets).
+3. Paste blink holes into the glare body. Produce 2–4 frames. Restore glare eyes
+   after the closed-lid hold (back to open glare eyes).
+4. Do not cut hair, ahoge, mouth, or collar. Stay on idle key only.
+
+Runtime
+- Do not opacity-crossfade / stack two full-body PNGs for blink.
+- Animate using the composite frames (glare body + eye holes only), or an
+  equivalent eye-region composite on the live idle key.
+- Rest/idle only; cancel mid-blink on pose/talk/tint; prefers-reduced-motion off.
+- Named poses do not blink.
+
+Assets
+- Live glare/idle key: public/rai/idle.png (1008×1792) — never replace this as default.
+- Blink source: public/rai/idle_blink.png (or official closed-lid still registered to that canvas).
+- Ship baked composites (and/or replace idle_blink.png with a body-locked composite)
+  so outside the two eye holes the pixels match live idle (max delta 0).
+
+Done when
+Lids close on rest idle and the body does not punch / flash.
+
+Out of scope
+Spine flag, 3D, generated lids, Expo face_eyes_* busts, Chat tint/tabs/copy, Pages deploy.
+
+Eye holes (1008×1792 idle canvas — same rects on glare and the closed-lid sheet)
+Bangs above y=208, ahoge, mouth, and collar are outside these rects.
+left:  x=434 y=208 w=80 h=28
+right: x=514 y=208 w=98 h=30
+Constants: IDLE_BLINK_EYE_HOLES in src/lib/rai.ts. Bake: scripts/bake-idle-blink.py.
+
+Frames (full plates are the bake proof: RGB matches idle.png outside the holes, max delta 0; alpha 0 outside)
+- public/rai/idle_blink_01.png — 40% closed
+- public/rai/idle_blink_02.png — 75% closed
+- public/rai/idle_blink.png — official closed lids (hold), then glare eyes return
+
+Runtime
+- One body texture the whole blink: live public/rai/idle.png, never unloaded.
+- The blink sheet is only a source. After register onto 1008×1792, copy the two eye rects onto that idle bitmap. Do not draw the rest of the blink PNG.
+- No second <img>. No opacity crossfade of two full figures. No canvas clear between blink frames.
+- Crops copied in: idle_blink_01_l/r (40%), idle_blink_02_l/r (75%), idle_blink_l/r (closed hold).
+- If those crops are not ready, blink stays off. Do not swap in a full plate.
+- Proof: pixels outside the two rects stay byte-identical to the idle bitmap through close and open.

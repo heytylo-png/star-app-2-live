@@ -1,12 +1,17 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
+import { inflateSync } from "node:zlib";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
   CHART_BEAT_TINT_POSES,
+  IDLE_BLINK_CANVAS,
+  IDLE_BLINK_EYE_HOLES,
   allSpriteUrls,
   canIdleBlink,
+  idleBlinkEyeSrcs,
+  isFullBlinkPlate,
   DEFAULT_EMOTION,
   EMOTION_HOLD_MS,
   EMOTION_TO_POSE,
@@ -31,9 +36,98 @@ import {
   talkFlapOpacity,
   USE_EXPO_TALK_BUST,
 } from "./rai.ts";
+import { copyEyeRect } from "./idle-blink-paint.ts";
 import { POSE_TINT_SOURCE } from "./generated/star-rai-artifacts.ts";
 
 const publicRoot = join(dirname(fileURLToPath(import.meta.url)), "../../public");
+
+function paeth(a: number, b: number, c: number): number {
+  const p = a + b - c;
+  const pa = Math.abs(p - a);
+  const pb = Math.abs(p - b);
+  const pc = Math.abs(p - c);
+  if (pa <= pb && pa <= pc) return a;
+  if (pb <= pc) return b;
+  return c;
+}
+
+/** 8-bit RGB or RGBA PNG. Enough for the idle / blink plates. */
+function decodePng(buf: Buffer): {
+  width: number;
+  height: number;
+  colorType: number;
+  rgba: Uint8Array;
+} {
+  let offset = 8;
+  let width = 0;
+  let height = 0;
+  let colorType = 0;
+  let bitDepth = 0;
+  const idat: Buffer[] = [];
+  while (offset + 8 <= buf.length) {
+    const len = buf.readUInt32BE(offset);
+    const type = buf.toString("ascii", offset + 4, offset + 8);
+    const data = buf.subarray(offset + 8, offset + 8 + len);
+    if (type === "IHDR") {
+      width = data.readUInt32BE(0);
+      height = data.readUInt32BE(4);
+      bitDepth = data[8]!;
+      colorType = data[9]!;
+    } else if (type === "IDAT") {
+      idat.push(data);
+    } else if (type === "IEND") {
+      break;
+    }
+    offset += 12 + len;
+  }
+  if (bitDepth !== 8 || (colorType !== 2 && colorType !== 6)) {
+    throw new Error(`unsupported png bitDepth=${bitDepth} colorType=${colorType}`);
+  }
+  const bpp = colorType === 6 ? 4 : 3;
+  const raw = inflateSync(Buffer.concat(idat));
+  const stride = width * bpp;
+  const rgba = new Uint8Array(width * height * 4);
+  let s = 0;
+  let prev = Buffer.alloc(stride);
+  for (let y = 0; y < height; y++) {
+    const filter = raw[s]!;
+    s += 1;
+    const row = Buffer.from(raw.subarray(s, s + stride));
+    s += stride;
+    for (let i = 0; i < stride; i++) {
+      const left = i >= bpp ? row[i - bpp]! : 0;
+      const up = prev[i]!;
+      const ul = i >= bpp ? prev[i - bpp]! : 0;
+      if (filter === 1) row[i] = (row[i]! + left) & 255;
+      else if (filter === 2) row[i] = (row[i]! + up) & 255;
+      else if (filter === 3) row[i] = (row[i]! + ((left + up) >> 1)) & 255;
+      else if (filter === 4) row[i] = (row[i]! + paeth(left, up, ul)) & 255;
+      else if (filter !== 0) throw new Error(`bad png filter ${filter}`);
+    }
+    prev = row;
+    for (let x = 0; x < width; x++) {
+      const o = (y * width + x) * 4;
+      const i = x * bpp;
+      rgba[o] = row[i]!;
+      rgba[o + 1] = row[i + 1]!;
+      rgba[o + 2] = row[i + 2]!;
+      rgba[o + 3] = bpp === 4 ? row[i + 3]! : 255;
+    }
+  }
+  return { width, height, colorType, rgba };
+}
+
+function holeMask(width: number, height: number): Uint8Array {
+  const mask = new Uint8Array(width * height);
+  for (const hole of IDLE_BLINK_EYE_HOLES) {
+    for (let y = hole.y; y < hole.y + hole.h; y++) {
+      for (let x = hole.x; x < hole.x + hole.w; x++) {
+        mask[y * width + x] = 1;
+      }
+    }
+  }
+  return mask;
+}
 
 describe("poseResetDelayMs", () => {
   it("does not reset while talking", () => {
@@ -316,20 +410,39 @@ describe("layersFor talking vs pose hold", () => {
     assert.doesNotMatch(layers[0]!.src, /idle_blink/);
   });
 
-  it("keeps idle.png as the only rest body and does not blink", () => {
+  it("keeps one idle body while blink copies two eye rects onto that bitmap", () => {
     const rest = {
       ...base,
       pose: "idle" as const,
       emotion: "bratty" as const,
       talking: false,
-      blink: 2 as const,
+      blink: 3 as const,
     };
     const blink = layersFor(rest);
     assert.equal(blink.length, 1);
+    assert.equal(blink[0]!.role, "body");
     assert.match(blink[0]!.src, /rai\/idle\.png$/);
-    assert.doesNotMatch(blink[0]!.src, /idle_blink|face_eyes|mouth_speak|mouth_oh/);
+    assert.doesNotMatch(blink.map((l) => l.src).join(" "), /idle_blink|face_eyes|mouth_speak|mouth_oh/);
+    assert.deepEqual(idleBlinkEyeSrcs(1), [SPRITES.idleBlink01L, SPRITES.idleBlink01R]);
+    assert.deepEqual(idleBlinkEyeSrcs(2), [SPRITES.idleBlink02L, SPRITES.idleBlink02R]);
+    assert.deepEqual(idleBlinkEyeSrcs(3), [SPRITES.idleBlinkL, SPRITES.idleBlinkR]);
+    assert.equal(idleBlinkEyeSrcs(0), null);
+    assert.equal(isFullBlinkPlate("/rai/idle_blink.png"), true);
+    assert.equal(isFullBlinkPlate("/rai/idle_blink_01.png"), true);
+    assert.equal(isFullBlinkPlate("/rai/idle_blink_02.png"), true);
+    assert.equal(isFullBlinkPlate(SPRITES.idleBlinkL), false);
+    assert.equal(isFullBlinkPlate(SPRITES.idleBlinkR), false);
 
+    const early = layersFor({ ...rest, blink: 1 });
+    assert.equal(early.length, 1);
+    assert.match(early[0]!.src, /rai\/idle\.png$/);
+    const mid = layersFor({ ...rest, blink: 2 });
+    assert.equal(mid.length, 1);
+    assert.equal(mid[0]!.src, early[0]!.src);
+
+    assert.equal(layersFor({ ...rest, blink: 0 }).length, 1);
     assert.match(layersFor({ ...rest, blink: 0 })[0]!.src, /rai\/idle\.png$/);
+    assert.equal(layersFor({ ...rest, talking: true }).length, 1);
     assert.match(layersFor({ ...rest, talking: true })[0]!.src, /talk_official/);
     assert.match(layersFor({ ...rest, pose: "wave" })[0]!.src, /wave_official/);
     assert.match(layersFor({ ...rest, pose: "scold" })[0]!.src, /scold_official/);
@@ -338,38 +451,115 @@ describe("layersFor talking vs pose hold", () => {
     assert.match(layersFor({ ...rest, emotion: "smug" })[0]!.src, /smug_official/);
     assert.match(layersFor({ ...rest, emotion: "shy" })[0]!.src, /shy_official/);
     assert.match(layersFor({ ...rest, emotion: "hype" })[0]!.src, /peace\.png/);
-    assert.match(layersFor({ ...rest, reducedMotion: true })[0]!.src, /rai\/idle\.png$/);
-    assert.doesNotMatch(
-      layersFor({ ...rest, reducedMotion: true })[0]!.src,
-      /idle_blink|face_eyes/,
-    );
-    assert.match(layersFor({ ...rest, emotion: "glance" })[0]!.src, /rai\/idle\.png$/);
-    assert.doesNotMatch(layersFor({ ...rest, emotion: "glance" })[0]!.src, /idle_blink/);
+    const reduced = layersFor({ ...rest, reducedMotion: true });
+    assert.equal(reduced.length, 1);
+    assert.match(reduced[0]!.src, /rai\/idle\.png$/);
+    assert.doesNotMatch(reduced[0]!.src, /idle_blink|face_eyes/);
+    const glance = layersFor({ ...rest, emotion: "glance" });
+    assert.equal(glance.length, 1);
+    assert.match(glance[0]!.src, /rai\/idle\.png$/);
+    assert.ok(glance.every((layer) => !isFullBlinkPlate(layer.src)));
 
-    assert.equal(canIdleBlink(rest), false);
+    assert.equal(canIdleBlink(rest), true);
     assert.equal(canIdleBlink({ ...rest, talking: true }), false);
     assert.equal(canIdleBlink({ ...rest, pose: "wave" }), false);
     assert.equal(canIdleBlink({ ...rest, reducedMotion: true }), false);
     assert.equal(USE_EXPO_TALK_BUST, false);
-    assert.equal(allSpriteUrls().includes(SPRITES.idleBlink), false);
-    assert.match(SPRITES.idleBlink, /rai\/idle_blink\.png/);
+    for (const src of [
+      SPRITES.idleBlink01L,
+      SPRITES.idleBlink01R,
+      SPRITES.idleBlink02L,
+      SPRITES.idleBlink02R,
+      SPRITES.idleBlinkL,
+      SPRITES.idleBlinkR,
+    ]) {
+      assert.ok(allSpriteUrls().includes(src));
+      assert.equal(isFullBlinkPlate(src), false);
+    }
+    assert.ok(allSpriteUrls().every((src) => !isFullBlinkPlate(src)));
 
-    const ihdr = (rel: string) => {
-      const buf = readFileSync(join(publicRoot, rel));
-      return {
-        width: buf.readUInt32BE(16),
-        height: buf.readUInt32BE(20),
-        colorType: buf[25],
-      };
-    };
-    const idle = ihdr("rai/idle.png");
-    const closed = ihdr("rai/idle_blink.png");
-    assert.equal(closed.width, idle.width);
-    assert.equal(closed.height, idle.height);
-    assert.equal(closed.width, 1008);
-    assert.equal(closed.height, 1792);
-    assert.equal(closed.colorType, idle.colorType);
-    assert.equal(closed.colorType, 2, "RGB plate, punched at runtime like idle.png");
+    const idle = decodePng(readFileSync(join(publicRoot, "rai/idle.png")));
+    assert.equal(idle.width, IDLE_BLINK_CANVAS.width);
+    assert.equal(idle.height, IDLE_BLINK_CANVAS.height);
+    assert.equal(idle.colorType, 2);
+    const holes = holeMask(idle.width, idle.height);
+    const plates: Array<[string, readonly [string, string]]> = [
+      ["rai/idle_blink.png", ["rai/idle_blink_l.png", "rai/idle_blink_r.png"]],
+      ["rai/idle_blink_01.png", ["rai/idle_blink_01_l.png", "rai/idle_blink_01_r.png"]],
+      ["rai/idle_blink_02.png", ["rai/idle_blink_02_l.png", "rai/idle_blink_02_r.png"]],
+    ];
+    for (const [rel, crops] of plates) {
+      const frame = decodePng(readFileSync(join(publicRoot, rel)));
+      assert.equal(frame.width, idle.width);
+      assert.equal(frame.height, idle.height);
+      assert.equal(frame.colorType, 6, `${rel} is the eye-hole proof plate`);
+      let outsideMax = 0;
+      let outsideAlpha = 0;
+      let inside = 0;
+      let insideOpaque = 0;
+      let insideChanged = 0;
+      for (let i = 0; i < holes.length; i++) {
+        const dr = Math.abs(frame.rgba[i * 4]! - idle.rgba[i * 4]!);
+        const dg = Math.abs(frame.rgba[i * 4 + 1]! - idle.rgba[i * 4 + 1]!);
+        const db = Math.abs(frame.rgba[i * 4 + 2]! - idle.rgba[i * 4 + 2]!);
+        const delta = dr > dg ? (dr > db ? dr : db) : dg > db ? dg : db;
+        if (!holes[i]) {
+          if (delta > outsideMax) outsideMax = delta;
+          if (frame.rgba[i * 4 + 3]! > outsideAlpha) outsideAlpha = frame.rgba[i * 4 + 3]!;
+        } else {
+          inside++;
+          if (frame.rgba[i * 4 + 3] === 255) insideOpaque++;
+          if (delta > 0) insideChanged++;
+        }
+      }
+      assert.equal(outsideMax, 0, `${rel} RGB drifted outside the eye holes`);
+      assert.equal(outsideAlpha, 0, `${rel} alpha leaked outside the eye holes`);
+      assert.ok(inside > 0);
+      assert.equal(insideOpaque, inside, `${rel} eye holes are fully opaque`);
+      if (rel === "rai/idle_blink.png") {
+        assert.ok(insideChanged > 0, "closed lids change pixels inside the eye holes");
+      }
+      crops.forEach((cropRel, eye) => {
+        const hole = IDLE_BLINK_EYE_HOLES[eye]!;
+        const crop = decodePng(readFileSync(join(publicRoot, cropRel)));
+        assert.equal(crop.width, hole.w, cropRel);
+        assert.equal(crop.height, hole.h, cropRel);
+        assert.equal(crop.colorType, 6, cropRel);
+        assert.ok(crop.width < idle.width && crop.height < idle.height);
+        for (let y = 0; y < hole.h; y++) {
+          for (let x = 0; x < hole.w; x++) {
+            const pi = ((hole.y + y) * frame.width + (hole.x + x)) * 4;
+            const ci = (y * crop.width + x) * 4;
+            assert.equal(crop.rgba[ci], frame.rgba[pi], `${cropRel} r ${x},${y}`);
+            assert.equal(crop.rgba[ci + 1], frame.rgba[pi + 1], `${cropRel} g ${x},${y}`);
+            assert.equal(crop.rgba[ci + 2], frame.rgba[pi + 2], `${cropRel} b ${x},${y}`);
+            assert.equal(crop.rgba[ci + 3], 255, `${cropRel} a ${x},${y}`);
+          }
+        }
+      });
+    }
+
+    const painted = new Uint8ClampedArray(idle.rgba);
+    const closedCrops = ["rai/idle_blink_l.png", "rai/idle_blink_r.png"] as const;
+    closedCrops.forEach((cropRel, eye) => {
+      const hole = IDLE_BLINK_EYE_HOLES[eye]!;
+      const crop = decodePng(readFileSync(join(publicRoot, cropRel)));
+      copyEyeRect(painted, idle.width, crop.rgba, hole);
+    });
+    let outsideMax = 0;
+    let insideChanged = 0;
+    for (let i = 0; i < holes.length; i++) {
+      const dr = Math.abs(painted[i * 4]! - idle.rgba[i * 4]!);
+      const dg = Math.abs(painted[i * 4 + 1]! - idle.rgba[i * 4 + 1]!);
+      const db = Math.abs(painted[i * 4 + 2]! - idle.rgba[i * 4 + 2]!);
+      const da = Math.abs(painted[i * 4 + 3]! - idle.rgba[i * 4 + 3]!);
+      const delta = Math.max(dr, dg, db, da);
+      if (!holes[i]) {
+        if (delta > outsideMax) outsideMax = delta;
+      } else if (delta > 0) insideChanged++;
+    }
+    assert.equal(outsideMax, 0, "copying eye rects moved idle pixels outside the holes");
+    assert.ok(insideChanged > 0, "closed lids did not change the eye holes");
   });
 
   it("pins soft/hype off frown idle even when pose is still idle", () => {
@@ -704,7 +894,7 @@ describe("pose tint", () => {
     assert.match(restSrc, /\/idle\.png$/);
     assert.equal(
       canIdleBlink({ pose: "idle", emotion: DEFAULT_EMOTION, talking: false }),
-      false,
+      true,
     );
   });
 
