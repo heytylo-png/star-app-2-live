@@ -43,13 +43,11 @@ Amplitude still drives a small talk bob on the rig. Dedicated poses (`talk`, `wa
 
 ### Idle blink
 
-Rest idle only: pose `idle`, not talking, not a dedicated pose, not an emotion sheet (smug, shy, tired, soft, hype, and the named pose keys). Every **3–6s** (random), crossfade `idle.png` → `public/rai/idle_blink.png` (official 462 closed-lid full body, same crop) and back.
+**Off.** `canIdleBlink` is false. There is no rest-blink timer and no `idle_blink` layer. Live rest stays on `idle.png` only.
 
-- Fade **100ms** (`IDLE_BLINK_FADE_MS`) — inside 80–120ms and under `POSE_CROSSFADE_MS` (380).
-- Closed hold **100ms** (`IDLE_BLINK_HOLD_MS`) after that fade-in, then the same 100ms fade back to `idle.png`.
-- A pose command, talk flap, or emotion-sheet swap mid-blink clears blink immediately and snaps to that sheet.
-- `prefers-reduced-motion: reduce` disables blink.
-- `idle_blink.png` is preloaded with the other sprites and punched with the same studio-white pipeline as `idle.png`.
+A full-plate swap of `public/rai/idle_blink.png` flashes the standing body, and the eye rects are not ready to composite. Maker's eye-rect composite will re-enable blink later: keep this same `idle.png` body, and copy only the closed-lid rects from the blink sheet. Do not crossfade two full figures in the meantime.
+
+`idle_blink.png` stays on disk for that follow-up. It is not preloaded and not drawn.
 
 Fallback: spoken `talk` / mood sheet as a single body. Reduced motion matches that (no flap over frown idle, no blink).
 

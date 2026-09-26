@@ -85,20 +85,20 @@ export function isExpressiveEmotion(emotion: EmotionId): boolean {
 }
 
 /**
- * Official PNG blink window: rest idle on the frown sheet.
- * Named poses, talk flap, and emotion-named sheets do not blink.
+ * Rest idle blink is off.
+ *
+ * Swapping or fading the full `idle_blink.png` plate flashes the standing
+ * body. Maker's eye-rect composite — copy only the closed lids onto the
+ * live `idle.png`, never a second full figure — will re-enable this later.
+ * Until those rects ship, do not blink.
  */
-export function canIdleBlink(state: {
+export function canIdleBlink(_state: {
   pose: PoseId;
   emotion: EmotionId;
   talking: boolean;
   reducedMotion?: boolean;
 }): boolean {
-  if (state.reducedMotion) return false;
-  if (state.talking) return false;
-  if (isDedicatedPose(state.pose)) return false;
-  if (isExpressiveEmotion(state.emotion)) return false;
-  return true;
+  return false;
 }
 
 /**
@@ -209,8 +209,9 @@ export const SPRITES = {
     three_quarter: ASSET(LIVE_POSE_FILES.three_quarter),
   } satisfies Record<PoseId, string>,
   /**
-   * Official 462 closed-lid full body. Same crop as poses.idle.
-   * Not a pose key — rest blink only. Punched like every other plate.
+   * Closed-lid plate kept on disk for Maker's later eye-rect composite.
+   * Not a live layer and not preloaded — rest blink is off, so this must
+   * not load as a second full figure.
    */
   idleBlink: ASSET("rai/idle_blink.png"),
   angles: {
@@ -258,7 +259,6 @@ export type TalkViseme = "closed" | "speak" | "oh" | "grin" | "kiss";
 /** Flat list of every sprite URL referenced by SPRITES — use for preload. */
 export function allSpriteUrls(): string[] {
   return [
-    SPRITES.idleBlink,
     ...Object.values(SPRITES.poses),
     ...Object.values(SPRITES.angles),
     SPRITES.talk,
@@ -291,7 +291,7 @@ export type PuppetState = {
   /**
    * 0 open, 1 half, 2 closed.
    * Expo talk bust (flag on) uses 1/2 with face_eyes_* while speaking.
-   * Official PNG uses any non-zero only on rest idle → idle_blink.png.
+   * Official PNG ignores this — rest blink is off until the eye-rect composite.
    */
   blink?: 0 | 1 | 2;
   /** Brief idle variety beat from puppet timer (smile/grin). Official pack ignores Expo alts. */
@@ -392,7 +392,6 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     talking,
     amplitude,
     blink = 0,
-    reducedMotion = false,
   } = state;
 
   // Dedicated act poses own the stage — hold talk/mood through the line.
@@ -430,11 +429,7 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     return [body(SPRITES.poses.talk)];
   }
 
-  // Closed-lid full body. Same punch path as idle. Not an Expo eye bust.
-  if (blink > 0 && canIdleBlink({ pose, emotion, talking, reducedMotion })) {
-    return [body(SPRITES.idleBlink)];
-  }
-
+  // Rest blink is off. idle.png is the only rest body — never idle_blink.png.
   return [body(SPRITES.poses.idle)];
 }
 
