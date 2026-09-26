@@ -45,7 +45,7 @@ Amplitude still drives a small talk bob on the rig. Dedicated poses (`talk`, `wa
 
 **Off.** Rest idle paints `public/rai/idle.png` only (`IDLE_BLINK_ENABLED` is false).
 
-The baked sheets under `public/rai/` (`idle_blink_01_open.png` through `idle_blink_04_closed.png`) are full **1008×1792** frames, same layout size as `idle.png`. The draw path does not crop an eye strip, stamp a hole, or composite a DEST_RECT. It also does not play those sheets: 02–04 are a different body than `idle.png`, so swapping them replaces the figure and the lids read jagged. Until a same-body full sheet exists, blink stays off.
+The baked sheets under `public/rai/` (`idle_blink_01_open.png` through `idle_blink_04_closed.png`) are full **1008×1792** frames on the `idle.png` canvas. Outside the eye box the pixels match `idle.png`; only the lids change. The draw path does not crop an eye strip, stamp a hole, or composite a DEST_RECT, and it does not play those sheets. Re-enable stays held until Starai and CoS glance the standing clip. Blink stays off.
 
 Named poses, talk, and emotion sheets still do not blink. `prefers-reduced-motion: reduce` stays on `idle.png` as well. Spoken `talk` / mood is a single body sheet.
 

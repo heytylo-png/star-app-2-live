@@ -80,9 +80,10 @@ function fadeMsFor(layer: SpriteLayer, talking: boolean, blinkMode: BlinkFadeMod
  * Studio-white cards are punched to alpha. Layers crossfade by stable id.
  * Spoken bubble holds talk/mood through the line; frown idle is rest-only.
  * Rest idle is one full-frame image: public/rai/idle.png.
- * Blink is off (IDLE_BLINK_ENABLED). The baked sheets are full frames, but
- * 02–04 replace the body, so they are not swapped in. No eye strip, no hole
- * overlay. Expo bust mouth/eye crops stay off. Dedicated poses do not blink.
+ * Blink is off (IDLE_BLINK_ENABLED). The baked sheets are full frames with
+ * the body locked to idle.png; they are not swapped in until re-enable.
+ * No eye strip, no hole overlay. Expo bust mouth/eye crops stay off.
+ * Dedicated poses do not blink.
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
   const stageRef = useRef<HTMLDivElement>(null);
