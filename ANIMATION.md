@@ -45,7 +45,7 @@ Amplitude still drives a small talk bob on the rig. Dedicated poses (`talk`, `wa
 
 Rest idle only: pose `idle`, not talking, not a dedicated pose, not an emotion sheet (smug, shy, tired, soft, hype, and the named pose keys). Every **3–6s** (random), the glare body stays one live `idle.png` bitmap. Blink does not add an `<img>` and does not opacity-crossfade a second figure.
 
-The blink sheet is a source. After it is registered onto the 1008×1792 idle canvas, only the two eye rects (`IDLE_BLINK_EYE_HOLES`) are copied onto that bitmap (`copyEyeRect`). The rest of the blink PNG is not drawn. The canvas is not cleared between frames. If the crops are not ready, blink stays off.
+The idle `<canvas>` is created at 1008×1792 (not the browser default 300×150). On mount, and when `idle.png` is decoded, that canvas is painted once with the full idle bitmap. Blink then `drawImage`s only the two eye rects (`IDLE_BLINK_EYE_HOLES`: left 434,208 80×28; right 514,208 98×30) from the crop sheets. The rest of the blink PNG is not drawn. The canvas is not cleared between frames, and the idle body is not unloaded. If the crops are not ready, blink stays off.
 
 Baked by `scripts/bake-idle-blink.py`. Full plates stay on disk so pixels outside the holes match `idle.png` (max delta 0). They are not mounted. The copied rects are:
 
