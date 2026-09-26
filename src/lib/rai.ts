@@ -89,10 +89,14 @@ export function isExpressiveEmotion(emotion: EmotionId): boolean {
 /**
  * Rest blink is parked.
  *
- * TyLo FAIL: double — two PNGs up at once (ghost / second body during blink).
- * Keep this false until a standing clip shows one body, lids only, no ghost.
- * While parked, rest paints public/rai/idle.png only. The blink timer does
- * not cycle frames. Do not turn this back on in the park PR.
+ * TyLo FAIL: two PNGs up at once (ghost / second body during blink).
+ * Rest paints public/rai/idle.png only. The four eyes-only sheets stay
+ * on disk (01 is a byte copy of idle.png; 02–04 change lids only).
+ * proof_standing_full.gif is the art gate: one 1008×1792 sheet at a time,
+ * cycle 01 → 02 → 03 → 04 → 03 → 02 → 01 (do not skip 02), hard cut.
+ * Do not turn this back on here. Re-enable only when TyLo says pass
+ * (CoS alone is not enough), and only by hard-swapping a single <img>
+ * / texture — never a dual-layer opacity blend.
  */
 export const IDLE_BLINK_ENABLED = false;
 
@@ -260,9 +264,10 @@ export const SPRITES = {
   /**
    * Baked full-frame rest blink. Byte copies of
    * artifacts/star-rai-blink-frames/baked/. Each file is 1008×1792 on the
-   * idle.png canvas. Not mounted while IDLE_BLINK_ENABLED is false —
-   * rest paints idle.png only until a standing clip shows one body,
-   * lids only, no ghost.
+   * idle.png canvas (eyes only). 01 open is the idle.png file itself.
+   * Not mounted while IDLE_BLINK_ENABLED is false — rest paints idle.png.
+   * Future wire: hard-swap one of these per step, including 02 closing
+   * (01 → 02 → 03 → 04 → 03 → 02 → 01). Never blend two sheets.
    */
   idleBlinkOpen: ASSET("rai/idle_blink_01_open.png"),
   idleBlinkClosing: ASSET("rai/idle_blink_02_closing.png"),
@@ -341,8 +346,11 @@ export function isRetiredBlinkSrc(src: string): boolean {
 
 /**
  * Full frame for one rest-blink step.
- * 0 rest and 1 are both 01 open. 2 = 02 closing, 3 = 03 half, 4 = 04 closed.
+ * 0 rest and 1 are both 01 open (byte copy of idle.png).
+ * 2 = 02 closing, 3 = 03 half, 4 = 04 closed.
+ * 02 is part of the cycle; do not skip the closing sheet.
  * Unused while IDLE_BLINK_ENABLED is false — rest is idle.png.
+ * Hard cut only. Never an opacity blend of two of these sheets.
  */
 export function idleBlinkFrameSrc(blink: number): string {
   if (blink === 2) return SPRITES.idleBlinkClosing;
@@ -542,8 +550,8 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
   }
 
   // One full frame. The layer id stays IDLE_REST_LAYER_ID so a blink, when
-  // enabled, swaps a single image and never stacks a second figure.
-  // Parked: rest paints idle.png only. No blink cycle, no second body.
+  // enabled, hard-swaps a single image and never stacks a second figure.
+  // Parked: rest paints idle.png only. No blink cycle, no dual-layer opacity.
   void reducedMotion;
   if (!IDLE_BLINK_ENABLED) {
     return [body(SPRITES.poses.idle, 1, IDLE_REST_LAYER_ID)];

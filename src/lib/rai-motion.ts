@@ -56,10 +56,10 @@ export function idleBlinkStepName(
 
 /**
  * One rest blink: 01 → 02 → 03 → 04 → 03 → 02 → 01, then rest.
- * `at` is ms from the start of the blink. The last step is rest, which is
- * the 01 open sheet again. Each step is one full frame, not a lid overlay.
- * Not scheduled while IDLE_BLINK_ENABLED is false — the puppet timer returns
- * before the first timeout, so rest stays on idle.png.
+ * Do not skip 02. `at` is ms from the start of the blink. The last step
+ * is rest, which is the 01 open sheet again. Each step is a hard cut of
+ * one full frame. Never opacity-blend two sheets. Not scheduled while
+ * IDLE_BLINK_ENABLED is false — rest stays on idle.png.
  */
 function idleBlinkDwellMs(blink: IdleBlinkFrame): number {
   if (blink === 4) return IDLE_BLINK_HOLD_MS;
