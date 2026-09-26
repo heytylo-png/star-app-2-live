@@ -52,7 +52,7 @@ Source of truth: `artifacts/star-rai-blink-frames/baked/`. Runtime files under `
 - `idle_blink_03_half.png`
 - `idle_blink_04_closed.png`
 
-Each file is **1008×1792**, same size as `idle.png`. Blink swaps the main girl sprite through those full frames, one image at a time. There is no second `<img>`, no canvas, and no eye-hole paste. `idle.png` punches against frame 01, so idle rest uses `01_open` as well (including reduced motion, which does not blink).
+Each file is **1008×1792**, same size as `idle.png`. Blink swaps the main girl sprite through those full frames, one image at a time, with no opacity blend between them. There is no second `<img>`, no canvas, and no eye-hole paste. `idle.png` punches against frame 01, so idle rest uses `01_open` as well (including reduced motion, which does not blink). Old hole plates and L/R crops are not in `public/rai/`.
 
 Cycle: **01 → 02 → 03 → 04 → 03 → 02 → 01**, then rest on 01. Open and closing hold **160ms** each (at least two frames at 24fps, ~83ms). Half holds **640ms** each way and closed holds **1000ms**, so a long-shot glance can read them. A 50ms half does not.
 - A pose command, talk flap, or emotion-sheet swap mid-blink clears blink immediately and snaps to that sheet.

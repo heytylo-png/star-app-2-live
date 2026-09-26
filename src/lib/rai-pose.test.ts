@@ -531,9 +531,24 @@ describe("layersFor talking vs pose hold", () => {
       assert.doesNotMatch(source, /790-open-brow|788-open|791-half|789-closed/);
     }
     assert.doesNotMatch(puppetSrc, /<canvas|drawImage|getContext/);
+    assert.match(puppetSrc, /restOnly/);
+    assert.match(puppetSrc, /transition: "none"/);
     assert.equal(existsSync(join(srcRoot, "lib/idle-blink-paint.ts")), false);
     assert.equal(existsSync(join(publicRoot, "rai/idle_blink_open_brow.png")), false);
     assert.equal(existsSync(join(publicRoot, "rai/idle_blink_02_open.png")), false);
+    for (const retired of [
+      "idle_blink.png",
+      "idle_blink_01.png",
+      "idle_blink_02.png",
+      "idle_blink_l.png",
+      "idle_blink_r.png",
+      "idle_blink_01_l.png",
+      "idle_blink_01_r.png",
+      "idle_blink_02_l.png",
+      "idle_blink_02_r.png",
+    ]) {
+      assert.equal(existsSync(join(publicRoot, "rai", retired)), false, retired);
+    }
 
     const idle = decodePng(readFileSync(join(publicRoot, "rai/idle.png")));
     assert.equal(idle.width, IDLE_FRAME_SIZE.width);

@@ -456,6 +456,12 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const stageReady = Boolean(restPunched);
   const talkOverlay = display.find((layer) => layer.role === "talk");
   const blinkFrame = restingBlink ? idleBlinkStepName(blinkShown) : "off";
+  // Rest blink is one full frame. Pose crossfade may still overlap a sheet on
+  // the way in or out; once that handoff is done, paint only this sprite.
+  const restPlate = plates.length === 1 && plates[0]?.id === IDLE_REST_LAYER_ID ? plates[0] : null;
+  const poseHandoff = display.some((layer) => layer.id !== IDLE_REST_LAYER_ID && layer.opacity > 0.01);
+  const restOnly = Boolean(restPlate) && !poseHandoff;
+  const restOnlySrc = restPlate ? sheets[restPlate.src] : undefined;
 
   return (
     <div
@@ -471,31 +477,50 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
     >
       <div data-rai-rig className="rai-rig">
-        {display.map((layer) => {
-          if (layer.role === "eyes" || isRetiredBlinkSrc(layer.src)) return null;
-          const src = sheets[layer.src];
-          if (!src) return null;
-          const style = {
-            opacity: layer.opacity,
-            zIndex: layer.z,
-            transition: isInstantLayer(layer, talking)
-              ? "none"
-              : `opacity ${fadeMsFor(layer, talking, blinkModeLive)}ms var(--ease-smooth-out)`,
-          };
-          return (
-            <img
-              key={layer.id}
-              src={src}
-              alt=""
-              draggable={false}
-              decoding="async"
-              className="rai-layer"
-              data-rai-role={layer.role}
-              data-rai-sheet={layer.id === IDLE_REST_LAYER_ID ? blinkFrame : undefined}
-              style={style}
-            />
-          );
-        })}
+        {restOnly && restOnlySrc ? (
+          <img
+            key={IDLE_REST_LAYER_ID}
+            src={restOnlySrc}
+            alt=""
+            draggable={false}
+            decoding="sync"
+            className="rai-layer"
+            data-rai-role="body"
+            data-rai-sheet={blinkFrame}
+            style={{ opacity: 1, zIndex: 1, transition: "none" }}
+          />
+        ) : (
+          display.map((layer) => {
+            if (layer.role === "eyes" || isRetiredBlinkSrc(layer.src)) return null;
+            const src = sheets[layer.src];
+            if (!src) return null;
+            const fadeMs = fadeMsFor(layer, talking, blinkModeLive);
+            // A visible rest frame never opacity-blends. Src swaps are a cut.
+            // Fading this sheet out for a pose still uses the pose crossfade.
+            const restHardCut = layer.id === IDLE_REST_LAYER_ID && layer.opacity > 0;
+            const style = {
+              opacity: layer.opacity,
+              zIndex: layer.z,
+              transition:
+                restHardCut || isInstantLayer(layer, talking) || fadeMs === 0
+                  ? "none"
+                  : `opacity ${fadeMs}ms var(--ease-smooth-out)`,
+            };
+            return (
+              <img
+                key={layer.id}
+                src={src}
+                alt=""
+                draggable={false}
+                decoding="async"
+                className="rai-layer"
+                data-rai-role={layer.role}
+                data-rai-sheet={layer.id === IDLE_REST_LAYER_ID ? blinkFrame : undefined}
+                style={style}
+              />
+            );
+          })
+        )}
         {/* Ahoge / hair tip proxy — rotates over the crown */}
         <span data-rai-ahoge className="rai-ahoge" />
       </div>
