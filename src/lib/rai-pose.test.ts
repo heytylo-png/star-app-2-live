@@ -6,10 +6,12 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
   CHART_BEAT_TINT_POSES,
+  IDLE_BLINK_CANVAS,
   IDLE_BLINK_EYE_HOLES,
   allSpriteUrls,
   canIdleBlink,
-  idleBlinkLidSrc,
+  idleBlinkEyeSrcs,
+  isFullBlinkPlate,
   DEFAULT_EMOTION,
   EMOTION_HOLD_MS,
   EMOTION_TO_POSE,
@@ -407,7 +409,7 @@ describe("layersFor talking vs pose hold", () => {
     assert.doesNotMatch(layers[0]!.src, /idle_blink/);
   });
 
-  it("blinks only on rest idle by overlaying eye holes on the glare body", () => {
+  it("blinks only on rest idle by overlaying two eye rects on the glare body", () => {
     const rest = {
       ...base,
       pose: "idle" as const,
@@ -416,21 +418,37 @@ describe("layersFor talking vs pose hold", () => {
       blink: 3 as const,
     };
     const blink = layersFor(rest);
-    assert.equal(blink.length, 2);
+    assert.equal(blink.length, 3);
     assert.equal(blink[0]!.role, "body");
     assert.match(blink[0]!.src, /rai\/idle\.png$/);
     assert.equal(blink[1]!.role, "eyes");
-    assert.match(blink[1]!.src, /rai\/idle_blink\.png$/);
+    assert.equal(blink[2]!.role, "eyes");
+    assert.match(blink[1]!.src, /rai\/idle_blink_l\.png$/);
+    assert.match(blink[2]!.src, /rai\/idle_blink_r\.png$/);
+    assert.equal(isFullBlinkPlate(blink[1]!.src), false);
+    assert.equal(isFullBlinkPlate(blink[2]!.src), false);
+    assert.deepEqual(blink[1]!.eye, IDLE_BLINK_EYE_HOLES[0]);
+    assert.deepEqual(blink[2]!.eye, IDLE_BLINK_EYE_HOLES[1]);
     assert.doesNotMatch(blink.map((l) => l.src).join(" "), /face_eyes|mouth_speak|mouth_oh/);
-    assert.equal(idleBlinkLidSrc(1), SPRITES.idleBlink01);
-    assert.equal(idleBlinkLidSrc(2), SPRITES.idleBlink02);
-    assert.equal(idleBlinkLidSrc(3), SPRITES.idleBlink);
-    assert.equal(idleBlinkLidSrc(0), null);
+    assert.deepEqual(idleBlinkEyeSrcs(1), [SPRITES.idleBlink01L, SPRITES.idleBlink01R]);
+    assert.deepEqual(idleBlinkEyeSrcs(2), [SPRITES.idleBlink02L, SPRITES.idleBlink02R]);
+    assert.deepEqual(idleBlinkEyeSrcs(3), [SPRITES.idleBlinkL, SPRITES.idleBlinkR]);
+    assert.equal(idleBlinkEyeSrcs(0), null);
+    assert.equal(isFullBlinkPlate("/rai/idle_blink.png"), true);
+    assert.equal(isFullBlinkPlate("/rai/idle_blink_01.png"), true);
+    assert.equal(isFullBlinkPlate("/rai/idle_blink_02.png"), true);
 
     const early = layersFor({ ...rest, blink: 1 });
+    assert.equal(early.length, 3);
     assert.match(early[0]!.src, /rai\/idle\.png$/);
-    assert.match(early[1]!.src, /idle_blink_01\.png/);
+    assert.match(early[1]!.src, /idle_blink_01_l\.png$/);
+    assert.match(early[2]!.src, /idle_blink_01_r\.png$/);
     assert.equal(early[1]!.role, "eyes");
+    assert.equal(early[2]!.role, "eyes");
+
+    const mid = layersFor({ ...rest, blink: 2 });
+    assert.match(mid[1]!.src, /idle_blink_02_l\.png$/);
+    assert.match(mid[2]!.src, /idle_blink_02_r\.png$/);
 
     assert.equal(layersFor({ ...rest, blink: 0 }).length, 1);
     assert.match(layersFor({ ...rest, blink: 0 })[0]!.src, /rai\/idle\.png$/);
@@ -448,29 +466,45 @@ describe("layersFor talking vs pose hold", () => {
     assert.match(reduced[0]!.src, /rai\/idle\.png$/);
     assert.doesNotMatch(reduced[0]!.src, /idle_blink|face_eyes/);
     const glance = layersFor({ ...rest, emotion: "glance" });
+    assert.equal(glance.length, 3);
     assert.match(glance[0]!.src, /rai\/idle\.png$/);
-    assert.match(glance[1]!.src, /idle_blink\.png$/);
+    assert.match(glance[1]!.src, /idle_blink_l\.png$/);
+    assert.match(glance[2]!.src, /idle_blink_r\.png$/);
+    assert.ok(glance.every((layer) => !isFullBlinkPlate(layer.src)));
 
     assert.equal(canIdleBlink(rest), true);
     assert.equal(canIdleBlink({ ...rest, talking: true }), false);
     assert.equal(canIdleBlink({ ...rest, pose: "wave" }), false);
     assert.equal(canIdleBlink({ ...rest, reducedMotion: true }), false);
     assert.equal(USE_EXPO_TALK_BUST, false);
-    assert.ok(allSpriteUrls().includes(SPRITES.idleBlink));
-    assert.ok(allSpriteUrls().includes(SPRITES.idleBlink01));
-    assert.ok(allSpriteUrls().includes(SPRITES.idleBlink02));
-    assert.match(SPRITES.idleBlink, /rai\/idle_blink\.png/);
+    for (const src of [
+      SPRITES.idleBlink01L,
+      SPRITES.idleBlink01R,
+      SPRITES.idleBlink02L,
+      SPRITES.idleBlink02R,
+      SPRITES.idleBlinkL,
+      SPRITES.idleBlinkR,
+    ]) {
+      assert.ok(allSpriteUrls().includes(src));
+      assert.equal(isFullBlinkPlate(src), false);
+    }
+    assert.ok(allSpriteUrls().every((src) => !isFullBlinkPlate(src)));
 
     const idle = decodePng(readFileSync(join(publicRoot, "rai/idle.png")));
-    assert.equal(idle.width, 1008);
-    assert.equal(idle.height, 1792);
+    assert.equal(idle.width, IDLE_BLINK_CANVAS.width);
+    assert.equal(idle.height, IDLE_BLINK_CANVAS.height);
     assert.equal(idle.colorType, 2);
     const holes = holeMask(idle.width, idle.height);
-    for (const rel of ["rai/idle_blink.png", "rai/idle_blink_01.png", "rai/idle_blink_02.png"]) {
+    const plates: Array<[string, readonly [string, string]]> = [
+      ["rai/idle_blink.png", ["rai/idle_blink_l.png", "rai/idle_blink_r.png"]],
+      ["rai/idle_blink_01.png", ["rai/idle_blink_01_l.png", "rai/idle_blink_01_r.png"]],
+      ["rai/idle_blink_02.png", ["rai/idle_blink_02_l.png", "rai/idle_blink_02_r.png"]],
+    ];
+    for (const [rel, crops] of plates) {
       const frame = decodePng(readFileSync(join(publicRoot, rel)));
       assert.equal(frame.width, idle.width);
       assert.equal(frame.height, idle.height);
-      assert.equal(frame.colorType, 6, `${rel} is an eye-hole overlay`);
+      assert.equal(frame.colorType, 6, `${rel} is the eye-hole proof plate`);
       let outsideMax = 0;
       let outsideAlpha = 0;
       let inside = 0;
@@ -497,6 +531,24 @@ describe("layersFor talking vs pose hold", () => {
       if (rel === "rai/idle_blink.png") {
         assert.ok(insideChanged > 0, "closed lids change pixels inside the eye holes");
       }
+      crops.forEach((cropRel, eye) => {
+        const hole = IDLE_BLINK_EYE_HOLES[eye]!;
+        const crop = decodePng(readFileSync(join(publicRoot, cropRel)));
+        assert.equal(crop.width, hole.w, cropRel);
+        assert.equal(crop.height, hole.h, cropRel);
+        assert.equal(crop.colorType, 6, cropRel);
+        assert.ok(crop.width < idle.width && crop.height < idle.height);
+        for (let y = 0; y < hole.h; y++) {
+          for (let x = 0; x < hole.w; x++) {
+            const pi = ((hole.y + y) * frame.width + (hole.x + x)) * 4;
+            const ci = (y * crop.width + x) * 4;
+            assert.equal(crop.rgba[ci], frame.rgba[pi], `${cropRel} r ${x},${y}`);
+            assert.equal(crop.rgba[ci + 1], frame.rgba[pi + 1], `${cropRel} g ${x},${y}`);
+            assert.equal(crop.rgba[ci + 2], frame.rgba[pi + 2], `${cropRel} b ${x},${y}`);
+            assert.equal(crop.rgba[ci + 3], 255, `${cropRel} a ${x},${y}`);
+          }
+        }
+      });
     }
   });
 

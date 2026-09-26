@@ -209,14 +209,16 @@ export const SPRITES = {
     three_quarter: ASSET(LIVE_POSE_FILES.three_quarter),
   } satisfies Record<PoseId, string>,
   /**
-   * Rest-idle lid frames on the live idle canvas (1008×1792).
-   * Not pose keys. RGB outside IDLE_BLINK_EYE_HOLES matches idle.png;
-   * alpha is 0 there so the puppet overlays lids and never stacks a second body.
-   * 01 = 40% close, 02 = 75%, idleBlink = official closed lids (hold).
+   * Rest-idle lid crops — one file per eye hole, not full plates.
+   * 01 = 40% close, 02 = 75%, closed = official lids (hold).
+   * Full-canvas proofs live at public/rai/idle_blink*.png and are not mounted.
    */
-  idleBlink: ASSET("rai/idle_blink.png"),
-  idleBlink01: ASSET("rai/idle_blink_01.png"),
-  idleBlink02: ASSET("rai/idle_blink_02.png"),
+  idleBlink01L: ASSET("rai/idle_blink_01_l.png"),
+  idleBlink01R: ASSET("rai/idle_blink_01_r.png"),
+  idleBlink02L: ASSET("rai/idle_blink_02_l.png"),
+  idleBlink02R: ASSET("rai/idle_blink_02_r.png"),
+  idleBlinkL: ASSET("rai/idle_blink_l.png"),
+  idleBlinkR: ASSET("rai/idle_blink_r.png"),
   angles: {
     front: ASSET("star-rai/angles/front.png"),
     threeQuarter: ASSET("star-rai/angles/three-quarter.png"),
@@ -270,20 +272,36 @@ export const IDLE_BLINK_EYE_HOLES = [
   { x: 514, y: 208, w: 98, h: 30 },
 ] as const;
 
-/** Lid overlay for rest blink. 1 early, 2 mid, ≥3 fully closed. Null when open. */
-export function idleBlinkLidSrc(blink: number): string | null {
-  if (blink === 1) return SPRITES.idleBlink01;
-  if (blink === 2) return SPRITES.idleBlink02;
-  if (blink >= 3) return SPRITES.idleBlink;
+/** Live idle canvas the holes are registered onto. */
+export const IDLE_BLINK_CANVAS = { width: 1008, height: 1792 } as const;
+
+/** Full-plate blink files. Never an `<img>` — eye crops are the overlay. */
+export function isFullBlinkPlate(src: string): boolean {
+  return /\/idle_blink(?:_0[12])?\.png(?:\?|$)/.test(src);
+}
+
+/**
+ * Two eye-rect crops for rest blink. 1 early, 2 mid, ≥3 closed.
+ * Null when open. Not the full-canvas plates.
+ */
+export function idleBlinkEyeSrcs(blink: number): readonly [string, string] | null {
+  if (blink === 1) return [SPRITES.idleBlink01L, SPRITES.idleBlink01R];
+  if (blink === 2) return [SPRITES.idleBlink02L, SPRITES.idleBlink02R];
+  if (blink >= 3) return [SPRITES.idleBlinkL, SPRITES.idleBlinkR];
   return null;
+}
+
+export function idleBlinkEyeUrls(): string[] {
+  return [1, 2, 3].flatMap((frame) => {
+    const pair = idleBlinkEyeSrcs(frame);
+    return pair ? [...pair] : [];
+  });
 }
 
 /** Flat list of every sprite URL referenced by SPRITES — use for preload. */
 export function allSpriteUrls(): string[] {
   return [
-    SPRITES.idleBlink,
-    SPRITES.idleBlink01,
-    SPRITES.idleBlink02,
+    ...idleBlinkEyeUrls(),
     ...Object.values(SPRITES.poses),
     ...Object.values(SPRITES.angles),
     SPRITES.talk,
@@ -299,10 +317,12 @@ export type SpriteLayer = {
   src: string;
   opacity: number;
   /**
-   * body = full sheet. talk = viseme overlay.
-   * eyes = lid holes only (alpha 0 outside). Never a second full body.
+   * body = one full sheet. talk = viseme overlay.
+   * eyes = one eye-rect crop (see `eye`). Never a second full plate.
    */
   role: "body" | "talk" | "eyes";
+  /** Present only for role "eyes". Pixel rect on the 1008×1792 idle canvas. */
+  eye?: { x: number; y: number; w: number; h: number };
 };
 
 /** When true, SPEAKING uses Expo bust visemes (zoomed crop). Default off. */
@@ -317,8 +337,8 @@ export type PuppetState = {
   /** Seconds — drives official talk-sheet opacity flap (sin phase). */
   talkPhase?: number;
   /**
-   * 0 open. Official rest blink: 1 early lid, 2 mid, 3 closed hold
-   * (`idleBlinkLidSrc`) — eye overlay on idle.png, not a body swap.
+   * 0 open. Official rest blink: 1 early, 2 mid, 3 closed
+   * (`idleBlinkEyeSrcs`) — two eye-rect crops on idle.png, not a body swap.
    * Expo talk bust (flag on) still uses 1/2 with face_eyes_* while speaking.
    */
   blink?: 0 | 1 | 2 | 3;
@@ -458,13 +478,19 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     return [body(SPRITES.poses.talk)];
   }
 
-  // Eye-hole lids on the glare body. The idle sheet stays mounted; the lid
-  // frame is alpha outside the two holes so it cannot clip a second full PNG.
-  const lid = idleBlinkLidSrc(blink);
-  if (lid && canIdleBlink({ pose, emotion, talking, reducedMotion })) {
+  // Two eye-rect crops on the glare body. The idle sheet stays the only full
+  // texture. Full-canvas blink plates are not layers.
+  const eyes = idleBlinkEyeSrcs(blink);
+  if (eyes && canIdleBlink({ pose, emotion, talking, reducedMotion })) {
     return [
       body(SPRITES.poses.idle),
-      { id: `idle-eyes:${lid}`, src: lid, opacity: 1, role: "eyes" },
+      ...eyes.map((src, i) => ({
+        id: `idle-eye-${i}`,
+        src,
+        opacity: 1,
+        role: "eyes" as const,
+        eye: IDLE_BLINK_EYE_HOLES[i],
+      })),
     ];
   }
 

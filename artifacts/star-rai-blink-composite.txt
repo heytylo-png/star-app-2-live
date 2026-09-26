@@ -38,7 +38,16 @@ left:  x=434 y=208 w=80 h=28
 right: x=514 y=208 w=98 h=30
 Constants: IDLE_BLINK_EYE_HOLES in src/lib/rai.ts. Bake: scripts/bake-idle-blink.py.
 
-Frames (RGB matches idle.png outside the holes, max delta 0; alpha 0 outside so the overlay cannot cover the body)
+Frames (full plates are the bake proof: RGB matches idle.png outside the holes, max delta 0; alpha 0 outside)
 - public/rai/idle_blink_01.png — 40% closed
 - public/rai/idle_blink_02.png — 75% closed
 - public/rai/idle_blink.png — official closed lids (hold), then glare eyes return
+
+Runtime mount
+- One full texture the whole blink: public/rai/idle.png.
+- Overlay is two eye-rect crops only, after register onto that 1008×1792 canvas:
+  idle_blink_01_l.png / idle_blink_01_r.png (40%),
+  idle_blink_02_l.png / idle_blink_02_r.png (75%),
+  idle_blink_l.png / idle_blink_r.png (closed hold).
+- No second full <img>. No full-plate opacity crossfade.
+- If those crops have not decoded, blink stays off. Do not swap in a full plate.

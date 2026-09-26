@@ -7,8 +7,8 @@ IDLE_BLINK_EYE_HOLES in sync.
 Reads public/rai/idle.png (live glare, 1008×1792) and the closed-lid sheet.
 If the lid source is not already on that canvas (e.g. 720×1280), it is scaled
 to fit and letterboxed. Only the two eye holes are pasted. Outside those rects
-RGB matches idle (max delta 0) and alpha is 0 so the runtime can overlay lids
-without stacking a second full body.
+RGB matches idle (max delta 0) and alpha is 0. The runtime mounts the per-eye
+crops written next to each plate — never the full plate as a second image.
 """
 
 from __future__ import annotations
@@ -95,6 +95,16 @@ def main() -> None:
             raise SystemExit(f"{name} closed frame did not change the eyes")
         Image.fromarray(frame, "RGBA").save(out_dir / name, optimize=True)
         print(f"wrote {name} mix={t} outside_max={int(delta[outside].max())} hole_max={int(delta[holes].max())}")
+        # Runtime mounts these crops only — never the full plate.
+        for (x, y, w, h), tag in zip(EYE_HOLES, ("l", "r"), strict=True):
+            crop = frame[y : y + h, x : x + w]
+            if crop.shape[1] != w or crop.shape[0] != h:
+                raise SystemExit(f"{name} crop {tag} is {crop.shape}")
+            if int(crop[:, :, 3].min()) != 255:
+                raise SystemExit(f"{name} crop {tag} is not opaque")
+            crop_name = name.replace(".png", f"_{tag}.png")
+            Image.fromarray(crop, "RGBA").save(out_dir / crop_name, optimize=True)
+            print(f"  crop {crop_name} {w}x{h}")
 
 
 if __name__ == "__main__":

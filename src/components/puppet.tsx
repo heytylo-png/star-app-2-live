@@ -2,6 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   allSpriteUrls,
   canIdleBlink,
+  IDLE_BLINK_CANVAS,
+  idleBlinkEyeUrls,
+  isFullBlinkPlate,
   layersFor,
   POSE_CROSSFADE_MS,
   SPRITES,
@@ -73,7 +76,7 @@ function fadeMsFor(layer: SpriteLayer, talking: boolean, blinkMode: BlinkFadeMod
  * Star Rai 2D puppet — planted idle life, look-at lean, talk/mood sheets.
  * Studio-white cards are punched to alpha. Layers crossfade by stable id.
  * Spoken bubble holds talk/mood through the line; frown idle is rest-only.
- * Rest idle blinks by overlaying eye-hole frames on idle.png.
+ * Rest idle blinks with two eye-rect crops on idle.png. Never a second full plate.
  * Expo bust mouth/eye crops stay off. Dedicated poses hold their own sheet and do not blink.
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
@@ -92,6 +95,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
 
   const [ampLive, setAmpLive] = useState(0);
   const [blink, setBlink] = useState<0 | 1 | 2 | 3>(0);
+  /** Six eye-rect crops decoded. Until then blink stays off — no full-plate fallback. */
+  const [eyesReady, setEyesReady] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [display, setDisplay] = useState<DisplayLayer[]>([]);
   const [sheets, setSheets] = useState<Record<string, string>>({});
@@ -107,21 +112,37 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     let cancelled = false;
     const urls = allSpriteUrls();
     const idle = SPRITES.poses.idle;
-    const eyeLids = new Set<string>([SPRITES.idleBlink, SPRITES.idleBlink01, SPRITES.idleBlink02]);
-    const ordered = [idle, ...urls.filter((src) => src !== idle)];
+    const eyeCrops = new Set(idleBlinkEyeUrls());
+    const ordered = [idle, ...urls.filter((src) => src !== idle && !eyeCrops.has(src))];
     for (const src of ordered) {
-      if (eyeLids.has(src)) {
-        const img = new Image();
-        img.decoding = "async";
-        img.src = src;
-        void img.decode().catch(() => {});
-        continue;
-      }
+      if (isFullBlinkPlate(src)) continue;
       void punchedSpriteUrl(src).then((url) => {
         if (cancelled) return;
         setSheets((prev) => (prev[src] === url ? prev : { ...prev, [src]: url }));
       });
     }
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Decode the six eye-rect crops. Failure leaves blink off.
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.all(
+      idleBlinkEyeUrls().map((src) => {
+        const img = new Image();
+        img.decoding = "async";
+        img.src = src;
+        return img.decode();
+      }),
+    )
+      .then(() => {
+        if (!cancelled) setEyesReady(true);
+      })
+      .catch(() => {
+        // Crops are not ready. Do not fall back to a full-plate swap.
+      });
     return () => {
       cancelled = true;
     };
@@ -189,10 +210,10 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     };
   }, []);
 
-  // Eye-hole blink on rest idle only. The glare body stays up; lid frames swap
-  // with no opacity crossfade. Pose, talk, and emotion sheets cancel it.
+  // Eye-rect blink on rest idle only, and only after the crops decode.
+  // The glare body stays the only full texture. Pose, talk, and emotion cancel it.
   useEffect(() => {
-    if (USE_EXPO_TALK_BUST) return;
+    if (USE_EXPO_TALK_BUST || !eyesReady) return;
     const resting = canIdleBlink({ pose, emotion, talking, reducedMotion });
     if (!resting) return;
 
@@ -235,7 +256,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       setBlink(0);
       if (midBlink) setBlinkMode("snap");
     };
-  }, [pose, emotion, talking, reducedMotion]);
+  }, [pose, emotion, talking, reducedMotion, eyesReady]);
 
   // Pointer → look target (normalized -1..1), deadzone kills micro-jitter.
   useEffect(() => {
@@ -314,10 +335,11 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   }, []);
 
   const restingBlink = canIdleBlink({ pose, emotion, talking, reducedMotion });
+  const blinkShown = eyesReady ? blink : 0;
   // Pose / talk / emotion can change a frame before the blink timer cleans up.
   // Derive snap in that render so the next sheet cuts in instead of easing from closed lids.
   let blinkModeLive: BlinkFadeMode = blinkMode;
-  if (!USE_EXPO_TALK_BUST && !restingBlink && blink > 0) {
+  if (!USE_EXPO_TALK_BUST && !restingBlink && blinkShown > 0) {
     blinkModeLive = "snap";
   }
 
@@ -330,11 +352,23 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
         amplitude: ampLive,
         angle: 0,
         talkPhase: 0,
-        blink,
+        blink: blinkShown,
         idleBeat: "none",
         reducedMotion,
       }),
-    [pose, emotion, talking, ampLive, blink, reducedMotion],
+    [pose, emotion, talking, ampLive, blinkShown, reducedMotion],
+  );
+  const plates = useMemo(
+    () => desired.filter((layer) => layer.role !== "eyes" && !isFullBlinkPlate(layer.src)),
+    [desired],
+  );
+  const eyeLayers = useMemo(
+    () =>
+      desired.filter(
+        (layer): layer is SpriteLayer & { eye: { x: number; y: number; w: number; h: number } } =>
+          layer.role === "eyes" && layer.eye != null && !isFullBlinkPlate(layer.src),
+      ),
+    [desired],
   );
 
   // Drop snap timing once the cancelled blink has cut to the new sheet.
@@ -354,9 +388,9 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     }
 
     const next = new Map<string, DisplayLayer>();
-    desired.forEach((layer, i) => {
+    plates.forEach((layer, i) => {
       // Body starts at 1 so sheets sit above .rai-rig::after (contact shadow at z 0).
-      const z = layer.role === "talk" ? 20 + i : layer.role === "eyes" ? 6 : i + 1;
+      const z = layer.role === "talk" ? 20 + i : i + 1;
       next.set(layer.id, { ...layer, z });
     });
 
@@ -423,7 +457,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
         setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
       }, incomingDelay);
     }
-  }, [desired, talking, blinkModeLive]);
+  }, [plates, talking, blinkModeLive]);
 
   useEffect(() => {
     return () => {
@@ -445,14 +479,13 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       data-rai-pose={pose}
       data-rai-emotion={emotion}
       data-rai-talking={talking ? "1" : "0"}
-      data-rai-blink={blink > 0 && restingBlink ? "1" : "0"}
+      data-rai-blink={blinkShown > 0 && restingBlink ? "1" : "0"}
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
     >
       <div data-rai-rig className="rai-rig">
         {display.map((layer) => {
-          // Lid frames are already alpha outside the eye holes. Skip punch —
-          // it would fringe highlights that touch that clear margin.
-          const src = layer.role === "eyes" ? layer.src : sheets[layer.src];
+          if (layer.role === "eyes" || isFullBlinkPlate(layer.src)) return null;
+          const src = sheets[layer.src];
           if (!src) return null;
           return (
             <img
@@ -461,15 +494,9 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
               alt=""
               draggable={false}
               decoding="async"
-              className={layer.role === "eyes" ? "rai-layer rai-eye-lid" : "rai-layer"}
+              className="rai-layer"
               data-rai-role={layer.role}
-              data-rai-sheet={
-                layer.role === "eyes"
-                  ? "idle-blink"
-                  : layer.src === SPRITES.poses.idle
-                    ? "idle"
-                    : undefined
-              }
+              data-rai-sheet={layer.src === SPRITES.poses.idle ? "idle" : undefined}
               style={{
                 opacity: layer.opacity,
                 zIndex: layer.z,
@@ -481,6 +508,36 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
             />
           );
         })}
+        {eyeLayers.length === 2 ? (
+          <div className="rai-eye-host" data-rai-role="eyes">
+            <div
+              className="rai-eye-fit"
+              style={{
+                aspectRatio: `${IDLE_BLINK_CANVAS.width} / ${IDLE_BLINK_CANVAS.height}`,
+                width: `min(100cqw, calc(100cqh * ${IDLE_BLINK_CANVAS.width} / ${IDLE_BLINK_CANVAS.height}))`,
+              }}
+            >
+              {eyeLayers.map((layer) => (
+                <img
+                  key={layer.id}
+                  src={layer.src}
+                  alt=""
+                  draggable={false}
+                  decoding="sync"
+                  className="rai-eye-rect"
+                  data-rai-role="eyes"
+                  data-rai-sheet="idle-blink"
+                  style={{
+                    left: `${(layer.eye.x / IDLE_BLINK_CANVAS.width) * 100}%`,
+                    top: `${(layer.eye.y / IDLE_BLINK_CANVAS.height) * 100}%`,
+                    width: `${(layer.eye.w / IDLE_BLINK_CANVAS.width) * 100}%`,
+                    height: `${(layer.eye.h / IDLE_BLINK_CANVAS.height) * 100}%`,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        ) : null}
         {/* Ahoge / hair tip proxy — rotates over the crown */}
         <span data-rai-ahoge className="rai-ahoge" />
       </div>
