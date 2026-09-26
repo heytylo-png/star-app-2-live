@@ -12,12 +12,13 @@ export const IDLE_BEAT_FADE_MS = 400;
 
 /**
  * Rest-idle blink timing. Not an opacity crossfade of two full sheets.
- * `IDLE_BLINK_FADE_MS` is the close phase and the open phase (split across
- * the early/mid lid frames). `IDLE_BLINK_HOLD_MS` is the fully-closed dwell.
- * Both stay inside 80–120ms and under the pose crossfade.
+ * Each lid drawing is held for about two 24fps animation frames so close
+ * and open are steps (closing, half, closed) instead of an open↔closed pop.
+ * One step stays under the pose crossfade; a pose change still cuts the blink.
  */
-export const IDLE_BLINK_FADE_MS = 100;
-export const IDLE_BLINK_HOLD_MS = 100;
+export const IDLE_BLINK_STEP_FRAMES = 2;
+/** 24fps twos. ~83ms, about two animation frames. */
+export const IDLE_BLINK_STEP_MS = Math.round((1000 / 24) * IDLE_BLINK_STEP_FRAMES);
 /** Random gap between blinks, inclusive range ~3–6s. */
 export const IDLE_BLINK_GAP_MIN_MS = 3000;
 export const IDLE_BLINK_GAP_MAX_MS = 6000;
@@ -25,20 +26,38 @@ export const IDLE_BLINK_GAP_MAX_MS = 6000;
 export type IdleBlinkStep = { blink: 0 | 1 | 2 | 3; at: number };
 
 /**
- * One rest blink: early lid → mid → closed hold → mid → early → glare eyes.
- * `at` is ms from the start of the blink. Frame 0 restores `idle.png` eyes.
+ * Seven-step rest blink. The leading open is the idle.png glare already on
+ * the canvas, so the schedule starts at closing and ends by putting those
+ * glare eyes back.
+ *
+ * 1 open (rest) · 2 closing · 3 half · 4 closed · 5 half · 6 closing · 7 open
+ *
+ * `at` is ms from the start of the blink. blink 0 restores `idle.png` eyes.
+ * 1 = closing crops, 2 = half crops, 3 = closed crops.
  */
+export const IDLE_BLINK_SEQUENCE = [
+  "open",
+  "closing",
+  "half",
+  "closed",
+  "half",
+  "closing",
+  "open",
+] as const;
+
+const IDLE_BLINK_FRAME = {
+  open: 0,
+  closing: 1,
+  half: 2,
+  closed: 3,
+} as const satisfies Record<(typeof IDLE_BLINK_SEQUENCE)[number], 0 | 1 | 2 | 3>;
+
 export function idleBlinkSchedule(): IdleBlinkStep[] {
-  const step = IDLE_BLINK_FADE_MS / 2;
-  const hold = IDLE_BLINK_HOLD_MS;
-  return [
-    { blink: 1, at: 0 },
-    { blink: 2, at: step },
-    { blink: 3, at: step * 2 },
-    { blink: 2, at: step * 2 + hold },
-    { blink: 1, at: step * 3 + hold },
-    { blink: 0, at: step * 4 + hold },
-  ];
+  // Skip the leading open — scheduling blink 0 at t=0 would rearm the gap.
+  return IDLE_BLINK_SEQUENCE.slice(1).map((lid, index) => ({
+    blink: IDLE_BLINK_FRAME[lid],
+    at: index * IDLE_BLINK_STEP_MS,
+  }));
 }
 
 /** Idle vertical travel stays under this so the sheet does not float. */

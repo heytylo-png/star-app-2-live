@@ -4,10 +4,11 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
-  IDLE_BLINK_FADE_MS,
   IDLE_BLINK_GAP_MAX_MS,
   IDLE_BLINK_GAP_MIN_MS,
-  IDLE_BLINK_HOLD_MS,
+  IDLE_BLINK_SEQUENCE,
+  IDLE_BLINK_STEP_FRAMES,
+  IDLE_BLINK_STEP_MS,
   idleBlinkSchedule,
   IDLE_BREATHE_MAX,
   IDLE_BREATHE_MIN,
@@ -48,20 +49,32 @@ describe("official PNG puppet motion", () => {
   it("crossfades pose sheets and plants the rig on the hips", () => {
     assert.equal(POSE_CROSSFADE_MS, 380);
     assert.ok(POSE_CROSSFADE_MS >= 300 && POSE_CROSSFADE_MS <= 480);
-    assert.ok(IDLE_BLINK_FADE_MS <= POSE_CROSSFADE_MS);
-    assert.ok(IDLE_BLINK_FADE_MS >= 80 && IDLE_BLINK_FADE_MS <= 120);
-    assert.ok(IDLE_BLINK_HOLD_MS >= 80 && IDLE_BLINK_HOLD_MS <= 120);
+    assert.equal(IDLE_BLINK_STEP_FRAMES, 2);
+    assert.equal(IDLE_BLINK_STEP_MS, Math.round((1000 / 24) * 2));
+    assert.ok(IDLE_BLINK_STEP_MS < POSE_CROSSFADE_MS);
     assert.equal(IDLE_BLINK_GAP_MIN_MS, 3000);
     assert.equal(IDLE_BLINK_GAP_MAX_MS, 6000);
+    assert.deepEqual(IDLE_BLINK_SEQUENCE, [
+      "open",
+      "closing",
+      "half",
+      "closed",
+      "half",
+      "closing",
+      "open",
+    ]);
     const blink = idleBlinkSchedule();
+    // Leading open is the idle bitmap. The timer plays the other six steps.
     assert.deepEqual(
       blink.map((step) => step.blink),
       [1, 2, 3, 2, 1, 0],
     );
-    assert.equal(blink[2]!.at, IDLE_BLINK_FADE_MS);
-    assert.equal(blink[3]!.at - blink[2]!.at, IDLE_BLINK_HOLD_MS);
-    assert.equal(blink[5]!.at - blink[3]!.at, IDLE_BLINK_FADE_MS);
+    assert.equal(blink[0]!.at, 0);
+    for (let i = 1; i < blink.length; i++) {
+      assert.equal(blink[i]!.at - blink[i - 1]!.at, IDLE_BLINK_STEP_MS);
+    }
     assert.equal(blink[5]!.blink, 0);
+    assert.equal(blink.length, IDLE_BLINK_SEQUENCE.length - 1);
     assert.match(css, /\.rai-rig\s*\{/);
     assert.match(css, /transform-origin:\s*50%\s*72%/);
     assert.doesNotMatch(css, /perspective\(1400px\)/);

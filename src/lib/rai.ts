@@ -245,8 +245,9 @@ export const SPRITES = {
   } satisfies Record<PoseId, string>,
   /**
    * Rest-idle lid crops — one file per eye hole, not full plates.
-   * 01 = 40% close, 02 = 75%, closed = official lids (hold).
+   * 01 = closing (TyLo 782), 02 = half (TyLo 783), closed = official lids.
    * Full-canvas proofs live at public/rai/idle_blink*.png and are not mounted.
+   * The 782/783 jpg sheets are bake inputs, not a second body.
    */
   idleBlink01L: ASSET("rai/idle_blink_01_l.png"),
   idleBlink01R: ASSET("rai/idle_blink_01_r.png"),
@@ -310,14 +311,30 @@ export const IDLE_BLINK_EYE_HOLES = [
 /** Live idle canvas the holes are registered onto. */
 export const IDLE_BLINK_CANVAS = { width: 1008, height: 1792 } as const;
 
-/** Full-plate blink files. Never drawn. Eye crops are copied onto idle. */
+/**
+ * Full-plate blink files. Never drawn. Eye crops are copied onto idle.
+ * blink-frames jpgs are the registered 782/783 sheets — sources, not idle.
+ */
 export function isFullBlinkPlate(src: string): boolean {
-  return /\/idle_blink(?:_0[12])?\.png(?:\?|$)/.test(src);
+  return (
+    /\/idle_blink(?:_0[12])?\.png(?:\?|$)/.test(src) ||
+    /\/blink-frames\/.+\.jpe?g(?:\?|$)/.test(src)
+  );
+}
+
+export type IdleBlinkLid = "open" | "closing" | "half" | "closed";
+
+/** 0 open (idle glare). 1 closing. 2 half. ≥3 closed. */
+export function idleBlinkLid(blink: number): IdleBlinkLid {
+  if (blink === 1) return "closing";
+  if (blink === 2) return "half";
+  if (blink >= 3) return "closed";
+  return "open";
 }
 
 /**
- * Two eye-rect crops for rest blink. 1 early, 2 mid, ≥3 closed.
- * Null when open. Not the full-canvas plates.
+ * Two eye-rect crops for rest blink. 1 closing (782), 2 half (783), ≥3 closed.
+ * Null when open. Not the full-canvas plates and not the blink-frames jpgs.
  */
 export function idleBlinkEyeSrcs(blink: number): readonly [string, string] | null {
   if (blink === 1) return [SPRITES.idleBlink01L, SPRITES.idleBlink01R];
@@ -372,7 +389,7 @@ export type PuppetState = {
   /** Seconds — drives official talk-sheet opacity flap (sin phase). */
   talkPhase?: number;
   /**
-   * 0 open. Official rest blink: 1 early, 2 mid, 3 closed. The idle layer
+   * 0 open. Official rest blink: 1 closing, 2 half, 3 closed. The idle layer
    * list does not change — `idleBlinkEyeSrcs` is copied onto the live bitmap.
    * Expo talk bust (flag on) still uses 1/2 with face_eyes_* while speaking.
    */

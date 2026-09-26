@@ -11,6 +11,7 @@ import {
   allSpriteUrls,
   canIdleBlink,
   idleBlinkEyeSrcs,
+  idleBlinkLid,
   isFullBlinkPlate,
   DEFAULT_EMOTION,
   EMOTION_HOLD_MS,
@@ -427,6 +428,10 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(blink[0]!.role, "body");
     assert.match(blink[0]!.src, /rai\/idle\.png$/);
     assert.doesNotMatch(blink.map((l) => l.src).join(" "), /idle_blink|face_eyes|mouth_speak|mouth_oh/);
+    assert.equal(idleBlinkLid(0), "open");
+    assert.equal(idleBlinkLid(1), "closing");
+    assert.equal(idleBlinkLid(2), "half");
+    assert.equal(idleBlinkLid(3), "closed");
     assert.deepEqual(idleBlinkEyeSrcs(1), [SPRITES.idleBlink01L, SPRITES.idleBlink01R]);
     assert.deepEqual(idleBlinkEyeSrcs(2), [SPRITES.idleBlink02L, SPRITES.idleBlink02R]);
     assert.deepEqual(idleBlinkEyeSrcs(3), [SPRITES.idleBlinkL, SPRITES.idleBlinkR]);
@@ -434,8 +439,12 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(isFullBlinkPlate("/rai/idle_blink.png"), true);
     assert.equal(isFullBlinkPlate("/rai/idle_blink_01.png"), true);
     assert.equal(isFullBlinkPlate("/rai/idle_blink_02.png"), true);
+    assert.equal(isFullBlinkPlate("/rai/blink-frames/blink-02-closing.jpg"), true);
+    assert.equal(isFullBlinkPlate("/rai/blink-frames/blink-03-half.jpg"), true);
     assert.equal(isFullBlinkPlate(SPRITES.idleBlinkL), false);
     assert.equal(isFullBlinkPlate(SPRITES.idleBlinkR), false);
+    assert.ok(allSpriteUrls().every((src) => !src.includes("blink-frames")));
+    assert.ok(allSpriteUrls().every((src) => !/\.jpe?g(?:\?|$)/.test(src)));
 
     const early = layersFor({ ...rest, blink: 1 });
     assert.equal(early.length, 1);
@@ -520,9 +529,7 @@ describe("layersFor talking vs pose hold", () => {
       assert.equal(outsideAlpha, 0, `${rel} alpha leaked outside the eye holes`);
       assert.ok(inside > 0);
       assert.equal(insideOpaque, inside, `${rel} eye holes are fully opaque`);
-      if (rel === "rai/idle_blink.png") {
-        assert.ok(insideChanged > 0, "closed lids change pixels inside the eye holes");
-      }
+      assert.ok(insideChanged > 0, `${rel} lids change pixels inside the eye holes`);
       crops.forEach((cropRel, eye) => {
         const hole = IDLE_BLINK_EYE_HOLES[eye]!;
         const crop = decodePng(readFileSync(join(publicRoot, cropRel)));
@@ -564,6 +571,96 @@ describe("layersFor talking vs pose hold", () => {
     }
     assert.equal(outsideMax, 0, "copying eye rects moved idle pixels outside the holes");
     assert.ok(insideChanged > 0, "closed lids did not change the eye holes");
+  });
+
+  it("steps closing and half lids through the eye holes without moving the body", () => {
+    const idle = decodePng(readFileSync(join(publicRoot, "rai/idle.png")));
+    const closing = decodePng(readFileSync(join(publicRoot, "rai/idle_blink_01.png")));
+    const half = decodePng(readFileSync(join(publicRoot, "rai/idle_blink_02.png")));
+    const closed = decodePng(readFileSync(join(publicRoot, "rai/idle_blink.png")));
+    const holes = holeMask(idle.width, idle.height);
+
+    const meanInside = (a: Uint8Array, b: Uint8Array) => {
+      let sum = 0;
+      let n = 0;
+      for (let i = 0; i < holes.length; i++) {
+        if (!holes[i]) continue;
+        const o = i * 4;
+        sum += Math.abs(a[o]! - b[o]!);
+        sum += Math.abs(a[o + 1]! - b[o + 1]!);
+        sum += Math.abs(a[o + 2]! - b[o + 2]!);
+        n += 3;
+      }
+      return sum / n;
+    };
+
+    // Three different lid drawings. A blend of open and closed is not one of them.
+    assert.ok(meanInside(closing.rgba, half.rgba) > 12);
+    assert.ok(meanInside(closing.rgba, closed.rgba) > 12);
+    assert.ok(meanInside(half.rgba, closed.rgba) > 12);
+    const mix = new Uint8Array(idle.rgba);
+    for (let i = 0; i < holes.length; i++) {
+      if (!holes[i]) continue;
+      const o = i * 4;
+      for (let c = 0; c < 3; c++) {
+        mix[o + c] = Math.round(idle.rgba[o + c]! * 0.6 + closed.rgba[o + c]! * 0.4);
+      }
+    }
+    assert.ok(meanInside(closing.rgba, mix) > 12, "closing is the 782 lids, not a 40% blend");
+    for (let i = 0; i < holes.length; i++) {
+      if (!holes[i]) continue;
+      const o = i * 4;
+      for (let c = 0; c < 3; c++) {
+        mix[o + c] = Math.round(idle.rgba[o + c]! * 0.25 + closed.rgba[o + c]! * 0.75);
+      }
+    }
+    assert.ok(meanInside(half.rgba, mix) > 12, "half is the 783 lids, not a 75% blend");
+
+    for (const [lid, crops] of [
+      ["closing", ["rai/idle_blink_01_l.png", "rai/idle_blink_01_r.png"]],
+      ["half", ["rai/idle_blink_02_l.png", "rai/idle_blink_02_r.png"]],
+      ["closed", ["rai/idle_blink_l.png", "rai/idle_blink_r.png"]],
+    ] as const) {
+      const painted = new Uint8ClampedArray(idle.rgba);
+      crops.forEach((cropRel, eye) => {
+        const hole = IDLE_BLINK_EYE_HOLES[eye]!;
+        const crop = decodePng(readFileSync(join(publicRoot, cropRel)));
+        assert.equal(crop.width, hole.w);
+        assert.equal(crop.height, hole.h);
+        copyEyeRect(painted, idle.width, crop.rgba, hole);
+      });
+      let outsideMax = 0;
+      let insideChanged = 0;
+      for (let i = 0; i < holes.length; i++) {
+        const o = i * 4;
+        const delta = Math.max(
+          Math.abs(painted[o]! - idle.rgba[o]!),
+          Math.abs(painted[o + 1]! - idle.rgba[o + 1]!),
+          Math.abs(painted[o + 2]! - idle.rgba[o + 2]!),
+          Math.abs(painted[o + 3]! - idle.rgba[o + 3]!),
+        );
+        if (!holes[i]) {
+          if (delta > outsideMax) outsideMax = delta;
+        } else if (delta > 0) insideChanged++;
+      }
+      assert.equal(outsideMax, 0, `${lid} eye paint moved pixels outside the holes`);
+      assert.ok(insideChanged > 0, `${lid} eye paint did not change the holes`);
+    }
+
+    // 782/783 stay bake inputs. A full-sheet jpg must not become idle or a sprite.
+    for (const rel of [
+      "rai/blink-frames/blink-02-closing.jpg",
+      "rai/blink-frames/blink-03-half.jpg",
+    ]) {
+      assert.equal(isFullBlinkPlate(`/${rel}`), true);
+      assert.equal(
+        allSpriteUrls().some((src) => src.includes(rel) || src.includes("blink-frames")),
+        false,
+      );
+    }
+    assert.match(SPRITES.poses.idle, /rai\/idle\.png$/);
+    assert.doesNotMatch(SPRITES.poses.idle, /blink-frames|idle_blink/);
+    assert.equal(existsSync(join(publicRoot, "rai/idle.png")), true);
   });
 
   it("pins soft/hype off frown idle even when pose is still idle", () => {

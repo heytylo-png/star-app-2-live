@@ -39,8 +39,19 @@ right: x=514 y=208 w=98 h=30
 Constants: IDLE_BLINK_EYE_HOLES in src/lib/rai.ts. Bake: scripts/bake-idle-blink.py.
 
 Frames (full plates are the bake proof: RGB matches idle.png outside the holes, max delta 0; alpha 0 outside)
-- public/rai/idle_blink_01.png — 40% closed
-- public/rai/idle_blink_02.png — 75% closed
+Seven steps, about two frames each (24fps twos, IDLE_BLINK_STEP_MS). Open is glare eyes on the live idle bitmap.
+1 open     idle.png
+2 closing  eye holes from TyLo 782 (blink-02-closing), pasted into idle_blink_01
+3 half     eye holes from TyLo 783 (blink-03-half), pasted into idle_blink_02
+4 closed   public/rai/idle_blink.png (existing closed lid)
+5 half     783
+6 closing  782
+7 open     idle.png
+The 782/783 sheets are registered on the 1008×1792 canvas at bake time
+(public/rai/blink-frames/*.jpg, or IDLE_BLINK_CLOSING / IDLE_BLINK_HALF).
+They are not shipped as idle and they are not drawn. Only the eye holes are.
+- public/rai/idle_blink_01.png — closing lids (782), eye holes only
+- public/rai/idle_blink_02.png — half lids (783), eye holes only
 - public/rai/idle_blink.png — official closed lids (hold), then glare eyes return
 
 Runtime
@@ -48,6 +59,7 @@ Runtime
 - The idle canvas is 1008×1792. On mount, and when idle.png is ready, draw that full bitmap once. Do not leave the canvas at the browser default 300×150.
 - Blink only drawImages the two eye rects (L 434,208 80×28; R 514,208 98×30) from the crop sheets. Do not draw the rest of the blink PNG. Do not redraw the full sheet on a blink frame.
 - No second <img>. No opacity crossfade of two full figures. No canvas clear between blink frames.
-- Crops copied in: idle_blink_01_l/r (40%), idle_blink_02_l/r (75%), idle_blink_l/r (closed hold).
+- Crops copied in: idle_blink_01_l/r (closing), idle_blink_02_l/r (half), idle_blink_l/r (closed hold).
+- Each of those lid steps holds about two frames. Close and open are steps, not an open↔closed pop.
 - If those crops are not ready, blink stays off. Do not swap in a full plate.
 - Proof: pixels outside the two rects stay byte-identical to the idle bitmap through close and open.

@@ -47,13 +47,13 @@ Rest idle only: pose `idle`, not talking, not a dedicated pose, not an emotion s
 
 The idle `<canvas>` is created at 1008×1792 (not the browser default 300×150). On mount, and when `idle.png` is decoded, that canvas is painted once with the full idle bitmap. Blink then `drawImage`s only the two eye rects (`IDLE_BLINK_EYE_HOLES`: left 434,208 80×28; right 514,208 98×30) from the crop sheets. The rest of the blink PNG is not drawn. The canvas is not cleared between frames, and the idle body is not unloaded. If the crops are not ready, blink stays off.
 
-Baked by `scripts/bake-idle-blink.py`. Full plates stay on disk so pixels outside the holes match `idle.png` (max delta 0). They are not mounted. The copied rects are:
+Baked by `scripts/bake-idle-blink.py`. Full plates stay on disk so pixels outside the holes match `idle.png` (max delta 0). They are not mounted. TyLo 782 (closing) and 783 (half) are registered at bake time and are not shipped as a second idle. The copied rects are:
 
-- `idle_blink_01_l.png` / `idle_blink_01_r.png` — 40% closed
-- `idle_blink_02_l.png` / `idle_blink_02_r.png` — 75% closed
+- `idle_blink_01_l.png` / `idle_blink_01_r.png` — closing lids (782)
+- `idle_blink_02_l.png` / `idle_blink_02_r.png` — half lids (783)
 - `idle_blink_l.png` / `idle_blink_r.png` — official closed lids
 
-- Close phase **100ms** (`IDLE_BLINK_FADE_MS`) across the early and mid frames, then closed hold **100ms** (`IDLE_BLINK_HOLD_MS`), then the same 100ms open phase back to glare eyes.
+Seven steps, about two frames each (`IDLE_BLINK_STEP_MS`, 24fps twos): open glare → closing → half → closed → half → closing → open glare. The body bitmap stays `idle.png` the whole way.
 - A pose command, talk flap, or emotion-sheet swap mid-blink clears blink immediately and snaps to that sheet.
 - `prefers-reduced-motion: reduce` disables blink.
 

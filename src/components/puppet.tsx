@@ -277,6 +277,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       timers.push(
         window.setTimeout(() => {
           if (cancelled || reducedRef.current || talkingRef.current) return;
+          // Seven steps, ~2 frames each. Leading open is the body already painted.
           for (const step of idleBlinkSchedule()) {
             timers.push(
               window.setTimeout(() => {
