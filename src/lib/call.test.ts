@@ -398,7 +398,7 @@ describe("pose commands + tint still apply on a voice turn", () => {
       }),
       null,
     );
-    // Line over: a few seconds, then idle.png. Blink stays parked.
+    // Line over: a few seconds, then 01 open (byte copy of idle.png). Blink is on.
     const restDelay = poseResetDelayMs({
       pose,
       emotion: "bratty",
@@ -416,7 +416,7 @@ describe("pose commands + tint still apply on a voice turn", () => {
         amplitude: 0,
         angle: 0,
       })[0]!.src,
-      /\/idle\.png$/,
+      /idle_blink_01_open\.png$/,
     );
   });
 });

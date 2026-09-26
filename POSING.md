@@ -98,4 +98,4 @@ Live chat keys use the **morning official pack** under `public/rai/`. Do not poi
 
 ## Act pose hold
 
-A spoken line keeps its talk or mood sheet on that bubble, including while the caption is still the reply. Frown `idle.png` is not that line. The next rest — caption cleared, no spoken bubble — may settle to `idle.png` after the usual hold (~3.4s from landing, at least ~2.8s). Rest blink is parked (`IDLE_BLINK_ENABLED` is false) until TyLo says pass. Body-sheet crossfade ~380ms. Talking does not snap a dedicated pose (including `talk`) to frown idle.
+A spoken line keeps its talk or mood sheet on that bubble, including while the caption is still the reply. Frown `idle.png` is not that line. The next rest — caption cleared, no spoken bubble — may settle to the rest sheet (01 open, a byte copy of `idle.png`) after the usual hold (~3.4s from landing, at least ~2.8s). Rest blink is on (`IDLE_BLINK_ENABLED` is true), approved by TyLo on 2026-09-26 (807-referenced painted lids, pass 4b). Body-sheet crossfade ~380ms. Talking does not snap a dedicated pose (including `talk`) to frown idle.

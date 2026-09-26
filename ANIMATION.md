@@ -43,22 +43,22 @@ Amplitude still drives a small talk bob on the rig. Dedicated poses (`talk`, `wa
 
 ### Idle blink
 
-**Parked.** Rest idle paints `public/rai/idle.png` only (`IDLE_BLINK_ENABLED` is false). The blink timer does not cycle frames. Do not re-enable in this change. Re-enable only when TyLo says pass. CoS alone is not enough.
+**On.** Rest idle hard-swaps one full frame (`IDLE_BLINK_ENABLED` is true). Blink is on, approved by TyLo on 2026-09-26 (807-referenced painted lids, pass 4b). The blink timer cycles one `<img>` only.
 
-TyLo FAIL: two PNGs up at once (ghost / second body during blink). The four eyes-only sheets stay on disk and are not the rest body. Source of truth: `artifacts/star-rai-blink-frames/baked/`. The same bytes are in `public/rai/`:
+The four eyes-only sheets are the rest body, one sheet at a time. Source of truth: `artifacts/star-rai-blink-frames/baked/`. The same bytes are in `public/rai/`:
 
 - `idle_blink_01_open.png` — byte copy of `idle.png`
 - `idle_blink_02_closing.png`
 - `idle_blink_03_half.png`
 - `idle_blink_04_closed.png`
 
-Each file is a full **1008×1792** frame on the `idle.png` canvas. Outside the eye box `(420, 185, 210, 70)` max abs RGB delta versus `idle.png` is 0. Only the lids change.
+Each file is a full **1008×1792** frame on the `idle.png` canvas. Outside the eye box `(420, 185, 210, 70)` max abs RGB delta versus `idle.png` is 0. Only the lids change. The lids are the 807 video registered onto idle's eyes. 03 sets the 7s lash through the middle of the iris; 04 repaints the old opening with the 8s shut lid and one lash; 02 is that 7s lash only a light drop into the iris.
 
-Cycle map for a future hard-cut wire (not live): **01 → 02 → 03 → 04 → 03 → 02 → 01**. Do not skip 02. Hard cuts only — never opacity-blend two full sheets. Open and closing holds in the schedule are **160ms** each, half **640ms**, closed **1000ms**. Those timings are not running while the flag is false.
+Live cycle: **02 → 03 → 04 → 03 → 02** in **~300ms** total (60ms a cut), then **hold 01**. Do not skip 02. One `<img>` only — no stack, no dual PNG, no opacity blend of two sheets.
 
-Art gate: `artifacts/star-rai-blink-frames/baked/proof_standing_full.gif` and `proof_standing_strip.png`. The gif composites exactly one full frame at a time (hard replace, no crossfade). One body throughout; only the lids change. Runtime must hard-swap a single `<img>` / texture (no dual-layer opacity). This proof is the art gate before re-enable.
+Art gate: `artifacts/star-rai-blink-frames/baked/proof_standing_full.gif` and `proof_standing_strip.png`. The gif composites exactly one full frame at a time (hard replace, no crossfade). One body throughout; only the lids change. Runtime hard-swaps a single `<img>` / texture (no stack, no dual PNG). TyLo approved this on 2026-09-26 (807-referenced painted lids, pass 4b).
 
-Named poses, talk, and emotion sheets still do not blink. `prefers-reduced-motion: reduce` stays on `idle.png`. Spoken `talk` / mood is a single body sheet.
+Named poses, talk, and emotion sheets still do not blink. `prefers-reduced-motion: reduce` stays on 01 open (a byte copy of `idle.png`). Spoken `talk` / mood is a single body sheet.
 
 ## Track 2 — Spine / cutout (foothold)
 

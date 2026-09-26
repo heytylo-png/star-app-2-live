@@ -429,7 +429,8 @@ function RaiReady() {
       return;
     }
     // That caption is still her reply. Frown idle is the next rest, after
-    // this bubble is gone — not under the line she just said. Blink stays parked.
+    // this bubble is gone — not under the line she just said. Blink is on
+    // (approved by TyLo on 2026-09-26, 807-referenced painted lids, pass 4b).
     // Music Set (track_change → talk|content|smug) also stays if the caption flag drops.
     const captionLive = Boolean(caption.trim()) && caption !== "Listening…";
     const delay = spokenBubbleResetDelay({
