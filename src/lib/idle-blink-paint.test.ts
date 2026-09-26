@@ -29,19 +29,29 @@ function plan(over: Partial<typeof mountedReady> = {}): IdleCanvasDraw[] {
 }
 
 describe("planIdleCanvasDraws", () => {
-  it("draws idle.png once when the canvas mounts, before any blink", () => {
-    assert.deepEqual(plan(), [{ kind: "body" }]);
+  it("draws idle.png once when the canvas mounts, then the 01-open crops", () => {
+    assert.deepEqual(plan(), [
+      { kind: "body" },
+      { kind: "eyes", mode: "lid" },
+    ]);
     assert.deepEqual(
       plan({
         canvasWidth: IDLE_BLINK_CANVAS.width,
         canvasHeight: IDLE_BLINK_CANVAS.height,
       }),
-      [{ kind: "body" }],
+      [
+        { kind: "body" },
+        { kind: "eyes", mode: "lid" },
+      ],
     );
+    assert.deepEqual(plan({ eyesReady: false }), [{ kind: "body" }]);
   });
 
   it("does not wait for the blink timer to paint the body", () => {
-    assert.deepEqual(plan({ eyesReady: true, blink: 0 }), [{ kind: "body" }]);
+    assert.deepEqual(plan({ eyesReady: true, blink: 0 }), [
+      { kind: "body" },
+      { kind: "eyes", mode: "lid" },
+    ]);
     assert.deepEqual(plan({ eyesReady: false, blink: 0 }), [{ kind: "body" }]);
   });
 
@@ -52,8 +62,18 @@ describe("planIdleCanvasDraws", () => {
         canvasWidth: IDLE_BLINK_CANVAS.width,
         canvasHeight: IDLE_BLINK_CANVAS.height,
         blink: 0,
+        eyesReady: false,
       }),
       [],
+    );
+    assert.deepEqual(
+      plan({
+        bodyPainted: true,
+        canvasWidth: IDLE_BLINK_CANVAS.width,
+        canvasHeight: IDLE_BLINK_CANVAS.height,
+        blink: 0,
+      }),
+      [{ kind: "eyes", mode: "lid" }],
     );
   });
 
@@ -69,7 +89,7 @@ describe("planIdleCanvasDraws", () => {
     );
   });
 
-  it("restores glare eyes from the idle sheet rects, not a second full draw", () => {
+  it("paints the 01-open crops while rest blink is open", () => {
     assert.deepEqual(
       plan({
         bodyPainted: true,
@@ -77,6 +97,20 @@ describe("planIdleCanvasDraws", () => {
         canvasHeight: IDLE_BLINK_CANVAS.height,
         blink: 0,
         lidsOnCanvas: true,
+      }),
+      [{ kind: "eyes", mode: "lid" }],
+    );
+  });
+
+  it("restores idle eye rects when rest blink is cancelled", () => {
+    assert.deepEqual(
+      plan({
+        bodyPainted: true,
+        canvasWidth: IDLE_BLINK_CANVAS.width,
+        canvasHeight: IDLE_BLINK_CANVAS.height,
+        blink: 0,
+        lidsOnCanvas: true,
+        allowLids: false,
       }),
       [{ kind: "eyes", mode: "glare" }],
     );

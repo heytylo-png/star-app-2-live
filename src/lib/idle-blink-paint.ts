@@ -64,7 +64,8 @@ export function planIdleCanvasDraws(input: {
   const canLand = input.canvasMounted && bodyReady && (sized || out.some((step) => step.kind === "body"));
   if (!canLand) return out;
 
-  const showLids = input.allowLids && input.eyesReady && input.blink > 0;
+  // Rest blink, including 01-open (blink 0). Leaving rest puts the idle rects back.
+  const showLids = input.allowLids && input.eyesReady;
   if (showLids) {
     out.push({ kind: "eyes", mode: "lid" });
     return out;

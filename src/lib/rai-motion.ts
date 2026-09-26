@@ -26,14 +26,11 @@ export const IDLE_BLINK_GAP_MAX_MS = 6000;
 export type IdleBlinkStep = { blink: 0 | 1 | 2 | 3; at: number };
 
 /**
- * Seven-step rest blink on Maker's v4 holes (L 432,202 80×40 · R 508,202 80×40).
- * The leading open is the idle.png glare already on the canvas, so the
- * schedule starts at closing and ends by putting those glare eyes back.
+ * TyLo L/R hole sequence, about two frames each.
+ * 01-open → 02-closing → 03-half → 04-462-blink → 03-half → 02-closing → 01-open.
  *
- * 1 open (rest) · 2 closing · 3 half · 4 closed · 5 half · 6 closing · 7 open
- *
- * `at` is ms from the start of the blink. blink 0 restores `idle.png` eyes.
- * 1 = closing crops, 2 = half crops, 3 = closed crops. About two frames each.
+ * `at` is ms from the start of the blink. blink 0 paints the 01-open crops
+ * onto idle.png. 1 = 02-closing, 2 = 03-half, 3 = 04-462-blink.
  */
 export const IDLE_BLINK_SEQUENCE = [
   "open",
@@ -53,8 +50,7 @@ const IDLE_BLINK_FRAME = {
 } as const satisfies Record<(typeof IDLE_BLINK_SEQUENCE)[number], 0 | 1 | 2 | 3>;
 
 export function idleBlinkSchedule(): IdleBlinkStep[] {
-  // Skip the leading open — scheduling blink 0 at t=0 would rearm the gap.
-  return IDLE_BLINK_SEQUENCE.slice(1).map((lid, index) => ({
+  return IDLE_BLINK_SEQUENCE.map((lid, index) => ({
     blink: IDLE_BLINK_FRAME[lid],
     at: index * IDLE_BLINK_STEP_MS,
   }));

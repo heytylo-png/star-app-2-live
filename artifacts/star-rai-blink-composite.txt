@@ -43,18 +43,20 @@ Source of truth: artifacts/star-rai-blink-frames/eyes/ (RGBA hole crops + proof 
 scripts/bake-idle-blink.py still knows the rects, but re-running it overwrites the v4 ellipses with an opaque mix. Do not run it over those crops.
 
 Frames
-Seven steps, about two frames each (24fps twos, IDLE_BLINK_STEP_MS). Open is glare eyes on the live idle bitmap (the pack's 01-open is the open reference, not a second body).
-1 open     idle.png glare
-2 closing  artifacts/star-rai-blink-frames/eyes/02-closing_L.png + _R.png
-3 half     03-half_L.png + _R.png
-4 closed   04-462-blink_L.png + _R.png
-5 half     03-half
-6 closing  02-closing
-7 open     idle.png glare
+Seven steps, about two frames each (24fps twos, IDLE_BLINK_STEP_MS). L/R holes only.
+1 01-open        artifacts/star-rai-blink-frames/eyes/01-open_L.png + _R.png
+2 02-closing     02-closing_L.png + _R.png
+3 03-half        03-half_L.png + _R.png
+4 04-462-blink   04-462-blink_L.png + _R.png
+5 03-half
+6 02-closing
+7 01-open
 The raw 782/783 sheets are not body-locked: outside the eye holes their delta
 vs idle.png is 255. Never mount those JPGs as idle or as a full-body blink plate.
 Hole-only composites must match idle.png outside the holes (max delta 0).
+01-open matches the idle eye holes after source-over (inside delta 0). It is still the open crop, not a second body.
 Runtime copies of the pack (byte-identical):
+- public/rai/idle_blink_open_l.png / idle_blink_open_r.png — 01-open
 - public/rai/idle_blink_01_l.png / idle_blink_01_r.png — 02-closing
 - public/rai/idle_blink_02_l.png / idle_blink_02_r.png — 03-half
 - public/rai/idle_blink_l.png / idle_blink_r.png — 04-462-blink

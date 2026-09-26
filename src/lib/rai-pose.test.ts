@@ -442,10 +442,10 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(idleBlinkLid(1), "closing");
     assert.equal(idleBlinkLid(2), "half");
     assert.equal(idleBlinkLid(3), "closed");
+    assert.deepEqual(idleBlinkEyeSrcs(0), [SPRITES.idleBlinkOpenL, SPRITES.idleBlinkOpenR]);
     assert.deepEqual(idleBlinkEyeSrcs(1), [SPRITES.idleBlink01L, SPRITES.idleBlink01R]);
     assert.deepEqual(idleBlinkEyeSrcs(2), [SPRITES.idleBlink02L, SPRITES.idleBlink02R]);
     assert.deepEqual(idleBlinkEyeSrcs(3), [SPRITES.idleBlinkL, SPRITES.idleBlinkR]);
-    assert.equal(idleBlinkEyeSrcs(0), null);
     assert.equal(isFullBlinkPlate("/rai/idle_blink.png"), true);
     assert.equal(isFullBlinkPlate("/rai/idle_blink_01.png"), true);
     assert.equal(isFullBlinkPlate("/rai/idle_blink_02.png"), true);
@@ -491,6 +491,8 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(canIdleBlink({ ...rest, reducedMotion: true }), false);
     assert.equal(USE_EXPO_TALK_BUST, false);
     for (const src of [
+      SPRITES.idleBlinkOpenL,
+      SPRITES.idleBlinkOpenR,
       SPRITES.idleBlink01L,
       SPRITES.idleBlink01R,
       SPRITES.idleBlink02L,
@@ -516,6 +518,8 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(idle.colorType, 2);
     const holes = holeMask(idle.width, idle.height);
     const crops = [
+      "rai/idle_blink_open_l.png",
+      "rai/idle_blink_open_r.png",
       "rai/idle_blink_01_l.png",
       "rai/idle_blink_01_r.png",
       "rai/idle_blink_02_l.png",
@@ -580,6 +584,8 @@ describe("layersFor talking vs pose hold", () => {
     const holes = holeMask(idle.width, idle.height);
     const artifactRoot = join(publicRoot, "../artifacts/star-rai-blink-frames/eyes");
     const pack = [
+      ["rai/idle_blink_open_l.png", "01-open_L.png"],
+      ["rai/idle_blink_open_r.png", "01-open_R.png"],
       ["rai/idle_blink_01_l.png", "02-closing_L.png"],
       ["rai/idle_blink_01_r.png", "02-closing_R.png"],
       ["rai/idle_blink_02_l.png", "03-half_L.png"],
@@ -614,6 +620,7 @@ describe("layersFor talking vs pose hold", () => {
     assert.ok(opaqueMean(halfL.rgba, closedL.rgba) > 4, "half and closed are different lids");
 
     for (const [lid, crops] of [
+      ["open", ["rai/idle_blink_open_l.png", "rai/idle_blink_open_r.png"]],
       ["closing", ["rai/idle_blink_01_l.png", "rai/idle_blink_01_r.png"]],
       ["half", ["rai/idle_blink_02_l.png", "rai/idle_blink_02_r.png"]],
       ["closed", ["rai/idle_blink_l.png", "rai/idle_blink_r.png"]],
@@ -641,7 +648,11 @@ describe("layersFor talking vs pose hold", () => {
         } else if (delta > 0) insideChanged++;
       }
       assert.equal(outsideMax, 0, `${lid} eye paint moved pixels outside the holes`);
-      assert.ok(insideChanged > 0, `${lid} eye paint did not change the holes`);
+      if (lid === "open") {
+        assert.equal(insideChanged, 0, "01-open must match the idle eye holes");
+      } else {
+        assert.ok(insideChanged > 0, `${lid} eye paint did not change the holes`);
+      }
     }
 
     // 782/783 are not body-locked. They must not ship as jpg full sheets.

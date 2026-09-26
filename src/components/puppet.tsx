@@ -144,7 +144,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     };
   }, []);
 
-  // Decode the six eye-rect crops. Failure leaves blink off — no full-plate fallback.
+  // Decode the eight L/R crops (01-open through 04-462-blink). Failure leaves blink off.
   useEffect(() => {
     let cancelled = false;
     const urls = idleBlinkEyeUrls();
@@ -277,17 +277,19 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       timers.push(
         window.setTimeout(() => {
           if (cancelled || reducedRef.current || talkingRef.current) return;
-          // Seven steps, ~2 frames each. Leading open is the body already painted.
-          for (const step of idleBlinkSchedule()) {
+          // 01-open → closing → half → closed → reverse. ~2 frames each.
+          // Rearm on the last step only so the opening 01-open does not restart the gap.
+          const steps = idleBlinkSchedule();
+          steps.forEach((step, index) => {
             timers.push(
               window.setTimeout(() => {
                 if (cancelled || reducedRef.current || talkingRef.current) return;
                 blinkRef.current = step.blink;
                 setBlink(step.blink);
-                if (step.blink === 0) arm();
+                if (index === steps.length - 1) arm();
               }, step.at),
             );
-          }
+          });
         }, wait),
       );
     };

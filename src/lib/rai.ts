@@ -244,10 +244,12 @@ export const SPRITES = {
     three_quarter: ASSET(LIVE_POSE_FILES.three_quarter),
   } satisfies Record<PoseId, string>,
   /**
-   * Rest-idle lid crops — Maker v4 RGBA ellipses, one file per eye hole.
-   * 01 = closing, 02 = half, closed = 04-462-blink. Pixels match
-   * artifacts/star-rai-blink-frames/eyes/. Full sheets are not mounted.
+   * Rest-idle lid crops — TyLo L/R holes from artifacts/star-rai-blink-frames/eyes/.
+   * open = 01-open, 01 = 02-closing, 02 = 03-half, closed = 04-462-blink.
+   * Full sheets are not mounted.
    */
+  idleBlinkOpenL: ASSET("rai/idle_blink_open_l.png"),
+  idleBlinkOpenR: ASSET("rai/idle_blink_open_r.png"),
   idleBlink01L: ASSET("rai/idle_blink_01_l.png"),
   idleBlink01R: ASSET("rai/idle_blink_01_r.png"),
   idleBlink02L: ASSET("rai/idle_blink_02_l.png"),
@@ -325,7 +327,7 @@ export function isFullBlinkPlate(src: string): boolean {
 
 export type IdleBlinkLid = "open" | "closing" | "half" | "closed";
 
-/** 0 open (idle glare). 1 closing. 2 half. ≥3 closed. */
+/** 0 open (01-open). 1 closing (02-closing). 2 half (03-half). ≥3 closed (04-462-blink). */
 export function idleBlinkLid(blink: number): IdleBlinkLid {
   if (blink === 1) return "closing";
   if (blink === 2) return "half";
@@ -334,10 +336,12 @@ export function idleBlinkLid(blink: number): IdleBlinkLid {
 }
 
 /**
- * Two eye-rect crops for rest blink. 1 closing, 2 half, ≥3 closed.
- * Null when open. Not the full-canvas plates and not the 782/783 jpgs.
+ * Two eye-rect crops for rest blink.
+ * 0 = 01-open, 1 = 02-closing, 2 = 03-half, ≥3 = 04-462-blink.
+ * Not the full-canvas plates and not the 782/783 jpgs.
  */
 export function idleBlinkEyeSrcs(blink: number): readonly [string, string] | null {
+  if (blink === 0) return [SPRITES.idleBlinkOpenL, SPRITES.idleBlinkOpenR];
   if (blink === 1) return [SPRITES.idleBlink01L, SPRITES.idleBlink01R];
   if (blink === 2) return [SPRITES.idleBlink02L, SPRITES.idleBlink02R];
   if (blink >= 3) return [SPRITES.idleBlinkL, SPRITES.idleBlinkR];
@@ -345,7 +349,7 @@ export function idleBlinkEyeSrcs(blink: number): readonly [string, string] | nul
 }
 
 export function idleBlinkEyeUrls(): string[] {
-  return [1, 2, 3].flatMap((frame) => {
+  return [0, 1, 2, 3].flatMap((frame) => {
     const pair = idleBlinkEyeSrcs(frame);
     return pair ? [...pair] : [];
   });
@@ -390,7 +394,7 @@ export type PuppetState = {
   /** Seconds — drives official talk-sheet opacity flap (sin phase). */
   talkPhase?: number;
   /**
-   * 0 open. Official rest blink: 1 closing, 2 half, 3 closed. The idle layer
+   * 0 open (01-open crops). 1 closing, 2 half, 3 closed. The idle layer
    * list does not change — `idleBlinkEyeSrcs` is copied onto the live bitmap.
    * Expo talk bust (flag on) still uses 1/2 with face_eyes_* while speaking.
    */

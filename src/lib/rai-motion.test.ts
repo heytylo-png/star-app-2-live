@@ -64,17 +64,18 @@ describe("official PNG puppet motion", () => {
       "open",
     ]);
     const blink = idleBlinkSchedule();
-    // Leading open is the idle bitmap. The timer plays the other six steps.
+    // 01-open → 02-closing → 03-half → 04-462-blink → reverse.
     assert.deepEqual(
       blink.map((step) => step.blink),
-      [1, 2, 3, 2, 1, 0],
+      [0, 1, 2, 3, 2, 1, 0],
     );
     assert.equal(blink[0]!.at, 0);
     for (let i = 1; i < blink.length; i++) {
       assert.equal(blink[i]!.at - blink[i - 1]!.at, IDLE_BLINK_STEP_MS);
     }
-    assert.equal(blink[5]!.blink, 0);
-    assert.equal(blink.length, IDLE_BLINK_SEQUENCE.length - 1);
+    assert.equal(blink[0]!.blink, 0);
+    assert.equal(blink[blink.length - 1]!.blink, 0);
+    assert.equal(blink.length, IDLE_BLINK_SEQUENCE.length);
     assert.match(css, /\.rai-rig\s*\{/);
     assert.match(css, /transform-origin:\s*50%\s*72%/);
     assert.doesNotMatch(css, /perspective\(1400px\)/);
