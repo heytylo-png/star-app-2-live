@@ -1,3 +1,7 @@
+Superseded. Do not wire these L/R ovals.
+Wire source: artifacts/star-rai-blink-frames/tylo-holes/
+DEST_RECT (424, 193, 196, 57). Cycle: 02-open → 03-half → 04-closed → reverse.
+
 Star Rai soft-blink eye holes v4 (re-cut after mushy reject)
 
 Paste onto live idle.png only. 782/783 never mount as full idle.
