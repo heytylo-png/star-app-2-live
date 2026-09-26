@@ -47,13 +47,14 @@ Rest idle only: pose `idle`, not talking, not a dedicated pose, not an emotion s
 
 The idle `<canvas>` is created at 1008×1792 (not the browser default 300×150). On mount, and when `idle.png` is decoded, that canvas is painted once with the full idle bitmap. Blink then `drawImage`s one opaque patch into `IDLE_BLINK_DEST_RECT` `(x, y, w, h) = (424, 193, 196, 57)`. Nothing outside that rect is drawn. The canvas is not cleared between frames, and the idle body is not unloaded. If the patches are not ready, blink stays off.
 
-Source of truth: `artifacts/star-rai-blink-frames/tylo-holes/`. Runtime files are byte copies of those patches. Each step copies the dest rect back from `idle.png`, then source-over pastes the opaque patch, so the blend is against the body and not the previous lid. Pixels outside the rect stay identical to `idle.png` (max delta 0). Full plates (`idle_blink.png`, `idle_blink_01.png`, `idle_blink_02.png`) stay unmounted. The old L/R 80×40 ovals, `artifacts/star-rai-blink-frames/eyes/`, and scrap 790 / `01-open-brow` are not wired.
+Source of truth: `artifacts/star-rai-blink-frames/tylo-holes-v2/`. Runtime files are byte copies of those patches. Each step copies the dest rect back from `idle.png`, then source-over pastes the opaque patch, so the blend is against the body and not the previous lid. Pixels outside the rect stay identical to `idle.png` (max delta 0). Full plates (`idle_blink.png`, `idle_blink_01.png`, `idle_blink_02.png`) stay unmounted. The old `tylo-holes/` three-frame pack, the L/R 80×40 ovals, `artifacts/star-rai-blink-frames/eyes/`, and a full-plate `01-open-brow` are not wired.
 
-- `idle_blink_02_open.png` — 02-open (788)
-- `idle_blink_03_half.png` — 03-half (791)
-- `idle_blink_04_closed.png` — 04-closed (789)
+- `idle_blink_open_brow.png` — 790 open-brow
+- `idle_blink_02_open.png` — 788 open
+- `idle_blink_03_half.png` — 791 half
+- `idle_blink_04_closed.png` — 789 closed
 
-Cycle: **02-open → 03-half → 04-closed → reverse** (03-half → 02-open), then the dest rect is copied back from `idle.png`. 02-open holds **160ms**, 03-half **640ms** each way, 04-closed **1000ms**. A 50ms step on this long shot never reads as half or closed.
+Cycle: **790 open-brow → 788 open → 791 half → 789 closed → reverse** (791 half → 788 open → 790 open-brow), then the dest rect is copied back from `idle.png`. Open-brow and open hold **160ms** each (at least two frames at 24fps, ~83ms). Half holds **640ms** each way and closed holds **1000ms**, so a long-shot glance can read them. A 50ms half does not.
 - A pose command, talk flap, or emotion-sheet swap mid-blink clears blink immediately and snaps to that sheet.
 - `prefers-reduced-motion: reduce` disables blink.
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Retired L/R oval baker.
 
-Source of truth is artifacts/star-rai-blink-frames/tylo-holes/.
+Source of truth is artifacts/star-rai-blink-frames/tylo-holes-v2/.
 DEST_RECT on public/rai/idle.png is (424, 193, 196, 57).
 Do not bake the old 80×40 ovals back into the runtime.
 
@@ -75,9 +75,9 @@ def bake(idle: np.ndarray, lid: np.ndarray, t: float) -> np.ndarray:
 
 def main() -> None:
     raise SystemExit(
-        "Retired. Paste artifacts/star-rai-blink-frames/tylo-holes/ "
+        "Retired. Paste artifacts/star-rai-blink-frames/tylo-holes-v2/ "
         "at DEST_RECT (424, 193, 196, 57) on idle.png. "
-        "Do not bake L/R 80×40 ovals."
+        "Do not bake L/R 80×40 ovals or the old tylo-holes/ three-frame pack."
     )
 
 

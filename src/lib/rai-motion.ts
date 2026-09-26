@@ -15,10 +15,15 @@ export const IDLE_BEAT_FADE_MS = 400;
  *
  * The long shot shows the eye band at about 80×23 CSS pixels. A 50ms half
  * and a 100ms closed dwell are over before a glance can register the step.
- * 02-open is the short lead-in. 03-half and 04-closed stay up long enough
- * to read. The first blink starts soon after rest idle; later gaps still
- * land another cycle inside a 10–20s watch.
+ * Twos at 24fps are ~83ms; every lid step holds at least that. 790 open-brow
+ * and 788 open are the short lead-in. 791 half and 789 closed stay up long
+ * enough to read. The first blink starts soon after rest idle; later gaps
+ * still land another cycle inside a 10–20s watch.
  */
+/** Two frames at 24fps. Shorter than this (the old 50ms half) does not read. */
+export const IDLE_BLINK_MIN_STEP_MS = Math.round(2000 / 24);
+/** 790 open-brow. Softest lid; still a visible step, not a one-frame flash. */
+export const IDLE_BLINK_BROW_MS = 160;
 export const IDLE_BLINK_OPEN_MS = 160;
 export const IDLE_BLINK_HALF_MS = 640;
 export const IDLE_BLINK_HOLD_MS = 1000;
@@ -28,38 +33,49 @@ export const IDLE_BLINK_FIRST_MS = 900;
 export const IDLE_BLINK_GAP_MIN_MS = 4500;
 export const IDLE_BLINK_GAP_MAX_MS = 7000;
 
-export type IdleBlinkStep = { blink: 0 | 1 | 2 | 3; at: number };
+/** 0 restores idle. 4 = 790, 1 = 788, 2 = 791, 3 = 789. */
+export type IdleBlinkFrame = 0 | 1 | 2 | 3 | 4;
 
-/** Maker frames. 1 = 02-open (788), 2 = 03-half (791), 3 = 04-closed (789). */
-const IDLE_BLINK_FORWARD = [1, 2, 3] as const;
+export type IdleBlinkStep = { blink: IdleBlinkFrame; at: number };
+
+/**
+ * Maker frames, forward order.
+ * 4 = 790 open-brow, 1 = 788 open, 2 = 791 half, 3 = 789 closed.
+ */
+const IDLE_BLINK_FORWARD = [4, 1, 2, 3] as const;
 
 /**
  * Patch name for a schedule step. `idle` is the dest rect copied back from
- * idle.png — not a fourth patch, and not 01-open-brow.
+ * idle.png. Not a full-plate 01-open-brow, and not the old three-frame pack.
  */
-export function idleBlinkStepName(blink: number): "02-open" | "03-half" | "04-closed" | "idle" {
-  if (blink === 1) return "02-open";
-  if (blink === 2) return "03-half";
-  if (blink >= 3) return "04-closed";
+export function idleBlinkStepName(
+  blink: number,
+): "790-open-brow" | "788-open" | "791-half" | "789-closed" | "idle" {
+  if (blink === 4) return "790-open-brow";
+  if (blink === 1) return "788-open";
+  if (blink === 2) return "791-half";
+  if (blink === 3) return "789-closed";
   return "idle";
 }
 
 /**
  * One rest blink on the single dest rect.
- * 02-open → 03-half → 04-closed → reverse (03-half → 02-open) → idle dest.
+ * 790 open-brow → 788 open → 791 half → 789 closed → reverse
+ * (791 half → 788 open → 790 open-brow) → idle dest.
  * `at` is ms from the start of the blink. The last step restores idle.png
  * inside the dest rect. The body sheet is not swapped.
  */
-function idleBlinkDwellMs(blink: 0 | 1 | 2 | 3): number {
+function idleBlinkDwellMs(blink: IdleBlinkFrame): number {
   if (blink === 3) return IDLE_BLINK_HOLD_MS;
   if (blink === 2) return IDLE_BLINK_HALF_MS;
+  if (blink === 4) return IDLE_BLINK_BROW_MS;
   return IDLE_BLINK_OPEN_MS;
 }
 
 export function idleBlinkSchedule(): IdleBlinkStep[] {
-  const forward: Array<1 | 2 | 3> = [...IDLE_BLINK_FORWARD];
+  const forward: IdleBlinkFrame[] = [...IDLE_BLINK_FORWARD];
   const reverse = forward.slice(0, -1).reverse();
-  const frames: Array<0 | 1 | 2 | 3> = [...forward, ...reverse, 0];
+  const frames: IdleBlinkFrame[] = [...forward, ...reverse, 0];
   let at = 0;
   return frames.map((blink) => {
     const entry: IdleBlinkStep = { blink, at };
