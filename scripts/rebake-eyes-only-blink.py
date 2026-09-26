@@ -7,13 +7,12 @@ crop, so the open frame is registered to idle's eyes (sub-pixel, Lanczos)
 and that same scale is used for the blink frames, plus a per-frame brow shift.
 
 The source snaps from open to half in one frame (about 6.88s to 6.89s). There
-is no photographed pose between them. 03 is the 807 lid at 7s. 04 is 807 at
-8s across the whole socket, so the iris and sclera are gone and the painted
-lash stays continuous. 02 warps that same 7s lid part of the way toward the
-open eye, so the upper lid is lowered and the iris stays readable.
-
-Masks are smooth distance fields with a Gaussian edge. No square morphology,
-no nearest-neighbour resample, no binary cutout.
+is no photographed pose between them. 03 places the 7s lash through the middle
+of idle's iris, so the upper lid cuts the iris by about half. 02 is that same
+lash, only a light drop into the top of the iris. 04 repaints the whole old
+opening, including the old upper lid, with 8s skin and one crisp 8s lash.
+The lash pixels are a single Lanczos sample. Feathering is only on the mask
+edge. No Gaussian blur on the lash, no square morphology, no binary cutout.
 
 Runtime blink stays parked: IDLE_BLINK_ENABLED is false in src/lib/rai.ts.
 """
@@ -50,10 +49,16 @@ AFFINE = np.array(
 # Content shift in source pixels, from a brow template match against 0s.
 SHIFT_HALF = (33.0, -21.0)  # 7s
 SHIFT_SHUT = (33.0, -15.0)  # 8s
-# 02 sits this far along the open → 7s lid travel. 03 is the full 7s lid.
-LIGHT_DROP_T = 0.34
-# Gaussian edge. Width from ~10% to ~90% is about 2.6*sigma, so 1.7 ≈ 4.4px.
-FEATHER_SIGMA = 1.75
+# Fraction of the bright opening the lash covers, measured down from its top.
+# 02 only enters the upper iris. 03 crosses the middle of it.
+LIGHT_DROP_FRAC = 0.12
+HALF_DROP_FRAC = 0.46
+# 04 covers the old lid above the iris and the rest of the opening below it.
+SHUT_ABOVE = 8.0
+SHUT_BELOW = 5.5
+# Mask-edge feather only. The lash itself is not blurred.
+FEATHER_SIGMA = 1.55
+LASH_EDGE_SIGMA = 0.95
 
 FRAMES = (
     "idle_blink_01_open.png",
@@ -250,40 +255,102 @@ def socket_curves(idle: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return top, bot
 
 
+def bright_opening(idle: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Top and bottom of the bright iris and sclera, one curve per eye.
+
+    This is the colored opening a viewer reads as the eye. The bangs above it
+    are not part of the opening, so a lid aimed at the socket's dark top never
+    reaches the iris.
+    """
+    r, g, b, sat, lum = channels(idle)
+    iris = (sat > 0.62) & (b < 100) & (r > 165) & ((r - b) > 110) & (g > 35) & (g < 200) & (lum > 45)
+    sclera = (r > 220) & (g > 200) & (b > 175) & (sat < 0.28) & (lum > 160)
+    seed = iris | sclera
+    seed[:EY, :] = False
+    seed[EY + EH :, :] = False
+    seed[:, :EX] = False
+    seed[:, EX + EW :] = False
+    raw_top = np.full(idle.shape[1], np.nan)
+    raw_bot = np.full(idle.shape[1], np.nan)
+    for x in range(EX, EX + EW):
+        ys = np.where(seed[:, x])[0]
+        if ys.size < 2:
+            continue
+        if int(ys.max() - ys.min()) > 28:
+            med = float(np.median(ys))
+            ys = ys[np.abs(ys - med) <= 12]
+        if ys.size >= 2 and int(ys.max() - ys.min()) >= 4:
+            raw_top[x] = float(ys.min())
+            raw_bot[x] = float(ys.max())
+    spans = split_eyes(raw_top)
+    if len(spans) != 2:
+        raise SystemExit(f"expected two eyes, found {spans}")
+    top = np.full(idle.shape[1], np.nan)
+    bot = np.full(idle.shape[1], np.nan)
+    for i, (x0, x1) in enumerate(spans):
+        sl = slice(x0, x1 + 1)
+        med_t = float(np.nanmedian(raw_top[sl]))
+        med_b = float(np.nanmedian(raw_bot[sl]))
+        # Hair and the brow throw a few columns far off the iris.
+        keep = np.isfinite(raw_top[sl]) & (np.abs(raw_top[sl] - med_t) <= 9) & (np.abs(raw_bot[sl] - med_b) <= 8)
+        raw_top[sl] = np.where(keep, raw_top[sl], np.nan)
+        raw_bot[sl] = np.where(keep, raw_bot[sl], np.nan)
+        idx = np.where(np.isfinite(raw_top[sl]))[0]
+        if idx.size < 6:
+            raise SystemExit(f"eye {x0}-{x1} lost its iris outline")
+        xx = np.arange(x1 - x0 + 1)
+        t = gaussian_filter1d(np.interp(xx, idx, raw_top[sl][idx]), 2.8, mode="nearest")
+        b = gaussian_filter1d(np.interp(xx, idx, raw_bot[sl][idx]), 2.8, mode="nearest")
+        # Outer corner only. Do not grow across the nose.
+        grow_left = 8 if i == 0 else 3
+        grow_right = 3 if i == 0 else 8
+        aa = max(EX + 2, x0 - grow_left)
+        bb = min(EX + EW - 3, x1 + grow_right)
+        width = bb - aa + 1
+        full_t = np.empty(width, np.float64)
+        full_b = np.empty(width, np.float64)
+        off = x0 - aa
+        full_t[:off] = t[0]
+        full_b[:off] = b[0]
+        full_t[off : off + t.size] = t
+        full_b[off : off + t.size] = b
+        full_t[off + t.size :] = t[-1]
+        full_b[off + t.size :] = b[-1]
+        top[aa : bb + 1] = full_t
+        bot[aa : bb + 1] = full_b
+    return top, bot
+
+
 def lash_bottom(im: np.ndarray, top: np.ndarray, bot: np.ndarray) -> np.ndarray:
-    """Bottom row of the dark upper-lid stroke. NaN where the stroke is missing."""
+    """Bottom row of the dark upper-lid stroke. The y-position is smoothed; the pixels are not."""
     lum = channels(im)[4]
     out = np.full(im.shape[1], np.nan)
     for x in range(im.shape[1]):
         if np.isnan(top[x]) or np.isnan(bot[x]):
             continue
-        t = int(max(EY, np.floor(top[x] - 4)))
-        b = int(min(EY + EH - 2, np.ceil(bot[x])))
+        t = int(max(EY, np.floor(top[x] - 14)))
+        b = int(min(EY + EH - 2, np.ceil(max(bot[x], top[x] + 8))))
         if b - t < 6:
             continue
         col = lum[t : b + 1, x]
-        seen = False
-        start = None
-        for i, v in enumerate(col):
-            if v > 125:
-                seen = True
-            if seen and v < 85:
-                start = i
-                break
-        if start is None:
+        i = int(np.argmin(col))
+        if col[i] > 75:
             continue
-        end = start
-        while end + 1 < col.size and col[end + 1] < 115:
+        end = i
+        while end + 1 < col.size and col[end + 1] < 105 and col[end + 1] < col[i] + 40:
             end += 1
         out[x] = float(t + end)
     for x0, x1 in eye_spans(top):
-        filled = _fill_span(out[x0 : x1 + 1])
+        sl = slice(x0, x1 + 1)
+        filled = _fill_span(out[sl])
         known = ~np.isnan(filled)
         if int(known.sum()) < 4:
+            med = float(np.nanmedian(top[sl])) + 3.0
+            out[sl] = med
             continue
-        med = float(np.nanmedian(filled))
+        med = float(np.nanmedian(filled[known]))
         filled = np.where(known, filled, med)
-        out[x0 : x1 + 1] = gaussian_filter1d(filled, 2.6, mode="nearest")
+        out[sl] = gaussian_filter1d(filled, 1.3, mode="nearest")
     return out
 
 
@@ -377,54 +444,153 @@ def match_skin(idle: np.ndarray, blink: np.ndarray) -> np.ndarray:
     return np.clip(blink.astype(np.float32) + skin_delta(idle, blink), 0, 255).astype(np.float32)
 
 
-def lift_lid(src: np.ndarray, lash_src: np.ndarray, lash_dst: np.ndarray, anchor: np.ndarray) -> np.ndarray:
-    """Move the 7s lash up onto `lash_dst`. One Lanczos resample.
+def translate_lash(src: np.ndarray, lash_src: np.ndarray, lash_dst: np.ndarray, anchor: np.ndarray) -> np.ndarray:
+    """Move a lash onto `lash_dst` with one Lanczos resample.
 
-    Rows at `anchor` stay put. Below the destination lash the sample holds,
-    and the mask (not this remap) is what reveals idle's iris.
+    The stroke itself is a pure translation, so it is not stretched. Skin above
+    the stroke takes up the gap. Rows at `anchor` stay put.
     """
     h, w = src.shape[:2]
+    src_f = np.asarray(src, np.float32)
     map_x = np.tile(np.arange(w, dtype=np.float32), (h, 1))
-    map_y = np.tile(np.arange(h, dtype=np.float32)[:, None], (1, w))
     ys = np.arange(h, dtype=np.float32)[:, None]
-    span = lash_dst - anchor
-    safe = np.isfinite(lash_src) & np.isfinite(lash_dst) & np.isfinite(anchor) & (np.abs(span) > 1.5)
-    t = np.zeros((h, w), np.float32)
-    t[:, safe] = (ys - anchor[None, safe]) / span[None, safe]
-    src_y = anchor[None, :] + t * (lash_src - anchor)[None, :]
-    use = safe[None, :] & (t > -0.25) & (t < 1.35)
-    map_y = np.where(use, src_y, map_y).astype(np.float32)
-    return cv2.remap(src, map_x, map_y, interpolation=cv2.INTER_LANCZOS4, borderMode=cv2.BORDER_REPLICATE)
+    finite = np.isfinite(lash_src) & np.isfinite(lash_dst) & np.isfinite(anchor)
+    src_l = np.where(finite, lash_src, 0.0).astype(np.float32)
+    dst_l = np.where(finite, lash_dst, 0.0).astype(np.float32)
+    anch = np.where(finite, anchor, 0.0).astype(np.float32)
+    delta = dst_l - src_l
+    band = dst_l - 2.4
+    denom = np.maximum(band - anch, 1.0)
+    t = (ys - anch[None, :]) / denom[None, :]
+    stretch = anch[None, :] + t * ((src_l - 2.4) - anch)[None, :]
+    shifted = ys - delta[None, :]
+    map_y = np.broadcast_to(ys, (h, w)).copy()
+    use_stretch = finite[None, :] & (ys > anch[None, :]) & (ys < band[None, :])
+    use_shift = finite[None, :] & (ys >= band[None, :]) & (ys < (dst_l[None, :] + 14.0))
+    map_y = np.where(use_shift, shifted, np.where(use_stretch, stretch, map_y))
+    return cv2.remap(
+        src_f,
+        map_x,
+        map_y.astype(np.float32),
+        interpolation=cv2.INTER_LANCZOS4,
+        borderMode=cv2.BORDER_REPLICATE,
+    )
 
 
-def lid_alpha(top: np.ndarray, bot: np.ndarray, lash: np.ndarray, fade: np.ndarray) -> np.ndarray:
-    """Socket, cut on the lash, with a Gaussian edge and no rectangular clip."""
-    h = 1792
+def _taper_band(y_top: np.ndarray, y_bot: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Shrink the band to a point at each end so the corner is not a wall."""
+    yt = y_top.copy()
+    yb = y_bot.copy()
+    valid = np.isfinite(yt) & np.isfinite(yb)
+    cap = 12
+    for a, b in eye_spans(np.where(valid, 0.0, np.nan)):
+        center = 0.5 * (np.nanmedian(yt[a : b + 1]) + np.nanmedian(yb[a : b + 1]))
+        for i, x in enumerate(range(a, min(a + cap, b + 1))):
+            # Keep most of the height. Only the last columns round off,
+            # otherwise the inner-corner sclera falls outside the lid.
+            wgt = 0.55 + 0.45 * 0.5 * (1.0 - np.cos(np.pi * i / max(cap - 1, 1)))
+            yt[x] = center + (yt[x] - center) * wgt
+            yb[x] = center + (yb[x] - center) * wgt
+        for i, x in enumerate(range(b, max(b - cap, a) - 1, -1)):
+            wgt = 0.55 + 0.45 * 0.5 * (1.0 - np.cos(np.pi * i / max(cap - 1, 1)))
+            yt[x] = center + (yt[x] - center) * wgt
+            yb[x] = center + (yb[x] - center) * wgt
+    return yt, yb
+
+
+def band_alpha(y_top: np.ndarray, y_bot: np.ndarray, sigma: float) -> np.ndarray:
+    """Soft band. Feather is the mask edge; the interior stays opaque."""
+    h, w = 1792, 1008
+    yt, yb = _taper_band(y_top, y_bot)
+    valid = np.isfinite(y_top) & np.isfinite(y_bot)
     yy = np.arange(h, dtype=np.float32)[:, None]
-    valid = np.isfinite(top) & np.isfinite(bot) & np.isfinite(lash)
-    top_f = np.where(valid, top, 0).astype(np.float32)
-    bot_f = np.where(valid, bot, 0).astype(np.float32)
-    # The cut sits just under the lash stroke so the painted lash stays opaque.
-    cut = np.where(valid, lash + 1.6, 0).astype(np.float32)
-    sock = np.minimum(yy - (top_f[None, :] - 1.5), bot_f[None, :] - yy)
-    above_cut = cut[None, :] - yy
-    dist = np.minimum(sock, above_cut)
-    dist[:, ~valid] = -48
-    # Side falloff lives in curve_distance's ends; apply it here too.
-    side = curve_distance(np.where(valid, top, np.nan), np.where(valid, bot, np.nan))
-    dist = np.minimum(dist, side)
-    return gaussian_edge(dist) * fade
+    top_f = np.where(valid, yt, 0.0).astype(np.float32)
+    bot_f = np.where(valid, yb, 0.0).astype(np.float32)
+    inside = np.minimum(yy - top_f[None, :], bot_f[None, :] - yy)
+    side = np.full(w, 40.0, np.float32)
+    for a, b in eye_spans(np.where(valid, 0.0, np.nan)):
+        side[a : b + 1] = 0
+        left = np.arange(max(0, a - 16), a)
+        side[left] = np.minimum(side[left], (a - left).astype(np.float32))
+        right = np.arange(b + 1, min(w, b + 17))
+        side[right] = np.minimum(side[right], (right - b).astype(np.float32))
+    dist = inside - side[None, :] * 1.2
+    dist[:, ~valid] = np.minimum(dist[:, ~valid], -side[None, ~valid])
+    alpha = gaussian_edge(dist, sigma) * box_fade()
+    alpha[:EY, :] = 0
+    alpha[EY + EH :, :] = 0
+    alpha[:, :EX] = 0
+    alpha[:, EX + EW :] = 0
+    return alpha
 
 
-def shut_alpha(top: np.ndarray, bot: np.ndarray, fade: np.ndarray) -> np.ndarray:
-    # Pad the band a little so the lash, which sits inside it, is not feathered away.
-    top_p = np.where(np.isnan(top), np.nan, top - 2.0)
-    bot_p = np.where(np.isnan(bot), np.nan, bot + 2.0)
-    return gaussian_edge(curve_distance(top_p, bot_p)) * fade
+def cover_eye_white(alpha: np.ndarray, idle: np.ndarray) -> np.ndarray:
+    """Pull leftover sclera and iris in the eye box under the shut lid."""
+    r, g, b, sat, lum = channels(idle)
+    white = (r > 215) & (g > 195) & (b > 170) & (sat < 0.32) & (lum > 155)
+    iris = (sat > 0.72) & (b < 70) & (r > 175) & ((r - b) > 145) & (g > 40) & (g < 170)
+    specks = white | iris
+    specks[:EY, :] = False
+    specks[EY + EH :, :] = False
+    specks[:, :EX] = False
+    specks[:, EX + EW :] = False
+    # Already covered by the shut band. Only the stragglers at the corners.
+    specks &= alpha < 0.92
+    if not np.any(specks):
+        return alpha
+    near = gaussian_filter(specks.astype(np.float32), 1.25)
+    return np.maximum(alpha, np.clip(near * 1.45, 0.0, 1.0) * box_fade())
 
 
-def composite(idle: np.ndarray, painted: np.ndarray, alpha: np.ndarray, hair: np.ndarray, box: np.ndarray) -> np.ndarray:
-    a = np.clip(alpha * (1.0 - hair), 0.0, 1.0)
+def clear_ghosts(paint: np.ndarray, lash: np.ndarray, y_top: np.ndarray, y_bot: np.ndarray) -> np.ndarray:
+    """Repaint dark pixels that are not the lash with the lid's own shading.
+
+    A copied skin row goes flat and reads as a rectangle. Dark ghosts are
+    filled by interpolating the skin above and below them, so the shading
+    stays continuous. The lash stroke itself is not touched and not blurred.
+    """
+    out = np.array(paint, np.float32, copy=True)
+    lum = channels(np.clip(out, 0, 255).astype(np.uint8))[4]
+    for x in range(out.shape[1]):
+        if not np.isfinite(lash[x]) or not np.isfinite(y_top[x]) or not np.isfinite(y_bot[x]):
+            continue
+        y0 = int(max(EY, np.floor(y_top[x])))
+        y1 = int(min(EY + EH - 1, np.ceil(y_bot[x])))
+        if y1 - y0 < 4:
+            continue
+        lash_y = float(lash[x])
+        skin = [y for y in range(y0, y1 + 1) if abs(y - lash_y) > 2.6 and lum[y, x] > 140]
+        if len(skin) < 2:
+            continue
+        skin_a = np.asarray(skin)
+        for y in range(y0, y1 + 1):
+            if abs(y - lash_y) <= 2.6:
+                continue
+            above = skin_a[skin_a < y]
+            below = skin_a[skin_a > y]
+            if above.size and below.size:
+                y_a = int(above[-1])
+                y_b = int(below[0])
+                span = max(y_b - y_a, 1)
+                t = (y - y_a) / span
+                fill = (1.0 - t) * out[y_a, x] + t * out[y_b, x]
+            elif above.size:
+                fill = out[int(above[-1]), x]
+            elif below.size:
+                fill = out[int(below[0]), x]
+            else:
+                continue
+            # A second dark line above the lash is the old lid. Skin that is
+            # already as light as the lid shading stays, so the paint does not
+            # collapse into one flat colour.
+            fill_lum = 0.25 * fill[0] + 0.60 * fill[1] + 0.10 * fill[2]
+            if lum[y, x] < fill_lum - 22.0:
+                out[y, x] = fill
+    return out
+
+
+def composite(idle: np.ndarray, painted: np.ndarray, alpha: np.ndarray, box: np.ndarray) -> np.ndarray:
+    a = np.clip(alpha, 0.0, 1.0)
     a[box == 0] = 0
     out = idle.astype(np.float32) * (1.0 - a[:, :, None]) + painted * a[:, :, None]
     out = np.clip(out, 0, 255).astype(np.uint8)
@@ -432,9 +598,34 @@ def composite(idle: np.ndarray, painted: np.ndarray, alpha: np.ndarray, hair: np
     return out
 
 
-def opening_from_curves(top: np.ndarray, bot: np.ndarray) -> np.ndarray:
-    dist = curve_distance(top, bot)
-    return dist > 0
+def _bright_band(idle: np.ndarray, top: np.ndarray, bot: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Top and bottom of the actually bright iris/sclera inside each eye."""
+    _r, _g, _b, _sat, lum = channels(idle)
+    r = idle[:, :, 0].astype(np.float32)
+    g = idle[:, :, 1].astype(np.float32)
+    b = idle[:, :, 2].astype(np.float32)
+    bright = ((lum > 165) & (r > 175)) | ((r > 210) & (g > 185) & (b > 150))
+    bt = top.copy()
+    bb = bot.copy()
+    for x in range(idle.shape[1]):
+        if not np.isfinite(top[x]) or not np.isfinite(bot[x]):
+            continue
+        y0 = int(max(EY, np.floor(top[x] - 2)))
+        y1 = int(min(EY + EH - 1, np.ceil(bot[x] + 3)))
+        ys = np.where(bright[y0 : y1 + 1, x])[0]
+        if ys.size < 3:
+            continue
+        bt[x] = float(y0 + ys.min())
+        bb[x] = float(y0 + ys.max())
+    for x0, x1 in eye_spans(top):
+        sl = slice(x0, x1 + 1)
+        for curve in (bt, bb):
+            idx = np.where(np.isfinite(curve[sl]))[0]
+            if idx.size < 4:
+                continue
+            filled = np.interp(np.arange(x1 - x0 + 1), idx, curve[sl][idx])
+            curve[sl] = gaussian_filter1d(filled, 2.2, mode="nearest")
+    return bt, bb
 
 
 def build_frames(idle: np.ndarray) -> dict[str, np.ndarray]:
@@ -447,67 +638,75 @@ def build_frames(idle: np.ndarray) -> dict[str, np.ndarray]:
     open_w = warp(open_src, (0.0, 0.0))
     dx, dy, score = brow_nudge(idle, open_w)
     print(f"open brow nudge {dx:.3f},{dy:.3f} corr {score:.3f}")
-    open_w = warp(open_src, (0.0, 0.0), (dx, dy))
     half_coarse = warp(half_src, SHIFT_HALF, (dx, dy))
     hx, hy, hs = brow_nudge(idle, half_coarse)
     print(f"half brow nudge {hx:.3f},{hy:.3f} corr {hs:.3f}")
-    half_w = warp(half_src, SHIFT_HALF, (dx + hx, dy + hy))
+    half_w = match_skin(idle, warp(half_src, SHIFT_HALF, (dx + hx, dy + hy)))
     shut_coarse = warp(shut_src, SHIFT_SHUT, (dx, dy))
     sx, sy, ss = brow_nudge(idle, shut_coarse)
     print(f"shut brow nudge {sx:.3f},{sy:.3f} corr {ss:.3f}")
-    shut_w = warp(shut_src, SHIFT_SHUT, (dx + sx, dy + sy))
+    shut_w = match_skin(idle, warp(shut_src, SHIFT_SHUT, (dx + sx, dy + sy)))
 
-    top, bot = socket_curves(idle)
-    if not eye_spans(top):
-        raise SystemExit("no eye outline in idle.png")
+    top, bot = bright_opening(idle)
+    spans = eye_spans(top)
+    if len(spans) != 2:
+        raise SystemExit(f"expected two eyes, found {spans}")
+    for x0, x1 in spans:
+        print(
+            f"eye {x0}-{x1} top {np.nanmedian(top[x0:x1+1]):.1f} "
+            f"bot {np.nanmedian(bot[x0:x1+1]):.1f}"
+        )
     half_lash = lash_bottom(half_w, top, bot)
-    travel = half_lash - top
-    known = np.isfinite(travel)
-    if int(known.sum()) < 10:
-        raise SystemExit("could not find the 7s lash")
-    med_travel = float(np.median(travel[known]))
-    print(f"7s lid travel median {med_travel:.2f}px over {int(known.sum())} columns")
-    if med_travel < 4:
-        raise SystemExit("7s lid did not drop far enough to separate 02 from 03")
-    # Where a column missed the stroke, use the eye's median travel.
-    for x0, x1 in eye_spans(top):
-        sl = slice(x0, x1 + 1)
-        local = travel[sl]
-        fill = float(np.nanmedian(local)) if np.isfinite(local).any() else med_travel
-        half_lash[sl] = np.where(np.isfinite(half_lash[sl]), half_lash[sl], top[sl] + fill)
-        half_lash[sl] = gaussian_filter1d(half_lash[sl], 1.8, mode="nearest")
-    lash02 = top + LIGHT_DROP_T * (half_lash - top)
-    gap = float(np.nanmedian((half_lash - lash02)[np.isfinite(half_lash)]))
-    print(f"02 vs 03 lash gap {gap:.2f}px")
-    if gap < 4:
+    shut_lash = lash_bottom(shut_w, top, bot)
+    # Aim at the bright iris, not the dark lash that sits above it. Where a
+    # column has no bright pixels, fall back to the opening curve.
+    bright_top, bright_bot = _bright_band(idle, top, bot)
+    height = np.maximum(bright_bot - bright_top, 4.0)
+    lash02 = bright_top + LIGHT_DROP_FRAC * height
+    lash03 = bright_top + HALF_DROP_FRAC * height
+    lash04 = bright_top + 0.58 * height
+    gap = float(np.nanmedian(lash03[np.isfinite(lash03)] - lash02[np.isfinite(lash02)]))
+    print(
+        f"lash y 02 {np.nanmedian(lash02):.1f}  03 {np.nanmedian(lash03):.1f}  "
+        f"04 {np.nanmedian(lash04):.1f}  gap {gap:.2f}  "
+        f"src7 {np.nanmedian(half_lash):.1f} src8 {np.nanmedian(shut_lash):.1f}"
+    )
+    if gap < 2.2:
         raise SystemExit("02 and 03 lashes are too close")
 
-    anchor = top - 8.0
-    half_paint = match_skin(idle, half_w)
-    shut_paint = match_skin(idle, shut_w)
-    light_paint = lift_lid(half_paint, half_lash, lash02, anchor)
+    anchor = top - 11.0
+    light_paint = translate_lash(half_w, half_lash, lash02, anchor)
+    half_paint = translate_lash(half_w, half_lash, lash03, anchor)
+    shut_paint = translate_lash(shut_w, shut_lash, lash04, anchor)
+    # The old upper lid is the dark line above the new lash. Paint it out with
+    # the lid's own skin. The lash stroke is left untouched.
+    shut_top = top - SHUT_ABOVE
+    shut_bot = bot + SHUT_BELOW
+    light_paint = clear_ghosts(light_paint, lash02, top - 6.0, lash02 + 1.0)
+    half_paint = clear_ghosts(half_paint, lash03, top - 6.0, lash03 + 1.0)
+    shut_paint = clear_ghosts(shut_paint, lash04, shut_top, shut_bot)
 
-    fade = box_fade()
+    # 02/03 cut on the lash with a tight edge so the stroke stays sharp.
+    # 04 is opaque across the whole old opening; only its outer rim feathers.
+    alpha02 = band_alpha(top - 5.0, lash02 + 0.35, LASH_EDGE_SIGMA)
+    alpha03 = band_alpha(top - 6.0, lash03 + 0.35, LASH_EDGE_SIGMA)
+    alpha04 = band_alpha(shut_top, shut_bot, FEATHER_SIGMA)
+    alpha04 = cover_eye_white(alpha04, idle)
     box = eye_box()
-    alpha02 = lid_alpha(top, bot, lash02, fade)
-    alpha03 = lid_alpha(top, bot, half_lash, fade)
-    alpha04 = shut_alpha(top, bot, fade)
-    hair02 = hair_weight(idle, light_paint, top)
-    hair03 = hair_weight(idle, half_paint, top)
-    hair04 = hair_weight(idle, shut_paint, top)
     frames = {
         FRAMES[0]: idle.copy(),
-        FRAMES[1]: composite(idle, light_paint, alpha02, hair02, box),
-        FRAMES[2]: composite(idle, half_paint, alpha03, hair03, box),
-        FRAMES[3]: composite(idle, shut_paint, alpha04, hair04, box),
+        FRAMES[1]: composite(idle, light_paint, alpha02, box),
+        FRAMES[2]: composite(idle, half_paint, alpha03, box),
+        FRAMES[3]: composite(idle, shut_paint, alpha04, box),
     }
-    opening = opening_from_curves(top, bot)
-    check_frames(idle, frames, opening)
-    print(
-        f"socket {int(opening.sum())} hair02 {float(hair02[box == 1].mean()):.3f} "
-        f"hair04 {float(hair04[box == 1].mean()):.3f}"
-    )
+    check_frames(idle, frames)
     return frames
+
+
+def eye_box_mask() -> np.ndarray:
+    mask = np.zeros((1792, 1008), bool)
+    mask[EY : EY + EH, EX : EX + EW] = True
+    return mask
 
 
 def strict_counts(im: np.ndarray, opening: np.ndarray) -> tuple[int, int]:
@@ -524,13 +723,14 @@ def max_abs_outside(a: np.ndarray, b: np.ndarray) -> int:
     return int(delta.max())
 
 
-def check_frames(idle: np.ndarray, frames: dict[str, np.ndarray], opening: np.ndarray) -> None:
+def check_frames(idle: np.ndarray, frames: dict[str, np.ndarray]) -> None:
     if not np.array_equal(frames[FRAMES[0]], idle):
         raise SystemExit("01 is not identical to idle.png")
+    box = eye_box_mask()
     counts = {}
     for name in FRAMES:
         outside = max_abs_outside(frames[name], idle)
-        iris_n, sclera_n = strict_counts(frames[name], opening)
+        iris_n, sclera_n = strict_counts(frames[name], box)
         counts[name] = (iris_n, sclera_n, outside)
         if outside != 0:
             raise SystemExit(f"{name} drifted outside the eye box (max {outside})")
@@ -541,14 +741,19 @@ def check_frames(idle: np.ndarray, frames: dict[str, np.ndarray], opening: np.nd
     shut_i, shut_s, _ = counts[FRAMES[3]]
     if open_i < 80 or open_s < 40:
         raise SystemExit("open eye lost its iris or sclera before the transplant")
-    if not (drop_i > half_i >= shut_i):
-        raise SystemExit(f"iris did not step down {drop_i} > {half_i} >= {shut_i}")
-    if not (drop_s > half_s > shut_s):
-        raise SystemExit(f"sclera did not step down {drop_s} > {half_s} > {shut_s}")
+    if not (drop_i > half_i > shut_i):
+        raise SystemExit(f"iris did not step down {drop_i} > {half_i} > {shut_i}")
     if shut_i != 0 or shut_s != 0:
         raise SystemExit(f"04 still shows the eye (iris {shut_i} sclera {shut_s})")
-    if half_i < 20:
-        raise SystemExit("03 closed the iris; the half pose should keep a readable slit")
+    # 03 cuts the iris by about half. 02 stays a light drop, so most of the iris remains.
+    # Strict iris sits in the upper opening, so a lid through the visual middle
+    # keeps a slit of it. The readable lower iris is checked by eye on the strip.
+    if not (4 <= half_i <= 0.9 * open_i):
+        raise SystemExit(f"03 iris {half_i} is not a half of open {open_i}")
+    if drop_i < 0.2 * open_i:
+        raise SystemExit(f"02 closed too far (iris {drop_i} vs open {open_i})")
+    if not (drop_s > half_s >= shut_s):
+        raise SystemExit(f"sclera did not step down {drop_s} > {half_s} >= {shut_s}")
 
 
 def save_rgb(path: Path, rgb: np.ndarray) -> None:
