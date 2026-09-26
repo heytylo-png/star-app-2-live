@@ -28,11 +28,13 @@ LID_PATH = Path(
 
 CANVAS = (1008, 1792)
 
-# Same x,y,w,h on glare and on the registered closed-lid sheet.
-# Tight on the lids: bangs above y=208, mouth, and collar stay outside.
+# Same x,y,w,h as IDLE_BLINK_EYE_HOLES. Both 80×40 — the old right rect
+# was wider and ate the ear. Bangs above y=202, mouth, and collar stay outside.
+# Shipped files are the v4 RGBA soft ellipses. Re-running this bake overwrites
+# them with an opaque mix; do not run it over those crops.
 EYE_HOLES = (
-    (434, 208, 80, 28),  # left
-    (514, 208, 98, 30),  # right
+    (432, 202, 80, 40),  # left
+    (508, 202, 80, 40),  # right
 )
 
 # Partial closes are mixes of glare and official closed lids — not drawn lids.
