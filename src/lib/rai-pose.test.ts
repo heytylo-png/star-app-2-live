@@ -6,12 +6,14 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
   CHART_BEAT_TINT_POSES,
-  IDLE_BLINK_CANVAS,
-  IDLE_BLINK_DEST_RECT,
+  IDLE_FRAME_SIZE,
+  IDLE_REST_LAYER_ID,
   allSpriteUrls,
   canIdleBlink,
-  idleBlinkPatchSrc,
-  isFullBlinkPlate,
+  idleBlinkFrameSrc,
+  idleBlinkFrameUrls,
+  idleRestSrc,
+  isRetiredBlinkSrc,
   DEFAULT_EMOTION,
   EMOTION_HOLD_MS,
   EMOTION_TO_POSE,
@@ -38,7 +40,7 @@ import {
   USE_EXPO_TALK_BUST,
 } from "./rai.ts";
 import { actToJson, composeAct } from "./brain.ts";
-import { copyEyeRect } from "./idle-blink-paint.ts";
+import { punchStudioWhite } from "./punch-white.ts";
 import { POSE_TINT_SOURCE } from "./generated/star-rai-artifacts.ts";
 import { parseTrackTitle, resolveLifeTurn } from "./life.ts";
 import { applySlotPatch, extractSlotsFromUserText } from "./memory-slots.ts";
@@ -121,25 +123,29 @@ function decodePng(buf: Buffer): {
   return { width, height, colorType, rgba };
 }
 
-function destMask(width: number, height: number): Uint8Array {
-  const mask = new Uint8Array(width * height);
-  const hole = IDLE_BLINK_DEST_RECT;
-  for (let y = hole.y; y < hole.y + hole.h; y++) {
-    for (let x = hole.x; x < hole.x + hole.w; x++) {
-      mask[y * width + x] = 1;
+/** Pixels whose punched alpha disagrees, ignoring the lid band. */
+function punchedSilhouetteMismatch(
+  a: Uint8Array,
+  b: Uint8Array,
+  width: number,
+  height: number,
+): number {
+  const left = new Uint8ClampedArray(a);
+  const right = new Uint8ClampedArray(b);
+  punchStudioWhite(left, width, height);
+  punchStudioWhite(right, width, height);
+  let mismatch = 0;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      // Lid band. Open-eye pixels are not a body punch.
+      if (x >= 380 && x < 680 && y >= 150 && y < 320) continue;
+      const i = (y * width + x) * 4 + 3;
+      const aOn = left[i]! > 16;
+      const bOn = right[i]! > 16;
+      if (aOn !== bOn) mismatch++;
     }
   }
-  return mask;
-}
-
-function sliceDest(rgba: Uint8Array, width: number): Uint8ClampedArray {
-  const hole = IDLE_BLINK_DEST_RECT;
-  const out = new Uint8ClampedArray(hole.w * hole.h * 4);
-  for (let y = 0; y < hole.h; y++) {
-    const src = ((hole.y + y) * width + hole.x) * 4;
-    out.set(rgba.subarray(src, src + hole.w * 4), y * hole.w * 4);
-  }
-  return out;
+  return mismatch;
 }
 
 describe("poseResetDelayMs", () => {
@@ -417,51 +423,63 @@ describe("layersFor talking vs pose hold", () => {
     assert.doesNotMatch(blob, /star-rai\/idle-talk/);
   });
 
-  it("resolves idle to official idle.png", () => {
+  it("rests idle on the baked 01 open frame", () => {
     const layers = layersFor({ ...base, pose: "idle", emotion: "bratty", talking: false });
-    assert.match(layers[0]!.src, /rai\/idle\.png/);
-    assert.doesNotMatch(layers[0]!.src, /idle_blink/);
+    assert.equal(layers.length, 1);
+    assert.equal(layers[0]!.id, IDLE_REST_LAYER_ID);
+    assert.equal(layers[0]!.src, idleRestSrc());
+    assert.match(layers[0]!.src, /idle_blink_01_open\.png$/);
+    assert.doesNotMatch(layers[0]!.src, /\/idle\.png$/);
   });
 
-  it("keeps one idle body while blink pastes the TyLo dest rect onto that bitmap", () => {
+  it("swaps one full baked frame through the blink and does not paste a hole", () => {
     const rest = {
       ...base,
       pose: "idle" as const,
       emotion: "bratty" as const,
       talking: false,
-      blink: 3 as const,
+      blink: 4 as const,
     };
-    const blink = layersFor(rest);
-    assert.equal(blink.length, 1);
-    assert.equal(blink[0]!.role, "body");
-    assert.match(blink[0]!.src, /rai\/idle\.png$/);
-    assert.doesNotMatch(blink.map((l) => l.src).join(" "), /idle_blink|face_eyes|mouth_speak|mouth_oh/);
-    assert.equal(idleBlinkPatchSrc(4), SPRITES.idleBlinkOpenBrow);
-    assert.equal(idleBlinkPatchSrc(1), SPRITES.idleBlinkOpen);
-    assert.equal(idleBlinkPatchSrc(2), SPRITES.idleBlinkHalf);
-    assert.equal(idleBlinkPatchSrc(3), SPRITES.idleBlinkClosed);
-    assert.equal(idleBlinkPatchSrc(0), null);
-    assert.equal(isFullBlinkPlate("/rai/idle_blink.png"), true);
-    assert.equal(isFullBlinkPlate("/rai/idle_blink_01.png"), true);
-    assert.equal(isFullBlinkPlate("/rai/idle_blink_02.png"), true);
-    assert.equal(isFullBlinkPlate("/rai/idle_blink_l.png"), true);
-    assert.equal(isFullBlinkPlate("/rai/idle_blink_01_l.png"), true);
-    assert.equal(isFullBlinkPlate("artifacts/star-rai-blink-frames/eyes/01-open_L.png"), true);
-    assert.equal(isFullBlinkPlate("scrap/01-open-brow.png"), true);
-    assert.equal(isFullBlinkPlate(SPRITES.idleBlinkOpenBrow), false);
-    assert.equal(isFullBlinkPlate(SPRITES.idleBlinkOpen), false);
-    assert.equal(isFullBlinkPlate(SPRITES.idleBlinkHalf), false);
-    assert.equal(isFullBlinkPlate(SPRITES.idleBlinkClosed), false);
+    const closed = layersFor(rest);
+    assert.equal(closed.length, 1);
+    assert.equal(closed[0]!.role, "body");
+    assert.equal(closed[0]!.id, IDLE_REST_LAYER_ID);
+    assert.equal(closed[0]!.src, idleBlinkFrameSrc(4));
+    assert.match(closed[0]!.src, /idle_blink_04_closed\.png$/);
+    assert.doesNotMatch(closed.map((l) => l.src).join(" "), /face_eyes|mouth_speak|mouth_oh/);
+    assert.equal(idleBlinkFrameSrc(0), SPRITES.idleBlinkOpen);
+    assert.equal(idleBlinkFrameSrc(1), SPRITES.idleBlinkOpen);
+    assert.equal(idleBlinkFrameSrc(2), SPRITES.idleBlinkClosing);
+    assert.equal(idleBlinkFrameSrc(3), SPRITES.idleBlinkHalf);
+    assert.equal(idleBlinkFrameSrc(4), SPRITES.idleBlinkClosed);
+    assert.equal(isRetiredBlinkSrc("/rai/idle_blink.png"), true);
+    assert.equal(isRetiredBlinkSrc("/rai/idle_blink_01.png"), true);
+    assert.equal(isRetiredBlinkSrc("/rai/idle_blink_02.png"), true);
+    assert.equal(isRetiredBlinkSrc("/rai/idle_blink_l.png"), true);
+    assert.equal(isRetiredBlinkSrc("/rai/idle_blink_01_l.png"), true);
+    assert.equal(isRetiredBlinkSrc("/rai/idle_blink_open_brow.png"), true);
+    assert.equal(isRetiredBlinkSrc("/rai/idle_blink_02_open.png"), true);
+    assert.equal(isRetiredBlinkSrc("artifacts/star-rai-blink-frames/eyes/01-open_L.png"), true);
+    assert.equal(isRetiredBlinkSrc("artifacts/star-rai-blink-frames/tylo-holes/02-open.png"), true);
+    assert.equal(isRetiredBlinkSrc("scrap/01-open-brow.png"), true);
+    assert.equal(isRetiredBlinkSrc(SPRITES.idleBlinkOpen), false);
+    assert.equal(isRetiredBlinkSrc(SPRITES.idleBlinkClosing), false);
+    assert.equal(isRetiredBlinkSrc(SPRITES.idleBlinkHalf), false);
+    assert.equal(isRetiredBlinkSrc(SPRITES.idleBlinkClosed), false);
 
-    const early = layersFor({ ...rest, blink: 1 });
-    assert.equal(early.length, 1);
-    assert.match(early[0]!.src, /rai\/idle\.png$/);
-    const mid = layersFor({ ...rest, blink: 2 });
-    assert.equal(mid.length, 1);
-    assert.equal(mid[0]!.src, early[0]!.src);
+    const frames = [0, 1, 2, 3, 4].map((blink) => layersFor({ ...rest, blink: blink as 0 | 1 | 2 | 3 | 4 }));
+    for (const layer of frames) {
+      assert.equal(layer.length, 1);
+      assert.equal(layer[0]!.id, IDLE_REST_LAYER_ID);
+      assert.equal(layer[0]!.role, "body");
+    }
+    assert.equal(frames[0]![0]!.src, frames[1]![0]!.src);
+    assert.match(frames[1]![0]!.src, /idle_blink_01_open\.png$/);
+    assert.match(frames[2]![0]!.src, /idle_blink_02_closing\.png$/);
+    assert.match(frames[3]![0]!.src, /idle_blink_03_half\.png$/);
+    assert.match(frames[4]![0]!.src, /idle_blink_04_closed\.png$/);
+    assert.equal(new Set(frames.map((layer) => layer[0]!.src)).size, 4);
 
-    assert.equal(layersFor({ ...rest, blink: 0 }).length, 1);
-    assert.match(layersFor({ ...rest, blink: 0 })[0]!.src, /rai\/idle\.png$/);
     assert.equal(layersFor({ ...rest, talking: true }).length, 1);
     assert.match(layersFor({ ...rest, talking: true })[0]!.src, /talk_official/);
     assert.match(layersFor({ ...rest, pose: "wave" })[0]!.src, /wave_official/);
@@ -471,93 +489,77 @@ describe("layersFor talking vs pose hold", () => {
     assert.match(layersFor({ ...rest, emotion: "smug" })[0]!.src, /smug_official/);
     assert.match(layersFor({ ...rest, emotion: "shy" })[0]!.src, /shy_official/);
     assert.match(layersFor({ ...rest, emotion: "hype" })[0]!.src, /peace\.png/);
-    const reduced = layersFor({ ...rest, reducedMotion: true });
+    const reduced = layersFor({ ...rest, reducedMotion: true, blink: 0 });
     assert.equal(reduced.length, 1);
-    assert.match(reduced[0]!.src, /rai\/idle\.png$/);
-    assert.doesNotMatch(reduced[0]!.src, /idle_blink|face_eyes/);
-    const glance = layersFor({ ...rest, emotion: "glance" });
+    assert.equal(reduced[0]!.src, idleRestSrc());
+    assert.doesNotMatch(reduced[0]!.src, /face_eyes/);
+    const glance = layersFor({ ...rest, emotion: "glance", blink: 0 });
     assert.equal(glance.length, 1);
-    assert.match(glance[0]!.src, /rai\/idle\.png$/);
-    assert.ok(glance.every((layer) => !isFullBlinkPlate(layer.src)));
+    assert.equal(glance[0]!.src, idleRestSrc());
+    assert.equal(glance[0]!.id, IDLE_REST_LAYER_ID);
 
     assert.equal(canIdleBlink(rest), true);
     assert.equal(canIdleBlink({ ...rest, talking: true }), false);
     assert.equal(canIdleBlink({ ...rest, pose: "wave" }), false);
     assert.equal(canIdleBlink({ ...rest, reducedMotion: true }), false);
     assert.equal(USE_EXPO_TALK_BUST, false);
-    for (const src of [
-      SPRITES.idleBlinkOpenBrow,
+    const baked = idleBlinkFrameUrls();
+    assert.deepEqual(baked, [
       SPRITES.idleBlinkOpen,
+      SPRITES.idleBlinkClosing,
       SPRITES.idleBlinkHalf,
       SPRITES.idleBlinkClosed,
-    ]) {
+    ]);
+    for (const src of baked) {
       assert.ok(allSpriteUrls().includes(src));
-      assert.equal(isFullBlinkPlate(src), false);
-      assert.doesNotMatch(src, /_l\.png|_r\.png|blink-frames\/eyes|01-open-brow|tylo-holes\//);
+      assert.equal(isRetiredBlinkSrc(src), false);
+      assert.doesNotMatch(src, /_l\.png|_r\.png|open_brow|02_open|blink-frames\/eyes|tylo-holes\//);
     }
-    assert.ok(allSpriteUrls().every((src) => !isFullBlinkPlate(src)));
+    assert.ok(allSpriteUrls().every((src) => !isRetiredBlinkSrc(src)));
     assert.ok(
       allSpriteUrls().every(
-        (src) => !/_l\.png|_r\.png|blink-frames\/eyes|01-open-brow|tylo-holes\//.test(src),
+        (src) => !/_l\.png|_r\.png|open_brow|02_open|blink-frames\/eyes|tylo-holes\//.test(src),
       ),
     );
 
+    const srcRoot = join(publicRoot, "../src");
+    const puppetSrc = readFileSync(join(srcRoot, "components/puppet.tsx"), "utf8");
+    const motionSrc = readFileSync(join(srcRoot, "lib/rai-motion.ts"), "utf8");
+    const raiSrc = readFileSync(join(srcRoot, "lib/rai.ts"), "utf8");
+    for (const source of [puppetSrc, motionSrc, raiSrc]) {
+      assert.doesNotMatch(source, /IDLE_BLINK_DEST_RECT|idleBlinkPatchSrc|copyEyeRect|planIdleCanvasDraws|drawEyeRect/);
+      assert.doesNotMatch(source, /790-open-brow|788-open|791-half|789-closed/);
+    }
+    assert.doesNotMatch(puppetSrc, /<canvas|drawImage|getContext/);
+    assert.equal(existsSync(join(srcRoot, "lib/idle-blink-paint.ts")), false);
+    assert.equal(existsSync(join(publicRoot, "rai/idle_blink_open_brow.png")), false);
+    assert.equal(existsSync(join(publicRoot, "rai/idle_blink_02_open.png")), false);
+
     const idle = decodePng(readFileSync(join(publicRoot, "rai/idle.png")));
-    assert.equal(idle.width, IDLE_BLINK_CANVAS.width);
-    assert.equal(idle.height, IDLE_BLINK_CANVAS.height);
-    assert.equal(idle.colorType, 2);
-    const hole = IDLE_BLINK_DEST_RECT;
-    const holes = destMask(idle.width, idle.height);
-    const artifactRoot = join(publicRoot, "../artifacts/star-rai-blink-frames/tylo-holes-v2");
-    const retiredRoot = join(publicRoot, "../artifacts/star-rai-blink-frames/tylo-holes");
-    for (const proof of ["proof_strip.png", "proof_dest_band.png", "proof_blink.gif"]) {
-      assert.equal(existsSync(join(artifactRoot, proof)), true, proof);
-    }
-    const patches = [
-      ["rai/idle_blink_open_brow.png", "790-open-brow.png", null],
-      ["rai/idle_blink_02_open.png", "788-open.png", "02-open.png"],
-      ["rai/idle_blink_03_half.png", "791-half.png", "03-half.png"],
-      ["rai/idle_blink_04_closed.png", "789-closed.png", "04-closed.png"],
+    assert.equal(idle.width, IDLE_FRAME_SIZE.width);
+    assert.equal(idle.height, IDLE_FRAME_SIZE.height);
+    const bakedRoot = join(publicRoot, "../artifacts/star-rai-blink-frames/baked");
+    const runtimeFrames = [
+      ["rai/idle_blink_01_open.png", "idle_blink_01_open.png"],
+      ["rai/idle_blink_02_closing.png", "idle_blink_02_closing.png"],
+      ["rai/idle_blink_03_half.png", "idle_blink_03_half.png"],
+      ["rai/idle_blink_04_closed.png", "idle_blink_04_closed.png"],
     ] as const;
-    for (const [cropRel, artifactName, retiredName] of patches) {
-      const runtime = readFileSync(join(publicRoot, cropRel));
-      const artifact = readFileSync(join(artifactRoot, artifactName));
-      assert.deepEqual(runtime, artifact, `${cropRel} drifted from tylo-holes-v2/${artifactName}`);
-      if (retiredName) {
-        const retired = readFileSync(join(retiredRoot, retiredName));
-        assert.notDeepEqual(runtime, retired, `${cropRel} is still the old tylo-holes/${retiredName} pack`);
-      }
-      const crop = decodePng(runtime);
-      assert.equal(crop.width, hole.w, cropRel);
-      assert.equal(crop.height, hole.h, cropRel);
-      assert.equal(crop.colorType, 6, `${cropRel} is an RGBA patch`);
-      for (let i = 3; i < crop.rgba.length; i += 4) {
-        assert.equal(crop.rgba[i], 255, `${cropRel} stays opaque`);
-      }
-      const painted = new Uint8ClampedArray(idle.rgba);
-      copyEyeRect(painted, idle.width, crop.rgba, hole);
-      let outsideMax = 0;
-      let insideChanged = 0;
-      for (let i = 0; i < holes.length; i++) {
-        const delta = Math.max(
-          Math.abs(painted[i * 4]! - idle.rgba[i * 4]!),
-          Math.abs(painted[i * 4 + 1]! - idle.rgba[i * 4 + 1]!),
-          Math.abs(painted[i * 4 + 2]! - idle.rgba[i * 4 + 2]!),
-          Math.abs(painted[i * 4 + 3]! - idle.rgba[i * 4 + 3]!),
-        );
-        if (!holes[i]) {
-          if (delta > outsideMax) outsideMax = delta;
-        } else if (delta > 0) insideChanged++;
-      }
-      assert.equal(outsideMax, 0, `${cropRel} moved idle pixels outside DEST_RECT`);
-      assert.ok(insideChanged > 0, `${cropRel} did not change DEST_RECT`);
-      copyEyeRect(painted, idle.width, sliceDest(idle.rgba, idle.width), hole);
-      let restored = 0;
-      for (let i = 0; i < painted.length; i++) {
-        restored = Math.max(restored, Math.abs(painted[i]! - idle.rgba[i]!));
-      }
-      assert.equal(restored, 0, `${cropRel} restore redrew more than the dest rect`);
+    let openRgba: Uint8Array | null = null;
+    for (const [runtimeRel, bakedName] of runtimeFrames) {
+      const runtime = readFileSync(join(publicRoot, runtimeRel));
+      const artifact = readFileSync(join(bakedRoot, bakedName));
+      assert.deepEqual(runtime, artifact, `${runtimeRel} drifted from baked/${bakedName}`);
+      const frame = decodePng(runtime);
+      assert.equal(frame.width, IDLE_FRAME_SIZE.width, runtimeRel);
+      assert.equal(frame.height, IDLE_FRAME_SIZE.height, runtimeRel);
+      assert.equal(frame.colorType, 2, runtimeRel);
+      if (bakedName.endsWith("01_open.png")) openRgba = frame.rgba;
     }
+    assert.ok(openRgba);
+    const punch = punchedSilhouetteMismatch(idle.rgba, openRgba!, idle.width, idle.height);
+    assert.ok(punch > 400, `idle.png vs 01 open silhouette mismatch ${punch} — rest must stay on 01`);
+    assert.equal(idleRestSrc(), SPRITES.idleBlinkOpen);
   });
 
   it("pins soft/hype off frown idle even when pose is still idle", () => {
@@ -590,7 +592,7 @@ describe("layersFor talking vs pose hold", () => {
       idleBeat: "grin",
     });
     assert.equal(layers.length, 1);
-    assert.match(layers[0]!.src, /rai\/idle\.png/);
+    assert.equal(layers[0]!.src, idleRestSrc());
     assert.doesNotMatch(layers[0]!.src, /_alt_/);
   });
 
@@ -839,7 +841,7 @@ describe("pose tint", () => {
     assert.notEqual(pose, "idle");
   });
 
-  it("holds talk on a playful line, then idle.png a few seconds after the line ends", () => {
+  it("holds talk on a playful line, then the rest sheet a few seconds after the line ends", () => {
     const pose = resolveSpokenPose({
       namedPose: null,
       modelPose: null,
@@ -889,7 +891,8 @@ describe("pose tint", () => {
       amplitude: 0,
       angle: 0,
     })[0]!.src;
-    assert.match(restSrc, /\/idle\.png$/);
+    assert.equal(restSrc, idleRestSrc());
+    assert.match(restSrc, /idle_blink_01_open\.png$/);
     assert.equal(
       canIdleBlink({ pose: "idle", emotion: DEFAULT_EMOTION, talking: false }),
       true,

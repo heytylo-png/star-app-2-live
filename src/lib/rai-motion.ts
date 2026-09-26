@@ -11,20 +11,22 @@ export const POSE_CROSSFADE_MS = 380;
 export const IDLE_BEAT_FADE_MS = 400;
 
 /**
- * Rest-idle blink timing. Not an opacity crossfade of two full sheets.
+ * Rest-idle blink timing. One full frame replaces the last. Not an opacity
+ * crossfade of two sheets, and not a second image over the body.
  *
  * The long shot shows the eye band at about 80×23 CSS pixels. A 50ms half
  * and a 100ms closed dwell are over before a glance can register the step.
- * Twos at 24fps are ~83ms; every lid step holds at least that. 790 open-brow
- * and 788 open are the short lead-in. 791 half and 789 closed stay up long
+ * Twos at 24fps are ~83ms; every lid step holds at least that. 01 open and
+ * 02 closing are the short lead-in. 03 half and 04 closed stay up long
  * enough to read. The first blink starts soon after rest idle; later gaps
  * still land another cycle inside a 10–20s watch.
  */
 /** Two frames at 24fps. Shorter than this (the old 50ms half) does not read. */
 export const IDLE_BLINK_MIN_STEP_MS = Math.round(2000 / 24);
-/** 790 open-brow. Softest lid; still a visible step, not a one-frame flash. */
-export const IDLE_BLINK_BROW_MS = 160;
+/** 01 open. Visible step, not a one-frame smear. */
 export const IDLE_BLINK_OPEN_MS = 160;
+/** 02 closing. Same open-ish hold so the step reads on the long shot. */
+export const IDLE_BLINK_CLOSING_MS = 160;
 export const IDLE_BLINK_HALF_MS = 640;
 export const IDLE_BLINK_HOLD_MS = 1000;
 /** Delay before the first blink once rest idle is allowed. */
@@ -33,42 +35,34 @@ export const IDLE_BLINK_FIRST_MS = 900;
 export const IDLE_BLINK_GAP_MIN_MS = 4500;
 export const IDLE_BLINK_GAP_MAX_MS = 7000;
 
-/** 0 restores idle. 4 = 790, 1 = 788, 2 = 791, 3 = 789. */
+/** 0 rests on 01 open. 1 = 01 open, 2 = 02 closing, 3 = 03 half, 4 = 04 closed. */
 export type IdleBlinkFrame = 0 | 1 | 2 | 3 | 4;
 
 export type IdleBlinkStep = { blink: IdleBlinkFrame; at: number };
 
-/**
- * Maker frames, forward order.
- * 4 = 790 open-brow, 1 = 788 open, 2 = 791 half, 3 = 789 closed.
- */
-const IDLE_BLINK_FORWARD = [4, 1, 2, 3] as const;
+/** Baked full frames, forward order. 1 open → 2 closing → 3 half → 4 closed. */
+const IDLE_BLINK_FORWARD = [1, 2, 3, 4] as const;
 
-/**
- * Patch name for a schedule step. `idle` is the dest rect copied back from
- * idle.png. Not a full-plate 01-open-brow, and not the old three-frame pack.
- */
+/** Step name for a schedule frame. `rest` is the same sheet as 01 open. */
 export function idleBlinkStepName(
   blink: number,
-): "790-open-brow" | "788-open" | "791-half" | "789-closed" | "idle" {
-  if (blink === 4) return "790-open-brow";
-  if (blink === 1) return "788-open";
-  if (blink === 2) return "791-half";
-  if (blink === 3) return "789-closed";
-  return "idle";
+): "01-open" | "02-closing" | "03-half" | "04-closed" | "rest" {
+  if (blink === 1) return "01-open";
+  if (blink === 2) return "02-closing";
+  if (blink === 3) return "03-half";
+  if (blink === 4) return "04-closed";
+  return "rest";
 }
 
 /**
- * One rest blink on the single dest rect.
- * 790 open-brow → 788 open → 791 half → 789 closed → reverse
- * (791 half → 788 open → 790 open-brow) → idle dest.
- * `at` is ms from the start of the blink. The last step restores idle.png
- * inside the dest rect. The body sheet is not swapped.
+ * One rest blink: 01 → 02 → 03 → 04 → 03 → 02 → 01, then rest.
+ * `at` is ms from the start of the blink. The last step is rest, which is
+ * the 01 open sheet again. Each step is one full frame, not a lid overlay.
  */
 function idleBlinkDwellMs(blink: IdleBlinkFrame): number {
-  if (blink === 3) return IDLE_BLINK_HOLD_MS;
-  if (blink === 2) return IDLE_BLINK_HALF_MS;
-  if (blink === 4) return IDLE_BLINK_BROW_MS;
+  if (blink === 4) return IDLE_BLINK_HOLD_MS;
+  if (blink === 3) return IDLE_BLINK_HALF_MS;
+  if (blink === 2) return IDLE_BLINK_CLOSING_MS;
   return IDLE_BLINK_OPEN_MS;
 }
 
