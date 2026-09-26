@@ -4,7 +4,7 @@ Eyes-only rebake on the live `public/rai/idle.png` canvas (1008×1792).
 
 Body pixels are locked. Hair, skirt, shoes, torso, bow, and hands match `idle.png`. Only the eyes change across the cycle. These are full baked sheets — no hole overlay, no DEST_RECT stamp, no tylo-holes paste, and no L/R oval composite at runtime.
 
-`IDLE_BLINK_ENABLED` stays false. Starai holds the re-enable wire until CoS PASS on the standing clip.
+`IDLE_BLINK_ENABLED` is true. CoS PASS on the standing clip; rest plays these eyes-only same-body sheets.
 
 ## Files
 - `idle_blink_01_open.png` — byte copy of `public/rai/idle.png` (open glare)
@@ -24,7 +24,7 @@ Lid paint is taken from the TyLo v2 eye-band art and composited only inside the 
 ## Cycle
 `01 → 02 → 03 → 04 → 03 → 02 → 01`
 
-Re-enable is held. Do not flip `IDLE_BLINK_ENABLED` in this pack.
+The app swaps these full frames with a hard cut. Do not add a hole overlay or DEST_RECT.
 
 ## Proof
 - `proof_strip.png` — idle | 01 | 02 | 03 | 04 face crops
