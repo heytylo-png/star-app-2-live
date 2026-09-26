@@ -4,7 +4,7 @@ Eyes-only rebake on the live `public/rai/idle.png` canvas (1008×1792).
 
 Body pixels are locked. Hair, skirt, shoes, torso, bow, and hands match `idle.png`. Only the eyes change across the cycle. These are full baked sheets — no hole overlay, no DEST_RECT stamp, no tylo-holes paste, and no L/R oval composite.
 
-`IDLE_BLINK_ENABLED` is false. Rest paints `public/rai/idle.png` only. Do not turn the flag on in this pack. TyLo FAIL: two PNGs up at once (a ghost body). The standing clip below is the art gate: one body, lids only, no ghost. Re-enable only when TyLo says pass. CoS alone is not enough.
+`IDLE_BLINK_ENABLED` is true. Blink is on, approved by TyLo on 2026-09-26 (807-referenced painted lids, pass 4b). Rest hard-swaps one `<img>` through the lid pass, then holds 01 (a byte copy of `public/rai/idle.png`). One body, lids only, no ghost, no stack, no dual PNG.
 
 **Pass 4 (current): the lids are painted directly on `idle.png`.** No pixels from the 807 reference video are copied, warped, resampled, or composited — that method is banned. 807 was only looked at to judge lid position (7s = half, 8s = shut) and lash curve/tilt. Each eye's old opening is traced as a smooth spline and rasterised at 16× supersampling, then box-filtered down, so every edge is antialiased (no column/row mask edges). Skin under the new lid is a screened-Poisson fill that is continuous with idle's own surrounding skin and relaxes to idle's local skin tone, with a light grain matched to idle's cheek. 02 and 03 paint skin above a smooth new lid-edge curve and paint idle's dark upper lash as one tapered stroke on that curve; the iris and sclera below the curve are idle's own pixels. 04 turns the whole opening into skin (no sclera, no iris, no old lid) and paints one tapered crescent lash per eye low in the opening. Hair strands that used to run into the old lash are tapered to a point over the new skin.
 
@@ -16,7 +16,7 @@ Pass 4 follow-up (TyLo review): the 04 lid tone is now taken per column from idl
 - `idle_blink_03_half.png` — half close (807 7s used as position reference only). Painted lid edge crosses the iris at about half its height; lower iris and sclera are idle's.
 - `idle_blink_04_closed.png` — shut (807 8s used as curve reference only). Whole opening painted as skin, one painted lash per eye. Sclera 0, iris 0.
 
-The same four files are byte-copied into `public/rai/`. They are not the rest body while blink is parked.
+The same four files are byte-copied into `public/rai/`. Rest paints 01 between blinks. Blink is on.
 
 The 807 stills in `artifacts/star-rai-blink-frames/source/` are reference only; the pass 4 painter does not read them.
 
@@ -44,6 +44,6 @@ Nothing outside the eye box is rewritten.
 
 ## Art gate
 
-Runtime must hard-swap a single `<img>` / texture (no stack, no dual PNG). This proof is the art gate before re-enable. Blink stays parked until TyLo says pass. CoS alone is not enough. Do not flip the flag on from this pack.
+Runtime hard-swaps a single `<img>` / texture (no stack, no dual PNG). Blink is on, approved by TyLo on 2026-09-26 (807-referenced painted lids, pass 4b).
 
 Rebuild sheets: `python3 scripts/paint-blink-lids.py` (pass 4 painter; needs numpy, pillow, scipy). `scripts/rebake-eyes-only-blink.py` is the retired 807-paste method — do not use it.

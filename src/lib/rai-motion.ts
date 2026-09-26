@@ -17,8 +17,9 @@ export const IDLE_BEAT_FADE_MS = 400;
  *
  * The lid pass is five hard cuts — 02 → 03 → 04 → 03 → 02 — in 300ms,
  * then hold 01. The first blink starts soon after rest idle; later gaps
- * still land another cycle inside a 10–20s watch. Not scheduled while
- * IDLE_BLINK_ENABLED is false.
+ * still land another cycle inside a 10–20s watch. Blink is on
+ * (IDLE_BLINK_ENABLED). Approved by TyLo on 2026-09-26
+ * (807-referenced painted lids, pass 4b).
  */
 /** One lid cut. Five of these are the whole close-and-open. */
 export const IDLE_BLINK_STEP_MS = 60;
@@ -53,8 +54,9 @@ export function idleBlinkStepName(
  * One rest blink: 02 → 03 → 04 → 03 → 02 in 300ms, then hold 01.
  * Do not skip 02. `at` is ms from the start of the blink. The last step
  * is 01 open and stays up until the next gap. Each step is a hard cut of
- * one full frame on one image. Never opacity-blend two sheets. Not
- * scheduled while IDLE_BLINK_ENABLED is false — rest stays on idle.png.
+ * one full frame on one image. Never opacity-blend two sheets. Blink is
+ * on (IDLE_BLINK_ENABLED). Approved by TyLo on 2026-09-26
+ * (807-referenced painted lids, pass 4b).
  */
 export function idleBlinkSchedule(): IdleBlinkStep[] {
   const frames: IdleBlinkFrame[] = [...IDLE_BLINK_LIDS, 1];

@@ -14,7 +14,8 @@ opening, including the old upper lid, with 8s skin and one crisp 8s lash.
 The lash pixels are a single Lanczos sample. Feathering is only on the mask
 edge. No Gaussian blur on the lash, no square morphology, no binary cutout.
 
-Runtime blink stays parked: IDLE_BLINK_ENABLED is false in src/lib/rai.ts.
+Runtime blink is on: IDLE_BLINK_ENABLED is true in src/lib/rai.ts.
+Approved by TyLo on 2026-09-26 (807-referenced painted lids, pass 4b).
 """
 
 from __future__ import annotations

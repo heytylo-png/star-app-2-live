@@ -44,6 +44,7 @@ import { actToJson, composeAct } from "./brain.ts";
 import { POSE_TINT_SOURCE } from "./generated/star-rai-artifacts.ts";
 import { parseTrackTitle, resolveLifeTurn } from "./life.ts";
 import { applySlotPatch, extractSlotsFromUserText } from "./memory-slots.ts";
+import { IDLE_BLINK_PASS_MS, IDLE_BLINK_STEP_MS, idleBlinkSchedule } from "./rai-motion.ts";
 
 const publicRoot = join(dirname(fileURLToPath(import.meta.url)), "../../public");
 
@@ -430,18 +431,17 @@ describe("layersFor talking vs pose hold", () => {
     assert.doesNotMatch(blob, /star-rai\/idle-talk/);
   });
 
-  it("rests idle on idle.png while blink is parked", () => {
+  it("rests idle on 01 open while blink is on", () => {
     const layers = layersFor({ ...base, pose: "idle", emotion: "bratty", talking: false });
-    assert.equal(IDLE_BLINK_ENABLED, false);
+    assert.equal(IDLE_BLINK_ENABLED, true);
     assert.equal(layers.length, 1);
     assert.equal(layers[0]!.id, IDLE_REST_LAYER_ID);
     assert.equal(layers[0]!.src, idleRestSrc());
-    assert.equal(layers[0]!.src, SPRITES.poses.idle);
-    assert.match(layers[0]!.src, /\/idle\.png$/);
-    assert.doesNotMatch(layers[0]!.src, /idle_blink/);
+    assert.equal(layers[0]!.src, SPRITES.idleBlinkOpen);
+    assert.match(layers[0]!.src, /idle_blink_01_open\.png$/);
   });
 
-  it("keeps blink parked and does not paint blink frames on idle.png", () => {
+  it("hard-cuts one blink image through 02-03-04-03-02 then holds 01", () => {
     const rest = {
       ...base,
       pose: "idle" as const,
@@ -450,13 +450,13 @@ describe("layersFor talking vs pose hold", () => {
       blink: 4 as const,
     };
     const closed = layersFor(rest);
-    assert.equal(IDLE_BLINK_ENABLED, false);
+    assert.equal(IDLE_BLINK_ENABLED, true);
     assert.equal(closed.length, 1);
     assert.equal(closed[0]!.role, "body");
     assert.equal(closed[0]!.id, IDLE_REST_LAYER_ID);
-    assert.equal(closed[0]!.src, idleRestSrc());
-    assert.match(closed[0]!.src, /\/idle\.png$/);
-    assert.doesNotMatch(closed[0]!.src, /idle_blink/);
+    assert.equal(closed[0]!.src, idleBlinkFrameSrc(4));
+    assert.equal(closed[0]!.src, SPRITES.idleBlinkClosed);
+    assert.match(closed[0]!.src, /idle_blink_04_closed\.png$/);
     assert.doesNotMatch(closed.map((l) => l.src).join(" "), /face_eyes|mouth_speak|mouth_oh/);
     assert.equal(idleBlinkFrameSrc(0), SPRITES.idleBlinkOpen);
     assert.equal(idleBlinkFrameSrc(1), SPRITES.idleBlinkOpen);
@@ -478,16 +478,27 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(isRetiredBlinkSrc(SPRITES.idleBlinkHalf), false);
     assert.equal(isRetiredBlinkSrc(SPRITES.idleBlinkClosed), false);
 
-    const frames = [0, 1, 2, 3, 4].map((blink) => layersFor({ ...rest, blink: blink as 0 | 1 | 2 | 3 | 4 }));
-    for (const layer of frames) {
+    const blinkSteps = [0, 1, 2, 3, 4] as const;
+    const frames = blinkSteps.map((blink) => layersFor({ ...rest, blink }));
+    for (const [i, layer] of frames.entries()) {
       assert.equal(layer.length, 1);
       assert.equal(layer[0]!.id, IDLE_REST_LAYER_ID);
       assert.equal(layer[0]!.role, "body");
-      assert.equal(layer[0]!.src, idleRestSrc());
-      assert.match(layer[0]!.src, /\/idle\.png$/);
-      assert.doesNotMatch(layer[0]!.src, /idle_blink/);
+      assert.equal(layer[0]!.src, idleBlinkFrameSrc(blinkSteps[i]!));
     }
-    assert.equal(new Set(frames.map((layer) => layer[0]!.src)).size, 1);
+    assert.equal(new Set(frames.map((layer) => layer[0]!.src)).size, 4);
+    assert.equal(frames[0]![0]!.src, frames[1]![0]!.src);
+    assert.equal(frames[0]![0]!.src, SPRITES.idleBlinkOpen);
+    const cycle = idleBlinkSchedule();
+    assert.deepEqual(
+      cycle.map((step) => step.blink),
+      [2, 3, 4, 3, 2, 1],
+    );
+    assert.equal(IDLE_BLINK_STEP_MS, 60);
+    assert.equal(IDLE_BLINK_PASS_MS, 300);
+    for (let i = 0; i < 5; i++) {
+      assert.equal(cycle[i + 1]!.at - cycle[i]!.at, IDLE_BLINK_STEP_MS);
+    }
 
     assert.equal(layersFor({ ...rest, talking: true }).length, 1);
     assert.match(layersFor({ ...rest, talking: true })[0]!.src, /talk_official/);
@@ -507,7 +518,7 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(glance[0]!.src, idleRestSrc());
     assert.equal(glance[0]!.id, IDLE_REST_LAYER_ID);
 
-    assert.equal(canIdleBlink(rest), false);
+    assert.equal(canIdleBlink(rest), true);
     assert.equal(canIdleBlink({ ...rest, talking: true }), false);
     assert.equal(canIdleBlink({ ...rest, pose: "wave" }), false);
     assert.equal(canIdleBlink({ ...rest, reducedMotion: true }), false);
@@ -620,10 +631,9 @@ describe("layersFor talking vs pose hold", () => {
       assert.equal(outside, 0, `${name} drifted outside the eye box`);
       assert.ok(inside > 0, `${name} did not change the eyes`);
     }
-    assert.equal(IDLE_BLINK_ENABLED, false);
-    assert.equal(idleRestSrc(), SPRITES.poses.idle);
-    assert.match(idleRestSrc(), /\/idle\.png$/);
-    assert.doesNotMatch(idleRestSrc(), /idle_blink/);
+    assert.equal(IDLE_BLINK_ENABLED, true);
+    assert.equal(idleRestSrc(), SPRITES.idleBlinkOpen);
+    assert.match(idleRestSrc(), /idle_blink_01_open\.png$/);
 
     const gif = readFileSync(join(bakedRoot, "proof_standing_full.gif"));
     assert.equal(gif.subarray(0, 6).toString(), "GIF89a");
@@ -637,9 +647,9 @@ describe("layersFor talking vs pose hold", () => {
     assert.match(note, /one `<img>`/);
     assert.match(note, /no stack/);
     assert.match(note, /no dual PNG/);
-    assert.match(note, /IDLE_BLINK_ENABLED` is false/);
-    assert.match(note, /TyLo says pass/);
-    assert.match(note, /CoS alone is not enough/);
+    assert.match(note, /IDLE_BLINK_ENABLED` is true/);
+    assert.match(note, /Blink is on, approved by TyLo on 2026-09-26/);
+    assert.match(note, /807-referenced painted lids, pass 4b/);
   });
 
   it("pins soft/hype off frown idle even when pose is still idle", () => {
@@ -972,11 +982,11 @@ describe("pose tint", () => {
       angle: 0,
     })[0]!.src;
     assert.equal(restSrc, idleRestSrc());
-    assert.match(restSrc, /\/idle\.png$/);
-    assert.doesNotMatch(restSrc, /idle_blink/);
+    assert.equal(restSrc, SPRITES.idleBlinkOpen);
+    assert.match(restSrc, /idle_blink_01_open\.png$/);
     assert.equal(
       canIdleBlink({ pose: "idle", emotion: DEFAULT_EMOTION, talking: false }),
-      false,
+      true,
     );
   });
 
@@ -1116,7 +1126,7 @@ describe("pose tint", () => {
     });
     assert.equal(held, null);
 
-    // Next rest (caption gone) still settles a playful line onto idle.png. Blink stays parked.
+    // Next rest (caption gone) still settles a playful line onto idle.png. Blink is on.
     const playful = spokenBubbleResetDelay({
       pose: "talk",
       emotion: "bratty",

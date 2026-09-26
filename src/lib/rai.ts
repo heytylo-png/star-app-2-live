@@ -87,23 +87,20 @@ export function isExpressiveEmotion(emotion: EmotionId): boolean {
 }
 
 /**
- * Rest blink is parked.
+ * Rest blink is on.
  *
- * TyLo FAIL: two PNGs up at once (ghost / second body during blink).
- * Rest paints public/rai/idle.png only. The four eyes-only sheets stay
- * on disk (01 is a byte copy of idle.png; 02–04 change lids only).
- * proof_standing_full.gif is the art gate: one 1008×1792 sheet at a time.
- * Lid pass is 02 → 03 → 04 → 03 → 02 in ~300ms (do not skip 02), then hold
- * 01. Hard cut on one image. Do not turn this back on here. Re-enable only
- * when TyLo says pass (CoS alone is not enough), and only by hard-swapping
- * a single <img> / texture — never a stack or a dual PNG.
+ * Approved by TyLo on 2026-09-26 (807-referenced painted lids, pass 4b).
+ * One <img> / texture, hard cuts only: 02 → 03 → 04 → 03 → 02 in ~300ms
+ * (do not skip 02), then hold 01. 01 is a byte copy of public/rai/idle.png.
+ * 02–04 change lids only. Never a stack, never two PNGs, never a blend.
  */
-export const IDLE_BLINK_ENABLED = false;
+export const IDLE_BLINK_ENABLED = true;
 
 /**
  * Official PNG blink window: rest idle on the frown sheet.
  * Named poses, talk flap, and emotion-named sheets do not blink.
- * The feature is parked — see IDLE_BLINK_ENABLED.
+ * Blink is on — see IDLE_BLINK_ENABLED. Approved by TyLo on 2026-09-26
+ * (807-referenced painted lids, pass 4b).
  */
 export function canIdleBlink(state: {
   pose: PoseId;
@@ -127,7 +124,8 @@ export function canIdleBlink(state: {
  * over, the next rest is a few seconds — not the life of the transcript
  * row. Dedicated poses hold at least POSE_HOLD_MIN_MS from landing, and
  * at least POSE_HOLD_AFTER_TALK_MS after speech ends, then idle.png.
- * Rest blink is parked (IDLE_BLINK_ENABLED).
+ * Rest blink is on (IDLE_BLINK_ENABLED). Approved by TyLo on 2026-09-26
+ * (807-referenced painted lids, pass 4b).
  */
 export function poseResetDelayMs(opts: {
   pose: PoseId;
@@ -161,7 +159,9 @@ export function poseResetDelayMs(opts: {
  * stays too, even if the caller forgets the caption flag.
  *
  * The next rest is when that caption is gone. Then a normal line may settle
- * a few seconds later onto idle.png. Blink stays parked.
+ * a few seconds later onto idle.png. Blink is on (01 open is a byte copy
+ * of idle.png). Approved by TyLo on 2026-09-26 (807-referenced painted
+ * lids, pass 4b).
  */
 export function spokenBubbleResetDelay(opts: {
   pose: PoseId;
@@ -270,9 +270,10 @@ export const SPRITES = {
    * Baked full-frame rest blink. Byte copies of
    * artifacts/star-rai-blink-frames/baked/. Each file is 1008×1792 on the
    * idle.png canvas (eyes only). 01 open is the idle.png file itself.
-   * Not mounted while IDLE_BLINK_ENABLED is false — rest paints idle.png.
-   * Future wire: one <img>, hard cuts 02 → 03 → 04 → 03 → 02 in ~300ms,
+   * Mounted while blink is on. Rest holds 01 between cycles.
+   * One <img>, hard cuts 02 → 03 → 04 → 03 → 02 in ~300ms,
    * then hold 01. Never a stack, never two PNGs, never a blend.
+   * Approved by TyLo on 2026-09-26 (807-referenced painted lids, pass 4b).
    */
   idleBlinkOpen: ASSET("rai/idle_blink_01_open.png"),
   idleBlinkClosing: ASSET("rai/idle_blink_02_closing.png"),
@@ -354,8 +355,9 @@ export function isRetiredBlinkSrc(src: string): boolean {
  * 0 rest and 1 are both 01 open (byte copy of idle.png).
  * 2 = 02 closing, 3 = 03 half, 4 = 04 closed.
  * The pass is 02 → 03 → 04 → 03 → 02, then hold 01. Do not skip 02.
- * Unused while IDLE_BLINK_ENABLED is false — rest is idle.png.
- * Hard cut only. Never an opacity blend of two of these sheets.
+ * Live while IDLE_BLINK_ENABLED is true. Hard cut only.
+ * Never an opacity blend of two of these sheets.
+ * Approved by TyLo on 2026-09-26 (807-referenced painted lids, pass 4b).
  */
 export function idleBlinkFrameSrc(blink: number): string {
   if (blink === 2) return SPRITES.idleBlinkClosing;
@@ -364,7 +366,7 @@ export function idleBlinkFrameSrc(blink: number): string {
   return SPRITES.idleBlinkOpen;
 }
 
-/** Rest body. idle.png while blink is parked. 01 open when the flag is on. */
+/** Rest body. 01 open (byte copy of idle.png) while blink is on. */
 export function idleRestSrc(): string {
   return IDLE_BLINK_ENABLED ? SPRITES.idleBlinkOpen : SPRITES.poses.idle;
 }
@@ -554,9 +556,10 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     return [body(SPRITES.poses.talk)];
   }
 
-  // One full frame. The layer id stays IDLE_REST_LAYER_ID so a blink, when
-  // enabled, hard-swaps a single image and never stacks a second figure.
-  // Parked: rest paints idle.png only. No blink cycle, no dual-layer opacity.
+  // One full frame. The layer id stays IDLE_REST_LAYER_ID so a blink
+  // hard-swaps a single image and never stacks a second figure.
+  // Blink is on: hard cuts through the lid pass, then hold 01. No dual-layer opacity.
+  // Approved by TyLo on 2026-09-26 (807-referenced painted lids, pass 4b).
   void reducedMotion;
   if (!IDLE_BLINK_ENABLED) {
     return [body(SPRITES.poses.idle, 1, IDLE_REST_LAYER_ID)];
