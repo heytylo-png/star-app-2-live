@@ -275,7 +275,7 @@ export const IDLE_BLINK_EYE_HOLES = [
 /** Live idle canvas the holes are registered onto. */
 export const IDLE_BLINK_CANVAS = { width: 1008, height: 1792 } as const;
 
-/** Full-plate blink files. Never an `<img>` — eye crops are the overlay. */
+/** Full-plate blink files. Never drawn. Eye crops are copied onto idle. */
 export function isFullBlinkPlate(src: string): boolean {
   return /\/idle_blink(?:_0[12])?\.png(?:\?|$)/.test(src);
 }
@@ -337,8 +337,8 @@ export type PuppetState = {
   /** Seconds — drives official talk-sheet opacity flap (sin phase). */
   talkPhase?: number;
   /**
-   * 0 open. Official rest blink: 1 early, 2 mid, 3 closed
-   * (`idleBlinkEyeSrcs`) — two eye-rect crops on idle.png, not a body swap.
+   * 0 open. Official rest blink: 1 early, 2 mid, 3 closed. The idle layer
+   * list does not change — `idleBlinkEyeSrcs` is copied onto the live bitmap.
    * Expo talk bust (flag on) still uses 1/2 with face_eyes_* while speaking.
    */
   blink?: 0 | 1 | 2 | 3;
@@ -478,22 +478,11 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     return [body(SPRITES.poses.talk)];
   }
 
-  // Two eye-rect crops on the glare body. The idle sheet stays the only full
-  // texture. Full-canvas blink plates are not layers.
-  const eyes = idleBlinkEyeSrcs(blink);
-  if (eyes && canIdleBlink({ pose, emotion, talking, reducedMotion })) {
-    return [
-      body(SPRITES.poses.idle),
-      ...eyes.map((src, i) => ({
-        id: `idle-eye-${i}`,
-        src,
-        opacity: 1,
-        role: "eyes" as const,
-        eye: IDLE_BLINK_EYE_HOLES[i],
-      })),
-    ];
-  }
-
+  // Rest blink does not add a layer and does not swap this sheet. The mounted
+  // idle bitmap stays up; the painter copies two eye rects onto it. A second
+  // image, or drawing the rest of the blink plate, moves the body.
+  void reducedMotion;
+  void blink;
   return [body(SPRITES.poses.idle)];
 }
 

@@ -43,11 +43,10 @@ Frames (full plates are the bake proof: RGB matches idle.png outside the holes, 
 - public/rai/idle_blink_02.png — 75% closed
 - public/rai/idle_blink.png — official closed lids (hold), then glare eyes return
 
-Runtime mount
-- One full texture the whole blink: public/rai/idle.png.
-- Overlay is two eye-rect crops only, after register onto that 1008×1792 canvas:
-  idle_blink_01_l.png / idle_blink_01_r.png (40%),
-  idle_blink_02_l.png / idle_blink_02_r.png (75%),
-  idle_blink_l.png / idle_blink_r.png (closed hold).
-- No second full <img>. No full-plate opacity crossfade.
-- If those crops have not decoded, blink stays off. Do not swap in a full plate.
+Runtime
+- One body texture the whole blink: live public/rai/idle.png, never unloaded.
+- The blink sheet is only a source. After register onto 1008×1792, copy the two eye rects onto that idle bitmap. Do not draw the rest of the blink PNG.
+- No second <img>. No opacity crossfade of two full figures. No canvas clear between blink frames.
+- Crops copied in: idle_blink_01_l/r (40%), idle_blink_02_l/r (75%), idle_blink_l/r (closed hold).
+- If those crops are not ready, blink stays off. Do not swap in a full plate.
+- Proof: pixels outside the two rects stay byte-identical to the idle bitmap through close and open.

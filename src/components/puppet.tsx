@@ -1,8 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { copyEyeRect } from "@/lib/idle-blink-paint";
 import {
   allSpriteUrls,
   canIdleBlink,
   IDLE_BLINK_CANVAS,
+  IDLE_BLINK_EYE_HOLES,
+  idleBlinkEyeSrcs,
   idleBlinkEyeUrls,
   isFullBlinkPlate,
   layersFor,
@@ -54,6 +57,16 @@ function syntheticJaw(t: number): number {
   return 0.25 + 0.55 * Math.abs(Math.sin(t * 11)) * Math.abs(Math.sin(t * 3.3));
 }
 
+function blitEyeRect(
+  ctx: CanvasRenderingContext2D,
+  hole: { x: number; y: number; w: number; h: number },
+  pixels: Uint8ClampedArray,
+) {
+  const view = ctx.getImageData(hole.x, hole.y, hole.w, hole.h);
+  copyEyeRect(view.data, hole.w, pixels, { x: 0, y: 0, w: hole.w, h: hole.h });
+  ctx.putImageData(view, hole.x, hole.y);
+}
+
 function isInstantLayer(layer: SpriteLayer, talking: boolean): boolean {
   // Lid holes cut in. Fading them would dissolve a second image over the body.
   if (layer.role === "eyes") return true;
@@ -76,7 +89,7 @@ function fadeMsFor(layer: SpriteLayer, talking: boolean, blinkMode: BlinkFadeMod
  * Star Rai 2D puppet — planted idle life, look-at lean, talk/mood sheets.
  * Studio-white cards are punched to alpha. Layers crossfade by stable id.
  * Spoken bubble holds talk/mood through the line; frown idle is rest-only.
- * Rest idle blinks with two eye-rect crops on idle.png. Never a second full plate.
+ * Rest idle keeps one idle.png bitmap. Blink copies two eye rects onto it.
  * Expo bust mouth/eye crops stay off. Dedicated poses hold their own sheet and do not blink.
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
@@ -97,6 +110,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const [blink, setBlink] = useState<0 | 1 | 2 | 3>(0);
   /** Six eye-rect crops decoded. Until then blink stays off — no full-plate fallback. */
   const [eyesReady, setEyesReady] = useState(false);
+  /** Punched idle bitmap decoded. The canvas draws this and never swaps it out. */
+  const [idleBitmapUrl, setIdleBitmapUrl] = useState<string | null>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [display, setDisplay] = useState<DisplayLayer[]>([]);
   const [sheets, setSheets] = useState<Record<string, string>>({});
@@ -106,6 +121,12 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const fadeRaf = useRef(0);
   const [blinkMode, setBlinkMode] = useState<BlinkFadeMode>("off");
   const blinkRef = useRef<0 | 1 | 2 | 3>(0);
+  const idleCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const paintedCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const paintedUrlRef = useRef<string | null>(null);
+  const idleBitmapRef = useRef<HTMLImageElement | null>(null);
+  const glareEyesRef = useRef<Uint8ClampedArray[] | null>(null);
+  const eyePixelsRef = useRef<Record<string, Uint8ClampedArray>>({});
 
   // Punch studio-white cards to alpha, then decode so pose swaps never flash a plate.
   useEffect(() => {
@@ -126,27 +147,61 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     };
   }, []);
 
-  // Decode the six eye-rect crops. Failure leaves blink off.
+  // Decode the six eye-rect crops into pixel buffers. Failure leaves blink off.
   useEffect(() => {
     let cancelled = false;
+    const urls = idleBlinkEyeUrls();
     void Promise.all(
-      idleBlinkEyeUrls().map((src) => {
+      urls.map(async (src) => {
         const img = new Image();
         img.decoding = "async";
         img.src = src;
-        return img.decode();
+        await img.decode();
+        const hole = IDLE_BLINK_EYE_HOLES[urls.indexOf(src) % 2]!;
+        if (img.naturalWidth !== hole.w || img.naturalHeight !== hole.h) {
+          throw new Error("eye crop does not match the idle hole");
+        }
+        const scratch = document.createElement("canvas");
+        scratch.width = img.naturalWidth;
+        scratch.height = img.naturalHeight;
+        const ctx = scratch.getContext("2d", { willReadFrequently: true });
+        if (!ctx) throw new Error("eye crop canvas");
+        ctx.drawImage(img, 0, 0);
+        eyePixelsRef.current[src] = new Uint8ClampedArray(
+          ctx.getImageData(0, 0, scratch.width, scratch.height).data,
+        );
       }),
     )
       .then(() => {
         if (!cancelled) setEyesReady(true);
       })
       .catch(() => {
-        // Crops are not ready. Do not fall back to a full-plate swap.
+        // Crops are not ready. Blink stays off. Do not draw a blink plate.
       });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  const idleSheetUrl = sheets[SPRITES.poses.idle];
+  useEffect(() => {
+    if (!idleSheetUrl) return;
+    let cancelled = false;
+    const img = new Image();
+    img.decoding = "async";
+    img.src = idleSheetUrl;
+    void img.decode().then(() => {
+      if (cancelled) return;
+      if (img.naturalWidth !== IDLE_BLINK_CANVAS.width || img.naturalHeight !== IDLE_BLINK_CANVAS.height) {
+        return;
+      }
+      idleBitmapRef.current = img;
+      setIdleBitmapUrl(idleSheetUrl);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [idleSheetUrl]);
 
   useEffect(() => {
     const mq =
@@ -343,6 +398,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     blinkModeLive = "snap";
   }
 
+  // Blink must not change the layer list. A new layer remounts the body.
+  const sheetBlink = USE_EXPO_TALK_BUST ? blink : 0;
   const desired = useMemo(
     () =>
       layersFor({
@@ -352,22 +409,14 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
         amplitude: ampLive,
         angle: 0,
         talkPhase: 0,
-        blink: blinkShown,
+        blink: sheetBlink,
         idleBeat: "none",
         reducedMotion,
       }),
-    [pose, emotion, talking, ampLive, blinkShown, reducedMotion],
+    [pose, emotion, talking, ampLive, sheetBlink, reducedMotion],
   );
   const plates = useMemo(
     () => desired.filter((layer) => layer.role !== "eyes" && !isFullBlinkPlate(layer.src)),
-    [desired],
-  );
-  const eyeLayers = useMemo(
-    () =>
-      desired.filter(
-        (layer): layer is SpriteLayer & { eye: { x: number; y: number; w: number; h: number } } =>
-          layer.role === "eyes" && layer.eye != null && !isFullBlinkPlate(layer.src),
-      ),
     [desired],
   );
 
@@ -467,8 +516,61 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     };
   }, []);
 
-  const stageReady = Boolean(sheets[SPRITES.poses.idle]);
+  const stageReady = Boolean(idleSheetUrl && idleBitmapUrl === idleSheetUrl);
   const talkOverlay = display.find((layer) => layer.role === "talk");
+
+  // Copy eye pixels onto the live idle bitmap. Never clear the canvas.
+  // Never draw the blink plate. A new canvas gets one idle.png paint, then
+  // only the two holes change for the rest of its life.
+  useLayoutEffect(() => {
+    const canvas = idleCanvasRef.current;
+    const idleImg = idleBitmapRef.current;
+    if (!canvas || !idleImg || !idleSheetUrl || idleImg.src !== idleSheetUrl) return;
+    if (paintedCanvasRef.current !== canvas || paintedUrlRef.current !== idleSheetUrl) {
+      // Setting the bitmap size clears a new canvas. Do it once, then paint
+      // idle.png before the browser shows it. Blink frames must not reach this.
+      if (canvas.width !== IDLE_BLINK_CANVAS.width || canvas.height !== IDLE_BLINK_CANVAS.height) {
+        canvas.width = IDLE_BLINK_CANVAS.width;
+        canvas.height = IDLE_BLINK_CANVAS.height;
+      }
+    }
+    const ctx = canvas.getContext("2d", { alpha: true });
+    if (!ctx) return;
+
+    if (paintedCanvasRef.current !== canvas || paintedUrlRef.current !== idleSheetUrl) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(idleImg, 0, 0);
+      paintedCanvasRef.current = canvas;
+      paintedUrlRef.current = idleSheetUrl;
+      glareEyesRef.current = IDLE_BLINK_EYE_HOLES.map(
+        (hole) => new Uint8ClampedArray(ctx.getImageData(hole.x, hole.y, hole.w, hole.h).data),
+      );
+    }
+
+    const restore = () => {
+      const saved = glareEyesRef.current;
+      if (!saved) return;
+      IDLE_BLINK_EYE_HOLES.forEach((hole, i) => {
+        const pixels = saved[i];
+        if (!pixels) return;
+        blitEyeRect(ctx, hole, pixels);
+      });
+    };
+
+    if (!eyesReady || blinkShown === 0) {
+      restore();
+      return;
+    }
+    const pair = idleBlinkEyeSrcs(blinkShown);
+    const buffers = pair?.map((src) => eyePixelsRef.current[src]);
+    if (!pair || !buffers || buffers.some((buf) => !buf)) {
+      restore();
+      return;
+    }
+    IDLE_BLINK_EYE_HOLES.forEach((hole, i) => {
+      blitEyeRect(ctx, hole, buffers[i]!);
+    });
+  }, [blinkShown, eyesReady, idleSheetUrl]);
 
   return (
     <div
@@ -487,6 +589,26 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
           if (layer.role === "eyes" || isFullBlinkPlate(layer.src)) return null;
           const src = sheets[layer.src];
           if (!src) return null;
+          const style = {
+            opacity: layer.opacity,
+            zIndex: layer.z,
+            transition: isInstantLayer(layer, talking)
+              ? "none"
+              : `opacity ${fadeMsFor(layer, talking, blinkModeLive)}ms var(--ease-smooth-out)`,
+          };
+          if (layer.role === "body" && layer.src === SPRITES.poses.idle) {
+            if (idleBitmapUrl !== src) return null;
+            return (
+              <canvas
+                key={layer.id}
+                ref={idleCanvasRef}
+                className="rai-layer"
+                data-rai-role="body"
+                data-rai-sheet="idle"
+                style={style}
+              />
+            );
+          }
           return (
             <img
               key={layer.id}
@@ -496,48 +618,11 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
               decoding="async"
               className="rai-layer"
               data-rai-role={layer.role}
-              data-rai-sheet={layer.src === SPRITES.poses.idle ? "idle" : undefined}
-              style={{
-                opacity: layer.opacity,
-                zIndex: layer.z,
-                // Talk flap tracks sin immediately; pose sheets ease across.
-                transition: isInstantLayer(layer, talking)
-                  ? "none"
-                  : `opacity ${fadeMsFor(layer, talking, blinkModeLive)}ms var(--ease-smooth-out)`,
-              }}
+              data-rai-sheet={undefined}
+              style={style}
             />
           );
         })}
-        {eyeLayers.length === 2 ? (
-          <div className="rai-eye-host" data-rai-role="eyes">
-            <div
-              className="rai-eye-fit"
-              style={{
-                aspectRatio: `${IDLE_BLINK_CANVAS.width} / ${IDLE_BLINK_CANVAS.height}`,
-                width: `min(100cqw, calc(100cqh * ${IDLE_BLINK_CANVAS.width} / ${IDLE_BLINK_CANVAS.height}))`,
-              }}
-            >
-              {eyeLayers.map((layer) => (
-                <img
-                  key={layer.id}
-                  src={layer.src}
-                  alt=""
-                  draggable={false}
-                  decoding="sync"
-                  className="rai-eye-rect"
-                  data-rai-role="eyes"
-                  data-rai-sheet="idle-blink"
-                  style={{
-                    left: `${(layer.eye.x / IDLE_BLINK_CANVAS.width) * 100}%`,
-                    top: `${(layer.eye.y / IDLE_BLINK_CANVAS.height) * 100}%`,
-                    width: `${(layer.eye.w / IDLE_BLINK_CANVAS.width) * 100}%`,
-                    height: `${(layer.eye.h / IDLE_BLINK_CANVAS.height) * 100}%`,
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        ) : null}
         {/* Ahoge / hair tip proxy — rotates over the crown */}
         <span data-rai-ahoge className="rai-ahoge" />
       </div>

@@ -36,6 +36,7 @@ import {
   talkFlapOpacity,
   USE_EXPO_TALK_BUST,
 } from "./rai.ts";
+import { copyEyeRect } from "./idle-blink-paint.ts";
 import { POSE_TINT_SOURCE } from "./generated/star-rai-artifacts.ts";
 
 const publicRoot = join(dirname(fileURLToPath(import.meta.url)), "../../public");
@@ -409,7 +410,7 @@ describe("layersFor talking vs pose hold", () => {
     assert.doesNotMatch(layers[0]!.src, /idle_blink/);
   });
 
-  it("blinks only on rest idle by overlaying two eye rects on the glare body", () => {
+  it("keeps one idle body while blink copies two eye rects onto that bitmap", () => {
     const rest = {
       ...base,
       pose: "idle" as const,
@@ -418,18 +419,10 @@ describe("layersFor talking vs pose hold", () => {
       blink: 3 as const,
     };
     const blink = layersFor(rest);
-    assert.equal(blink.length, 3);
+    assert.equal(blink.length, 1);
     assert.equal(blink[0]!.role, "body");
     assert.match(blink[0]!.src, /rai\/idle\.png$/);
-    assert.equal(blink[1]!.role, "eyes");
-    assert.equal(blink[2]!.role, "eyes");
-    assert.match(blink[1]!.src, /rai\/idle_blink_l\.png$/);
-    assert.match(blink[2]!.src, /rai\/idle_blink_r\.png$/);
-    assert.equal(isFullBlinkPlate(blink[1]!.src), false);
-    assert.equal(isFullBlinkPlate(blink[2]!.src), false);
-    assert.deepEqual(blink[1]!.eye, IDLE_BLINK_EYE_HOLES[0]);
-    assert.deepEqual(blink[2]!.eye, IDLE_BLINK_EYE_HOLES[1]);
-    assert.doesNotMatch(blink.map((l) => l.src).join(" "), /face_eyes|mouth_speak|mouth_oh/);
+    assert.doesNotMatch(blink.map((l) => l.src).join(" "), /idle_blink|face_eyes|mouth_speak|mouth_oh/);
     assert.deepEqual(idleBlinkEyeSrcs(1), [SPRITES.idleBlink01L, SPRITES.idleBlink01R]);
     assert.deepEqual(idleBlinkEyeSrcs(2), [SPRITES.idleBlink02L, SPRITES.idleBlink02R]);
     assert.deepEqual(idleBlinkEyeSrcs(3), [SPRITES.idleBlinkL, SPRITES.idleBlinkR]);
@@ -437,18 +430,15 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(isFullBlinkPlate("/rai/idle_blink.png"), true);
     assert.equal(isFullBlinkPlate("/rai/idle_blink_01.png"), true);
     assert.equal(isFullBlinkPlate("/rai/idle_blink_02.png"), true);
+    assert.equal(isFullBlinkPlate(SPRITES.idleBlinkL), false);
+    assert.equal(isFullBlinkPlate(SPRITES.idleBlinkR), false);
 
     const early = layersFor({ ...rest, blink: 1 });
-    assert.equal(early.length, 3);
+    assert.equal(early.length, 1);
     assert.match(early[0]!.src, /rai\/idle\.png$/);
-    assert.match(early[1]!.src, /idle_blink_01_l\.png$/);
-    assert.match(early[2]!.src, /idle_blink_01_r\.png$/);
-    assert.equal(early[1]!.role, "eyes");
-    assert.equal(early[2]!.role, "eyes");
-
     const mid = layersFor({ ...rest, blink: 2 });
-    assert.match(mid[1]!.src, /idle_blink_02_l\.png$/);
-    assert.match(mid[2]!.src, /idle_blink_02_r\.png$/);
+    assert.equal(mid.length, 1);
+    assert.equal(mid[0]!.src, early[0]!.src);
 
     assert.equal(layersFor({ ...rest, blink: 0 }).length, 1);
     assert.match(layersFor({ ...rest, blink: 0 })[0]!.src, /rai\/idle\.png$/);
@@ -466,10 +456,8 @@ describe("layersFor talking vs pose hold", () => {
     assert.match(reduced[0]!.src, /rai\/idle\.png$/);
     assert.doesNotMatch(reduced[0]!.src, /idle_blink|face_eyes/);
     const glance = layersFor({ ...rest, emotion: "glance" });
-    assert.equal(glance.length, 3);
+    assert.equal(glance.length, 1);
     assert.match(glance[0]!.src, /rai\/idle\.png$/);
-    assert.match(glance[1]!.src, /idle_blink_l\.png$/);
-    assert.match(glance[2]!.src, /idle_blink_r\.png$/);
     assert.ok(glance.every((layer) => !isFullBlinkPlate(layer.src)));
 
     assert.equal(canIdleBlink(rest), true);
@@ -550,6 +538,28 @@ describe("layersFor talking vs pose hold", () => {
         }
       });
     }
+
+    const painted = new Uint8ClampedArray(idle.rgba);
+    const closedCrops = ["rai/idle_blink_l.png", "rai/idle_blink_r.png"] as const;
+    closedCrops.forEach((cropRel, eye) => {
+      const hole = IDLE_BLINK_EYE_HOLES[eye]!;
+      const crop = decodePng(readFileSync(join(publicRoot, cropRel)));
+      copyEyeRect(painted, idle.width, crop.rgba, hole);
+    });
+    let outsideMax = 0;
+    let insideChanged = 0;
+    for (let i = 0; i < holes.length; i++) {
+      const dr = Math.abs(painted[i * 4]! - idle.rgba[i * 4]!);
+      const dg = Math.abs(painted[i * 4 + 1]! - idle.rgba[i * 4 + 1]!);
+      const db = Math.abs(painted[i * 4 + 2]! - idle.rgba[i * 4 + 2]!);
+      const da = Math.abs(painted[i * 4 + 3]! - idle.rgba[i * 4 + 3]!);
+      const delta = Math.max(dr, dg, db, da);
+      if (!holes[i]) {
+        if (delta > outsideMax) outsideMax = delta;
+      } else if (delta > 0) insideChanged++;
+    }
+    assert.equal(outsideMax, 0, "copying eye rects moved idle pixels outside the holes");
+    assert.ok(insideChanged > 0, "closed lids did not change the eye holes");
   });
 
   it("pins soft/hype off frown idle even when pose is still idle", () => {
