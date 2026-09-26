@@ -11,9 +11,9 @@ export const POSE_CROSSFADE_MS = 380;
 export const IDLE_BEAT_FADE_MS = 400;
 
 /**
- * Rest-idle blink on `idle_blink.png`.
- * Fade stays inside 80–120ms and under the pose crossfade so lids read as a
- * blink. Hold is the fully-closed dwell after that fade-in.
+ * Rest-idle blink timing. The fade is lid alpha inside the eye rects only —
+ * not an opacity crossfade of idle.png against idle_blink.png.
+ * Hold is the fully-closed dwell after that fade-in.
  */
 export const IDLE_BLINK_FADE_MS = 100;
 export const IDLE_BLINK_HOLD_MS = 100;

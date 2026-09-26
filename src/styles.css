@@ -382,6 +382,13 @@ body.chat-thread-resizing {
     drop-shadow(0 1px 0 rgba(232, 163, 28, 0.1));
 }
 
+/* Eye-lid overlay shares the idle plate box. No rim — a drop-shadow would outline the rects. */
+.rai-eye-overlay {
+  filter: none;
+  object-fit: contain;
+  object-position: 50% 0%;
+}
+
 @media (max-width: 639px) {
   .rai-layer {
     top: 1.25%;

@@ -43,13 +43,13 @@ Amplitude still drives a small talk bob on the rig. Dedicated poses (`talk`, `wa
 
 ### Idle blink
 
-Rest idle only: pose `idle`, not talking, not a dedicated pose, not an emotion sheet (smug, shy, tired, soft, hype, and the named pose keys). Every **3–6s** (random), crossfade `idle.png` → `public/rai/idle_blink.png` (official 462 closed-lid full body, same crop) and back.
+Rest idle only: pose `idle`, not talking, not a dedicated pose, not an emotion sheet (smug, shy, tired, soft, hype, and the named pose keys). Every **3–6s** (random), the standing body stays on live `idle.png`. Closed lids are copied from two eye rects on `public/rai/idle_blink.png` (registered to 1008×1792) onto an eye-only overlay. The rest of that PNG is not drawn. There is no second full-body `<img>`, no opacity crossfade of the two figures, and no canvas clear.
 
-- Fade **100ms** (`IDLE_BLINK_FADE_MS`) — inside 80–120ms and under `POSE_CROSSFADE_MS` (380).
-- Closed hold **100ms** (`IDLE_BLINK_HOLD_MS`) after that fade-in, then the same 100ms fade back to `idle.png`.
-- A pose command, talk flap, or emotion-sheet swap mid-blink clears blink immediately and snaps to that sheet.
+- Fade **100ms** (`IDLE_BLINK_FADE_MS`) — lid alpha inside the eye rects, inside 80–120ms and under `POSE_CROSSFADE_MS` (380). The idle body layer opacity stays 1.
+- Closed hold **100ms** (`IDLE_BLINK_HOLD_MS`) after that fade-in, then the same 100ms fade back to open eyes on the same `idle.png`.
+- A pose command, talk flap, or emotion-sheet swap mid-blink clears the eye rects immediately and swaps to that sheet. `idle.png` is not replaced by the blink plate on the way out.
 - `prefers-reduced-motion: reduce` disables blink.
-- `idle_blink.png` is preloaded with the other sprites and punched with the same studio-white pipeline as `idle.png`.
+- `idle_blink.png` is preloaded and punched like `idle.png`, then used only as the eye-rect source.
 
 Fallback: spoken `talk` / mood sheet as a single body. Reduced motion matches that (no flap over frown idle, no blink).
 

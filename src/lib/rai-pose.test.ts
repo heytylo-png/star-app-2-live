@@ -316,7 +316,7 @@ describe("layersFor talking vs pose hold", () => {
     assert.doesNotMatch(layers[0]!.src, /idle_blink/);
   });
 
-  it("blinks only on rest idle using the closed-lid full body", () => {
+  it("keeps idle.png as the only rest body while the eyes blink", () => {
     const rest = {
       ...base,
       pose: "idle" as const,
@@ -326,8 +326,8 @@ describe("layersFor talking vs pose hold", () => {
     };
     const blink = layersFor(rest);
     assert.equal(blink.length, 1);
-    assert.match(blink[0]!.src, /rai\/idle_blink\.png/);
-    assert.doesNotMatch(blink[0]!.src, /face_eyes|mouth_speak|mouth_oh/);
+    assert.match(blink[0]!.src, /rai\/idle\.png$/);
+    assert.doesNotMatch(blink[0]!.src, /idle_blink|face_eyes|mouth_speak|mouth_oh/);
 
     assert.match(layersFor({ ...rest, blink: 0 })[0]!.src, /rai\/idle\.png$/);
     assert.match(layersFor({ ...rest, talking: true })[0]!.src, /talk_official/);
@@ -343,7 +343,8 @@ describe("layersFor talking vs pose hold", () => {
       layersFor({ ...rest, reducedMotion: true })[0]!.src,
       /idle_blink|face_eyes/,
     );
-    assert.match(layersFor({ ...rest, emotion: "glance" })[0]!.src, /idle_blink/);
+    assert.match(layersFor({ ...rest, emotion: "glance" })[0]!.src, /rai\/idle\.png$/);
+    assert.doesNotMatch(layersFor({ ...rest, emotion: "glance" })[0]!.src, /idle_blink/);
 
     assert.equal(canIdleBlink(rest), true);
     assert.equal(canIdleBlink({ ...rest, talking: true }), false);

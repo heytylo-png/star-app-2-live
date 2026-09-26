@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { eyeOverlayRect, IDLE_EYE_RECTS, IDLE_PLATE_HEIGHT, IDLE_PLATE_WIDTH } from "@/lib/idle-blink";
 import {
   allSpriteUrls,
   canIdleBlink,
@@ -56,33 +57,112 @@ function isInstantLayer(layer: SpriteLayer, talking: boolean): boolean {
   return talking && (layer.id === "talk" || layer.role === "talk");
 }
 
-/** off = pose timing. fade/out = idle ↔ blink. snap = drop blink and cut to the new sheet. */
-type BlinkFadeMode = "off" | "fade" | "out" | "snap";
-
-function fadeMsFor(layer: SpriteLayer, talking: boolean, blinkMode: BlinkFadeMode): number {
+function fadeMsFor(layer: SpriteLayer, talking: boolean): number {
   if (isInstantLayer(layer, talking)) return 0;
   if (layer.id.startsWith("idle-beat")) return IDLE_BEAT_FADE_MS;
   if (layer.id === "expo-talk") return 180;
-  if (layer.src === SPRITES.idleBlink) {
-    return blinkMode === "snap" ? 0 : IDLE_BLINK_FADE_MS;
-  }
-  if (
-    (blinkMode === "fade" || blinkMode === "out") &&
-    layer.src === SPRITES.poses.idle
-  ) {
-    return IDLE_BLINK_FADE_MS;
-  }
-  // Pose / talk / emotion swap mid-blink: cut, don't ease the closed lids out.
-  if (blinkMode === "snap") return 0;
   return POSE_CROSSFADE_MS;
+}
+
+/**
+ * Eye-only lid overlay. The idle <img> stays mounted and fully opaque.
+ * This canvas receives putImageData of the two eye rects and nothing else.
+ */
+function IdleEyes({
+  blinkUrl,
+  opacity,
+  zIndex,
+  transition,
+  paintRef,
+}: {
+  blinkUrl: string | undefined;
+  opacity: number;
+  zIndex: number;
+  transition: string;
+  paintRef: { current: (alpha: number) => boolean };
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const blinkRef = useRef<Uint8ClampedArray | null>(null);
+
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    let cancelled = false;
+    blinkRef.current = null;
+    paintRef.current = () => false;
+    if (!canvas || !blinkUrl) {
+      return () => {
+        paintRef.current = () => false;
+      };
+    }
+
+    const img = new Image();
+    img.decoding = "async";
+    img.src = blinkUrl;
+    void img
+      .decode()
+      .then(() => {
+        if (cancelled) return;
+        const plate = document.createElement("canvas");
+        plate.width = IDLE_PLATE_WIDTH;
+        plate.height = IDLE_PLATE_HEIGHT;
+        const ctx = plate.getContext("2d", { willReadFrequently: true });
+        if (!ctx || img.naturalWidth <= 0 || img.naturalHeight <= 0) return;
+        if (img.naturalWidth === IDLE_PLATE_WIDTH && img.naturalHeight === IDLE_PLATE_HEIGHT) {
+          ctx.drawImage(img, 0, 0);
+        } else {
+          ctx.drawImage(img, 0, 0, IDLE_PLATE_WIDTH, IDLE_PLATE_HEIGHT);
+        }
+        blinkRef.current = new Uint8ClampedArray(
+          ctx.getImageData(0, 0, IDLE_PLATE_WIDTH, IDLE_PLATE_HEIGHT).data,
+        );
+        paintRef.current = (alpha: number) => {
+          const blink = blinkRef.current;
+          const node = canvasRef.current;
+          if (!blink || !node) return false;
+          const dest = node.getContext("2d", { alpha: true });
+          if (!dest) return false;
+          for (const rect of IDLE_EYE_RECTS) {
+            const pixels = eyeOverlayRect(blink, IDLE_PLATE_WIDTH, rect, alpha);
+            const image = new ImageData(rect.width, rect.height);
+            image.data.set(pixels);
+            dest.putImageData(image, rect.x, rect.y);
+          }
+          return true;
+        };
+      })
+      .catch(() => {
+        if (!cancelled) paintRef.current = () => false;
+      });
+
+    return () => {
+      cancelled = true;
+      paintRef.current(0);
+      paintRef.current = () => false;
+      blinkRef.current = null;
+    };
+  }, [blinkUrl, paintRef]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={IDLE_PLATE_WIDTH}
+      height={IDLE_PLATE_HEIGHT}
+      className="rai-layer rai-eye-overlay"
+      data-rai-role="eyes"
+      data-rai-sheet="idle-eyes"
+      aria-hidden="true"
+      style={{ opacity, zIndex, transition }}
+    />
+  );
 }
 
 /**
  * Star Rai 2D puppet — planted idle life, look-at lean, talk/mood sheets.
  * Studio-white cards are punched to alpha. Layers crossfade by stable id.
  * Spoken bubble holds talk/mood through the line; frown idle is rest-only.
- * Rest idle blinks with idle_blink.png. Expo bust mouth/eye crops stay off.
- * Dedicated poses hold their own sheet and do not blink.
+ * Rest idle keeps one idle.png body. Blink copies two eye rects from
+ * idle_blink.png and does not draw the rest of that plate.
+ * Expo bust mouth/eye crops stay off. Dedicated poses hold their own sheet.
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -100,6 +180,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
 
   const [ampLive, setAmpLive] = useState(0);
   const [blink, setBlink] = useState<0 | 1 | 2>(0);
+  const [eyesClosed, setEyesClosed] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [display, setDisplay] = useState<DisplayLayer[]>([]);
   const [sheets, setSheets] = useState<Record<string, string>>({});
@@ -107,7 +188,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const fadeTimers = useRef<Map<string, number>>(new Map());
   const fadingIn = useRef<Set<string>>(new Set());
   const fadeRaf = useRef(0);
-  const [blinkMode, setBlinkMode] = useState<BlinkFadeMode>("off");
+  const paintLids = useRef<(alpha: number) => boolean>(() => false);
 
   // Punch studio-white cards to alpha, then decode so pose swaps never flash a plate.
   useEffect(() => {
@@ -188,41 +269,79 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     };
   }, []);
 
-  // Official full-body blink on rest idle only. Pose, talk, and emotion sheets cancel it.
-  useEffect(() => {
+  // Rest-idle blink: lid alpha inside the eye rects. The idle body img never swaps.
+  // Layout cleanup so leaving rest opens the eyes before the next paint.
+  useLayoutEffect(() => {
     if (USE_EXPO_TALK_BUST) return;
     const resting = canIdleBlink({ pose, emotion, talking, reducedMotion });
-    // Leaving rest cancels in the previous effect's cleanup (snap blink off).
     if (!resting) return;
 
     let cancelled = false;
     let sleepTimer = 0;
-    let holdTimer = 0;
+    let rafId = 0;
+    let wake = () => {};
 
-    const schedule = () => {
-      const wait =
-        IDLE_BLINK_GAP_MIN_MS +
-        Math.random() * (IDLE_BLINK_GAP_MAX_MS - IDLE_BLINK_GAP_MIN_MS);
-      sleepTimer = window.setTimeout(() => {
-        if (cancelled || reducedRef.current || talkingRef.current) return;
-        setBlink(2);
-        setBlinkMode("fade");
-        holdTimer = window.setTimeout(() => {
-          if (cancelled) return;
-          setBlink(0);
-          setBlinkMode("out");
-          schedule();
-        }, IDLE_BLINK_FADE_MS + IDLE_BLINK_HOLD_MS);
-      }, wait);
+    const sleep = (ms: number) =>
+      new Promise<void>((resolve) => {
+        wake = resolve;
+        sleepTimer = window.setTimeout(resolve, ms);
+      });
+
+    const tween = (from: number, to: number, ms: number) =>
+      new Promise<boolean>((resolve) => {
+        const t0 = performance.now();
+        const frame = (now: number) => {
+          if (cancelled) {
+            resolve(false);
+            return;
+          }
+          const u = ms <= 0 ? 1 : Math.min(1, (now - t0) / ms);
+          const ok = paintLids.current(from + (to - from) * u);
+          if (!ok) {
+            resolve(false);
+            return;
+          }
+          if (u >= 1) resolve(true);
+          else rafId = requestAnimationFrame(frame);
+        };
+        rafId = requestAnimationFrame(frame);
+      });
+
+    const run = async () => {
+      while (!cancelled) {
+        const wait =
+          IDLE_BLINK_GAP_MIN_MS +
+          Math.random() * (IDLE_BLINK_GAP_MAX_MS - IDLE_BLINK_GAP_MIN_MS);
+        await sleep(wait);
+        if (cancelled || reducedRef.current || talkingRef.current) break;
+        if (!paintLids.current(0)) continue;
+        if (cancelled) break;
+        setEyesClosed(true);
+        const closed = await tween(0, 1, IDLE_BLINK_FADE_MS);
+        if (!closed || cancelled) {
+          if (!cancelled) {
+            paintLids.current(0);
+            setEyesClosed(false);
+          }
+          if (cancelled) break;
+          continue;
+        }
+        await sleep(IDLE_BLINK_HOLD_MS);
+        if (cancelled) break;
+        const opened = await tween(1, 0, IDLE_BLINK_FADE_MS);
+        if (!cancelled) setEyesClosed(false);
+        if (!opened && !cancelled) paintLids.current(0);
+      }
     };
 
-    schedule();
+    void run();
     return () => {
       cancelled = true;
       window.clearTimeout(sleepTimer);
-      window.clearTimeout(holdTimer);
-      setBlink(0);
-      setBlinkMode((mode) => (mode === "fade" || mode === "out" ? "snap" : mode));
+      cancelAnimationFrame(rafId);
+      wake();
+      paintLids.current(0);
+      setEyesClosed(false);
     };
   }, [pose, emotion, talking, reducedMotion]);
 
@@ -303,18 +422,6 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   }, []);
 
   const restingBlink = canIdleBlink({ pose, emotion, talking, reducedMotion });
-  // Pose / talk / emotion can change a frame before the blink timer cleans up.
-  // Derive snap in that render so the next sheet cuts in instead of easing from closed lids.
-  let blinkModeLive: BlinkFadeMode = blinkMode;
-  if (!USE_EXPO_TALK_BUST) {
-    if (!restingBlink && (blink > 0 || blinkMode === "fade" || blinkMode === "out")) {
-      blinkModeLive = "snap";
-    } else if (blink > 0 && restingBlink) {
-      blinkModeLive = "fade";
-    } else if (restingBlink && blink === 0 && blinkMode === "fade") {
-      blinkModeLive = "out";
-    }
-  }
 
   const desired = useMemo(
     () =>
@@ -331,16 +438,6 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       }),
     [pose, emotion, talking, ampLive, blink, reducedMotion],
   );
-
-  // Drop snap/out timing once the blink cut or return fade has finished.
-  useEffect(() => {
-    if (blinkMode !== "snap" && blinkMode !== "out") return;
-    const delay = blinkMode === "snap" ? 0 : IDLE_BLINK_FADE_MS + 40;
-    const timer = window.setTimeout(() => {
-      setBlinkMode((mode) => (mode === blinkMode ? "off" : mode));
-    }, delay);
-    return () => window.clearTimeout(timer);
-  }, [blinkMode]);
 
   // Crossfade pool: incoming fades from 0, outgoing fades to 0, overlap both.
   useEffect(() => {
@@ -367,8 +464,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       }
       const prev = merged.get(id);
       if (!prev) {
-        if (isInstantLayer(layer, talking) || firstPaint || blinkModeLive === "snap") {
-          // First paint and cancelled blinks snap on — fading from empty left a blank or a stuck lid.
+        if (isInstantLayer(layer, talking) || firstPaint) {
+          // First paint snaps on — fading from empty left the stage blank.
           merged.set(id, layer);
         } else {
           // Incoming on top at 0 so the outgoing PNG stays visible until the fade starts.
@@ -376,11 +473,10 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
           fadingIn.current.add(id);
           incoming.push([id, layer]);
         }
-      } else if (fadingIn.current.has(id) && blinkModeLive !== "snap") {
+      } else if (fadingIn.current.has(id)) {
         // Keep the fade-in; don't snap to target when talkPhase retriggers.
         merged.set(id, { ...layer, opacity: prev.opacity });
       } else {
-        if (blinkModeLive === "snap") fadingIn.current.delete(id);
         merged.set(id, layer);
       }
     }
@@ -391,17 +487,12 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
         merged.set(id, { ...layer, opacity: 0 });
         const existingTimer = fadeTimers.current.get(id);
         if (existingTimer) window.clearTimeout(existingTimer);
-        const fadeMs = fadeMsFor(layer, talking, blinkModeLive);
-        // Keep frown idle mounted through the closed hold so the return can crossfade.
-        const removeAfter =
-          blinkModeLive === "fade" && layer.src === SPRITES.poses.idle
-            ? IDLE_BLINK_FADE_MS + IDLE_BLINK_HOLD_MS + IDLE_BLINK_FADE_MS
-            : fadeMs + 40;
+        const fadeMs = fadeMsFor(layer, talking);
         const timer = window.setTimeout(() => {
           prevIds.current.delete(id);
           fadeTimers.current.delete(id);
           setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
-        }, removeAfter);
+        }, fadeMs + 40);
         fadeTimers.current.set(id, timer);
       }
     }
@@ -412,8 +503,6 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     if (incoming.length) {
       if (fadeRaf.current) window.clearTimeout(fadeRaf.current);
       // Wait one paint at opacity 0 so CSS can interpolate 0 → target (not a hard cut in).
-      // Blink fades are short, so start on the next frame instead of the pose delay.
-      const incomingDelay = blinkModeLive === "fade" || blinkModeLive === "out" ? 16 : 48;
       fadeRaf.current = window.setTimeout(() => {
         for (const [id, layer] of incoming) {
           if (!prevIds.current.has(id)) continue;
@@ -421,9 +510,9 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
           fadingIn.current.delete(id);
         }
         setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
-      }, incomingDelay);
+      }, 48);
     }
-  }, [desired, talking, blinkModeLive]);
+  }, [desired, talking]);
 
   useEffect(() => {
     return () => {
@@ -445,13 +534,45 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       data-rai-pose={pose}
       data-rai-emotion={emotion}
       data-rai-talking={talking ? "1" : "0"}
-      data-rai-blink={blink > 0 && restingBlink ? "1" : "0"}
+      data-rai-blink={eyesClosed && restingBlink ? "1" : "0"}
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
     >
       <div data-rai-rig className="rai-rig">
         {display.map((layer) => {
           const src = sheets[layer.src];
           if (!src) return null;
+          const transition = isInstantLayer(layer, talking)
+            ? "none"
+            : `opacity ${fadeMsFor(layer, talking)}ms var(--ease-smooth-out)`;
+          const style = {
+            opacity: layer.opacity,
+            zIndex: layer.z,
+            transition,
+          };
+          const idleBody = !USE_EXPO_TALK_BUST && layer.src === SPRITES.poses.idle;
+          if (idleBody) {
+            return (
+              <Fragment key={layer.id}>
+                <img
+                  src={src}
+                  alt=""
+                  draggable={false}
+                  decoding="async"
+                  className="rai-layer"
+                  data-rai-role={layer.role}
+                  data-rai-sheet="idle"
+                  style={style}
+                />
+                <IdleEyes
+                  blinkUrl={sheets[SPRITES.idleBlink]}
+                  opacity={layer.opacity}
+                  zIndex={layer.z + 1}
+                  transition={transition}
+                  paintRef={paintLids}
+                />
+              </Fragment>
+            );
+          }
           return (
             <img
               key={layer.id}
@@ -461,21 +582,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
               decoding="async"
               className="rai-layer"
               data-rai-role={layer.role}
-              data-rai-sheet={
-                layer.src === SPRITES.idleBlink
-                  ? "idle-blink"
-                  : layer.src === SPRITES.poses.idle
-                    ? "idle"
-                    : undefined
-              }
-              style={{
-                opacity: layer.opacity,
-                zIndex: layer.z,
-                // Talk flap tracks sin immediately; pose sheets ease across.
-                transition: isInstantLayer(layer, talking)
-                  ? "none"
-                  : `opacity ${fadeMsFor(layer, talking, blinkModeLive)}ms var(--ease-smooth-out)`,
-              }}
+              style={style}
             />
           );
         })}

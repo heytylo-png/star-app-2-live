@@ -209,8 +209,8 @@ export const SPRITES = {
     three_quarter: ASSET(LIVE_POSE_FILES.three_quarter),
   } satisfies Record<PoseId, string>,
   /**
-   * Official 462 closed-lid full body. Same crop as poses.idle.
-   * Not a pose key — rest blink only. Punched like every other plate.
+   * Closed-lid source for the two eye rects. Not a body layer — rest blink
+   * copies those rects onto idle.png and never draws the rest of this plate.
    */
   idleBlink: ASSET("rai/idle_blink.png"),
   angles: {
@@ -291,7 +291,7 @@ export type PuppetState = {
   /**
    * 0 open, 1 half, 2 closed.
    * Expo talk bust (flag on) uses 1/2 with face_eyes_* while speaking.
-   * Official PNG uses any non-zero only on rest idle → idle_blink.png.
+   * Official PNG ignores this — rest blink stamps eye rects, it does not swap sheets.
    */
   blink?: 0 | 1 | 2;
   /** Brief idle variety beat from puppet timer (smile/grin). Official pack ignores Expo alts. */
@@ -392,7 +392,6 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     talking,
     amplitude,
     blink = 0,
-    reducedMotion = false,
   } = state;
 
   // Dedicated act poses own the stage — hold talk/mood through the line.
@@ -430,11 +429,8 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     return [body(SPRITES.poses.talk)];
   }
 
-  // Closed-lid full body. Same punch path as idle. Not an Expo eye bust.
-  if (blink > 0 && canIdleBlink({ pose, emotion, talking, reducedMotion })) {
-    return [body(SPRITES.idleBlink)];
-  }
-
+  // Rest idle stays on idle.png for the whole blink. Closed lids are eye
+  // rects copied from idle_blink.png — never a second full-body plate.
   return [body(SPRITES.poses.idle)];
 }
 
