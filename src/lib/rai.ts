@@ -89,11 +89,11 @@ export function isExpressiveEmotion(emotion: EmotionId): boolean {
 /**
  * Rest blink is off.
  *
- * The four baked sheets are full 1008×1792 frames and the draw path swaps
- * one of them at a time (no eye strip, no hole, no DEST_RECT). Frames 02–04
- * are still a different painting than idle.png / 01 outside the eyes, so
- * playing the cycle replaces the body and the lids read jagged. Until a
- * same-body full sheet exists, rest is public/rai/idle.png only.
+ * The four baked sheets are full 1008×1792 frames on the idle.png canvas.
+ * Only the eyes change; outside the eye box the pixels match idle.png.
+ * The draw path swaps one full frame at a time (no eye strip, no hole, no
+ * DEST_RECT). Re-enable stays held until Starai and CoS glance the standing
+ * clip — rest is public/rai/idle.png until IDLE_BLINK_ENABLED is flipped.
  */
 export const IDLE_BLINK_ENABLED = false;
 
@@ -260,9 +260,8 @@ export const SPRITES = {
   } satisfies Record<PoseId, string>,
   /**
    * Baked full-frame rest blink. Byte copies of
-   * artifacts/star-rai-blink-frames/baked/. Each file is 1008×1792.
-   * Not mounted: 02–04 are a different body than idle.png, so a swap
-   * replaces the figure. Rest is idle.png while IDLE_BLINK_ENABLED is false.
+   * artifacts/star-rai-blink-frames/baked/. Each file is 1008×1792 on the
+   * idle.png canvas (eyes only). Not mounted while IDLE_BLINK_ENABLED is false.
    */
   idleBlinkOpen: ASSET("rai/idle_blink_01_open.png"),
   idleBlinkClosing: ASSET("rai/idle_blink_02_closing.png"),
@@ -543,7 +542,7 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
 
   // One full frame. The layer id stays IDLE_REST_LAYER_ID so a blink, when
   // enabled, swaps a single image and never stacks a second figure.
-  // Blink is off: 02–04 replace the idle body, so rest is idle.png only.
+  // Blink is off until Starai + CoS glance the standing clip. Rest is idle.png.
   void reducedMotion;
   void blink;
   if (!IDLE_BLINK_ENABLED) {

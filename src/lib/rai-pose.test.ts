@@ -123,27 +123,36 @@ function decodePng(buf: Buffer): {
   return { width, height, colorType, rgba };
 }
 
-/** Pixels outside the lid band whose RGB differs by more than `min`. */
-function bodyChannelMismatch(
+/**
+ * Eye box for the eyes-only rebake. Matches
+ * artifacts/star-rai-blink-frames/baked/README.md.
+ */
+const IDLE_BLINK_EYE_BOX = { x: 420, y: 185, w: 210, h: 70 } as const;
+
+/** Max abs RGB delta. Pixels inside `box` are ignored when `outside` is set. */
+function maxAbsRgb(
   a: Uint8Array,
   b: Uint8Array,
   width: number,
   height: number,
-  min = 20,
+  box?: { x: number; y: number; w: number; h: number },
+  outside = false,
 ): number {
-  let mismatch = 0;
+  let max = 0;
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      if (x >= 370 && x < 680 && y >= 170 && y < 320) continue;
+      const inBox =
+        !!box && x >= box.x && x < box.x + box.w && y >= box.y && y < box.y + box.h;
+      if (outside ? inBox : box ? !inBox : false) continue;
       const i = (y * width + x) * 4;
       const dr = Math.abs(a[i]! - b[i]!);
       const dg = Math.abs(a[i + 1]! - b[i + 1]!);
       const db = Math.abs(a[i + 2]! - b[i + 2]!);
-      const max = dr > dg ? (dr > db ? dr : db) : dg > db ? dg : db;
-      if (max > min) mismatch++;
+      const ch = dr > dg ? (dr > db ? dr : db) : dg > db ? dg : db;
+      if (ch > max) max = ch;
     }
   }
-  return mismatch;
+  return max;
 }
 
 describe("poseResetDelayMs", () => {
@@ -571,13 +580,42 @@ describe("layersFor talking vs pose hold", () => {
       assert.equal(frame.colorType, 2, runtimeRel);
       if (bakedName.endsWith("01_open.png")) openRgba = frame.rgba;
     }
-    assert.ok(openRgba);
-    const closing = decodePng(readFileSync(join(publicRoot, "rai/idle_blink_02_closing.png")));
-    const diverge = bodyChannelMismatch(idle.rgba, closing.rgba, idle.width, idle.height);
-    assert.ok(
-      diverge > 40_000,
-      `02 vs idle.png body divergence ${diverge} — blink stays off until the body matches`,
+    if (!openRgba) throw new Error("missing 01_open pixels");
+    assert.deepEqual(
+      readFileSync(join(publicRoot, "rai/idle_blink_01_open.png")),
+      readFileSync(join(publicRoot, "rai/idle.png")),
+      "01_open must be a byte copy of idle.png",
     );
+    assert.equal(
+      maxAbsRgb(idle.rgba, openRgba, idle.width, idle.height),
+      0,
+      "01_open pixels must match idle.png",
+    );
+    for (const name of [
+      "rai/idle_blink_02_closing.png",
+      "rai/idle_blink_03_half.png",
+      "rai/idle_blink_04_closed.png",
+    ]) {
+      const frame = decodePng(readFileSync(join(publicRoot, name)));
+      const outside = maxAbsRgb(
+        idle.rgba,
+        frame.rgba,
+        idle.width,
+        idle.height,
+        IDLE_BLINK_EYE_BOX,
+        true,
+      );
+      const inside = maxAbsRgb(
+        idle.rgba,
+        frame.rgba,
+        idle.width,
+        idle.height,
+        IDLE_BLINK_EYE_BOX,
+        false,
+      );
+      assert.equal(outside, 0, `${name} drifted outside the eye box`);
+      assert.ok(inside > 0, `${name} did not change the eyes`);
+    }
     assert.equal(IDLE_BLINK_ENABLED, false);
     assert.equal(idleRestSrc(), SPRITES.poses.idle);
     assert.match(idleRestSrc(), /\/idle\.png$/);
