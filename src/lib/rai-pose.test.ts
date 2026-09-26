@@ -32,12 +32,16 @@ import {
   parseAct,
   poseResetDelayMs,
   resolveSpokenPose,
+  spokenBubbleResetDelay,
   streamSpokenAct,
   talkFlapOpacity,
   USE_EXPO_TALK_BUST,
 } from "./rai.ts";
+import { actToJson, composeAct } from "./brain.ts";
 import { copyEyeRect } from "./idle-blink-paint.ts";
 import { POSE_TINT_SOURCE } from "./generated/star-rai-artifacts.ts";
+import { parseTrackTitle, resolveLifeTurn } from "./life.ts";
+import { applySlotPatch, extractSlotsFromUserText } from "./memory-slots.ts";
 
 const publicRoot = join(dirname(fileURLToPath(import.meta.url)), "../../public");
 
@@ -964,5 +968,90 @@ describe("pose tint", () => {
 
     const keep = streamSpokenAct('{"line":"Still waving."', { currentPose: "wave" });
     assert.equal(keep?.pose, "wave");
+  });
+
+  it("Music Set from the Life sentence stays talk|content|smug on that bubble", () => {
+    // The Set button sends this sentence. The turn is not pre-marked.
+    const text = "I'm listening to ETA";
+    const patch = extractSlotsFromUserText(text);
+    const after = applySlotPatch({}, patch).life;
+    const turn = resolveLifeTurn({ userText: text, before: undefined, after });
+    assert.equal(turn.kind, "track_change");
+
+    const act = composeAct([{ role: "user", content: text }], "", "idle", undefined, turn);
+    const raw = actToJson(act);
+    const parsed = parseAct(raw);
+    const lifeTitle = parseTrackTitle(text);
+    const pose = resolveSpokenPose({
+      namedPose: lifeTitle ? null : namedPoseFromText(text),
+      modelPose: parsed.pose,
+      emotion: parsed.emotion,
+      spoken: Boolean(parsed.line),
+      nowPlayingJustSet: turn.kind === "track_change",
+      lifeTintPose: turn.tintPose,
+      seed: parsed.line,
+      currentPose: "idle",
+    });
+    assert.ok(pose === "talk" || pose === "content" || pose === "smug");
+    assert.notEqual(pose, "idle");
+    const src = layersFor({
+      pose,
+      emotion: parsed.emotion,
+      talking: false,
+      amplitude: 0,
+      angle: 0,
+    })[0]!.src;
+    assert.doesNotMatch(src, /\/idle\.png$/);
+
+    // Model idle must not win on this same turn — CoS saw frown idle under the reply.
+    const grokIdle = parseAct('{"line":"ETA. Yeah, that one~","emotion":"tired","pose":"idle"}');
+    const overIdle = resolveSpokenPose({
+      namedPose: null,
+      modelPose: grokIdle.pose,
+      emotion: grokIdle.emotion,
+      spoken: true,
+      nowPlayingJustSet: turn.kind === "track_change",
+      lifeTintPose: turn.tintPose,
+      seed: grokIdle.line,
+      currentPose: "idle",
+    });
+    assert.ok(overIdle === "talk" || overIdle === "content" || overIdle === "smug");
+    assert.notEqual(overIdle, "idle");
+
+    const streamed = streamSpokenAct('{"line":"ETA. Yeah, that one~","emotion":"bratty","pose":"idle"', {
+      nowPlayingJustSet: turn.kind === "track_change",
+      lifeTintPose: turn.tintPose,
+      currentPose: "idle",
+      seed: "ETA",
+    });
+    assert.ok(streamed);
+    assert.ok(streamed.pose === "talk" || streamed.pose === "content" || streamed.pose === "smug");
+
+    // A minute later the music reply is still the bubble. Do not snap to idle.png.
+    const held = spokenBubbleResetDelay({
+      pose,
+      emotion: parsed.emotion,
+      talking: false,
+      actLandedAt: 1_000,
+      now: 61_000,
+      lifeKind: turn.kind,
+    });
+    assert.equal(held, null);
+
+    // A normal playful line still settles so rest blink can run.
+    const playful = spokenBubbleResetDelay({
+      pose: "talk",
+      emotion: "bratty",
+      talking: false,
+      actLandedAt: 1_000,
+      now: 61_000,
+      lifeKind: "none",
+    });
+    assert.equal(playful, POSE_HOLD_AFTER_TALK_MS);
+
+    // The Life Set path in the app must pass that turn into the settle, not only tint.
+    const app = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../components/rai-app.tsx"), "utf8");
+    assert.match(app, /spokenBubbleResetDelay\(\{[\s\S]*lifeKind:\s*bubbleLifeKind/);
+    assert.match(app, /setBubbleLifeKind\(lifeTurn\.kind\)/);
   });
 });

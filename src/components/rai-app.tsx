@@ -28,8 +28,8 @@ import {
   DEFAULT_EMOTION,
   namedPoseFromText,
   parseAct,
-  poseResetDelayMs,
   resolveSpokenPose,
+  spokenBubbleResetDelay,
   streamLine,
   streamSpokenAct,
   type EmotionId,
@@ -182,6 +182,11 @@ function RaiReady() {
   const [caption, setCaption] = useState("");
   const [emotion, setEmotion] = useState<EmotionId>(DEFAULT_EMOTION);
   const [pose, setPose] = useState<PoseId>("idle");
+  /**
+   * Life turn behind the pose on stage. `track_change` pins talk|content|smug
+   * for that Music Set bubble so rest does not put frown idle under it.
+   */
+  const [bubbleLifeKind, setBubbleLifeKind] = useState<string>("none");
   const [talking, setTalking] = useState(false);
   const [holding, setHolding] = useState(false);
   const [pttSupported, setPttSupported] = useState(true);
@@ -351,6 +356,7 @@ function RaiReady() {
     });
     setPose(nextPose);
     poseRef.current = nextPose;
+    setBubbleLifeKind("none");
     actLandedAt.current = Date.now();
   }
   deliverReturnRef.current = deliverReturnBeat;
@@ -421,21 +427,23 @@ function RaiReady() {
       setEmotion("glance");
       return;
     }
-    // Line is over (not sending, not speaking). Settle a few seconds later.
-    // The transcript row staying on screen is not a hold.
-    const delay = poseResetDelayMs({
+    // A normal line settles a few seconds after speech so rest blink can run.
+    // Music Set (track_change → talk|content|smug) stays on that bubble.
+    const delay = spokenBubbleResetDelay({
       pose,
       emotion,
       talking: false,
       actLandedAt: actLandedAt.current,
+      lifeKind: bubbleLifeKind,
     });
     if (delay == null) return;
     const id = window.setTimeout(() => {
       setPose("idle");
+      setBubbleLifeKind("none");
       setEmotion(DEFAULT_EMOTION);
     }, delay);
     return () => window.clearTimeout(id);
-  }, [draft, sending, talking, holding, callListening, pose, emotion]);
+  }, [draft, sending, talking, holding, callListening, pose, emotion, bubbleLifeKind]);
 
   function clearCallListenTimers() {
     if (listenRestartTimerRef.current) {
@@ -802,6 +810,7 @@ function RaiReady() {
             setEmotion(streamed.emotion);
             setPose(streamed.pose);
             poseRef.current = streamed.pose;
+            setBubbleLifeKind(lifeTurn.kind);
             actLandedAt.current = Date.now();
           }
           if (live) {
@@ -834,6 +843,7 @@ function RaiReady() {
       });
       setPose(next);
       poseRef.current = next;
+      setBubbleLifeKind(lifeTurn.kind);
       actLandedAt.current = Date.now();
       if (act.memories.length) useMemoryStore.getState().addMany(act.memories);
 

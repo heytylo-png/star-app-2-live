@@ -117,8 +117,14 @@ export function poseResetDelayMs(opts: {
   talking: boolean;
   actLandedAt: number;
   now?: number;
+  /**
+   * Music Set reply is still the spoken bubble. Frown idle is the next rest,
+   * not this line — even a minute after speech ends.
+   */
+  nowPlayingBubble?: boolean;
 }): number | null {
   if (opts.talking) return null;
+  if (opts.nowPlayingBubble) return null;
   const now = opts.now ?? Date.now();
   const elapsed = Math.max(0, now - (opts.actLandedAt || now));
   const holdPose =
@@ -127,6 +133,35 @@ export function poseResetDelayMs(opts: {
     return Math.max(POSE_HOLD_MIN_MS - elapsed, POSE_HOLD_AFTER_TALK_MS);
   }
   return Math.max(EMOTION_HOLD_MS - elapsed, 800);
+}
+
+/**
+ * Settle delay for the pose just put on a spoken bubble.
+ *
+ * `lifeKind` is the Life turn that produced the line (`track_change` when
+ * Music Set / now_playing just changed). A normal line still settles a few
+ * seconds after speech. A Music Set line whose pose is talk | content | smug
+ * stays on that bubble — idle.png is the next rest, not this reply.
+ */
+export function spokenBubbleResetDelay(opts: {
+  pose: PoseId;
+  emotion?: EmotionId;
+  talking: boolean;
+  actLandedAt: number;
+  now?: number;
+  lifeKind?: string | null;
+}): number | null {
+  const nowPlayingBubble =
+    opts.lifeKind === "track_change" &&
+    (NOW_PLAYING_TINT_POSES as readonly string[]).includes(opts.pose);
+  return poseResetDelayMs({
+    pose: opts.pose,
+    emotion: opts.emotion,
+    talking: opts.talking,
+    actLandedAt: opts.actLandedAt,
+    now: opts.now,
+    nowPlayingBubble,
+  });
 }
 
 /**
