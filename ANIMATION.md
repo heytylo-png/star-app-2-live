@@ -48,9 +48,9 @@ Amplitude still drives a small talk bob on the rig. Dedicated poses (`talk`, `wa
 TyLo FAIL: two PNGs up at once (ghost / second body during blink). The four eyes-only sheets stay on disk and are not the rest body. Source of truth: `artifacts/star-rai-blink-frames/baked/`. The same bytes are in `public/rai/`:
 
 - `idle_blink_01_open.png` — byte copy of `idle.png`
-- `idle_blink_02_closing.png`
-- `idle_blink_03_half.png`
-- `idle_blink_04_closed.png`
+- `idle_blink_02_closing.png` — lids dropped, lower iris still readable
+- `idle_blink_03_half.png` — mid step between 02 and 04
+- `idle_blink_04_closed.png` — lids shut, no iris
 
 Each file is a full **1008×1792** frame on the `idle.png` canvas. Outside the eye box `(420, 185, 210, 70)` max abs RGB delta versus `idle.png` is 0. Only the lids change.
 

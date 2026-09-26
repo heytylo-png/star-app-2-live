@@ -8,9 +8,9 @@ Body pixels are locked. Hair, skirt, shoes, torso, bow, and hands match `idle.pn
 
 ## Files
 - `idle_blink_01_open.png` — byte copy of `public/rai/idle.png` (open glare)
-- `idle_blink_02_closing.png` — lids starting down
-- `idle_blink_03_half.png` — mid lids
-- `idle_blink_04_closed.png` — lids closed
+- `idle_blink_02_closing.png` — lids dropped, lower iris still readable
+- `idle_blink_03_half.png` — mid step between 02 and 04
+- `idle_blink_04_closed.png` — lids shut, no iris
 
 The same four files are byte-copied into `public/rai/`. They are not the rest body while blink is parked.
 
@@ -19,7 +19,7 @@ Outside this box, max abs RGB delta versus `idle.png` is 0 on every frame:
 
 `(x, y, w, h) = (420, 185, 210, 70)`
 
-Lid paint is taken from the TyLo v2 eye-band art and composited only inside the idle eye sockets. The sockets sit inside that box. Nothing outside it is rewritten.
+Lids are painted on the `idle.png` canvas, inside the sockets. A GIF palette is not the source. `02` drops the upper lid over the top of the iris and leaves the lower iris readable. `03` is the step between that and shut. `04` fills the socket with the lid: no sclera, no iris. Nothing outside the eye box is rewritten.
 
 ## Cycle
 `01 → 02 → 03 → 04 → 03 → 02 → 01`
