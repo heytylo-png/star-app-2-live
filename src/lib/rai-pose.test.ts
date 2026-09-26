@@ -6,6 +6,7 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
   CHART_BEAT_TINT_POSES,
+  IDLE_BLINK_ENABLED,
   IDLE_FRAME_SIZE,
   IDLE_REST_LAYER_ID,
   allSpriteUrls,
@@ -40,7 +41,6 @@ import {
   USE_EXPO_TALK_BUST,
 } from "./rai.ts";
 import { actToJson, composeAct } from "./brain.ts";
-import { punchStudioWhite } from "./punch-white.ts";
 import { POSE_TINT_SOURCE } from "./generated/star-rai-artifacts.ts";
 import { parseTrackTitle, resolveLifeTurn } from "./life.ts";
 import { applySlotPatch, extractSlotsFromUserText } from "./memory-slots.ts";
@@ -123,26 +123,24 @@ function decodePng(buf: Buffer): {
   return { width, height, colorType, rgba };
 }
 
-/** Pixels whose punched alpha disagrees, ignoring the lid band. */
-function punchedSilhouetteMismatch(
+/** Pixels outside the lid band whose RGB differs by more than `min`. */
+function bodyChannelMismatch(
   a: Uint8Array,
   b: Uint8Array,
   width: number,
   height: number,
+  min = 20,
 ): number {
-  const left = new Uint8ClampedArray(a);
-  const right = new Uint8ClampedArray(b);
-  punchStudioWhite(left, width, height);
-  punchStudioWhite(right, width, height);
   let mismatch = 0;
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      // Lid band. Open-eye pixels are not a body punch.
-      if (x >= 380 && x < 680 && y >= 150 && y < 320) continue;
-      const i = (y * width + x) * 4 + 3;
-      const aOn = left[i]! > 16;
-      const bOn = right[i]! > 16;
-      if (aOn !== bOn) mismatch++;
+      if (x >= 370 && x < 680 && y >= 170 && y < 320) continue;
+      const i = (y * width + x) * 4;
+      const dr = Math.abs(a[i]! - b[i]!);
+      const dg = Math.abs(a[i + 1]! - b[i + 1]!);
+      const db = Math.abs(a[i + 2]! - b[i + 2]!);
+      const max = dr > dg ? (dr > db ? dr : db) : dg > db ? dg : db;
+      if (max > min) mismatch++;
     }
   }
   return mismatch;
@@ -423,16 +421,17 @@ describe("layersFor talking vs pose hold", () => {
     assert.doesNotMatch(blob, /star-rai\/idle-talk/);
   });
 
-  it("rests idle on the baked 01 open frame", () => {
+  it("rests idle on idle.png while blink is off", () => {
     const layers = layersFor({ ...base, pose: "idle", emotion: "bratty", talking: false });
+    assert.equal(IDLE_BLINK_ENABLED, false);
     assert.equal(layers.length, 1);
     assert.equal(layers[0]!.id, IDLE_REST_LAYER_ID);
     assert.equal(layers[0]!.src, idleRestSrc());
-    assert.match(layers[0]!.src, /idle_blink_01_open\.png$/);
-    assert.doesNotMatch(layers[0]!.src, /\/idle\.png$/);
+    assert.match(layers[0]!.src, /\/idle\.png$/);
+    assert.doesNotMatch(layers[0]!.src, /idle_blink/);
   });
 
-  it("swaps one full baked frame through the blink and does not paste a hole", () => {
+  it("keeps blink off and does not paste a hole onto idle.png", () => {
     const rest = {
       ...base,
       pose: "idle" as const,
@@ -441,11 +440,13 @@ describe("layersFor talking vs pose hold", () => {
       blink: 4 as const,
     };
     const closed = layersFor(rest);
+    assert.equal(IDLE_BLINK_ENABLED, false);
     assert.equal(closed.length, 1);
     assert.equal(closed[0]!.role, "body");
     assert.equal(closed[0]!.id, IDLE_REST_LAYER_ID);
-    assert.equal(closed[0]!.src, idleBlinkFrameSrc(4));
-    assert.match(closed[0]!.src, /idle_blink_04_closed\.png$/);
+    assert.equal(closed[0]!.src, idleRestSrc());
+    assert.match(closed[0]!.src, /\/idle\.png$/);
+    assert.doesNotMatch(closed[0]!.src, /idle_blink/);
     assert.doesNotMatch(closed.map((l) => l.src).join(" "), /face_eyes|mouth_speak|mouth_oh/);
     assert.equal(idleBlinkFrameSrc(0), SPRITES.idleBlinkOpen);
     assert.equal(idleBlinkFrameSrc(1), SPRITES.idleBlinkOpen);
@@ -473,12 +474,11 @@ describe("layersFor talking vs pose hold", () => {
       assert.equal(layer[0]!.id, IDLE_REST_LAYER_ID);
       assert.equal(layer[0]!.role, "body");
     }
-    assert.equal(frames[0]![0]!.src, frames[1]![0]!.src);
-    assert.match(frames[1]![0]!.src, /idle_blink_01_open\.png$/);
-    assert.match(frames[2]![0]!.src, /idle_blink_02_closing\.png$/);
-    assert.match(frames[3]![0]!.src, /idle_blink_03_half\.png$/);
-    assert.match(frames[4]![0]!.src, /idle_blink_04_closed\.png$/);
-    assert.equal(new Set(frames.map((layer) => layer[0]!.src)).size, 4);
+    for (const layer of frames) {
+      assert.match(layer[0]!.src, /\/idle\.png$/);
+      assert.doesNotMatch(layer[0]!.src, /idle_blink/);
+    }
+    assert.equal(new Set(frames.map((layer) => layer[0]!.src)).size, 1);
 
     assert.equal(layersFor({ ...rest, talking: true }).length, 1);
     assert.match(layersFor({ ...rest, talking: true })[0]!.src, /talk_official/);
@@ -498,7 +498,7 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(glance[0]!.src, idleRestSrc());
     assert.equal(glance[0]!.id, IDLE_REST_LAYER_ID);
 
-    assert.equal(canIdleBlink(rest), true);
+    assert.equal(canIdleBlink(rest), false);
     assert.equal(canIdleBlink({ ...rest, talking: true }), false);
     assert.equal(canIdleBlink({ ...rest, pose: "wave" }), false);
     assert.equal(canIdleBlink({ ...rest, reducedMotion: true }), false);
@@ -572,9 +572,15 @@ describe("layersFor talking vs pose hold", () => {
       if (bakedName.endsWith("01_open.png")) openRgba = frame.rgba;
     }
     assert.ok(openRgba);
-    const punch = punchedSilhouetteMismatch(idle.rgba, openRgba!, idle.width, idle.height);
-    assert.ok(punch > 400, `idle.png vs 01 open silhouette mismatch ${punch} — rest must stay on 01`);
-    assert.equal(idleRestSrc(), SPRITES.idleBlinkOpen);
+    const closing = decodePng(readFileSync(join(publicRoot, "rai/idle_blink_02_closing.png")));
+    const diverge = bodyChannelMismatch(idle.rgba, closing.rgba, idle.width, idle.height);
+    assert.ok(
+      diverge > 40_000,
+      `02 vs idle.png body divergence ${diverge} — blink stays off until the body matches`,
+    );
+    assert.equal(IDLE_BLINK_ENABLED, false);
+    assert.equal(idleRestSrc(), SPRITES.poses.idle);
+    assert.match(idleRestSrc(), /\/idle\.png$/);
   });
 
   it("pins soft/hype off frown idle even when pose is still idle", () => {
@@ -907,10 +913,11 @@ describe("pose tint", () => {
       angle: 0,
     })[0]!.src;
     assert.equal(restSrc, idleRestSrc());
-    assert.match(restSrc, /idle_blink_01_open\.png$/);
+    assert.match(restSrc, /\/idle\.png$/);
+    assert.doesNotMatch(restSrc, /idle_blink/);
     assert.equal(
       canIdleBlink({ pose: "idle", emotion: DEFAULT_EMOTION, talking: false }),
-      true,
+      false,
     );
   });
 
@@ -1050,7 +1057,7 @@ describe("pose tint", () => {
     });
     assert.equal(held, null);
 
-    // A normal playful line still settles so rest blink can run.
+    // A normal playful line still settles onto idle.png. Blink stays off.
     const playful = spokenBubbleResetDelay({
       pose: "talk",
       emotion: "bratty",

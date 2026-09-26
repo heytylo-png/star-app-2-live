@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   allSpriteUrls,
   canIdleBlink,
+  IDLE_BLINK_ENABLED,
   IDLE_REST_LAYER_ID,
   idleBlinkFrameUrls,
   idleRestSrc,
@@ -78,8 +79,10 @@ function fadeMsFor(layer: SpriteLayer, talking: boolean, blinkMode: BlinkFadeMod
  * Star Rai 2D puppet — planted idle life, look-at lean, talk/mood sheets.
  * Studio-white cards are punched to alpha. Layers crossfade by stable id.
  * Spoken bubble holds talk/mood through the line; frown idle is rest-only.
- * Rest idle is one full-frame image. Blink swaps that image through the baked
- * cycle. Expo bust mouth/eye crops stay off. Dedicated poses do not blink.
+ * Rest idle is one full-frame image: public/rai/idle.png.
+ * Blink is off (IDLE_BLINK_ENABLED). The baked sheets are full frames, but
+ * 02–04 replace the body, so they are not swapped in. No eye strip, no hole
+ * overlay. Expo bust mouth/eye crops stay off. Dedicated poses do not blink.
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -327,7 +330,13 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     return () => cancelAnimationFrame(raf.current);
   }, []);
 
-  const blinkShown = USE_EXPO_TALK_BUST ? blink : framesReady ? blink : 0;
+  const blinkShown = !IDLE_BLINK_ENABLED
+    ? 0
+    : USE_EXPO_TALK_BUST
+      ? blink
+      : framesReady
+        ? blink
+        : 0;
   // Pose / talk / emotion can change a frame before the blink timer cleans up.
   // Derive snap in that render so the next sheet cuts in instead of easing from a closed frame.
   let blinkModeLive: BlinkFadeMode = blinkMode;

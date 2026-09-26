@@ -87,8 +87,20 @@ export function isExpressiveEmotion(emotion: EmotionId): boolean {
 }
 
 /**
+ * Rest blink is off.
+ *
+ * The four baked sheets are full 1008×1792 frames and the draw path swaps
+ * one of them at a time (no eye strip, no hole, no DEST_RECT). Frames 02–04
+ * are still a different painting than idle.png / 01 outside the eyes, so
+ * playing the cycle replaces the body and the lids read jagged. Until a
+ * same-body full sheet exists, rest is public/rai/idle.png only.
+ */
+export const IDLE_BLINK_ENABLED = false;
+
+/**
  * Official PNG blink window: rest idle on the frown sheet.
  * Named poses, talk flap, and emotion-named sheets do not blink.
+ * The feature itself is off — see IDLE_BLINK_ENABLED.
  */
 export function canIdleBlink(state: {
   pose: PoseId;
@@ -96,6 +108,7 @@ export function canIdleBlink(state: {
   talking: boolean;
   reducedMotion?: boolean;
 }): boolean {
+  if (!IDLE_BLINK_ENABLED) return false;
   if (state.reducedMotion) return false;
   if (state.talking) return false;
   if (isDedicatedPose(state.pose)) return false;
@@ -110,8 +123,8 @@ export function canIdleBlink(state: {
  * The talk/mood sheet stays on the line she is saying. Once that line is
  * over, the next rest is a few seconds — not the life of the transcript
  * row. Dedicated poses hold at least POSE_HOLD_MIN_MS from landing, and
- * at least POSE_HOLD_AFTER_TALK_MS after speech ends, then idle.png so
- * rest blink can run.
+ * at least POSE_HOLD_AFTER_TALK_MS after speech ends, then idle.png.
+ * Rest blink stays off (IDLE_BLINK_ENABLED).
  */
 export function poseResetDelayMs(opts: {
   pose: PoseId;
@@ -248,8 +261,8 @@ export const SPRITES = {
   /**
    * Baked full-frame rest blink. Byte copies of
    * artifacts/star-rai-blink-frames/baked/. Each file is 1008×1792.
-   * The idle body swaps through these one image at a time.
-   * idle.png punches against 01, so rest uses 01 open as well.
+   * Not mounted: 02–04 are a different body than idle.png, so a swap
+   * replaces the figure. Rest is idle.png while IDLE_BLINK_ENABLED is false.
    */
   idleBlinkOpen: ASSET("rai/idle_blink_01_open.png"),
   idleBlinkClosing: ASSET("rai/idle_blink_02_closing.png"),
@@ -328,8 +341,8 @@ export function isRetiredBlinkSrc(src: string): boolean {
 
 /**
  * Full frame for one rest-blink step.
- * 0 rest and 1 are both 01 open (idle.png punches against that sheet).
- * 2 = 02 closing, 3 = 03 half, 4 = 04 closed.
+ * 0 rest and 1 are both 01 open. 2 = 02 closing, 3 = 03 half, 4 = 04 closed.
+ * Unused while IDLE_BLINK_ENABLED is false — rest is idle.png.
  */
 export function idleBlinkFrameSrc(blink: number): string {
   if (blink === 2) return SPRITES.idleBlinkClosing;
@@ -338,9 +351,9 @@ export function idleBlinkFrameSrc(blink: number): string {
   return SPRITES.idleBlinkOpen;
 }
 
-/** Rest body. Same sheet as blink step 01 open. */
+/** Rest body. idle.png while blink is off. */
 export function idleRestSrc(): string {
-  return SPRITES.idleBlinkOpen;
+  return IDLE_BLINK_ENABLED ? SPRITES.idleBlinkOpen : SPRITES.poses.idle;
 }
 
 /** The four unique baked frames, in forward order. */
@@ -528,9 +541,14 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     return [body(SPRITES.poses.talk)];
   }
 
-  // One full frame. The layer id stays IDLE_REST_LAYER_ID so the stage swaps
-  // a single image through the baked cycle and never stacks a second figure.
+  // One full frame. The layer id stays IDLE_REST_LAYER_ID so a blink, when
+  // enabled, swaps a single image and never stacks a second figure.
+  // Blink is off: 02–04 replace the idle body, so rest is idle.png only.
   void reducedMotion;
+  void blink;
+  if (!IDLE_BLINK_ENABLED) {
+    return [body(SPRITES.poses.idle, 1, IDLE_REST_LAYER_ID)];
+  }
   return [body(idleBlinkFrameSrc(blink), 1, IDLE_REST_LAYER_ID)];
 }
 

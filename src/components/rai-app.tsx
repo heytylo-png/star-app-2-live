@@ -427,7 +427,7 @@ function RaiReady() {
       setEmotion("glance");
       return;
     }
-    // A normal line settles a few seconds after speech so rest blink can run.
+    // A normal line settles a few seconds after speech onto idle.png. Blink stays off.
     // Music Set (track_change → talk|content|smug) stays on that bubble.
     const delay = spokenBubbleResetDelay({
       pose,
