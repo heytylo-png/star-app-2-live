@@ -382,25 +382,11 @@ body.chat-thread-resizing {
     drop-shadow(0 1px 0 rgba(232, 163, 28, 0.1));
 }
 
-@media (max-width: 639px) {
-  .rai-layer,
-  .rai-eye-host {
-    top: 1.25%;
-    transform: scale(var(--rai-long-shot-phone));
-  }
-}
-
-@media (min-width: 640px) and (min-height: 900px) {
-  .rai-layer,
-  .rai-eye-host {
-    transform: scale(var(--rai-long-shot-tall));
-  }
-}
-
 /*
   Eye-rect host shares the body layer box (top, scale, origin) so the two
   crops land on the same contain-fit as idle.png. Not a second full sheet.
-  Canvas is 1008×1792 (IDLE_BLINK_CANVAS).
+  Canvas is 1008×1792 (IDLE_BLINK_CANVAS). Keep this rule above the
+  long-shot media queries so those overrides win for both.
 */
 .rai-eye-host {
   position: absolute;
@@ -430,6 +416,22 @@ body.chat-thread-resizing {
   pointer-events: none;
   user-select: none;
   object-fit: fill;
+  transition: none;
+}
+
+@media (max-width: 639px) {
+  .rai-layer,
+  .rai-eye-host {
+    top: 1.25%;
+    transform: scale(var(--rai-long-shot-phone));
+  }
+}
+
+@media (min-width: 640px) and (min-height: 900px) {
+  .rai-layer,
+  .rai-eye-host {
+    transform: scale(var(--rai-long-shot-tall));
+  }
 }
 
 .rai-ahoge {
