@@ -10,7 +10,7 @@ import {
   planIdleCanvasDraws,
   type IdleCanvasDraw,
 } from "./idle-blink-paint.ts";
-import { IDLE_BLINK_CANVAS, IDLE_BLINK_EYE_HOLES } from "./rai.ts";
+import { IDLE_BLINK_CANVAS, IDLE_BLINK_DEST_RECT } from "./rai.ts";
 
 const mountedReady = {
   canvasMounted: true,
@@ -57,7 +57,7 @@ describe("planIdleCanvasDraws", () => {
     );
   });
 
-  it("blink only schedules the two eye rects", () => {
+  it("blink only schedules the dest rect", () => {
     assert.deepEqual(
       plan({
         bodyPainted: true,
@@ -102,13 +102,10 @@ describe("planIdleCanvasDraws", () => {
     ]);
   });
 
-  it("keeps both eye holes outside 300×150 and inside the idle bitmap", () => {
-    for (const hole of IDLE_BLINK_EYE_HOLES) {
-      assert.equal(eyeRectFitsCanvas(hole, BROWSER_DEFAULT_CANVAS), false);
-      assert.equal(eyeRectFitsCanvas(hole, IDLE_BLINK_CANVAS), true);
-    }
-    assert.deepEqual(IDLE_BLINK_EYE_HOLES[0], { x: 432, y: 202, w: 80, h: 40 });
-    assert.deepEqual(IDLE_BLINK_EYE_HOLES[1], { x: 508, y: 202, w: 80, h: 40 });
+  it("keeps DEST_RECT outside 300×150 and inside the idle bitmap", () => {
+    assert.equal(eyeRectFitsCanvas(IDLE_BLINK_DEST_RECT, BROWSER_DEFAULT_CANVAS), false);
+    assert.equal(eyeRectFitsCanvas(IDLE_BLINK_DEST_RECT, IDLE_BLINK_CANVAS), true);
+    assert.deepEqual(IDLE_BLINK_DEST_RECT, { x: 424, y: 193, w: 196, h: 57 });
   });
 });
 
@@ -128,27 +125,24 @@ function fakeCtx(calls: unknown[][]) {
 }
 
 describe("idle canvas drawImage", () => {
-  it("draws the full idle sheet once and eye rects only at the holes", () => {
+  it("draws the full idle sheet once and one patch at DEST_RECT", () => {
     const calls: unknown[][] = [];
     const ctx = fakeCtx(calls);
     const idle = { name: "idle" };
-    const left = { name: "lid-l" };
-    const right = { name: "lid-r" };
+    const patch = { name: "02-open" };
     const draws = applyIdleCanvasPlan(
       [
         { kind: "body" },
         { kind: "eyes", mode: "lid" },
       ],
       ctx,
-      { idle: idle as CanvasImageSource, lids: [left, right] as unknown as [CanvasImageSource, CanvasImageSource] },
+      { idle: idle as CanvasImageSource, lid: patch as CanvasImageSource },
     );
-    const [holeL, holeR] = IDLE_BLINK_EYE_HOLES;
-    assert.equal(draws, 5);
+    const hole = IDLE_BLINK_DEST_RECT;
+    assert.equal(draws, 3);
     assert.deepEqual(calls[0], [idle, 0, 0]);
-    assert.deepEqual(calls[1], [idle, holeL.x, holeL.y, holeL.w, holeL.h, holeL.x, holeL.y, holeL.w, holeL.h]);
-    assert.deepEqual(calls[2], [left, 0, 0, holeL.w, holeL.h, holeL.x, holeL.y, holeL.w, holeL.h]);
-    assert.deepEqual(calls[3], [idle, holeR.x, holeR.y, holeR.w, holeR.h, holeR.x, holeR.y, holeR.w, holeR.h]);
-    assert.deepEqual(calls[4], [right, 0, 0, holeR.w, holeR.h, holeR.x, holeR.y, holeR.w, holeR.h]);
+    assert.deepEqual(calls[1], [idle, hole.x, hole.y, hole.w, hole.h, hole.x, hole.y, hole.w, hole.h]);
+    assert.deepEqual(calls[2], [patch, 0, 0, hole.w, hole.h, hole.x, hole.y, hole.w, hole.h]);
     assert.equal(
       calls.filter((args) => args.length === 3).length,
       1,
@@ -156,18 +150,20 @@ describe("idle canvas drawImage", () => {
     );
   });
 
-  it("puts glare eyes back from idle.png source rects only", () => {
+  it("puts the dest rect back from idle.png source rects only", () => {
     const calls: unknown[][] = [];
     const ctx = fakeCtx(calls);
     const idle = { name: "idle" };
     drawIdleBody(ctx, idle as CanvasImageSource);
     calls.length = 0;
-    drawGlareEyeRect(ctx, idle as CanvasImageSource, IDLE_BLINK_EYE_HOLES[0]);
-    drawEyeRect(ctx, { name: "crop" } as CanvasImageSource, IDLE_BLINK_EYE_HOLES[1]);
-    const [holeL, holeR] = IDLE_BLINK_EYE_HOLES;
-    assert.deepEqual(calls[0], [idle, holeL.x, holeL.y, holeL.w, holeL.h, holeL.x, holeL.y, holeL.w, holeL.h]);
-    assert.equal(calls[1]?.[5], holeR.x);
-    assert.equal(calls[1]?.[6], holeR.y);
+    drawGlareEyeRect(ctx, idle as CanvasImageSource, IDLE_BLINK_DEST_RECT);
+    drawEyeRect(ctx, { name: "patch" } as CanvasImageSource, IDLE_BLINK_DEST_RECT);
+    const hole = IDLE_BLINK_DEST_RECT;
+    assert.deepEqual(calls[0], [idle, hole.x, hole.y, hole.w, hole.h, hole.x, hole.y, hole.w, hole.h]);
+    assert.equal(calls[1]?.[5], hole.x);
+    assert.equal(calls[1]?.[6], hole.y);
+    assert.equal(calls[1]?.[7], hole.w);
+    assert.equal(calls[1]?.[8], hole.h);
     assert.ok(calls.every((args) => args.length === 9));
   });
 });

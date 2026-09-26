@@ -13,7 +13,7 @@ export const IDLE_BEAT_FADE_MS = 400;
 /**
  * Rest-idle blink timing. Not an opacity crossfade of two full sheets.
  * `IDLE_BLINK_FADE_MS` is the close phase and the open phase (split across
- * the early/mid lid frames). `IDLE_BLINK_HOLD_MS` is the fully-closed dwell.
+ * 02-open and 03-half). `IDLE_BLINK_HOLD_MS` is the 04-closed dwell.
  * Both stay inside 80–120ms and under the pose crossfade.
  */
 export const IDLE_BLINK_FADE_MS = 100;
@@ -24,22 +24,38 @@ export const IDLE_BLINK_GAP_MAX_MS = 6000;
 
 export type IdleBlinkStep = { blink: 0 | 1 | 2 | 3; at: number };
 
+/** Maker frames. 1 = 02-open (788), 2 = 03-half (791), 3 = 04-closed (789). */
+const IDLE_BLINK_FORWARD = [1, 2, 3] as const;
+
 /**
- * One rest blink. The body is already open. Then closing → half → closed
- * hold → half → closing → open (7 steps, glare at both ends).
- * `at` is ms from the start of the blink. Frame 0 restores `idle.png` eyes.
+ * Patch name for a schedule step. `idle` is the dest rect copied back from
+ * idle.png — not a fourth patch, and not 01-open-brow.
+ */
+export function idleBlinkStepName(blink: number): "02-open" | "03-half" | "04-closed" | "idle" {
+  if (blink === 1) return "02-open";
+  if (blink === 2) return "03-half";
+  if (blink >= 3) return "04-closed";
+  return "idle";
+}
+
+/**
+ * One rest blink on the single dest rect.
+ * 02-open → 03-half → 04-closed → reverse (03-half → 02-open) → idle dest.
+ * `at` is ms from the start of the blink. The last step restores idle.png
+ * inside the dest rect. The body sheet is not swapped.
  */
 export function idleBlinkSchedule(): IdleBlinkStep[] {
   const step = IDLE_BLINK_FADE_MS / 2;
   const hold = IDLE_BLINK_HOLD_MS;
-  return [
-    { blink: 1, at: 0 },
-    { blink: 2, at: step },
-    { blink: 3, at: step * 2 },
-    { blink: 2, at: step * 2 + hold },
-    { blink: 1, at: step * 3 + hold },
-    { blink: 0, at: step * 4 + hold },
-  ];
+  const forward: Array<1 | 2 | 3> = [...IDLE_BLINK_FORWARD];
+  const reverse = forward.slice(0, -1).reverse();
+  const frames: Array<0 | 1 | 2 | 3> = [...forward, ...reverse, 0];
+  let at = 0;
+  return frames.map((blink) => {
+    const entry: IdleBlinkStep = { blink, at };
+    at += blink === 3 ? hold : step;
+    return entry;
+  });
 }
 
 /** Idle vertical travel stays under this so the sheet does not float. */
