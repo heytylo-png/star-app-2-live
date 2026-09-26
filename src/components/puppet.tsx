@@ -82,8 +82,8 @@ function fadeMsFor(layer: SpriteLayer, talking: boolean, blinkMode: BlinkFadeMod
  * Rest idle is one full-frame image: public/rai/idle.png.
  * Blink is parked (IDLE_BLINK_ENABLED). The timer does not cycle frames.
  * The baked sheets stay on disk but are not swapped in. No eye strip,
- * no hole overlay, no second body. Expo bust mouth/eye crops stay off.
- * Dedicated poses do not blink.
+ * no hole overlay, no second <img> for lids. Expo bust mouth/eye crops
+ * stay off. Dedicated poses do not blink.
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
   const stageRef = useRef<HTMLDivElement>(null);

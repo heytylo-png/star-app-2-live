@@ -483,8 +483,6 @@ describe("layersFor talking vs pose hold", () => {
       assert.equal(layer.length, 1);
       assert.equal(layer[0]!.id, IDLE_REST_LAYER_ID);
       assert.equal(layer[0]!.role, "body");
-    }
-    for (const layer of frames) {
       assert.equal(layer[0]!.src, idleRestSrc());
       assert.match(layer[0]!.src, /\/idle\.png$/);
       assert.doesNotMatch(layer[0]!.src, /idle_blink/);
@@ -626,6 +624,19 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(idleRestSrc(), SPRITES.poses.idle);
     assert.match(idleRestSrc(), /\/idle\.png$/);
     assert.doesNotMatch(idleRestSrc(), /idle_blink/);
+
+    const gif = readFileSync(join(bakedRoot, "proof_standing_full.gif"));
+    assert.equal(gif.subarray(0, 6).toString(), "GIF89a");
+    assert.equal(gif.readUInt16LE(6), IDLE_FRAME_SIZE.width);
+    assert.equal(gif.readUInt16LE(8), IDLE_FRAME_SIZE.height);
+    const note = readFileSync(join(bakedRoot, "README.md"), "utf8");
+    assert.match(note, /01 → 02 → 03 → 04 → 03 → 02 → 01/);
+    assert.match(note, /Do not skip 02/);
+    assert.match(note, /hard-swap a single/);
+    assert.match(note, /no dual-layer opacity/);
+    assert.match(note, /IDLE_BLINK_ENABLED` is false/);
+    assert.match(note, /TyLo says pass/);
+    assert.match(note, /CoS alone is not enough/);
   });
 
   it("pins soft/hype off frown idle even when pose is still idle", () => {

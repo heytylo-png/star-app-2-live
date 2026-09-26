@@ -3,8 +3,9 @@
 
 Eyes only. Every pixel outside the documented eye box is copied from idle.png.
 Frame 01 is a byte copy of idle.png. --proof-only refreshes the standing
-clip from the locked sheets and does not re-encode 02–04. Runtime blink
-is IDLE_BLINK_ENABLED in src/lib/rai.ts.
+clip from the locked sheets and does not re-encode 02–04. The standing
+gif hard-replaces exactly one 1008×1792 sheet per frame (no crossfade).
+Runtime blink stays parked: IDLE_BLINK_ENABLED is false in src/lib/rai.ts.
 
 Lid paint is the TyLo v2 eye-band art (791 half, 789 closed), sampled only
 inside the idle eye sockets. Those patches are not stamped as full sheets.
@@ -218,12 +219,32 @@ def build_frames(idle: np.ndarray) -> dict[str, np.ndarray]:
     }
 
 
+def composite_hard_replace(sheet: np.ndarray) -> np.ndarray:
+    """Exactly one full 1008×1792 sheet on a fresh canvas.
+
+    Hard replace: every pixel is copied from this sheet. No previous frame,
+    no second body, no alpha, and no opacity blend with another sheet.
+    """
+    if sheet.dtype != np.uint8 or sheet.shape != (1792, 1008, 3):
+        raise SystemExit(
+            f"hard replace wants one 1008×1792 RGB sheet, got {getattr(sheet, 'shape', None)}"
+        )
+    canvas = np.empty((1792, 1008, 3), dtype=np.uint8)
+    canvas[:, :, :] = sheet
+    if not np.array_equal(canvas, sheet):
+        raise SystemExit("hard replace changed the single sheet")
+    return canvas
+
+
 def write_standing_proof(idle: np.ndarray, frames: dict[str, np.ndarray]) -> None:
     """Full-body cycle gif plus a standing strip with a diff row.
 
+    Each gif frame is one full sheet, hard-replaced onto an empty canvas.
     Holds are longer than the runtime dwells so 02 closing is obvious.
     The gif uses one palette and no dither: identical body pixels stay
-    identical across frames. The diff row is computed from the PNG sheets.
+    identical across frames. Disposal restores to background before the
+    next frame so a viewer cannot leave the previous body underneath.
+    The diff row is computed from the PNG sheets.
     """
     order_names = [
         "idle_blink_01_open.png",
@@ -235,34 +256,72 @@ def write_standing_proof(idle: np.ndarray, frames: dict[str, np.ndarray]) -> Non
         "idle_blink_01_open.png",
     ]
     # Review holds. Runtime dwells stay 160/160/640/1000 in rai-motion.ts.
+    # 02 is on the way closed and on the way open. Do not skip it.
     durations = [400, 480, 720, 960, 720, 480, 400]
-    order = [frames[name] for name in order_names]
+    order = [composite_hard_replace(frames[name]) for name in order_names]
+    for index, (sheet, name) in enumerate(zip(order, order_names)):
+        if not np.array_equal(sheet, frames[name]):
+            raise SystemExit(f"cycle step {index} is not exactly {name}")
+        if index == 0:
+            continue
+        prev = order[index - 1]
+        if np.array_equal(sheet, prev):
+            continue
+        blend = ((sheet.astype(np.uint16) + prev.astype(np.uint16)) // 2).astype(np.uint8)
+        if np.array_equal(sheet, blend):
+            raise SystemExit(f"cycle step {index} is an opacity blend of two sheets")
+        # A blend would move the eye-box pixels halfway. The hard cut must not.
+        eye = np.abs(sheet.astype(np.int16) - blend.astype(np.int16)).max()
+        if eye == 0:
+            raise SystemExit(f"cycle step {index} matches a crossfade of the previous sheet")
+
     base = Image.fromarray(idle).quantize(colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
-    gif_frames = [
-        Image.fromarray(im).quantize(palette=base, dither=Image.Dither.NONE) for im in order
-    ]
+    gif_frames = []
+    for im in order:
+        frame = Image.fromarray(im).quantize(palette=base, dither=Image.Dither.NONE)
+        frame.info.pop("transparency", None)
+        gif_frames.append(frame)
     gif_path = BAKED / "proof_standing_full.gif"
+    # disposal=2: restore to background, then draw the next full sheet.
+    # That is a hard replace. disposal=1 would leave the previous texture
+    # in place under any partial update.
     gif_frames[0].save(
         gif_path,
         save_all=True,
         append_images=gif_frames[1:],
         duration=durations,
         loop=0,
-        disposal=1,
+        disposal=2,
         optimize=False,
     )
 
     gif = Image.open(gif_path)
+    if gif.n_frames != len(order_names) or gif.size != (1008, 1792):
+        raise SystemExit(f"standing gif is {gif.n_frames} frames {gif.size}, expected 7×1008×1792")
     gif.seek(0)
     ref = np.array(gif.convert("RGB"))
     x, y, w, h = EYE_BOX
-    for index in range(1, gif.n_frames):
+    for index in range(gif.n_frames):
         gif.seek(index)
+        if gif.size != (1008, 1792):
+            raise SystemExit(f"standing gif frame {index} is {gif.size}, expected 1008×1792")
+        if getattr(gif, "disposal_method", None) != 2:
+            raise SystemExit(f"standing gif frame {index} disposal is not hard-replace (2)")
+        if gif.info.get("transparency") is not None:
+            raise SystemExit(f"standing gif frame {index} has a transparency index")
         arr = np.array(gif.convert("RGB"))
         outside = max_abs_outside(arr, ref, EYE_BOX)
         if outside != 0:
             raise SystemExit(f"standing gif frame {index} drifted outside the eye box (max {outside})")
-    print(f"standing gif {gif.n_frames} frames {gif.size[0]}x{gif.size[1]} outside_max_vs_01=0")
+        # Non-background silhouette outside the eye box must match frame 01.
+        # A second body would show up here even if a blend hid it in the lids.
+        bg_ref = (ref[:, :, 0] >= 250) & (ref[:, :, 1] >= 250) & (ref[:, :, 2] >= 250)
+        bg = (arr[:, :, 0] >= 250) & (arr[:, :, 1] >= 250) & (arr[:, :, 2] >= 250)
+        extra = bg_ref ^ bg
+        extra[y : y + h, x : x + w] = False
+        if bool(extra.any()):
+            raise SystemExit(f"standing gif frame {index} shows a second silhouette")
+    print(f"standing gif {gif.n_frames} frames {gif.size[0]}x{gif.size[1]} hard-replace disposal=2 outside_max_vs_01=0")
 
     # Standing strip: idle | 01 | 02 | 03 | 04, then the same frames as a
     # diff against idle.png (red = any channel changed). Full body, not an eye crop.

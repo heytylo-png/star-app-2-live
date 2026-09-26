@@ -43,18 +43,22 @@ Amplitude still drives a small talk bob on the rig. Dedicated poses (`talk`, `wa
 
 ### Idle blink
 
-**Parked.** Rest idle paints `public/rai/idle.png` only (`IDLE_BLINK_ENABLED` is false). The blink timer does not cycle frames.
+**Parked.** Rest idle paints `public/rai/idle.png` only (`IDLE_BLINK_ENABLED` is false). The blink timer does not cycle frames. Do not re-enable in this change. Re-enable only when TyLo says pass. CoS alone is not enough.
 
-TyLo FAIL: double — two PNGs up at once (ghost / second body during blink). Keep the flag false until a standing clip shows one body, lids only, no ghost. Do not re-enable in the park change.
+TyLo FAIL: two PNGs up at once (ghost / second body during blink). The four eyes-only sheets stay on disk and are not the rest body. Source of truth: `artifacts/star-rai-blink-frames/baked/`. The same bytes are in `public/rai/`:
 
-The four baked sheets stay on disk (source `artifacts/star-rai-blink-frames/baked/`, runtime copies under `public/rai/`) and are not the rest body:
-
-- `idle_blink_01_open.png`
+- `idle_blink_01_open.png` — byte copy of `idle.png`
 - `idle_blink_02_closing.png`
 - `idle_blink_03_half.png`
 - `idle_blink_04_closed.png`
 
-Named poses, talk, and emotion sheets still do not blink. `prefers-reduced-motion: reduce` stays on `idle.png` as well. Spoken `talk` / mood is a single body sheet.
+Each file is a full **1008×1792** frame on the `idle.png` canvas. Outside the eye box `(420, 185, 210, 70)` max abs RGB delta versus `idle.png` is 0. Only the lids change.
+
+Cycle map for a future hard-cut wire (not live): **01 → 02 → 03 → 04 → 03 → 02 → 01**. Do not skip 02. Hard cuts only — never opacity-blend two full sheets. Open and closing holds in the schedule are **160ms** each, half **640ms**, closed **1000ms**. Those timings are not running while the flag is false.
+
+Art gate: `artifacts/star-rai-blink-frames/baked/proof_standing_full.gif` and `proof_standing_strip.png`. The gif composites exactly one full frame at a time (hard replace, no crossfade). One body throughout; only the lids change. Runtime must hard-swap a single `<img>` / texture (no dual-layer opacity). This proof is the art gate before re-enable.
+
+Named poses, talk, and emotion sheets still do not blink. `prefers-reduced-motion: reduce` stays on `idle.png`. Spoken `talk` / mood is a single body sheet.
 
 ## Track 2 — Spine / cutout (foothold)
 
