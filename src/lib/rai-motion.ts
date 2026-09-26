@@ -12,15 +12,21 @@ export const IDLE_BEAT_FADE_MS = 400;
 
 /**
  * Rest-idle blink timing. Not an opacity crossfade of two full sheets.
- * `IDLE_BLINK_FADE_MS` is the close phase and the open phase (split across
- * 02-open and 03-half). `IDLE_BLINK_HOLD_MS` is the 04-closed dwell.
- * Both stay inside 80–120ms and under the pose crossfade.
+ *
+ * The long shot shows the eye band at about 80×23 CSS pixels. A 50ms half
+ * and a 100ms closed dwell are over before a glance can register the step.
+ * 02-open is the short lead-in. 03-half and 04-closed stay up long enough
+ * to read. The first blink starts soon after rest idle; later gaps still
+ * land another cycle inside a 10–20s watch.
  */
-export const IDLE_BLINK_FADE_MS = 100;
-export const IDLE_BLINK_HOLD_MS = 100;
-/** Random gap between blinks, inclusive range ~3–6s. */
-export const IDLE_BLINK_GAP_MIN_MS = 3000;
-export const IDLE_BLINK_GAP_MAX_MS = 6000;
+export const IDLE_BLINK_OPEN_MS = 160;
+export const IDLE_BLINK_HALF_MS = 640;
+export const IDLE_BLINK_HOLD_MS = 1000;
+/** Delay before the first blink once rest idle is allowed. */
+export const IDLE_BLINK_FIRST_MS = 900;
+/** Random gap after a cycle finishes, before the next one. */
+export const IDLE_BLINK_GAP_MIN_MS = 4500;
+export const IDLE_BLINK_GAP_MAX_MS = 7000;
 
 export type IdleBlinkStep = { blink: 0 | 1 | 2 | 3; at: number };
 
@@ -44,16 +50,21 @@ export function idleBlinkStepName(blink: number): "02-open" | "03-half" | "04-cl
  * `at` is ms from the start of the blink. The last step restores idle.png
  * inside the dest rect. The body sheet is not swapped.
  */
+function idleBlinkDwellMs(blink: 0 | 1 | 2 | 3): number {
+  if (blink === 3) return IDLE_BLINK_HOLD_MS;
+  if (blink === 2) return IDLE_BLINK_HALF_MS;
+  return IDLE_BLINK_OPEN_MS;
+}
+
 export function idleBlinkSchedule(): IdleBlinkStep[] {
-  const step = IDLE_BLINK_FADE_MS / 2;
-  const hold = IDLE_BLINK_HOLD_MS;
   const forward: Array<1 | 2 | 3> = [...IDLE_BLINK_FORWARD];
   const reverse = forward.slice(0, -1).reverse();
   const frames: Array<0 | 1 | 2 | 3> = [...forward, ...reverse, 0];
   let at = 0;
   return frames.map((blink) => {
     const entry: IdleBlinkStep = { blink, at };
-    at += blink === 3 ? hold : step;
+    // The idle restore has no lid dwell. The gap timer starts when it lands.
+    if (blink !== 0) at += idleBlinkDwellMs(blink);
     return entry;
   });
 }
