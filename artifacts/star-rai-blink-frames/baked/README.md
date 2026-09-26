@@ -8,9 +8,11 @@ Body pixels are locked. Hair, skirt, shoes, torso, bow, and hands match `idle.pn
 
 **Pass 4 (current): the lids are painted directly on `idle.png`.** No pixels from the 807 reference video are copied, warped, resampled, or composited — that method is banned. 807 was only looked at to judge lid position (7s = half, 8s = shut) and lash curve/tilt. Each eye's old opening is traced as a smooth spline and rasterised at 16× supersampling, then box-filtered down, so every edge is antialiased (no column/row mask edges). Skin under the new lid is a screened-Poisson fill that is continuous with idle's own surrounding skin and relaxes to idle's local skin tone, with a light grain matched to idle's cheek. 02 and 03 paint skin above a smooth new lid-edge curve and paint idle's dark upper lash as one tapered stroke on that curve; the iris and sclera below the curve are idle's own pixels. 04 turns the whole opening into skin (no sclera, no iris, no old lid) and paints one tapered crescent lash per eye low in the opening. Hair strands that used to run into the old lash are tapered to a point over the new skin.
 
+Pass 4 follow-up (TyLo review): the 04 lid tone is now taken per column from idle's shadow band just above the old opening and carried down to the closed lash line, where it eases into the cheek tone under the lash, so no outline of the old opening shows at 6×. The 02/03 upper lash is tapered like idle's: about 8.5px in the outer third, thinning to a point at the inner corner, with idle's outer flick (straight out on her right eye, drooping behind the hair strand on her left eye). 02's lid edge sits just low enough to cover the iris highlight completely, so no grey sliver is left under the lash.
+
 ## Files
 - `idle_blink_01_open.png` — byte copy of `public/rai/idle.png` (open glare). This is the hold.
-- `idle_blink_02_closing.png` — light drop. Painted upper lid covers about a quarter of the iris; iris still readable.
+- `idle_blink_02_closing.png` — light drop. Painted upper lid covers about a quarter of the iris (lid edge ~26–30% down the iris, ~16–22% of iris pixels); iris still readable.
 - `idle_blink_03_half.png` — half close (807 7s used as position reference only). Painted lid edge crosses the iris at about half its height; lower iris and sclera are idle's.
 - `idle_blink_04_closed.png` — shut (807 8s used as curve reference only). Whole opening painted as skin, one painted lash per eye. Sclera 0, iris 0.
 

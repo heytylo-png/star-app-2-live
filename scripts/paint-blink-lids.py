@@ -79,11 +79,14 @@ def spline(pts,closed,n=24): return [tuple(p) for p in catmull(pts,closed,n)]
 
 # lid-edge curves E (outer->inner for A, inner->outer for B) per frame
 E={
- 'A02':[(446.0,209.4),(452,211.3),(460,212.8),(468,213.6),(477,214.0),(486,214.1),(492,215.2),(497.6,217.9)],
+ 'A02':[(446.0,209.4),(452,211.3),(460,212.8),(468,214.0),(477,214.8),(486,214.6),(492,215.5),(497.6,217.9)],
  'A03':[(446.0,209.6),(452,213.0),(460,216.2),(468,218.0),(477,218.6),(486,218.5),(492,218.2),(497.6,217.9)],
  'B02':[(546.8,212.2),(550,211.9),(556,211.9),(563,211.9),(570,211.4),(577,210.2),(583,209.4),(587.2,210.4)],
  'B03':[(546.8,212.2),(551,214.5),(557,215.8),(563,216.1),(570,215.8),(577,214.6),(583,212.6),(587.2,210.4)],
 }
+
+C04={'A':[(441.7,207.3),(446,210.2),(452,214.4),(460,218.3),(468,220.3),(477,221.0),(486,220.5),(493,219.3),(497.9,218.0)],
+     'B':[(547.1,215.6),(552,218.3),(559,219.6),(566,219.6),(573,218.4),(579.5,216.0),(584.5,212.6),(588.4,209.2),(590.6,206.4)]}
 
 # ---------------- skin fill (harmonic / membrane inpaint from idle's own surrounding skin) -----
 def open_cov():
@@ -101,10 +104,47 @@ skinlike=(Lr>120)&(reg[...,0]>reg[...,1])&(reg[...,1]>reg[...,2])&(reg[...,0]>15
 unk=covO>0
 # smooth skin-tone base from idle's own clean skin (normalized gaussian convolution, outside the opening)
 satr=(reg[...,0]-reg[...,2])/np.maximum(reg[...,0],1)
-wm=(skinlike&(satr>0.42)&(covO==0)).astype(float)
-base=np.stack([gaussian_filter(reg[...,c]*wm,5.0) for c in range(3)],2)/np.maximum(gaussian_filter(wm,5.0),1e-6)[...,None]
-# screened-Poisson residual: continuous with the idle ring at the boundary, relaxes to the base tone inside
-LAM=1/2.5**2
+# skin-tone base: per column, sample idle's own skin in the shadow band just ABOVE the old opening and
+# the band just BELOW it, and carry the colour down across the opening with a smooth vertical gradient.
+def _band_base():
+    Om=covO>0.5
+    base=np.zeros_like(reg)
+    T=np.full((w,3),np.nan); Bt=np.full((w,3),np.nan); top=np.full(w,np.nan); bot=np.full(w,np.nan)
+    for c in range(w):
+        ys=np.nonzero(Om[:,c])[0]
+        if len(ys)==0: continue
+        t,b=ys[0],ys[-1]; top[c]=t; bot[c]=b
+        up=[y for y in range(max(t-6,0),t) if skinlike[y,c] and covO[y,c]==0]
+        dn=[y for y in range(b+1,min(b+6,h)) if skinlike[y,c] and covO[y,c]==0]
+        if len(up)>=2: T[c]=np.median(reg[up,c],0)
+        if len(dn)>=2: Bt[c]=np.median(reg[dn,c],0)
+    xs=np.arange(w)
+    def fillsmooth(A,sig=2.5):
+        A=A.copy()
+        for k in range(A.shape[1]):
+            ok=~np.isnan(A[:,k]); A[:,k]=np.interp(xs,xs[ok],A[ok,k])
+        return np.stack([gaussian_filter(A[:,k],sig,mode='nearest') for k in range(A.shape[1])],1)
+    T=fillsmooth(T); Bt=fillsmooth(Bt)
+    okc=~np.isnan(top); top=np.interp(xs,xs[okc],top[okc]); bot=np.interp(xs,xs[okc],bot[okc])
+    # the lid keeps the shadow-band tone all the way down to the closed lash line; the change to the
+    # cheek tone happens across the lash (where the painted lash hides it), eased with a smoothstep.
+    yl=np.full(w,np.nan)
+    for e in 'AB':
+        cp=np.array(spline(C04[e],False)); o=np.argsort(cp[:,0])
+        xs_e=np.arange(int(np.ceil(cp[:,0].min())),int(np.floor(cp[:,0].max()))+1)
+        yl[xs_e-X0]=np.interp(xs_e,cp[o,0],cp[o,1])
+    okl=~np.isnan(yl); yl=np.interp(xs,xs[okl],yl[okl])
+    # outside the lash span (eye corners) fall back to the middle of the opening
+    span=np.zeros(w,bool)
+    for e in 'AB':
+        cx=[q[0] for q in C04[e]]; span[int(min(cx))-X0:int(max(cx))-X0+1]=True
+    yl=np.where(span,yl,(top+bot)/2+Y0)-Y0
+    yy=np.arange(h)[:,None]
+    sfrac=np.clip((yy-(yl[None,:]-3.0))/5.0,0,1)
+    sfrac=sfrac*sfrac*(3-2*sfrac)
+    return T[None,:,:]*(1-sfrac[...,None])+Bt[None,:,:]*sfrac[...,None]
+base=_band_base()
+LAM=1/6.0**2
 res=reg-base
 idx=-np.ones((h,w),int); ii=np.argwhere(unk); idx[unk]=np.arange(len(ii))
 n=len(ii); A=lil_matrix((n,n)); b=np.zeros((n,3))
@@ -141,8 +181,9 @@ def lid_lash(Epts, th, tip, tip_at_start):
     """upper lash painted as one stroke whose lower edge is the new lid edge."""
     top=[(x,y-t) for (x,y),t in zip(Epts,th)]
     bot=list(Epts)
-    if tip_at_start: top=[tip]+top; bot=[tip]+bot
-    else: top=top+[tip]; bot=bot+[tip]
+    wt,wb=tip   # outer wing: extra top/bottom points ending in the shared flick tip, shaped like idle's wing
+    if tip_at_start: top=wt+top; bot=wb+bot
+    else: top=top+wt; bot=bot+wb
     return top,bot
 def closed_lash(C, th, up=0.42):
     top=[(x,y-t*up) for (x,y),t in zip(C,th)]
@@ -154,10 +195,13 @@ def above_path(Epts, left_to_right=True):
     pts=[(X0-8,sp[0][1])]+sp+[(X1+8,sp[-1][1]),(X1+8,Y0-8),(X0-8,Y0-8)]
     return poly(pts)
 
-TH={'A':[6.4,6.8,6.8,6.5,6.0,5.0,3.4,0.0],'B':[0.0,3.2,5.2,6.0,6.5,6.8,7.0,7.2]}
-TIP={'A':(441.3,205.6),'B':(591.4,205.0)}
-C04={'A':[(441.7,207.3),(446,210.2),(452,214.4),(460,218.3),(468,220.3),(477,221.0),(486,220.5),(493,219.3),(497.9,218.0)],
-     'B':[(547.1,215.6),(552,218.3),(559,219.6),(566,219.6),(573,218.4),(579.5,216.0),(584.5,212.6),(588.4,209.2),(590.6,206.4)]}
+# lash thickness at each lid-edge point, measured off idle's own upper lash: thickest in the outer
+# third (~8.5px), tapering to a fine point at the inner corner.
+TH={'A':[7.6,8.6,8.4,7.4,6.0,4.4,2.8,0.6],'B':[0.6,2.6,4.4,5.8,7.0,7.8,8.2,8.4]}
+# outer flick, copied in shape from idle: her right eye (viewer-left) runs straight out to a point;
+# her left eye (viewer-right) droops down the outer corner and tucks behind the hair strand.
+TIP={'A':([(441.0,205.4),(443.6,203.2)],[(441.0,205.4),(443.6,208.4)]),
+     'B':([(590.4,201.8),(591.4,206.4)],[(589.6,211.8),(591.4,206.4)])}
 TH04={'A':[0,2.5,3.7,4.2,4.4,4.2,3.6,2.3,0],'B':[0,2.3,3.5,4.1,4.3,4.2,3.8,2.8,0]}
 
 TIPS=[((460.3,199.9),(1.17,1.0),2.0,3.0),((465.9,200.4),(0.05,1.0),3.0,3.4),
