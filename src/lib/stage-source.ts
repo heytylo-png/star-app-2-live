@@ -2,7 +2,7 @@
  * Life desk loop — what the character stage shows.
  * SoT: artifacts/star-rai-video-loops.txt
  *
- * Life plays diary-loop.mp4. Chat, Chart, and Call stay on the official PNG
+ * Life plays diary-loop-v2.mp4. Chat, Chart, and Call stay on the official PNG
  * puppet. The clip is never idle and never the launch state (the app boots
  * on Chat). Chart diary may reuse the loop later; this slice keeps Chart on
  * the PNG. prefers-reduced-motion shows the poster still. A failed load or
@@ -11,8 +11,8 @@
 
 import type { ShellTab } from "./shell.ts";
 
-export const DIARY_LOOP_FILE = "clips/diary-loop.mp4";
-export const DIARY_POSTER_FILE = "clips/diary-poster.jpg";
+export const DIARY_LOOP_FILE = "clips/diary-loop-v2.mp4";
+export const DIARY_POSTER_FILE = "clips/diary-poster-v2.jpg";
 
 /** Chat / Chart / Life tabs, plus Call (a mode, not a tab). */
 export type StagePlace = ShellTab | "call";
