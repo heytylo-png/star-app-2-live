@@ -37,6 +37,8 @@ export type SpotifyPlaybackState = {
   deviceId: string | null;
   paused: boolean;
   title: string;
+  /** Spotify track uri (or id) for the title above. Empty when nothing is loaded. */
+  trackId: string;
   busy: boolean;
   justConnected: boolean;
 };
@@ -53,6 +55,7 @@ const EMPTY: SpotifyPlaybackState = {
   deviceId: null,
   paused: true,
   title: "",
+  trackId: "",
   busy: false,
   justConnected: false,
 };
@@ -94,6 +97,7 @@ export function useSpotifyPlayback(opts: { onTrackChange?: (title: string) => vo
         premium: false,
         deviceId: null,
         title: "",
+        trackId: "",
       }));
       return;
     }
@@ -114,6 +118,7 @@ export function useSpotifyPlayback(opts: { onTrackChange?: (title: string) => vo
             ...s,
             paused: playerState.paused,
             title: title || s.title,
+            trackId: id || s.trackId,
           }));
           if (id && id !== lastTrackRef.current && title) {
             lastTrackRef.current = id;
@@ -236,12 +241,17 @@ export function useSpotifyPlayback(opts: { onTrackChange?: (title: string) => vo
             ...s,
             busy: false,
             title: formatSpotifyTrackTitle(first),
+            trackId: first.uri || first.id || "",
             error: "Player is still waking up. Title is set — tap Transfer when the device is ready.",
           }));
           return true;
         }
         await playSpotifyUris(deviceId, [first.uri]);
-        setState((s) => ({ ...s, title: formatSpotifyTrackTitle(first) }));
+        setState((s) => ({
+          ...s,
+          title: formatSpotifyTrackTitle(first),
+          trackId: first.uri || first.id || "",
+        }));
         return true;
       } catch (err) {
         setState((s) => ({

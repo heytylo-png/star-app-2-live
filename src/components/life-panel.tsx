@@ -48,13 +48,17 @@ export function LifeMenu({ open, life, onStop, onPlayTitle, onClose, anchorRef, 
     const today = localDateKey(new Date(), tz);
     if (!shouldRefreshSuggestions({ today, sessionOn, askedDate })) return;
     let cancelled = false;
-    void requestLifeSuggestions({ today, life }).then(() => {
+    void requestLifeSuggestions({
+      today,
+      life,
+      alsoAvoid: spotify.title ? [spotify.title] : [],
+    }).then(() => {
       if (cancelled) return;
     });
     return () => {
       cancelled = true;
     };
-  }, [sessionOn, askedDate, timezone, life]);
+  }, [sessionOn, askedDate, timezone, life, spotify.title]);
 
   useEffect(() => {
     if (!open) return;
@@ -82,6 +86,11 @@ export function LifeMenu({ open, life, onStop, onPlayTitle, onClose, anchorRef, 
 
   const tracks = lifeMenuTracks({
     nowPlaying: life?.now_playing,
+    lastPlayed: life?.now_playing,
+    spotify:
+      spotify.title || spotify.trackId
+        ? { title: spotify.title, id: spotify.trackId, paused: spotify.paused }
+        : null,
     suggestions: suggestions.map((row) => row.title),
     daily: playlist,
   });
@@ -95,7 +104,7 @@ export function LifeMenu({ open, life, onStop, onPlayTitle, onClose, anchorRef, 
     >
       <NowPlayingBar
         sessionOn={sessionOn}
-        nowPlaying={life?.now_playing}
+        nowPlaying={tracks.nowPlaying ?? undefined}
         onStop={onStop}
         onPlay={() => {
           if (tracks.nowPlaying) onPlayTitle(tracks.nowPlaying);
@@ -110,7 +119,7 @@ export function LifeMenu({ open, life, onStop, onPlayTitle, onClose, anchorRef, 
       {showLifeConnectMusic({
         connected: spotify.connected,
         sessionOn,
-        nowPlaying: life?.now_playing,
+        nowPlaying: tracks.nowPlaying ?? life?.now_playing,
       }) ? (
         <Button
           type="button"
