@@ -11,7 +11,7 @@ import { ChatThread } from "@/components/chat-thread";
 import { InstallHint } from "@/components/install-hint";
 import { ChartPanel } from "@/components/chart-panel";
 import { ChartSetupCard } from "@/components/chart-setup-card";
-import { LifePanel } from "@/components/life-panel";
+import { LifeMenu } from "@/components/life-panel";
 import { PresenceStage } from "@/components/presence-stage";
 import { StageMenu } from "@/components/stage-menu";
 import { Button } from "@/components/ui/button";
@@ -58,6 +58,7 @@ import { useHerMusicStore } from "@/lib/her-music-store";
 import { pickLocalSuggestions } from "@/lib/her-music";
 import { lockHerDailyMood, requestLifeSuggestions } from "@/lib/her-suggest";
 import { isSuggestAsk, parseTrackTitle, resolveLifeTurn, type LifeSlots } from "@/lib/life";
+import { reduceLifeMenu } from "@/lib/life-menu";
 import { useSpotifyPlayback } from "@/lib/use-spotify-playback";
 import { chatOpenForTab, DEFAULT_SHELL_TAB, type ShellTab } from "@/lib/shell";
 import { stagePlace, stageSourceFor, type StagePlace } from "@/lib/stage-source";
@@ -179,6 +180,8 @@ function RaiReady() {
   const tier = useMemo(() => scoreToTier(affectionScore), [affectionScore]);
 
   const [tab, setTab] = useState<ShellTab>(DEFAULT_SHELL_TAB);
+  const [lifeMenuOpen, setLifeMenuOpen] = useState(false);
+  const lifeTabRef = useRef<HTMLButtonElement>(null);
   const [deskPlaybackFailed, setDeskPlaybackFailed] = useState(false);
   const [trackedStage, setTrackedStage] = useState<StagePlace>(DEFAULT_SHELL_TAB);
   const reducedMotion = usePrefersReducedMotion();
@@ -292,9 +295,50 @@ function RaiReady() {
     if (stageAt !== "life") setDeskPlaybackFailed(false);
   }
 
+  const callBusy = callActive || callStarting;
+  if (lifeMenuOpen && (tab !== "life" || callBusy)) {
+    const reduced =
+      tab !== "life"
+        ? reduceLifeMenu({ tab: "life", open: true, callActive: callBusy }, { type: "select-tab", tab })
+        : reduceLifeMenu({ tab, open: true, callActive: false }, { type: "call", active: true });
+    setLifeMenuOpen(reduced.open);
+  }
+
+  const selectTab = (next: ShellTab) => {
+    const reduced = reduceLifeMenu(
+      { tab, open: lifeMenuOpen, callActive: callBusy },
+      { type: "select-tab", tab: next },
+    );
+    setTab(reduced.tab);
+    setLifeMenuOpen(reduced.open);
+  };
+
+  const toggleLifeMenu = () => {
+    const reduced = reduceLifeMenu(
+      { tab, open: lifeMenuOpen, callActive: callBusy },
+      { type: "toggle-life" },
+    );
+    setTab(reduced.tab);
+    setLifeMenuOpen(reduced.open);
+  };
+
+  const closeLifeMenu = () => {
+    const reduced = reduceLifeMenu(
+      { tab, open: lifeMenuOpen, callActive: callBusy },
+      { type: "escape" },
+    );
+    setLifeMenuOpen(reduced.open);
+    lifeTabRef.current?.focus();
+  };
+
   useEffect(() => {
     if (!spotify.justConnected) return;
-    setTab("life");
+    const reduced = reduceLifeMenu(
+      { tab: tabRef.current, open: false, callActive: callActiveRef.current },
+      { type: "select-tab", tab: "life" },
+    );
+    setTab(reduced.tab);
+    setLifeMenuOpen(reduced.open);
     spotify.clearJustConnected();
   }, [spotify.justConnected, spotify.clearJustConnected]);
 
@@ -1330,22 +1374,12 @@ function RaiReady() {
             />
           </div>
         ) : (
-          <div className="pointer-events-auto flex min-h-0 flex-1 flex-col justify-end pt-1">
-            <LifePanel
-              life={slots.life}
-              onStop={() => void send("stop listening")}
-              onPlayTitle={(title) => {
-                void (async () => {
-                  if (spotify.connected && spotify.premium) {
-                    const played = await spotify.playQuery(title);
-                    if (played) return;
-                  }
-                  void send(`I'm listening to ${title}`);
-                })();
-              }}
-              spotify={spotify}
-            />
-          </div>
+          <div
+            id="star-pane-life"
+            role="tabpanel"
+            aria-labelledby="star-tab-life"
+            className="min-h-0 flex-1"
+          />
         )}
 
         {tab === "chat" ? (
@@ -1494,7 +1528,34 @@ function RaiReady() {
         </div>
         ) : null}
 
-        <AppTabs tab={tab} onChange={setTab} sessionOn={Boolean(slots.life?.on)} />
+        <AppTabs
+          tab={tab}
+          onChange={selectTab}
+          sessionOn={Boolean(slots.life?.on)}
+          lifeMenuOpen={lifeMenuOpen}
+          onToggleLifeMenu={toggleLifeMenu}
+          lifeTabRef={lifeTabRef}
+          lifeMenu={
+            tab === "life" ? (
+              <LifeMenu
+                open={lifeMenuOpen}
+                life={slots.life}
+                onStop={() => void send("stop listening")}
+                onPlayTitle={(title) => {
+                  void (async () => {
+                    if (spotify.connected && spotify.premium) {
+                      const played = await spotify.playQuery(title);
+                      if (played) return;
+                    }
+                    void send(`I'm listening to ${title}`);
+                  })();
+                }}
+                onClose={closeLifeMenu}
+                spotify={spotify}
+              />
+            ) : null
+          }
+        />
       </div>
 
       <Sheet open={memoryOpen} onOpenChange={setMemoryOpen}>

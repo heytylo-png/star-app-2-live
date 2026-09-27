@@ -113,5 +113,8 @@ describe("Life desk loop stage source", () => {
     const css = readFileSync(join(root, "src/styles.css"), "utf8");
     assert.match(css, /\.rai-desk-loop\s*\{/);
     assert.match(css, /\.rai-desk-stage\s*\{/);
+    const deskCss = css.slice(css.indexOf(".rai-desk-loop"));
+    assert.match(deskCss, /object-fit:\s*cover/);
+    assert.match(deskCss, /object-position:\s*30%\s+50%/);
   });
 });
