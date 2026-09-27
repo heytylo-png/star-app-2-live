@@ -56,7 +56,7 @@ describe("Life menu does not cover the desk", () => {
       assert.equal(menu.open, open);
       const stage = stageSourceFor({ place: "life" });
       assert.equal(stage.kind, "video");
-      if (stage.kind === "video") assert.equal(stage.src, "clips/diary-loop.mp4");
+      if (stage.kind === "video") assert.equal(stage.src, "clips/diary-loop-v2.mp4");
     }
     const still = stageSourceFor({ place: "life", reducedMotion: true });
     assert.equal(still.kind, "poster");

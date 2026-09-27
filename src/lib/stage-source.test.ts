@@ -21,9 +21,9 @@ describe("Life desk loop stage source", () => {
     assert.equal(life.kind, "video");
     if (life.kind !== "video") return;
     assert.equal(life.src, DIARY_LOOP_FILE);
-    assert.equal(life.src, "clips/diary-loop.mp4");
+    assert.equal(life.src, "clips/diary-loop-v2.mp4");
     assert.equal(life.poster, DIARY_POSTER_FILE);
-    assert.equal(life.poster, "clips/diary-poster.jpg");
+    assert.equal(life.poster, "clips/diary-poster-v2.jpg");
     assert.equal(life.loop, true);
     assert.equal(life.muted, true);
     assert.equal(life.playsInline, true);
@@ -45,7 +45,7 @@ describe("Life desk loop stage source", () => {
     const still = stageSourceFor({ place: "life", reducedMotion: true });
     assert.equal(still.kind, "poster");
     if (still.kind !== "poster") return;
-    assert.equal(still.src, "clips/diary-poster.jpg");
+    assert.equal(still.src, "clips/diary-poster-v2.jpg");
     assert.equal("src" in still && !("loop" in still), true);
   });
 
@@ -74,8 +74,11 @@ describe("Life desk loop stage source", () => {
 
   it("follows the video-loop spec and does not reference sleep.mp4", () => {
     const spec = readFileSync(join(root, "artifacts/star-rai-video-loops.txt"), "utf8");
-    assert.match(spec, /diary-loop\.mp4/);
-    assert.match(spec, /diary-poster\.jpg/);
+    assert.match(spec, /diary-loop-v2\.mp4/);
+    assert.match(spec, /diary-poster-v2\.jpg/);
+    assert.match(spec, /784x1168/);
+    assert.match(spec, /CRF 23/);
+    assert.match(spec, /hqdn3d 1\.2:1\.2:4:4 \+ unsharp 5:5:0\.7/);
     assert.match(spec, /prefers-reduced-motion/);
     assert.match(spec, /fall back to the PNG puppet/);
     assert.match(spec, /sleep\.mp4 does not exist/);

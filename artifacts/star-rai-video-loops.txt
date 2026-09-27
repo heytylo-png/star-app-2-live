@@ -1,12 +1,12 @@
 Star Rai: video loops (Life desk loop) v1. Written from TyLo's 2026-09-26 brief.
 
 Asset
-- public/clips/diary-loop.mp4: TyLo's desk/diary clip. 720x1072 H.264, 24fps, 22s, no audio track, faststart, about 0.8 MB.
-- public/clips/diary-poster.jpg: first frame, used as the poster and the reduced-motion still.
+- public/clips/diary-loop-v2.mp4: TyLo's desk/diary clip. 784x1168 H.264 high, CRF 23, hqdn3d 1.2:1.2:4:4 + unsharp 5:5:0.7, 24fps, 22s, no audio track, faststart, about 5.3 MB.
+- public/clips/diary-poster-v2.jpg: first frame, used as the poster and the reduced-motion still.
 - sleep.mp4 does not exist. Do not add or reference it.
 
 Behavior
-- The Life tab is active: the puppet stage swaps to diary-loop.mp4, looped, muted, playsInline, autoplay. No controls. There's no audio track, and muted stays forced.
+- The Life tab is active: the puppet stage swaps to diary-loop-v2.mp4, looped, muted, playsInline, autoplay. No controls. There's no audio track, and muted stays forced.
 - Leaving Life (Chat, Chart or Call): stop the video immediately (pause, clear src or unmount) and bring back the official PNG puppet with blink and pose tint. No desk frame lingers under the Chat bubbles.
 - Chart diary open: this may use the same muted loop. It's optional, and the stage returns to the PNG when the diary closes.
 - Chat default is always the PNG. The clip is never the idle and never the launch state.
