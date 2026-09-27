@@ -422,6 +422,42 @@ export function startupSpriteUrls(): string[] {
   return [SPRITES.poses.idle, ...idleBlinkFrameUrls()];
 }
 
+/** Lid pass 02–04. Open hold is 0 or 1. Deferred punches wait this out. */
+export function blinkPassInFlight(frame: number): boolean {
+  return frame >= 2;
+}
+
+/**
+ * Pose sheet to fetch now. Startup idle/blink stay on the critical path.
+ * Null when the requested sheets are already punched, so a sprite that
+ * lands after the pose changed is not treated as the one to show.
+ */
+export function priorityPoseSrc(
+  desired: readonly { src: string }[],
+  ready: Readonly<Record<string, unknown>>,
+  startup: readonly string[] = startupSpriteUrls(),
+): string | null {
+  const startupSet = new Set(startup);
+  for (const layer of desired) {
+    if (startupSet.has(layer.src)) continue;
+    if (ready[layer.src] == null) return layer.src;
+  }
+  return null;
+}
+
+/**
+ * Unready pose: keep the plates on stage, but the rest layer goes back to
+ * the open frame so a mid-blink lid cannot freeze on screen.
+ */
+export function openRestFallback<T extends { id: string; src: string }>(
+  plates: T[],
+  openSrc: string,
+): T[] {
+  return plates.map((layer) =>
+    layer.id === IDLE_REST_LAYER_ID ? { ...layer, src: openSrc } : layer,
+  );
+}
+
 /**
  * Pose sheets the default PNG puppet can mount after first paint.
  * Live keys only (`SPRITES.poses`). Angle sheets, legacy idle-talk,

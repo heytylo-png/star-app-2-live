@@ -5,10 +5,15 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
   deferredSpriteUrls,
+  blinkPassInFlight,
+  IDLE_REST_LAYER_ID,
   idleBlinkFrameUrls,
+  idleRestSrc,
   layersFor,
   LIVE_POSE_FILES,
+  openRestFallback,
   POSES,
+  priorityPoseSrc,
   SPRITES,
   startupSpriteUrls,
   unusedPngSpriteUrls,
@@ -116,5 +121,41 @@ describe("startup sprite lists", () => {
     assert.doesNotMatch(puppet, /allSpriteUrls/);
     assert.doesNotMatch(puppet, /star-rai\/angles/);
     assert.match(puppet, /const firstPaint = prevIds\.current\.size === 0/);
+    assert.match(puppet, /openRestFallback\(/);
+    assert.match(puppet, /priorityPoseSrc\(/);
+    assert.match(puppet, /blinkPassInFlight\(/);
+    assert.match(puppet, /framesReady/);
+    assert.match(puppet, /decoding=\{layer\.id === IDLE_REST_LAYER_ID \? "sync" : "async"\}/);
+  });
+
+  it("maps a mid-blink rest plate back to the open frame", () => {
+    const open = idleRestSrc();
+    const closed = openRestFallback(
+      [{ id: IDLE_REST_LAYER_ID, src: SPRITES.idleBlinkClosed }],
+      open,
+    );
+    assert.equal(closed[0]!.src, open);
+    assert.match(closed[0]!.src, /idle_blink_01_open\.png$/);
+    const half = openRestFallback(
+      [{ id: IDLE_REST_LAYER_ID, src: SPRITES.idleBlinkHalf }],
+      open,
+    );
+    assert.equal(half[0]!.src, open);
+    const pose = openRestFallback([{ id: "body:wave", src: SPRITES.poses.wave }], open);
+    assert.equal(pose[0]!.src, SPRITES.poses.wave);
+    assert.equal(blinkPassInFlight(0), false);
+    assert.equal(blinkPassInFlight(1), false);
+    assert.equal(blinkPassInFlight(2), true);
+    assert.equal(blinkPassInFlight(3), true);
+    assert.equal(blinkPassInFlight(4), true);
+  });
+
+  it("fetches a requested pose ahead of startup sheets, and only while it is still requested", () => {
+    const ready = { [idleRestSrc()]: "blob:open" };
+    assert.equal(priorityPoseSrc([{ src: idleRestSrc() }], ready), null);
+    assert.equal(priorityPoseSrc([{ src: SPRITES.poses.wave }], ready), SPRITES.poses.wave);
+    const waveReady = { ...ready, [SPRITES.poses.wave]: "blob:wave" };
+    assert.equal(priorityPoseSrc([{ src: SPRITES.poses.wave }], waveReady), null);
+    assert.equal(priorityPoseSrc([{ src: SPRITES.poses.peace }], waveReady), SPRITES.poses.peace);
   });
 });
