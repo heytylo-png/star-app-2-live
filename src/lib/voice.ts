@@ -28,7 +28,6 @@ const EMOTICON_TOKENS = [
   "O_O",
   ";_;",
   "</3",
-  "<3",
   ":-3",
   ":-D",
   ":-P",
@@ -98,6 +97,7 @@ function parenIsKaomoji(inner: string): boolean {
   if (!core) return true;
   if (/^\d{1,4}:\d{1,4}$/.test(core)) return false;
   const withoutFaces = stripEmoticonTokens(stripEmoji(core))
+    .replace(/(?<!\/)<3{1,3}(?!3)/g, " ")
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim();
   const words = withoutFaces.match(/\p{L}+/gu) ?? [];
@@ -121,6 +121,16 @@ function stripActionAsterisks(text: string): string {
   });
 }
 
+/**
+ * `<3`, `<33`, and `<333` are the word "love" when they sit in the sentence.
+ * A heart that only trails punctuation (`Night! <3`) is dropped.
+ * `</3` is not a heart and is stripped later with the other emoticons.
+ */
+function speakHearts(text: string): string {
+  const dropped = text.replace(/([.!?])(?:\s+(?<!\/)<3{1,3}(?!3))+(?=\s*$)/g, "$1");
+  return dropped.replace(/(?<!\/)(?:^|(?<=\s))<3{1,3}(?!3)(?=$|\s|[.,!?;:)"'\]])/g, " love ");
+}
+
 function collapseSpeech(text: string): string {
   const collapsed = text
     .replace(/\s+([.,!?;:])/g, "$1")
@@ -135,12 +145,12 @@ function collapseSpeech(text: string): string {
 
 /**
  * Text safe to send to speech. Emoticons, kaomoji, emoji, and *actions* go.
- * The chat bubble keeps the original line. Times and ratios stay.
- * Empty string means there is nothing to speak.
+ * A mid-line `<3` is spoken as "love". The chat bubble keeps the original line.
+ * Times and ratios stay. Empty string means there is nothing to speak.
  */
 export function speechTextForTts(text: string): string {
   const saved: string[] = [];
-  let out = stripActionAsterisks(stripParenKaomoji(stripEmoji(text)));
+  let out = speakHearts(stripActionAsterisks(stripParenKaomoji(stripEmoji(text))));
   out = out.replace(TIME_OR_RATIO_RE, (match) => {
     const token = `\uE000${saved.length}\uE000`;
     saved.push(match);

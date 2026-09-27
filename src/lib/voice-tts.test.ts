@@ -30,7 +30,6 @@ describe("TTS emoticon strip", () => {
     assert.equal(speechTextForTts("Hey ^_^"), "Hey");
     assert.equal(speechTextForTts("Hey owo"), "Hey");
     assert.equal(speechTextForTts("Hey uwu"), "Hey");
-    assert.equal(speechTextForTts("I <3 this"), "I this");
     assert.equal(speechTextForTts("Hey T_T"), "Hey");
     assert.equal(speechTextForTts("Hey :o"), "Hey");
     assert.equal(speechTextForTts("Hey -_-"), "Hey");
@@ -47,6 +46,26 @@ describe("TTS emoticon strip", () => {
     assert.equal(speechTextForTts("Hi \u263A\uFE0F"), "Hi");
     assert.equal(speechTextForTts("hello *giggles* there"), "hello there");
     assert.equal(speechTextForTts("hello *soft laugh* there"), "hello there");
+  });
+
+  it("speaks a mid-line heart as love and drops one that only trails punctuation", () => {
+    assert.equal(speechTextForTts("I <3 this"), "I love this");
+    assert.equal(speechTextForTts("I <33 this"), "I love this");
+    assert.equal(speechTextForTts("I <333 this"), "I love this");
+    assert.equal(speechTextForTts("I <3"), "I love");
+    assert.equal(speechTextForTts("Night! <3"), "Night!");
+    assert.equal(speechTextForTts("Night! <33"), "Night!");
+    assert.equal(speechTextForTts("Night? <333"), "Night?");
+    assert.equal(speechTextForTts("See you. <3"), "See you.");
+    assert.equal(speechTextForTts("I </3 this"), "I this");
+    assert.equal(speechTextForTts("</3"), "");
+    const plan = elevenTtsPlan("I <3 this", "speech-key", "voice-demo");
+    assert.ok(plan);
+    assert.equal(JSON.parse(plan.body).text, "I love this");
+    const trailing = elevenTtsPlan("Night! <3", "speech-key", "voice-demo");
+    assert.ok(trailing);
+    assert.equal(JSON.parse(trailing.body).text, "Night!");
+    assert.equal(JSON.parse(trailing.body).text.includes("love"), false);
   });
 
   it("does not call TTS when nothing speakable remains", async () => {
