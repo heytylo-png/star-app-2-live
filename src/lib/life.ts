@@ -35,13 +35,17 @@ export function lifeNowPlayingChrome(opts: {
 }): {
   title: string | null;
   showStop: boolean;
+  showPlay: boolean;
   showLogin: false;
   showConnect: false;
 } {
-  const title = opts.sessionOn ? opts.title?.replace(/\s+/g, " ").trim() || null : null;
+  const title = opts.title?.replace(/\s+/g, " ").trim() || null;
+  const showStop = Boolean(opts.sessionOn && title);
+  const showPlay = Boolean(!opts.sessionOn && title);
   return {
-    title,
-    showStop: Boolean(title),
+    title: showStop || showPlay ? title : null,
+    showStop,
+    showPlay,
     showLogin: false,
     showConnect: false,
   };
@@ -57,7 +61,8 @@ export function showLifeConnectMusic(opts: {
   nowPlaying?: string | null;
 }): boolean {
   if (opts.connected) return false;
-  return !lifeNowPlayingChrome({ sessionOn: opts.sessionOn, title: opts.nowPlaying }).showStop;
+  const chrome = lifeNowPlayingChrome({ sessionOn: opts.sessionOn, title: opts.nowPlaying });
+  return !chrome.title;
 }
 export type LifeTintPose = (typeof LIFE_TINT_POSES)[number];
 
@@ -408,9 +413,11 @@ export function applyLifePatch(current: LifeSlots | undefined, patch?: LifeSlots
         ? current.mood_tag
         : undefined;
     const mood_date = patch.mood_date ?? current?.mood_date;
-    if (!playlist && !mood_tag) return undefined;
+    const now_playing = current?.now_playing?.trim() ? clip(current.now_playing, 48) : undefined;
+    if (!playlist && !mood_tag && !now_playing) return undefined;
     return persistLife({
       on: false,
+      now_playing,
       daily_playlist: playlist,
       playlist_date: today,
       mood_tag,
@@ -445,9 +452,10 @@ function persistLife(life?: LifeSlots): LifeSlots | undefined {
   const now_playing = life.now_playing?.trim() ? clip(life.now_playing, 48) : undefined;
   const mood_tag = isLifeMoodTag(life.mood_tag) ? life.mood_tag : undefined;
   const mood_date = life.mood_date?.trim() || undefined;
-  if (!life.on && !playlist && !mood_tag) return undefined;
+  if (!life.on && !playlist && !mood_tag && !now_playing) return undefined;
   if (!life.on) {
     const off: LifeSlots = { on: false };
+    if (now_playing) off.now_playing = now_playing;
     if (playlist) off.daily_playlist = playlist;
     if (life.playlist_date) off.playlist_date = life.playlist_date;
     if (mood_tag) off.mood_tag = mood_tag;

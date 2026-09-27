@@ -1,3 +1,4 @@
+import { Play } from "lucide-react";
 import { useEffect, useRef, type RefObject } from "react";
 import { NowPlayingBar } from "@/components/now-playing-bar";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,8 @@ import { clockTimeZone } from "@/lib/clock";
 import { useHerMusicStore } from "@/lib/her-music-store";
 import { lockHerDailyMood, requestLifeSuggestions, shouldRefreshSuggestions } from "@/lib/her-suggest";
 import { showLifeConnectMusic, type LifeSlots } from "@/lib/life";
+import { lifeMenuTracks } from "@/lib/life-menu";
+import { cn } from "@/lib/utils";
 import { useMemoryStore } from "@/lib/memory-store";
 import type { SpotifyPlaybackApi } from "@/lib/use-spotify-playback";
 
@@ -77,6 +80,12 @@ export function LifeMenu({ open, life, onStop, onPlayTitle, onClose, anchorRef, 
 
   if (!open) return null;
 
+  const tracks = lifeMenuTracks({
+    nowPlaying: life?.now_playing,
+    suggestions: suggestions.map((row) => row.title),
+    daily: playlist,
+  });
+
   return (
     <div
       id="star-life-menu"
@@ -88,6 +97,9 @@ export function LifeMenu({ open, life, onStop, onPlayTitle, onClose, anchorRef, 
         sessionOn={sessionOn}
         nowPlaying={life?.now_playing}
         onStop={onStop}
+        onPlay={() => {
+          if (tracks.nowPlaying) onPlayTitle(tracks.nowPlaying);
+        }}
         className="mx-0 mb-1.5 max-w-none rounded-sm bg-bg px-2 py-1.5 shadow-none"
       />
 
@@ -114,19 +126,10 @@ export function LifeMenu({ open, life, onStop, onPlayTitle, onClose, anchorRef, 
 
       <div className="mt-2 border-t border-border pt-1.5">
         <p className="px-0.5 text-[0.65rem] tracking-wide text-subtle uppercase">Her suggestion</p>
-        {suggestions.length ? (
+        {tracks.suggestions.length ? (
           <ul className="mt-1 space-y-0.5">
-            {suggestions.map((row) => (
-              <li key={row.title}>
-                <button
-                  type="button"
-                  className="w-full truncate rounded-sm px-1.5 py-1 text-left text-sm text-fg hover:bg-bg disabled:opacity-40"
-                  disabled={spotify.busy}
-                  onClick={() => onPlayTitle(row.title)}
-                >
-                  {row.title}
-                </button>
-              </li>
+            {tracks.suggestions.map((title) => (
+              <TrackPlayRow key={title} title={title} disabled={spotify.busy} onPlay={onPlayTitle} />
             ))}
           </ul>
         ) : (
@@ -136,12 +139,10 @@ export function LifeMenu({ open, life, onStop, onPlayTitle, onClose, anchorRef, 
 
       <div className="mt-1.5 border-t border-border pt-1.5">
         <p className="px-0.5 text-[0.65rem] tracking-wide text-subtle uppercase">Daily</p>
-        {playlist.length ? (
+        {tracks.daily.length ? (
           <ul className="mt-1 space-y-0.5">
-            {playlist.map((title) => (
-              <li key={title} className="truncate px-1.5 text-sm text-muted">
-                {title}
-              </li>
+            {tracks.daily.map((title) => (
+              <TrackPlayRow key={title} title={title} muted disabled={spotify.busy} onPlay={onPlayTitle} />
             ))}
           </ul>
         ) : (
@@ -149,5 +150,35 @@ export function LifeMenu({ open, life, onStop, onPlayTitle, onClose, anchorRef, 
         )}
       </div>
     </div>
+  );
+}
+
+function TrackPlayRow({
+  title,
+  muted,
+  disabled,
+  onPlay,
+}: {
+  title: string;
+  muted?: boolean;
+  disabled?: boolean;
+  onPlay: (title: string) => void;
+}) {
+  return (
+    <li>
+      <button
+        type="button"
+        aria-label={`Play ${title}`}
+        disabled={disabled}
+        onClick={() => onPlay(title)}
+        className={cn(
+          "flex w-full items-center justify-between gap-2 rounded-sm px-1.5 py-1 text-left text-sm hover:bg-bg disabled:opacity-40",
+          muted ? "text-muted" : "text-fg",
+        )}
+      >
+        <span className="min-w-0 truncate">{title}</span>
+        <Play className="size-3.5 shrink-0" aria-hidden />
+      </button>
+    </li>
   );
 }

@@ -133,13 +133,16 @@ describe("tab chrome", () => {
     assert.equal(chrome.showConnect, false);
     assert.equal(LIFE_SHOWS_LOGIN, false);
     assert.equal(lifeNowPlayingChrome({ sessionOn: false, title: "Super Shy" }).showStop, false);
+    assert.equal(lifeNowPlayingChrome({ sessionOn: false, title: "Super Shy" }).showPlay, true);
+    assert.equal(lifeNowPlayingChrome({ sessionOn: true, title: "Super Shy" }).showPlay, false);
     const panel = readFileSync(join(root, "src/components/life-panel.tsx"), "utf8");
     const bar = readFileSync(join(root, "src/components/now-playing-bar.tsx"), "utf8");
     const spotify = readFileSync(join(root, "src/lib/spotify.ts"), "utf8");
     assert.doesNotMatch(panel, /SpotifyLifePlayer|Connect Spotify|beginSpotifyLogin/);
     assert.doesNotMatch(bar, /Connect Spotify|Log in|placeholder=/);
-    assert.match(bar, /onClick=\{onStop\}/);
+    assert.match(bar, /onStop\(\)/);
     assert.match(bar, /\bStop\b/);
+    assert.match(bar, /Play \$\{chrome\.title\}/);
     assert.match(spotify, new RegExp(SPOTIFY_TOKEN_STORAGE));
   });
 

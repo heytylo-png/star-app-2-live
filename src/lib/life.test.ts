@@ -90,7 +90,8 @@ describe("session + playlist", () => {
     const after = applyLifePatch(merged, off);
     assert.equal(after?.on, false);
     assert.deepEqual(after?.daily_playlist, ["Super Shy"]);
-    assert.equal(after?.now_playing, undefined);
+    assert.equal(after?.now_playing, "Super Shy");
+    assert.deepEqual(formatLifeMemoryLines(after), []);
   });
 
   it("accumulates unique titles and caps at 8", () => {
