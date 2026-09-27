@@ -154,14 +154,15 @@ export function poseResetDelayMs(opts: {
 /**
  * Settle delay for the pose just put on a spoken bubble.
  *
- * While `captionLive` is set, that reply is still the bubble — do not snap
- * to frown idle under it. Music Set (`track_change` + talk | content | smug)
- * stays too, even if the caller forgets the caption flag.
+ * While `captionLive` is set, that reply is still being said — do not snap
+ * to frown idle under it. A transcript caption that remains after she
+ * finishes is not live; callers pass `captionLive: false` then so a mood
+ * sheet cannot freeze as the standing face. Music Set (`track_change` +
+ * talk | content | smug) stays too, even if the caller forgets the caption flag.
  *
- * The next rest is when that caption is gone. Then a normal line may settle
- * a few seconds later onto idle.png. Blink is on (01 open is a byte copy
- * of idle.png). Approved by TyLo on 2026-09-26 (807-referenced painted
- * lids, pass 4b).
+ * The next rest is official idle.png (front idle, framing C; blink 01 is a
+ * byte copy). Blink is on. Approved by TyLo on 2026-09-26 (807-referenced
+ * painted lids, pass 4b).
  */
 export function spokenBubbleResetDelay(opts: {
   pose: PoseId;
@@ -185,6 +186,14 @@ export function spokenBubbleResetDelay(opts: {
     now: opts.now,
     nowPlayingBubble,
   });
+}
+
+/**
+ * Standing face after a spoken bubble's rest timer.
+ * Official front idle (idle.png, framing C). Never think, and never a mood sheet.
+ */
+export function settledRestPose(): PoseId {
+  return "idle";
 }
 
 /**
@@ -643,6 +652,8 @@ const EMOTION_ALIASES: Record<string, EmotionId> = {
   happy: "hype",
   sad: "soft",
   surprised: "glance",
+  /** Explicit think emotion. Spoken pose is the chin-rest sheet, not a leftover. */
+  think: "glance",
   thinking: "glance",
   flirty: "smug",
 };
@@ -747,23 +758,29 @@ export type ResolveSpokenPoseOpts = {
   chartTintPose?: PoseId;
   lifeTintPose?: PoseId;
   seed?: string;
-  /** Dedicated current body is kept until tint inference applies. */
+  /**
+   * Pose already on stage. A new spoken line does not inherit it.
+   * Unmapped kiss may keep a dedicated body so kiss does not invent a sheet.
+   */
   currentPose?: PoseId | null;
 };
 
 /**
- * Pose for a spoken bubble.
+ * Pose for a spoken bubble. Every new line resolves from scratch.
  *
- * 1. User-named pose command wins (sheet already swapped).
+ * 1. User-named pose command wins for this turn only (sheet already swapped).
  * 2. now_playing just set (Music Set), when the pose was omitted / idle / kiss
  *    or is the tint we stamped → talk | content | smug. A different live model
  *    key still falls through.
  * 3. Emotion tired tints to the tired sheet — never grin / peace / wave —
  *    unless step 2 already placed a Music Set sheet.
- * 4. Live model key (not idle / kiss) is used as-is.
- * 5. Omitted / unknown / kiss / idle → context tint, else keep a dedicated
- *    current body, else infer from emotion. Never leave frown idle under
- *    a spoken line. Idle is the next rest, after that bubble.
+ * 4. Live model key (not idle / kiss) is used as-is. `think` only when that
+ *    key, the emotion (think / thinking / glance), the user, or a Chart beat
+ *    asks for it.
+ * 5. Omitted / unknown / idle → context tint, else infer from emotion.
+ *    A leftover think / pout / tired does not carry. Spoken fallback is talk
+ *    (bratty), never chin-rest. Unmapped kiss keeps a dedicated current body.
+ *    Never leave frown idle under a spoken line. Idle is the next rest.
  */
 export function resolveSpokenPose(opts: ResolveSpokenPoseOpts): PoseId {
   if (opts.namedPose) return opts.namedPose;
@@ -793,11 +810,13 @@ export function resolveSpokenPose(opts: ResolveSpokenPoseOpts): PoseId {
     return pickTint(CHART_BEAT_TINT_POSES, seed);
   }
 
-  if (opts.currentPose && isDedicatedPose(opts.currentPose)) {
+  // Kiss stays unmapped. Do not invent a sheet, and do not treat that as a
+  // reason for the next spoken line to keep think / pout / tired.
+  if (opts.namedPose === false && opts.currentPose && isDedicatedPose(opts.currentPose)) {
     return opts.currentPose;
   }
 
-  if (opts.spoken === false) return "idle";
+  if (opts.spoken === false) return settledRestPose();
   return inferEmotionPose(opts.emotion, seed);
 }
 

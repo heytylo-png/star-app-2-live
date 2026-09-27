@@ -35,6 +35,7 @@ import {
   parseAct,
   poseResetDelayMs,
   resolveSpokenPose,
+  settledRestPose,
   spokenBubbleResetDelay,
   streamSpokenAct,
   talkFlapOpacity,
@@ -810,7 +811,7 @@ describe("pose tint", () => {
     );
   });
 
-  it("keeps a dedicated current body for kiss / omit until context tint applies", () => {
+  it("keeps a dedicated current body for unmapped kiss only", () => {
     assert.equal(
       resolveSpokenPose({
         namedPose: false,
@@ -820,6 +821,16 @@ describe("pose tint", () => {
         currentPose: "wave",
       }),
       "wave",
+    );
+    assert.equal(
+      resolveSpokenPose({
+        namedPose: null,
+        modelPose: null,
+        emotion: "bratty",
+        spoken: true,
+        currentPose: "wave",
+      }),
+      "talk",
     );
   });
 
@@ -1054,8 +1065,10 @@ describe("pose tint", () => {
     const named = streamSpokenAct('{"line":"Wink~"', { namedPose: "wink", currentPose: "idle" });
     assert.equal(named?.pose, "wink");
 
-    const keep = streamSpokenAct('{"line":"Still waving."', { currentPose: "wave" });
-    assert.equal(keep?.pose, "wave");
+    const fresh = streamSpokenAct('{"line":"Still waving."', { currentPose: "wave" });
+    assert.equal(fresh?.pose, "talk");
+    assert.notEqual(fresh?.pose, "wave");
+    assert.notEqual(fresh?.pose, "think");
   });
 
   it("Music Set from the Life sentence stays talk|content|smug on that bubble", () => {
@@ -1152,8 +1165,213 @@ describe("pose tint", () => {
     // The Life Set path in the app must pass that turn into the settle, not only tint.
     const app = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../components/rai-app.tsx"), "utf8");
     assert.match(app, /spokenBubbleResetDelay\(\{[\s\S]*lifeKind:\s*bubbleLifeKind/);
-    assert.match(app, /captionLive/);
+    assert.match(app, /captionLive:\s*false/);
     assert.match(app, /setBubbleLifeKind\(lifeTurn\.kind\)/);
-    assert.match(app, /!namedThisTurn && !isDedicatedPose\(poseAtTurnRef\.current\)/);
+    assert.match(app, /namedThisTurn == null/);
+    assert.match(app, /setPose\(settledRestPose\(\)\)/);
+  });
+});
+
+describe("spoken pose re-resolves each line", () => {
+  const teaseLines = [
+    { emotion: "bratty" as const, seed: "you're cute. keep up~" },
+    { emotion: "smug" as const, seed: "as if I'd let that slide" },
+    { emotion: "bratty" as const, seed: "playful tease. yeah I heard that" },
+    { emotion: "bratty" as const, seed: "bratty on purpose :3" },
+  ];
+
+  it("resolves several tease lines in a row to talk or smug, never think", () => {
+    let current: "think" | "talk" | "smug" | "pout" | "tired" = "think";
+    for (const line of teaseLines) {
+      const pose = resolveSpokenPose({
+        namedPose: null,
+        modelPose: null,
+        emotion: line.emotion,
+        spoken: true,
+        currentPose: current,
+        seed: line.seed,
+      });
+      assert.ok(pose === "talk" || pose === "smug", `${line.seed} → ${pose}`);
+      assert.notEqual(pose, "think");
+      assert.notEqual(pose, "idle");
+      const src = layersFor({
+        pose,
+        emotion: line.emotion,
+        talking: true,
+        amplitude: 0.2,
+        angle: 0,
+      })[0]!.src;
+      assert.doesNotMatch(src, /think_official/);
+      assert.doesNotMatch(src, /\/idle\.png$/);
+      assert.doesNotMatch(src, /idle_blink/);
+      current = pose;
+    }
+  });
+
+  it("does not carry think from line N onto line N+1 unless N+1 calls think", () => {
+    const lineN = resolveSpokenPose({
+      namedPose: null,
+      modelPose: "think",
+      emotion: "glance",
+      spoken: true,
+      currentPose: "talk",
+      seed: "give me a second",
+    });
+    assert.equal(lineN, "think");
+
+    const next = resolveSpokenPose({
+      namedPose: null,
+      modelPose: null,
+      emotion: "bratty",
+      spoken: true,
+      currentPose: lineN,
+      seed: "okay I'm done teasing",
+    });
+    assert.equal(next, "talk");
+    assert.notEqual(next, "think");
+
+    const callsThink = resolveSpokenPose({
+      namedPose: null,
+      modelPose: "think",
+      emotion: "bratty",
+      spoken: true,
+      currentPose: "talk",
+      seed: "actually wait",
+    });
+    assert.equal(callsThink, "think");
+  });
+
+  it("settles the next rest to official idle, never think or the frown sheet under a talking line", () => {
+    const spoken = resolveSpokenPose({
+      namedPose: null,
+      modelPose: null,
+      emotion: "bratty",
+      spoken: true,
+      currentPose: "think",
+      seed: "tease",
+    });
+    assert.equal(spoken, "talk");
+    const talkingSrc = layersFor({
+      pose: spoken,
+      emotion: "bratty",
+      talking: true,
+      amplitude: 0,
+      angle: 0,
+    })[0]!.src;
+    assert.match(talkingSrc, /talk_official/);
+    assert.doesNotMatch(talkingSrc, /\/idle\.png$/);
+    assert.doesNotMatch(talkingSrc, /think_official/);
+
+    const delay = spokenBubbleResetDelay({
+      pose: spoken,
+      emotion: "bratty",
+      talking: false,
+      actLandedAt: 1_000,
+      now: 61_000,
+      captionLive: false,
+    });
+    assert.equal(delay, POSE_HOLD_AFTER_TALK_MS);
+    assert.equal(settledRestPose(), "idle");
+    assert.notEqual(settledRestPose(), "think");
+    const restSrc = layersFor({
+      pose: settledRestPose(),
+      emotion: DEFAULT_EMOTION,
+      talking: false,
+      amplitude: 0,
+      angle: 0,
+    })[0]!.src;
+    assert.equal(restSrc, idleRestSrc());
+    assert.match(restSrc, /idle_blink_01_open\.png$/);
+    assert.doesNotMatch(restSrc, /think_official/);
+    assert.equal(
+      canIdleBlink({ pose: settledRestPose(), emotion: DEFAULT_EMOTION, talking: false }),
+      true,
+    );
+  });
+
+  it("applies a user-named pose for one turn, then re-resolves", () => {
+    assert.equal(namedPoseFromText("do a wink"), "wink");
+    const named = resolveSpokenPose({
+      namedPose: "wink",
+      modelPose: null,
+      emotion: "bratty",
+      spoken: true,
+      currentPose: "think",
+      seed: "do a wink",
+    });
+    assert.equal(named, "wink");
+
+    const next = resolveSpokenPose({
+      namedPose: null,
+      modelPose: null,
+      emotion: "smug",
+      spoken: true,
+      currentPose: named,
+      seed: "cute. your turn",
+    });
+    assert.equal(next, "smug");
+    assert.notEqual(next, "wink");
+    assert.notEqual(next, "think");
+  });
+
+  it("still uses think for an explicit think emotion and a Chart beat", () => {
+    assert.equal(clampEmotion("think"), "glance");
+    assert.equal(clampEmotion("thinking"), "glance");
+    assert.equal(EMOTION_TO_POSE.glance, "think");
+    assert.equal(
+      resolveSpokenPose({
+        namedPose: null,
+        modelPose: null,
+        emotion: clampEmotion("think"),
+        spoken: true,
+        currentPose: "talk",
+        seed: "hmm",
+      }),
+      "think",
+    );
+    assert.equal(
+      resolveSpokenPose({
+        namedPose: null,
+        modelPose: null,
+        emotion: "glance",
+        spoken: true,
+        currentPose: "smug",
+        seed: "let me think",
+      }),
+      "think",
+    );
+    assert.equal(
+      resolveSpokenPose({
+        namedPose: "think",
+        modelPose: null,
+        emotion: "bratty",
+        spoken: true,
+        currentPose: "talk",
+        seed: "think pose",
+      }),
+      "think",
+    );
+
+    const chart = resolveSpokenPose({
+      namedPose: null,
+      modelPose: null,
+      emotion: "bratty",
+      spoken: true,
+      chartBeat: true,
+      chartTintPose: "think",
+      currentPose: "talk",
+      seed: "What do you make of my chart?",
+    });
+    assert.equal(chart, "think");
+    assert.match(
+      layersFor({
+        pose: chart,
+        emotion: "bratty",
+        talking: false,
+        amplitude: 0,
+        angle: 0,
+      })[0]!.src,
+      /think_official/,
+    );
   });
 });
