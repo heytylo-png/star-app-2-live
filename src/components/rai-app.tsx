@@ -74,6 +74,14 @@ import {
   maskXaiKey,
   setStoredXaiKey,
 } from "@/lib/grok";
+import {
+  getStoredElevenKey,
+  getStoredVoiceId,
+  hasCallVoice,
+  maskSecret,
+  setStoredElevenKey,
+  setStoredVoiceId,
+} from "@/lib/settings-keys";
 import { speak, stopVoice, unlockVoice } from "@/lib/voice";
 import { speakable } from "@/lib/companion";
 import {
@@ -196,6 +204,10 @@ function RaiReady() {
   const [xaiKeyDraft, setXaiKeyDraft] = useState("");
   const [xaiSaved, setXaiSaved] = useState(() => hasXaiKey());
   const [xaiMask, setXaiMask] = useState(() => maskXaiKey(getStoredXaiKey()));
+  const [elevenKeyDraft, setElevenKeyDraft] = useState("");
+  const [elevenSaved, setElevenSaved] = useState(() => Boolean(getStoredElevenKey()));
+  const [elevenMask, setElevenMask] = useState(() => maskSecret(getStoredElevenKey()));
+  const [voiceIdDraft, setVoiceIdDraft] = useState(() => getStoredVoiceId() ?? "");
   const [keyJustSaved, setKeyJustSaved] = useState(false);
   const [caption, setCaption] = useState("");
   const [emotion, setEmotion] = useState<EmotionId>(DEFAULT_EMOTION);
@@ -999,7 +1011,7 @@ function RaiReady() {
       actLandedAt.current = Date.now();
       if (act.memories.length) useMemoryStore.getState().addMany(act.memories);
 
-      if (shouldSpeakCallLine({ voiceOn: voiceOnRef.current, line })) {
+      if (shouldSpeakCallLine({ voiceOn: voiceOnRef.current, line }) && hasCallVoice()) {
         const spoken = speakable(line);
         if (spoken) {
           // Pause / stop recognition while she talks so her voice + room noise
@@ -1396,9 +1408,13 @@ function RaiReady() {
           memoryCount={memories.length}
           onOpenSettings={() => {
             setXaiKeyDraft("");
+            setElevenKeyDraft("");
+            setVoiceIdDraft(getStoredVoiceId() ?? "");
             setKeyJustSaved(false);
             setXaiSaved(hasXaiKey());
             setXaiMask(maskXaiKey(getStoredXaiKey()));
+            setElevenSaved(Boolean(getStoredElevenKey()));
+            setElevenMask(maskSecret(getStoredElevenKey()));
             setSettingsOpen(true);
           }}
           onOpenMemory={() => setMemoryOpen(true)}
@@ -1725,19 +1741,22 @@ function RaiReady() {
           </div>
           <div className="space-y-5 overflow-y-auto p-4">
             <div>
-              <p className="text-sm font-medium">xAI API key</p>
+              <label htmlFor="grok-key" className="text-sm font-medium">
+                Grok / xAI key
+              </label>
               <p className="mt-1 text-xs leading-relaxed text-muted">
-                From console.x.ai — stored only in this browser. Never shipped in the build.
+                Chat and Call brain only. Stays on this device.
               </p>
               <p className="mt-2 text-xs tracking-wide text-subtle uppercase">
                 {xaiSaved ? `Saved · ${xaiMask}` : "Not saved · Local brain"}
                 {grokProxyConfigured() ? " · proxy" : ""}
               </p>
               <input
+                id="grok-key"
                 type="password"
                 autoComplete="off"
                 spellCheck={false}
-                placeholder={xaiSaved ? "New key to replace…" : "xai-…"}
+                placeholder="Paste key"
                 value={xaiKeyDraft}
                 onChange={(e) => {
                   setXaiKeyDraft(e.target.value);
@@ -1783,6 +1802,105 @@ function RaiReady() {
               ) : null}
             </div>
 
+            <div>
+              <label htmlFor="eleven-key" className="text-sm font-medium">
+                ElevenLabs key
+              </label>
+              <p className="mt-1 text-xs leading-relaxed text-muted">
+                Call speech only. Stays on this device.
+              </p>
+              <p className="mt-2 text-xs tracking-wide text-subtle uppercase">
+                {elevenSaved ? `Saved · ${elevenMask}` : "Not saved · no Call speech"}
+              </p>
+              <input
+                id="eleven-key"
+                type="password"
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="Paste key"
+                value={elevenKeyDraft}
+                onChange={(e) => setElevenKeyDraft(e.target.value)}
+                className="mt-3 h-10 w-full rounded-md bg-elevated px-3 text-sm shadow-[var(--shadow-border)] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={!elevenKeyDraft.trim()}
+                  onClick={() => {
+                    const next = elevenKeyDraft.trim();
+                    if (!next) return;
+                    setStoredElevenKey(next);
+                    setElevenSaved(true);
+                    setElevenMask(maskSecret(next));
+                    setElevenKeyDraft("");
+                  }}
+                >
+                  Save key
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={!elevenSaved}
+                  onClick={() => {
+                    setStoredElevenKey(null);
+                    setElevenSaved(false);
+                    setElevenMask("");
+                    setElevenKeyDraft("");
+                  }}
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="voice-id" className="text-sm font-medium">
+                Voice ID
+              </label>
+              <p className="mt-1 text-xs leading-relaxed text-muted">
+                The ElevenLabs voice Call speaks with. Not a secret.
+              </p>
+              <input
+                id="voice-id"
+                type="text"
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="Paste voice id"
+                value={voiceIdDraft}
+                onChange={(e) => setVoiceIdDraft(e.target.value)}
+                className="mt-3 h-10 w-full rounded-md bg-elevated px-3 text-sm shadow-[var(--shadow-border)] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={!voiceIdDraft.trim()}
+                  onClick={() => {
+                    const next = voiceIdDraft.trim();
+                    if (!next) return;
+                    setStoredVoiceId(next);
+                    setVoiceIdDraft(next);
+                  }}
+                >
+                  Save voice
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={!voiceIdDraft.trim() && !getStoredVoiceId()}
+                  onClick={() => {
+                    setStoredVoiceId(null);
+                    setVoiceIdDraft("");
+                  }}
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+
             <div className="border-t border-border pt-4">
               <p className="text-sm font-medium">Relationship</p>
               <p className="mt-1 text-xs leading-relaxed text-muted">
@@ -1794,13 +1912,15 @@ function RaiReady() {
             </div>
 
             <div className="rounded-md bg-elevated px-3 py-2.5 text-xs leading-relaxed text-muted shadow-[var(--shadow-border)]">
-              With a key, Star Rai calls xAI (<span className="text-fg">grok-4-latest</span>).
+              With a Grok key, Star Rai calls xAI (<span className="text-fg">grok-4-latest</span>).
               CORS or key issues fall back to the local brain — no breaking character.
+              Call speaks only when both the ElevenLabs key and Voice ID are saved.
+              Without them the reply still shows, with no speech.
               Phone icon starts Call mode. Chrome on Android asks for the
               microphone on that tap (getUserMedia). If the prompt never
               appears, unblock it: site settings → Microphone → Allow for
               heytylo-png.github.io. Tap again to hang up — thread stays.
-              Mute in the header still skips TTS. Mic audio is never stored.
+              Mute in the header still skips speech. Mic audio is never stored.
               Tabs are Chat · Chart · Life — launch on Chat. Chart is a sparse daily sky pane
               (no auto-reading, no wheel). Life shows the track title and Stop — no Spotify login.
               Session can stay on in the background; comments still land in Chat.
