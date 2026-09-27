@@ -61,7 +61,8 @@ HAIR_SPECK_LUMA = 145
 HAIR_BUMP_LUMA = 100
 FLOOR_ZONE = (0, 1640, 1008, 1792)
 FLOOR_BUMP_LUMA = 80
-FLOOR_FG_LUMA = 40     # floor shadow becomes translucent dark
+FLOOR_FG_LUMA = 40
+FLOOR_WHITE = 240.0  # luma where the studio-white test stops (min channel 238)     # floor shadow becomes translucent dark
 RAMP_DEPTH, FLOOR_RAMP_DEPTH, RAMP_TOL = 6, 90, 4.0
 LOW_ALPHA_LO, LOW_ALPHA_HI = 0.15, 0.40  # colour blend band for faint edge pixels
 
@@ -174,16 +175,35 @@ def build_mask(rgb):
     ok = soft & (denom >= 40)
     a[ok] = np.clip((255.0 - L[ok]) / denom[ok], 0, 1)
     a[soft & ~ok & bg] = 0.0
+    # Floor shadow: the studio card fades 251 -> 238 into the shadow, and the white test cuts it at
+    # 238, so un-mixing against pure 255 starts the shadow at ~8% alpha on a hard line (a seam where
+    # the leg gap meets the floor). Un-mix the shadow against the cut-off white instead, so alpha
+    # rises from 0 exactly where the background ends.
+    matte = np.full(bg.shape, 255.0)
+    shadow = floor & (floor_soft | (near & ndi.binary_dilation(floor_soft, iterations=2))) & ok
+    matte[shadow] = FLOOR_WHITE
+    a[shadow] = np.clip((FLOOR_WHITE - L[shadow]) / (FLOOR_WHITE - Lfg[shadow]), 0, 1)
+    # Stray soft pixels inside the opaque figure: a partly transparent pixel (or pocket) whose
+    # 4-neighbours are all opaque and that touches no transparent pixel, even diagonally, is a
+    # blend of two foreground colours (hair over collar, arm over shirt), not coverage.
+    slab, sn = ndi.label(a < 1)
+    if sn:
+        zero = a <= 0
+        has_zero = ndi.maximum(ndi.binary_dilation(zero, structure=np.ones((3, 3), bool)), slab, range(sn + 1))
+        stray = [l for l in range(1, sn + 1) if not has_zero[l]]
+        a[np.isin(slab, stray)] = 1.0
+        print("stray soft pixels inside the figure made opaque:", int(np.isin(slab, stray).sum()),
+              "in", len(stray), "pocket(s)")
     alpha = np.round(a * 255).astype(np.uint8)
-    return alpha, lab, picked, bg
+    return alpha, lab, picked, bg, matte
 
 
-def apply_mask(rgb, alpha):
+def apply_mask(rgb, alpha, matte):
     a = alpha.astype(np.float64) / 255.0
     out = rgb.astype(np.float64)
     part = (a > 0) & (a < 1)
     aa = a[part][:, None]
-    decon = np.clip((out[part] - (1 - aa) * 255.0) / aa, 0, 255)
+    decon = np.clip((out[part] - (1 - aa) * matte[part][:, None]) / aa, 0, 255)
     solid = out.copy()
     solid[part] = decon
     # Nearest solid pixel (alpha >= 0.5): the colour a faint edge pixel is really made of.
@@ -215,7 +235,7 @@ def main():
     for f, s in zip(FRAMES[1:], srcs[1:]):
         assert s.shape == srcs[0].shape and (s[outside] == srcs[0][outside]).all(), f"{f} differs outside eye box"
 
-    alpha, lab, picked, bg = build_mask(srcs[0])
+    alpha, lab, picked, bg, matte = build_mask(srcs[0])
     assert (alpha[y0:y1, x0:x1] == 255).all(), "eye box must be fully opaque"
     os.makedirs(OUT, exist_ok=True)
     Image.fromarray(alpha, "L").save(os.path.join(OUT, "idle_alpha.png"), optimize=True)
@@ -228,7 +248,7 @@ def main():
     rev[pk] = [255, 40, 40]
     Image.fromarray(rev).save(os.path.join(OUT, "pockets.png"), optimize=True)
 
-    outs = [apply_mask(s, alpha) for s in srcs]
+    outs = [apply_mask(s, alpha, matte) for s in srcs]
     idle_out = os.path.join(PUB, "idle.png")
     Image.fromarray(outs[0], "RGBA").save(idle_out, optimize=True)
     shutil.copyfile(idle_out, os.path.join(PUB, FRAMES[0]))

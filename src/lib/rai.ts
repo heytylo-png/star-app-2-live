@@ -197,6 +197,32 @@ export function settledRestPose(): PoseId {
 }
 
 /**
+ * Sheets that ship as true RGBA (cut offline by scripts/cut-alpha.py: enclosed
+ * white pockets removed, soft decontaminated edge). The runtime studio-white
+ * punch must not run on these; it would only re-fringe them.
+ */
+export const PRE_CUT_ALPHA_FILES = [
+  "rai/idle.png",
+  "rai/idle_blink_01_open.png",
+  "rai/idle_blink_02_closing.png",
+  "rai/idle_blink_03_half.png",
+  "rai/idle_blink_04_closed.png",
+] as const;
+
+/**
+ * Cache key for the pre-cut sheets. The service worker serves same-origin PNGs cache-first, so a
+ * returning phone would get the old RGB-on-white file under the bare URL for one visit. Bump this
+ * whenever scripts/cut-alpha.py output changes.
+ */
+export const PRE_CUT_ALPHA_VERSION = "rgba1";
+
+/** False for pre-cut RGBA sheets; true for the RGB-on-white sheets that still need punch-white. */
+export function spriteNeedsWhitePunch(src: string): boolean {
+  const path = src.split(/[?#]/)[0] ?? src;
+  return !PRE_CUT_ALPHA_FILES.some((file) => path === file || path.endsWith(`/${file}`));
+}
+
+/**
  * Drop-in PNG contract for Star Rai.
  *
  * Morning official pack (live chat keys) lives under public/rai/:
@@ -214,7 +240,9 @@ const ASSET = (path: string) => {
   const env = (import.meta as ImportMeta & { env?: { BASE_URL?: string } }).env;
   const base = env?.BASE_URL || "/";
   const prefix = base.endsWith("/") ? base : `${base}/`;
-  return `${prefix}${path.replace(/^\//, "")}`;
+  const file = path.replace(/^\//, "");
+  const preCut = (PRE_CUT_ALPHA_FILES as readonly string[]).includes(file);
+  return preCut ? `${prefix}${file}?v=${PRE_CUT_ALPHA_VERSION}` : `${prefix}${file}`;
 };
 
 /** Live key → file under the static tree the puppet already serves. */
@@ -383,25 +411,6 @@ export function idleRestSrc(): string {
 /** The four unique baked frames, in forward order. */
 export function idleBlinkFrameUrls(): string[] {
   return [1, 2, 3, 4].map((frame) => idleBlinkFrameSrc(frame));
-}
-
-/**
- * Sheets that ship as true RGBA (cut offline by scripts/cut-alpha.py: enclosed
- * white pockets removed, soft decontaminated edge). The runtime studio-white
- * punch must not run on these; it would only re-fringe them.
- */
-export const PRE_CUT_ALPHA_FILES = [
-  "rai/idle.png",
-  "rai/idle_blink_01_open.png",
-  "rai/idle_blink_02_closing.png",
-  "rai/idle_blink_03_half.png",
-  "rai/idle_blink_04_closed.png",
-] as const;
-
-/** False for pre-cut RGBA sheets; true for the RGB-on-white sheets that still need punch-white. */
-export function spriteNeedsWhitePunch(src: string): boolean {
-  const path = src.split(/[?#]/)[0] ?? src;
-  return !PRE_CUT_ALPHA_FILES.some((file) => path === file || path.endsWith(`/${file}`));
 }
 
 /** Flat list of every sprite URL referenced by SPRITES — use for preload. */

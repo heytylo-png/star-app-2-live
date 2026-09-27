@@ -4,7 +4,8 @@
 so the runtime studio-white punch (`src/lib/punch-white.ts`) is skipped for them
 (`PRE_CUT_ALPHA_FILES` / `spriteNeedsWhitePunch` in `src/lib/rai.ts`).
 
-Reproduce: `python3 scripts/cut-alpha.py`
+Reproduce: `python3 scripts/cut-alpha.py`. When its output changes, bump `PRE_CUT_ALPHA_VERSION` in
+`src/lib/rai.ts` (the five URLs carry `?v=<version>` so the service worker's cache-first copy is bypassed).
 
 - `rgb-src/`: the RGB-on-white sources (01 is the old RGB `idle.png`, byte for byte). Never edited.
 - `idle_alpha.png`: the one alpha mask, applied identically to all five frames.
@@ -21,7 +22,10 @@ The antialias ramp only advances outward from the background, one pixel ring per
 leak sideways into a thin strand (that leak left see-through dots along the ahoge). Mid-grey tails of
 the ramp next to a still-light edge pixel are un-mixed too (hair zone and shoe/floor edge only).
 Below ~40% coverage the un-mix is noisy, so faint edge pixels take the nearest solid colour instead.
-The floor shadow under the shoes becomes a smooth translucent dark shadow.
+The floor shadow under the shoes becomes a smooth translucent dark shadow, un-mixed against the cut-off
+white (luma 240) so its alpha rises from 0 where the background ends (no seam where the leg gap meets it).
+A partly transparent pixel whose 4-neighbours are all opaque and that touches no transparent pixel is a
+blend of two foreground colours and is set opaque (2 found: (650,354) hair/collar, (693,665) arm/shirt).
 
 If the lids are ever repainted (`scripts/paint-blink-lids.py`), rebuild the RGB sources in `rgb-src/`
 from that output first, then rerun `cut-alpha.py`.

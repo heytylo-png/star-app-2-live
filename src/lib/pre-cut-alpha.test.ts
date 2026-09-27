@@ -8,6 +8,7 @@ import { inflateSync } from "node:zlib";
 import {
   idleBlinkFrameUrls,
   PRE_CUT_ALPHA_FILES,
+  PRE_CUT_ALPHA_VERSION,
   SPRITES,
   spriteNeedsWhitePunch,
 } from "./rai.ts";
@@ -52,6 +53,19 @@ describe("pre-cut RGBA idle + blink sheets", () => {
       assert.equal(spriteNeedsWhitePunch(src), true, src);
     }
     assert.equal(spriteNeedsWhitePunch("/star-app-2-live/rai/not_idle.png"), true);
+  });
+
+  it("versions the pre-cut URLs so the service worker's cached RGB copy is bypassed", () => {
+    const precut = [SPRITES.poses.idle, ...idleBlinkFrameUrls()];
+    for (const src of precut) {
+      assert.ok(src.endsWith(`.png?v=${PRE_CUT_ALPHA_VERSION}`), src);
+      assert.equal(spriteNeedsWhitePunch(src), false, src);
+    }
+    for (const src of [SPRITES.poses.talk, SPRITES.poses.peace, SPRITES.poses.wave]) {
+      assert.equal(src.includes("?"), false, src);
+    }
+    const sw = readFileSync(join(root, "public/sw.js"), "utf8");
+    assert.doesNotMatch(sw, /const CACHE = "star-rai-shell-v1";/);
   });
 
   it("ships those files as true RGBA with a transparent background", () => {
