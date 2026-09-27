@@ -4,7 +4,7 @@
 # Multiple rows per key; one is picked (avoid lastLine).
 # kiss is unmapped — never add a kiss key.
 # _default is used when the pose key has no rows.
-# Generic chat (no named pose) tracks the last user line via src/lib/track.ts.
+# Generic chat (no named pose) reacts via src/lib/track.ts. Never echo their words.
 # _correction / _permission rows serve that tracker. Never a stock flirt
 # that ignores what they said.
 

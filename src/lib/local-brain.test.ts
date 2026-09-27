@@ -108,7 +108,8 @@ describe("composeAct local-brain path", () => {
     const act = composeAct([{ role: "user", content: "Hey. Just got here." }], undefined, "idle");
     assert.ok(act.pose === "talk" || act.pose === "smug");
     assert.notEqual(act.pose, "idle");
-    assert.match(act.line, /Just got here|Facing you|You seeing this/);
+    assert.doesNotMatch(act.line, /Just got here|heard that/i);
+    assert.match(act.line, /Say more|I'm with you|Keep going|I'm here|Facing you|You seeing this/);
     assert.doesNotMatch(act.line, /Don't flinch/i);
   });
 

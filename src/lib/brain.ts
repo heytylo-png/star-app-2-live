@@ -3,7 +3,7 @@ import { actForClockTurn, filterClockSpokenLine, type ClockTurn } from "./clock.
 import { actForLifeTurn, parseTrackTitle, type LifeTurn } from "./life.ts";
 import { localBrainKeyFor, pickLocalBrainLine } from "./local-brain.ts";
 import { namedPoseFromText, resolveSpokenPose, type EmotionId, type PoseId } from "./rai.ts";
-import { localTrackAct } from "./track.ts";
+import { filterEchoedLine, localTrackAct } from "./track.ts";
 
 export type BrainMessage = { role: "user" | "assistant"; content: string };
 
@@ -118,12 +118,20 @@ export function composeAct(
     .map((m) => m.content)
     .join("\n");
   const finish = (act: BrainAct): BrainAct => {
-    if (!clockTurn) return act;
-    const line = filterClockSpokenLine(act.line, {
-      now: clockTurn.now,
-      recentText: recentUserText,
-      askedTime: clockTurn.kind === "ask_time",
-    });
+    let line = act.line;
+    if (clockTurn) {
+      line = filterClockSpokenLine(line, {
+        now: clockTurn.now,
+        recentText: recentUserText,
+        askedTime: clockTurn.kind === "ask_time",
+      });
+    }
+    // Time ask keeps the real hour. A named pose command may say the pose.
+    // Every other line loses a parrot clause.
+    const poseCommand = parseTrackTitle(lastUser) ? null : namedPoseFromText(lastUser);
+    if (clockTurn?.kind !== "ask_time" && poseCommand == null) {
+      line = filterEchoedLine(line, lastUser);
+    }
     return line === act.line ? act : { ...act, line };
   };
   const lifeTitle = parseTrackTitle(lastUser);
