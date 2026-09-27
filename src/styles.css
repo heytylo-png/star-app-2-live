@@ -313,11 +313,29 @@ body.chat-thread-resizing {
   top: calc(env(safe-area-inset-top, 0px) + var(--rai-top-bar) + 0.2rem);
   /* Composer + tabs only — feet continue toward the compact Chat band. */
   bottom: clamp(5.1rem, 15vh, 7.25rem);
-  /* Hip origin: planted weight-shift / breathe. JS owns transform (no rotateY). */
+  /* Hip origin: planted weight-shift sway. JS owns transform (no rotateY, no scale).
+     No will-change here: a composited rig re-sampled the already-zoomed sheet a
+     second time and made her soft on high-DPR phones. */
   transform-origin: 50% 72%;
-  will-change: transform;
   background: transparent;
   z-index: 1;
+  /* Long-shot zoom + crown drop for the sheet box. Puppet JS reads these and
+     sizes/positions .rai-layer in whole device pixels (--rai-sheet-x/y/w/h). */
+  --rai-sheet-zoom: var(--rai-long-shot);
+  --rai-sheet-top: 0.02;
+}
+
+@media (max-width: 639px) {
+  .rai-rig {
+    --rai-sheet-zoom: var(--rai-long-shot-phone);
+    --rai-sheet-top: 0.0125;
+  }
+}
+
+@media (min-width: 640px) and (min-height: 900px) {
+  .rai-rig {
+    --rai-sheet-zoom: var(--rai-long-shot-tall);
+  }
 }
 
 /* Soft elliptical contact shadow under the hip origin (~72%) — no hard comic blob. */
@@ -357,42 +375,39 @@ body.chat-thread-resizing {
 
 .rai-layer {
   position: absolute;
-  inset: 0;
   display: block;
-  width: 100%;
-  height: 100%;
+  /*
+    Crown-origin long shot: modest zoom so the full body stays in frame
+    (ahoge safe, feet toward Chat). Phone zoom is the pulled-back 1.08 crop.
+    Not a face-filling mid-shot / bust.
+    The zoom is real width/height (whole device px, set by puppet JS), not
+    transform: scale, so the sheet is resampled exactly once. The calc()
+    fallbacks give the same box before JS measures.
+  */
+  left: var(--rai-sheet-x, calc((1 - var(--rai-sheet-zoom)) * 50%));
+  top: var(--rai-sheet-y, calc(var(--rai-sheet-top) * 100%));
+  width: var(--rai-sheet-w, calc(var(--rai-sheet-zoom) * 100%));
+  height: var(--rai-sheet-h, calc(var(--rai-sheet-zoom) * 100%));
+  /* The zoomed box is wider than the rig; preflight's img max-width: 100% would clamp it. */
+  max-width: none;
+  max-height: none;
   object-fit: contain;
   object-position: 50% 0%;
+  transform-origin: 50% 0%;
+  image-rendering: auto;
+  /* No translateZ(0) or will-change hint. Promoting the sheet to its own layer made the
+     compositor resample it again (face sharpness 263 vs 695 at DPR 3, measured).
+     Painted in place, the sheet is resampled exactly once. */
+  transform: none;
   pointer-events: none;
   user-select: none;
   background: transparent;
   z-index: 1;
-  /*
-    Crown-origin long shot: modest zoom so the full body stays in frame
-    (ahoge safe, feet toward Chat). Phone scale is the pulled-back 1.08 crop.
-    Not a face-filling mid-shot / bust.
-  */
-  top: 2%;
-  transform: scale(var(--rai-long-shot));
-  transform-origin: 50% 0%;
   /* 1px amber rim on the punched sprite. Keep ahoge crisp; no cyan. */
   filter:
     drop-shadow(1px 0 0 rgba(232, 163, 28, 0.22))
     drop-shadow(-1px 0 0 rgba(232, 163, 28, 0.12))
     drop-shadow(0 1px 0 rgba(232, 163, 28, 0.1));
-}
-
-@media (max-width: 639px) {
-  .rai-layer {
-    top: 1.25%;
-    transform: scale(var(--rai-long-shot-phone));
-  }
-}
-
-@media (min-width: 640px) and (min-height: 900px) {
-  .rai-layer {
-    transform: scale(var(--rai-long-shot-tall));
-  }
 }
 
 .rai-ahoge {

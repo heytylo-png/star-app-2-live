@@ -12,10 +12,11 @@ Default body: `idle.png`, `talk_official.png`, and the other live keys in [POSIN
 
 The rig (`[data-rai-rig]`) is hip-origin (`transform-origin: 50% 72%`). A rAF loop applies:
 
-- **Breathe** — tiny scale (~0.75%)
-- **Weight shift** — a few pixels of X + sub-degree `rotateZ`
+- **Weight shift** — a few pixels of X sway, snapped to whole device pixels
 - **Look-at** — pointer lean on X / Z only (no `rotateY` / perspective card-flip)
 - **Ahoge** — a light extra rotate on `[data-rai-ahoge]`
+
+**Sharpness rules (no second resample).** Rest scale is exactly 1: no breathe `scale()` and no idle `rotateZ` rock in the rig transform (either one resamples the whole sheet every frame). Translates are whole device pixels. The long-shot zoom (`--rai-long-shot*`) is a real width/height on `.rai-layer`, computed in JS in whole device pixels (`src/lib/rai-sheet-box.ts`), not `transform: scale`. No `will-change` on `.rai-rig` and no `translateZ(0)` on `.rai-layer`: promoting either layer made the compositor resample the sheet again. Measured face sharpness at 412x915 @ DPR 3: ~400 before, ~695 after (single resample), with sway running.
 
 Vertical travel stays under ~1px at rest so she does not float. `prefers-reduced-motion: reduce` zeros the loop.
 
