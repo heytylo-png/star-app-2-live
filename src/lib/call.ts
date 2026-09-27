@@ -7,7 +7,8 @@
  */
 
 import { speakable } from "./companion.ts";
-import { streamLine } from "./rai.ts";
+import { characterDisplayName } from "./helix.ts";
+import { resolveSpokenPose, streamLine, type PoseId, type ResolveSpokenPoseOpts } from "./rai.ts";
 
 /** Never persist SpeechRecognition / TTS audio blobs. */
 export const CALL_STORE_RECORDINGS = false;
@@ -202,14 +203,54 @@ export function callListenEndAction(opts: {
   return "backoff";
 }
 
+function applySpokenCase(sample: string, canonical: string): string {
+  if (sample === sample.toUpperCase()) return canonical.toUpperCase();
+  if (sample === sample.toLowerCase()) return canonical.toLowerCase();
+  if (sample.length === canonical.length) {
+    return [...canonical]
+      .map((ch, i) => {
+        const src = sample[i] ?? "";
+        const upper = src !== src.toLowerCase() && src === src.toUpperCase();
+        return upper ? ch.toUpperCase() : ch.toLowerCase();
+      })
+      .join("");
+  }
+  const head = canonical[0] ?? "";
+  return `${head.toUpperCase()}${canonical.slice(1).toLowerCase()}`;
+}
+
 /**
- * User bubble + send path: keep SpeechRecognition text as-is.
- * Do not rewrite tokens to memory names (Rai↔Ray or similar). She already
- * has the user name in memory — no ASR name autocorrect on shown or sent text.
+ * STT often hears her name as "Ray". Rewrite that one word to the display
+ * name from the character config. Word boundary, case-preserving.
+ * "Raymond" and "array" stay put.
+ */
+export function normalizeSttDisplayName(
+  text: string,
+  displayName: string = characterDisplayName(),
+): string {
+  const canonical = displayName.trim();
+  if (!canonical || canonical.toLowerCase() === "ray") return text;
+  return text.replace(/\bRay\b/gi, (match) => applySpokenCase(match, canonical));
+}
+
+/** Listen chrome. Her display name, never the "Ray" mishear. */
+export function callListenLabel(displayName: string = characterDisplayName()): string {
+  return `Listening to ${displayName}`;
+}
+
+/** Her name on the Call transcript. */
+export function callTranscriptSpeaker(displayName: string = characterDisplayName()): string {
+  return displayName;
+}
+
+/**
+ * User bubble + send path. Whitespace collapses. The only name rewrite is
+ * a word-boundary "Ray" → her display name (case-preserving).
  */
 export function keepRawSttText(transcript: string, knownNames: readonly string[] = []): string {
   void knownNames;
-  return (transcript ?? "").replace(/\s+/g, " ").trim();
+  const trimmed = (transcript ?? "").replace(/\s+/g, " ").trim();
+  return normalizeSttDisplayName(trimmed);
 }
 
 export function normalizeCallUtterance(text: string): string {
@@ -254,6 +295,63 @@ export type CallSubmitGate = {
   listenPausedForTts: boolean;
   finals: string[];
 };
+
+const holdClaims = new Map<string, string>();
+
+export function resetHoldSubmits(): void {
+  holdClaims.clear();
+}
+
+export type HoldSettle = {
+  text: string;
+  bubbles: number;
+  brainRequests: number;
+  /** This hold id already produced its one submit. */
+  already: boolean;
+};
+
+/**
+ * One hold → at most one user bubble and one brain request.
+ * Empty / whitespace events submit nothing and do not claim the hold.
+ * A second call for the same hold id (final STT plus the pause timer, or
+ * onend plus onresult) is dropped, including a repeated identical final.
+ */
+export function settleHoldUtterance(opts: {
+  holdId: string;
+  events: ReadonlyArray<{ transcript: string }>;
+}): HoldSettle {
+  const id = opts.holdId.trim();
+  if (!id) return { text: "", bubbles: 0, brainRequests: 0, already: false };
+  if (holdClaims.has(id)) {
+    return { text: "", bubbles: 0, brainRequests: 0, already: true };
+  }
+  const finals: string[] = [];
+  for (const event of opts.events) pushCallFinal(finals, event.transcript);
+  const text = callUtteranceToSend({ finals });
+  if (!text) return { text: "", bubbles: 0, brainRequests: 0, already: false };
+  holdClaims.set(id, text);
+  return { text, bubbles: 1, brainRequests: 1, already: false };
+}
+
+export type CallOpenResult = {
+  state: "listen";
+  greeting: string | null;
+  brainRequests: number;
+  bubbles: number;
+};
+
+/** Opening Call stays in listen. No invented hello, no auto-greeting. */
+export function callSessionOpened(): CallOpenResult {
+  return { state: "listen", greeting: null, brainRequests: 0, bubbles: 0 };
+}
+
+/**
+ * Spoken Call reply pose. Same function as Chat (`resolveSpokenPose`) —
+ * not a second tint table. Kiss stays unmapped inside that path.
+ */
+export function poseForCallReply(opts: ResolveSpokenPoseOpts): PoseId {
+  return resolveSpokenPose(opts);
+}
 
 /**
  * Submit gate for Call listen:

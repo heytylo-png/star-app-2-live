@@ -21,6 +21,31 @@ export const LIFE_MOOD_TAGS = ["bratty", "smug", "tired", "soft"] as const;
 export type LifeMoodTag = (typeof LIFE_MOOD_TAGS)[number];
 
 export const LIFE_TINT_POSES = ["talk", "content", "smug", "tired", "wave"] as const satisfies readonly PoseId[];
+
+/** Life never surfaces a Spotify login wall. Stored tokens stay in spotify.ts. */
+export const LIFE_SHOWS_LOGIN = false;
+
+/**
+ * Now-playing chrome on Life: track title and Stop, or nothing.
+ * No connect / login prompt.
+ */
+export function lifeNowPlayingChrome(opts: {
+  sessionOn: boolean;
+  title?: string | null;
+}): {
+  title: string | null;
+  showStop: boolean;
+  showLogin: false;
+  showConnect: false;
+} {
+  const title = opts.sessionOn ? opts.title?.replace(/\s+/g, " ").trim() || null : null;
+  return {
+    title,
+    showStop: Boolean(title),
+    showLogin: false,
+    showConnect: false,
+  };
+}
 export type LifeTintPose = (typeof LIFE_TINT_POSES)[number];
 
 export const PLAYLIST_MIN = 4;

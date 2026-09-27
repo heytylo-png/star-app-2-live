@@ -17,7 +17,7 @@ Tap the **phone** icon in the header. Spec: `artifacts/star-rai-call-mode.txt`.
 - After Allow: listen loop (`webkitSpeechRecognition`) → same Chat brain as typed Chat → speak `line` only.
 - Empty / whitespace / very short / filler transcripts (`uh`, `um`, `hmm`, …) are ignored (keep listening; no invented user line). Hangup stops mic tracks + recognition.
 - Recognition **pauses while she is speaking** (her voice + room noise are not transcribed mid-reply), then resumes after a short cooldown — or on hangup.
-- Final results are preferred over noisy interim; finals debounce ~1400ms before send (do not submit on recognition `onend`). Immediate leading repeats (`hello hello`) collapse to one token. Raw STT stays in the bubble (no Rai↔Ray rewrite). `no-speech` / empty cycles **back off** instead of thrashing start/stop. Call stays hot until hangup.
+- Final results are preferred over noisy interim; finals debounce ~1400ms before send (do not submit on recognition `onend`). One hold submits once — a repeated final plus the pause timer does not double-send. Immediate leading repeats (`hello hello`) collapse to one token. A word-boundary `Ray` in STT becomes her display name Rai (case preserved). `no-speech` / empty cycles **back off** instead of thrashing start/stop. Opening Call does not greet. Call stays hot until hangup.
 - Pose commands by voice still swap the sheet first. Pose tint applies to the spoken bubble.
 - TTS speaks the parsed `line` only — never JSON, memory lists, or lore dumps. If TTS fails, the bubble still shows.
 - Header **mute** is honored (Call does not force speaker on).

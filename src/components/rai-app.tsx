@@ -29,7 +29,6 @@ import {
   isDedicatedPose,
   namedPoseFromText,
   parseAct,
-  resolveSpokenPose,
   spokenBubbleResetDelay,
   streamLine,
   streamSpokenAct,
@@ -78,13 +77,19 @@ import {
   CALL_LISTEN_DURING_TTS,
   CALL_POST_TTS_COOLDOWN_MS,
   callListenEndAction,
+  callListenLabel,
   callMicNotice,
+  callSessionOpened,
+  callTranscriptSpeaker,
   classifyGetUserMediaError,
   collapseDuplicateNgrams,
   gateCallUtterance,
   keepRawSttText,
   nextCallListenBackoffMs,
+  poseForCallReply,
   pushCallFinal,
+  resetHoldSubmits,
+  settleHoldUtterance,
   shouldEndCallOnPageEvent,
   shouldSpeakCallLine,
   shouldStartRecognitionOnError,
@@ -218,6 +223,9 @@ function RaiReady() {
   const listenPausedForTtsRef = useRef(false);
   const callFinalsRef = useRef<string[]>([]);
   const callSubmittedRef = useRef(false);
+  const callHoldIdRef = useRef(0);
+  const pttHoldIdRef = useRef(0);
+  const pttTextRef = useRef("");
   const startCallListenRef = useRef<(opts?: { continueUtterance?: boolean }) => void>(() => {});
   const poseRef = useRef<PoseId>("idle");
   /** Pose at the start of this turn. Inferred tint must not stick as "current body". */
@@ -347,7 +355,7 @@ function RaiReady() {
       source: "return",
     });
     setCaption(offer.line);
-    const nextPose = resolveSpokenPose({
+    const nextPose = poseForCallReply({
       namedPose: null,
       modelPose: null,
       emotion: DEFAULT_EMOTION,
@@ -432,7 +440,9 @@ function RaiReady() {
     // this bubble is gone — not under the line she just said. Blink is on
     // (approved by TyLo on 2026-09-26, 807-referenced painted lids, pass 4b).
     // Music Set (track_change → talk|content|smug) also stays if the caption flag drops.
-    const captionLive = Boolean(caption.trim()) && caption !== "Listening…";
+    const listenCaption = callListenLabel();
+    const captionLive =
+      Boolean(caption.trim()) && caption !== "Listening…" && caption !== listenCaption;
     const delay = spokenBubbleResetDelay({
       pose,
       emotion,
@@ -531,6 +541,7 @@ function RaiReady() {
     const continueUtterance = Boolean(opts?.continueUtterance) && !callSubmittedRef.current;
     if (!continueUtterance) {
       callListenGenRef.current += 1;
+      callHoldIdRef.current += 1;
       callFinalsRef.current = [];
       callSubmittedRef.current = false;
       clearCallListenTimers();
@@ -568,6 +579,12 @@ function RaiReady() {
         finals: callFinalsRef.current,
       });
       if (gated.action !== "send") return;
+      const settled = settleHoldUtterance({
+        holdId: `call-${callHoldIdRef.current}`,
+        events: callFinalsRef.current.map((transcript) => ({ transcript })),
+      });
+      // Empty STT, or a second fire from this hold (pause timer and onend).
+      if (settled.brainRequests !== 1 || !settled.text) return;
       callSubmittedRef.current = true;
       callListenGenRef.current += 1;
       listenBackoffAttemptRef.current = 0;
@@ -578,7 +595,7 @@ function RaiReady() {
       draftRef.current = "";
       setDraft("");
       callFinalsRef.current = [];
-      void sendRef.current(keepRawSttText(gated.text));
+      void sendRef.current(settled.text);
     };
 
     rec.onresult = (event) => {
@@ -847,7 +864,7 @@ function RaiReady() {
       setEmotion(act.emotion);
       const lifeTitle = parseTrackTitle(lastUser);
       const named = lifeTitle ? null : namedPoseFromText(lastUser);
-      const next = resolveSpokenPose({
+      const next = poseForCallReply({
         namedPose: named,
         modelPose: act.pose,
         emotion: act.emotion,
@@ -989,12 +1006,13 @@ function RaiReady() {
     listenAfterSpeakRef.current = false;
     callFinalsRef.current = [];
     callSubmittedRef.current = false;
+    resetHoldSubmits();
     setCallActive(false);
     setCallStarting(false);
     stop();
     stopCallMic();
     // Thread / memory / sheet stay. Drop the listen placeholder so the last line shows.
-    setCaption((c) => (c === "Listening…" ? "" : c));
+    setCaption((c) => (c === "Listening…" || c === callListenLabel() ? "" : c));
   }
   hangUpRef.current = hangUp;
 
@@ -1075,8 +1093,11 @@ function RaiReady() {
         setCallActive(true);
         listenAfterSpeakRef.current = true;
         setCallNotice(null);
-        deliverReturnRef.current("call");
-        startCallListen();
+        // Open stays in listen. No hello, no return beat, no brain request.
+        const opened = callSessionOpened();
+        if (opened.state === "listen" && !opened.greeting && opened.brainRequests === 0 && opened.bubbles === 0) {
+          startCallListen();
+        }
       })
       .catch((err) => {
         callStartingRef.current = false;
@@ -1098,19 +1119,36 @@ function RaiReady() {
     }
     unlockVoice();
     stopRec();
+    pttHoldIdRef.current += 1;
+    pttTextRef.current = "";
+    const pttHoldId = pttHoldIdRef.current;
     const rec = new SR();
     rec.lang = "en-US";
     rec.interimResults = true;
     rec.continuous = false;
+    const submitThisHold = () => {
+      const settled = settleHoldUtterance({
+        holdId: `ptt-${pttHoldId}`,
+        events: [{ transcript: pttTextRef.current }],
+      });
+      if (settled.already) return;
+      if (settled.brainRequests !== 1 || !settled.text) {
+        setCaption((c) => (c === "Listening…" || c === callListenLabel() ? "" : c));
+        return;
+      }
+      void sendRef.current(settled.text);
+    };
     rec.onresult = (event) => {
       let said = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         said += event.results[i][0].transcript;
       }
-      const next = said.trim();
+      const next = keepRawSttText(said);
+      if (!next) return;
+      pttTextRef.current = next;
       draftRef.current = next;
       setDraft(next);
-      if (next) setCaption(next);
+      setCaption(next);
     };
     rec.onerror = () => {
       setHolding(false);
@@ -1119,6 +1157,7 @@ function RaiReady() {
     rec.onend = () => {
       recRef.current = null;
       setHolding(false);
+      submitThisHold();
     };
     recRef.current = rec;
     setPttSupported(true);
@@ -1136,11 +1175,25 @@ function RaiReady() {
 
   function endPtt() {
     if (callActiveRef.current) return;
-    recRef.current?.stop();
+    const rec = recRef.current;
     setHolding(false);
-    const text = draftRef.current.trim();
-    if (text) void send(text);
-    else if (pttSupported) setCaption((c) => (c === "Listening…" ? "" : c));
+    if (rec) {
+      // onend submits this hold. stop() fires onend; the hold lock drops a second try.
+      try {
+        rec.stop();
+      } catch {
+        rec.onend?.();
+      }
+      return;
+    }
+    const settled = settleHoldUtterance({
+      holdId: `ptt-${pttHoldIdRef.current}`,
+      events: [{ transcript: pttTextRef.current }],
+    });
+    if (settled.brainRequests === 1 && settled.text) void send(settled.text);
+    else if (!settled.already && pttSupported) {
+      setCaption((c) => (c === "Listening…" || c === callListenLabel() ? "" : c));
+    }
   }
 
   const slotFacts = formatMemoryFacts(slots);
@@ -1154,7 +1207,7 @@ function RaiReady() {
       : sending
         ? "Thinking"
         : callListening
-          ? "Listening"
+          ? callListenLabel()
           : "On call"
     : talking
       ? "Speaking"
@@ -1237,6 +1290,8 @@ function RaiReady() {
             talking={talking}
             listening={holding || callListening}
             showSetup={showSetup}
+            herName={callActive ? callTranscriptSpeaker() : undefined}
+            listenLabel={callActive ? callListenLabel() : "Listening…"}
           />
         </div>
         ) : tab === "chart" ? (
@@ -1252,7 +1307,6 @@ function RaiReady() {
           <div className="pointer-events-auto flex min-h-0 flex-1 flex-col justify-end pt-1">
             <LifePanel
               life={slots.life}
-              onSetTitle={(title) => void send(`I'm listening to ${title}`)}
               onStop={() => void send("stop listening")}
               onPlayTitle={(title) => {
                 void (async () => {
@@ -1286,7 +1340,7 @@ function RaiReady() {
               <p className="text-xs tracking-wide text-muted">
                 <span className="font-medium text-fg">On call</span>
                 {" · "}
-                {talking ? "Speaking" : sending ? "Thinking" : callListening ? "Listening" : "Ready"}
+                {talking ? "Speaking" : sending ? "Thinking" : callListening ? callListenLabel() : "Ready"}
               </p>
               <Button type="button" size="sm" variant="secondary" onClick={hangUp}>
                 <PhoneOff className="size-3.5" />
@@ -1367,7 +1421,7 @@ function RaiReady() {
               placeholder={
                 callActive
                   ? callListening
-                    ? "Listening…"
+                    ? callListenLabel()
                     : talking
                       ? "On call…"
                       : "On call…"
@@ -1613,7 +1667,7 @@ function RaiReady() {
               heytylo-png.github.io. Tap again to hang up — thread stays.
               Mute in the header still skips TTS. Mic audio is never stored.
               Tabs are Chat · Chart · Life — launch on Chat. Chart is a sparse daily sky pane
-              (no auto-reading, no wheel). Life v1 is music only — paste a title, no Spotify/Apple login.
+              (no auto-reading, no wheel). Life shows the track title and Stop — no Spotify login.
               Session can stay on in the background; comments still land in Chat.
             </div>
           </div>

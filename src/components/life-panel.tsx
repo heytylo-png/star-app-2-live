@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { NowPlayingBar } from "@/components/now-playing-bar";
-import { SpotifyLifePlayer } from "@/components/spotify-life-player";
 import { Button } from "@/components/ui/button";
 import { localDateKey } from "@/lib/chart";
 import { clockTimeZone } from "@/lib/clock";
@@ -12,17 +11,17 @@ import type { SpotifyPlaybackApi } from "@/lib/use-spotify-playback";
 
 type LifePanelProps = {
   life?: LifeSlots;
-  onSetTitle: (title: string) => void;
   onStop: () => void;
   onPlayTitle: (title: string) => void;
   spotify: SpotifyPlaybackApi;
 };
 
 /**
- * Life pane — optional Spotify + paste Set/Stop + her suggestions / lists.
+ * Life pane — now playing is the track title and Stop.
+ * Spotify tokens can still exist; the connect wall is not shown.
  * Mood tag is hers for the day (read-only). Chat stays clean.
  */
-export function LifePanel({ life, onSetTitle, onStop, onPlayTitle, spotify }: LifePanelProps) {
+export function LifePanel({ life, onStop, onPlayTitle, spotify }: LifePanelProps) {
   const sessionOn = Boolean(life?.on);
   const playlist = life?.daily_playlist ?? [];
   const mood = life?.mood_tag;
@@ -73,13 +72,10 @@ export function LifePanel({ life, onSetTitle, onStop, onPlayTitle, spotify }: Li
         Music only. Her mood is hers for the day — wording tint only.
       </p>
 
-      <div className="mt-3 space-y-3">
-        <SpotifyLifePlayer spotify={spotify} />
+      <div className="mt-3">
         <NowPlayingBar
           sessionOn={sessionOn}
           nowPlaying={life?.now_playing}
-          moodTag={moodToday ? mood : undefined}
-          onSetTitle={onSetTitle}
           onStop={onStop}
           className="mx-0 mb-0 max-w-none rounded-md bg-bg px-2 shadow-none"
         />
@@ -136,9 +132,7 @@ export function LifePanel({ life, onSetTitle, onStop, onPlayTitle, spotify }: Li
 
       <div className="mt-4 border-t border-border pt-3">
         <p className="text-[0.65rem] tracking-wide text-subtle uppercase">Her lists</p>
-        <p className="mt-0.5 text-xs text-muted">
-          Hers. Titles only. Play still goes through Spotify if connected.
-        </p>
+        <p className="mt-0.5 text-xs text-muted">Hers. Titles only.</p>
         <ul className="mt-2 space-y-2">
           {lists.map((list) => {
             const open = openList === list.id;

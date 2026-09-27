@@ -5,9 +5,11 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import { speakable } from "./companion.ts";
 import { CALL_MODE_SOURCE, RAI_SYSTEM } from "./generated/star-rai-artifacts.ts";
+import { characterDisplayName } from "./helix.ts";
 import {
   layersFor,
   namedPoseFromText,
+  normalizePose,
   POSE_HOLD_AFTER_TALK_MS,
   poseResetDelayMs,
   resolveSpokenPose,
@@ -28,13 +30,20 @@ import {
   callListenEndAction,
   collapseDuplicateNgrams,
   collapseLeadingRepeatedToken,
+  callListenLabel,
+  callSessionOpened,
+  callTranscriptSpeaker,
   gateCallUtterance,
   hangUpCallState,
   keepRawSttText,
   meaningfulTranscript,
+  normalizeSttDisplayName,
+  poseForCallReply,
   MIC_UNBLOCK_STEPS,
   nextCallListenBackoffMs,
   pushCallFinal,
+  resetHoldSubmits,
+  settleHoldUtterance,
   shouldEndCallOnPageEvent,
   shouldSpeakCallLine,
   shouldStartRecognitionOnError,
@@ -155,11 +164,23 @@ describe("one utterance per submit", () => {
     assert.equal(collapseDuplicateNgrams("who is who is"), "who is");
   });
 
-  it("does not rewrite STT names (Rai stays Rai, Ray stays Ray)", () => {
+  it("rewrites a word-boundary Ray to her display name, case preserved", () => {
+    assert.equal(characterDisplayName(), "Rai");
+    assert.equal(callTranscriptSpeaker(), "Rai");
+    assert.equal(callListenLabel(), "Listening to Rai");
+    assert.doesNotMatch(callListenLabel(), /Ray/);
+    assert.doesNotMatch(callTranscriptSpeaker(), /Ray/);
+    assert.equal(normalizeSttDisplayName("hey Ray"), "hey Rai");
+    assert.equal(normalizeSttDisplayName("hey ray"), "hey rai");
+    assert.equal(normalizeSttDisplayName("HEY RAY"), "HEY RAI");
+    assert.equal(normalizeSttDisplayName("rAy said hi"), "rAi said hi");
+    assert.equal(normalizeSttDisplayName("hey Rai"), "hey Rai");
+    assert.equal(normalizeSttDisplayName("Raymond called"), "Raymond called");
+    assert.equal(normalizeSttDisplayName("array"), "array");
     assert.equal(keepRawSttText("hey Rai", ["Rai"]), "hey Rai");
-    assert.equal(keepRawSttText("hey Ray", ["Rai"]), "hey Ray");
+    assert.equal(keepRawSttText("hey Ray", ["Rai"]), "hey Rai");
+    assert.equal(callUtteranceToSend({ finals: ["hey Ray"] }), "hey Rai");
     assert.equal(callUtteranceToSend({ finals: ["hey Rai"] }), "hey Rai");
-    assert.equal(callUtteranceToSend({ finals: ["hey Ray"] }), "hey Ray");
   });
 
   it("drops duplicate finals instead of concatenating them", () => {
@@ -202,6 +223,59 @@ describe("one utterance per submit", () => {
       { action: "keep_listening", text: "" },
     );
     assert.equal(callTranscriptAction(""), "keep_listening");
+  });
+});
+
+describe("empty hold and one submit", () => {
+  it("opening Call or silence does not greet, submit, or bubble", () => {
+    const opened = callSessionOpened();
+    assert.equal(opened.state, "listen");
+    assert.equal(opened.greeting, null);
+    assert.equal(opened.brainRequests, 0);
+    assert.equal(opened.bubbles, 0);
+
+    resetHoldSubmits();
+    const silent = settleHoldUtterance({
+      holdId: "silence",
+      events: [{ transcript: "" }, { transcript: "   " }, { transcript: "\n\t" }],
+    });
+    assert.equal(silent.text, "");
+    assert.equal(silent.bubbles, 0);
+    assert.equal(silent.brainRequests, 0);
+    assert.equal(silent.already, false);
+    assert.equal(callTranscriptAction("   "), "keep_listening");
+  });
+
+  it("duplicate finals from one hold submit once", () => {
+    resetHoldSubmits();
+    const first = settleHoldUtterance({
+      holdId: "hold-1",
+      events: [{ transcript: "hey Ray" }, { transcript: "hey Ray" }],
+    });
+    assert.equal(first.text, "hey Rai");
+    assert.equal(first.bubbles, 1);
+    assert.equal(first.brainRequests, 1);
+
+    // Pause timer and onend / onresult both try to commit the same hold.
+    const again = settleHoldUtterance({
+      holdId: "hold-1",
+      events: [{ transcript: "hey Ray" }],
+    });
+    assert.equal(again.text, "");
+    assert.equal(again.bubbles, 0);
+    assert.equal(again.brainRequests, 0);
+    assert.equal(again.already, true);
+  });
+
+  it("wires Call open and the hold lock without an auto-greeting", () => {
+    const app = readFileSync(join(root, "src/components/rai-app.tsx"), "utf8");
+    assert.match(app, /callSessionOpened\(/);
+    assert.doesNotMatch(app, /deliverReturnRef\.current\("call"\)/);
+    assert.match(app, /settleHoldUtterance\(/);
+    assert.match(app, /callListenLabel\(/);
+    assert.match(app, /callTranscriptSpeaker\(/);
+    assert.match(app, /poseForCallReply\(/);
+    assert.doesNotMatch(app, /["']Ray["']/);
   });
 });
 
@@ -368,6 +442,58 @@ describe("pose commands + tint still apply on a voice turn", () => {
   it("named pose commands still resolve (sheet swaps first)", () => {
     assert.equal(namedPoseFromText("wave"), "wave");
     assert.equal(namedPoseFromText("kiss"), false);
+  });
+
+  it("Call reply pose equals the Chat tint for the same line", () => {
+    const line = "Yeah, I heard that~";
+    const opts = {
+      namedPose: null,
+      modelPose: null,
+      emotion: "bratty" as const,
+      spoken: true,
+      currentPose: "idle" as const,
+      seed: line,
+    };
+    const chat = resolveSpokenPose(opts);
+    const call = poseForCallReply(opts);
+    assert.equal(call, chat);
+    assert.equal(call, "talk");
+    assert.notEqual(call, "idle");
+    const src = layersFor({
+      pose: call,
+      emotion: "bratty",
+      talking: false,
+      amplitude: 0,
+      angle: 0,
+    })[0]!.src;
+    assert.match(src, /talk_official/);
+    assert.doesNotMatch(src, /\/idle\.png$/);
+
+    const music = {
+      namedPose: null,
+      modelPose: "idle" as const,
+      emotion: "bratty" as const,
+      spoken: true,
+      nowPlayingJustSet: true,
+      lifeTintPose: "content" as const,
+      currentPose: "idle" as const,
+      seed: "Super Shy",
+    };
+    assert.equal(poseForCallReply(music), resolveSpokenPose(music));
+    assert.equal(poseForCallReply(music), "content");
+    assert.notEqual(poseForCallReply(music), "idle");
+    assert.doesNotMatch(
+      layersFor({
+        pose: poseForCallReply(music),
+        emotion: "bratty",
+        talking: false,
+        amplitude: 0,
+        angle: 0,
+      })[0]!.src,
+      /\/idle\.png$/,
+    );
+    assert.equal(namedPoseFromText("kiss"), false);
+    assert.equal(normalizePose("kiss"), null);
   });
 
   it("pose tint applies to a spoken teasing line instead of idle-frown", () => {

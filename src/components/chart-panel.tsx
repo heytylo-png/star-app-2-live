@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { composeDiaryEntry, HER_CHART, localDateKey, localHerDay, natalFromSetup } from "@/lib/chart";
-import { storedToHerDay, useChartStore } from "@/lib/chart-store";
+import { useChartStore } from "@/lib/chart-store";
 import { clockTimeZone, readLocalNow } from "@/lib/clock";
-import { requestHerDayCopy } from "@/lib/her-day";
 import { lockHerDailyMood } from "@/lib/her-suggest";
 import { useMemoryStore } from "@/lib/memory-store";
 import { birthDateInputValue, lastDiaryEntry } from "@/lib/shell";
-import { composeSkyDashboard, computeSkyFacts, type HerDayCopy } from "@/lib/sky";
+import { composeSkyDashboard, computeSkyFacts } from "@/lib/sky";
 import { cn } from "@/lib/utils";
 
 type ChartPanelProps = {
@@ -18,10 +17,9 @@ type ChartPanelProps = {
 };
 
 /**
- * Sparse Chart pane — daily theme, her-day section, sky labels, quiet birth edit.
- * Layout inspiration only (not Co-Star brand/copy). No wheel.
- * Opening Chart does not post to Chat. Her-day copy is local first; optional
- * Grok Chart/her-day once per local day (fail soft).
+ * Sparse Chart pane — daily theme, her-day facts, sky labels, quiet birth edit.
+ * No zodiac wheel. Opening Chart does not generate a reading and does not
+ * post to Chat. A reading only happens when the user asks in Chat.
  */
 export function ChartPanel({ userSun, birthDate, birthTime, birthPlace }: ChartPanelProps) {
   const diaryByDay = useChartStore((s) => s.diaryByDay);
@@ -32,7 +30,6 @@ export function ChartPanel({ userSun, birthDate, birthTime, birthPlace }: ChartP
   const [place, setPlace] = useState(birthPlace ?? "");
   const [saved, setSaved] = useState(false);
   const [birthOpen, setBirthOpen] = useState(false);
-  const [herDay, setHerDay] = useState<HerDayCopy | null>(null);
 
   const dash = useMemo(() => {
     const tz = clockTimeZone(timezone);
@@ -57,25 +54,7 @@ export function ChartPanel({ userSun, birthDate, birthTime, birthPlace }: ChartP
     lockHerDailyMood();
   }, [dash.todayDate]);
 
-  useEffect(() => {
-    const cached = useChartStore.getState().herDayFor(dash.todayDate);
-    if (cached) {
-      setHerDay(storedToHerDay(cached));
-      return;
-    }
-    setHerDay(dash.localHer);
-    let cancelled = false;
-    void requestHerDayCopy({ todayDate: dash.todayDate, sky: dash.sky }).then((copy) => {
-      if (cancelled) return;
-      useChartStore.getState().saveHerDay(dash.todayDate, copy);
-      setHerDay(copy);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [dash.todayDate, dash.localHer, dash.sky]);
-
-  const her = herDay ?? dash.localHer;
+  const her = dash.localHer;
 
   return (
     <section
