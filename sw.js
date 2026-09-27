@@ -1,7 +1,7 @@
 /* Star Rai — minimal app-shell service worker.
  * Caches same-origin static assets for offline shell.
  * Does not intercept cross-origin (Grok / fonts) or mutate localStorage. */
-const CACHE = "star-rai-shell-5757400";
+const CACHE = "star-rai-shell-c86881b";
 const BASE = "/star-app-2-live/";
 const PRECACHE = [
   BASE,
