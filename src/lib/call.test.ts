@@ -4,6 +4,9 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import { speakable } from "./companion.ts";
+import { composeAct } from "./brain.ts";
+import { resetLocalBrainLastLine } from "./local-brain.ts";
+import { requestElevenSpeech, speechTextForTts } from "./voice.ts";
 import { CALL_MODE_SOURCE, RAI_SYSTEM } from "./generated/star-rai-artifacts.ts";
 import { characterDisplayName } from "./helix.ts";
 import {
@@ -544,5 +547,46 @@ describe("pose commands + tint still apply on a voice turn", () => {
       })[0]!.src,
       /idle_blink_01_open\.png(?:\?|$)/,
     );
+  });
+});
+
+describe("Call uses the same fallback line", () => {
+  it("speaks that one line only when both the ElevenLabs key and voice id are set", async () => {
+    resetLocalBrainLastLine();
+    const act = composeAct([{ role: "user", content: "wave" }], undefined, "idle");
+    assert.equal(act.pose, "wave");
+    assert.equal(act.line.includes("\n"), false);
+    const voice = readFileSync(join(root, "src/lib/voice.ts"), "utf8");
+    assert.doesNotMatch(voice, /speechSynthesis/);
+
+    const calls: string[] = [];
+    const fetchImpl = (async (url: RequestInfo | URL) => {
+      calls.push(String(url));
+      return new Response(new Uint8Array([1, 2, 3]), { status: 200 });
+    }) as typeof fetch;
+
+    assert.equal(shouldSpeakCallLine({ voiceOn: true, line: act.line }), true);
+    assert.equal(
+      await requestElevenSpeech({ text: act.line, key: null, voiceId: "voice-demo", fetchImpl }),
+      null,
+    );
+    assert.equal(
+      await requestElevenSpeech({ text: act.line, key: "speech-test", voiceId: "", fetchImpl }),
+      null,
+    );
+    assert.equal(calls.length, 0);
+
+    const spoken = await requestElevenSpeech({
+      text: act.line,
+      key: "speech-test",
+      voiceId: "voice-demo",
+      fetchImpl,
+    });
+    assert.equal(spoken?.ok, true);
+    assert.equal(calls.length, 1);
+    assert.match(calls[0]!, /api\.elevenlabs\.io\/v1\/text-to-speech\//);
+    assert.doesNotMatch(calls[0]!, /speechSynthesis/);
+    assert.equal(speechTextForTts(act.line).includes(act.line) || speechTextForTts(act.line).length > 0, true);
+    assert.doesNotMatch(speechTextForTts(act.line), /speech-test|voice-demo/);
   });
 });

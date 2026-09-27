@@ -1,9 +1,15 @@
 import { actForChartTurn, type ChartTurn } from "./chart.ts";
 import { actForClockTurn, filterClockSpokenLine, type ClockTurn } from "./clock.ts";
 import { actForLifeTurn, parseTrackTitle, type LifeTurn } from "./life.ts";
-import { localBrainKeyFor, pickLocalBrainLine } from "./local-brain.ts";
-import { namedPoseFromText, resolveSpokenPose, type EmotionId, type PoseId } from "./rai.ts";
-import { filterEchoedLine, localTrackAct } from "./track.ts";
+import { localBrainKeyFor, pickLocalBrainLine, usedDefaultBank } from "./local-brain.ts";
+import {
+  DEFAULT_EMOTION,
+  namedPoseFromText,
+  resolveSpokenPose,
+  type EmotionId,
+  type PoseId,
+} from "./rai.ts";
+import { filterEchoedLine, localTrackAct, localTrackKey } from "./track.ts";
 
 export type BrainMessage = { role: "user" | "assistant"; content: string };
 
@@ -184,9 +190,8 @@ export function composeAct(
   });
   const mem = extractMemCandidate(lastUser);
 
-  // Named pose commands still use the pose-keyed bank. Kiss stays unmapped.
-  // Generic chat tracks the last user line instead of a stock pose beat.
-  if (keyed == null) {
+  // Corrections and permission-asks stay on their spec rows. They are not a pose swap.
+  if (keyed == null && localTrackKey(lastUser)) {
     const tracked = localTrackAct(lastUser);
     if (tracked) {
       const act: BrainAct = { emotion: tracked.emotion, line: tracked.line };
@@ -195,11 +200,26 @@ export function composeAct(
     }
   }
 
-  const row = pickLocalBrainLine(poseKey);
-
+  // Command or tint already chose the sheet. Speak one line from that set.
+  // A missing pose key uses idle lines and does not invent a different body.
+  const spokenPose: PoseId | null = keyed
+    ? keyed
+    : resolveSpokenPose({
+        namedPose: keyed,
+        emotion: DEFAULT_EMOTION,
+        spoken: true,
+        currentPose,
+        seed: lastUser,
+        chartBeat: chartTurn?.kind === "daily",
+        chartTintPose: chartTurn?.tintPose,
+        nowPlayingJustSet: lifeTurn?.kind === "track_change",
+        lifeTintPose: lifeTurn?.tintPose,
+      });
+  const lineKey = spokenPose && !usedDefaultBank(spokenPose) ? spokenPose : poseKey;
+  const row = pickLocalBrainLine(lineKey);
   const act: BrainAct = { emotion: row.emotion, line: row.line };
-  // Named pose commands already swapped the sheet; echo the key. Kiss / omitted → tint.
   if (keyed) act.pose = keyed;
+  else if (spokenPose) act.pose = spokenPose;
   if (mem?.length) act.mem = mem;
   return finish(tintSpokenAct(act, { ...tintCtx, namedPose: keyed }));
 }
