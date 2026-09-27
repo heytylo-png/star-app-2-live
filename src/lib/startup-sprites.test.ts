@@ -23,7 +23,7 @@ import {
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
 function pathOf(url: string): string {
-  return url.replace(/^\//, "");
+  return url.replace(/^\//, "").split("?")[0];
 }
 
 describe("startup sprite lists", () => {
@@ -135,7 +135,7 @@ describe("startup sprite lists", () => {
       open,
     );
     assert.equal(closed[0]!.src, open);
-    assert.match(closed[0]!.src, /idle_blink_01_open\.png$/);
+    assert.match(closed[0]!.src, /idle_blink_01_open\.png(\?|$)/);
     const half = openRestFallback(
       [{ id: IDLE_REST_LAYER_ID, src: SPRITES.idleBlinkHalf }],
       open,
