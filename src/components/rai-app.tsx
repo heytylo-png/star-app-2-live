@@ -960,21 +960,25 @@ function RaiReady() {
           const live = shapeSpoken(streamedLine);
           const lifeTitle = parseTrackTitle(lastUser);
           const named = lifeTitle ? null : namedPoseFromText(lastUser);
-          const streamed = streamSpokenAct(raw, {
-            namedPose: named,
-            nowPlayingJustSet: lifeTurn.kind === "track_change",
-            chartBeat: chartTurn.kind === "daily",
-            chartTintPose: chartTurn.tintPose,
-            lifeTintPose: lifeTurn.tintPose,
-            seed: live || lastUser,
-            currentPose: poseAtTurnRef.current,
-          });
-          if (streamed) {
-            setEmotion(streamed.emotion);
-            setPose(streamed.pose);
-            poseRef.current = streamed.pose;
-            setBubbleLifeKind(lifeTurn.kind);
-            actLandedAt.current = Date.now();
+          // Kiss keeps the body already on stage. A local-brain emotion must
+          // not swap the sheet before the pose key arrives.
+          if (named !== false) {
+            const streamed = streamSpokenAct(raw, {
+              namedPose: named,
+              nowPlayingJustSet: lifeTurn.kind === "track_change",
+              chartBeat: chartTurn.kind === "daily",
+              chartTintPose: chartTurn.tintPose,
+              lifeTintPose: lifeTurn.tintPose,
+              seed: live || lastUser,
+              currentPose: poseAtTurnRef.current,
+            });
+            if (streamed) {
+              setEmotion(streamed.emotion);
+              setPose(streamed.pose);
+              poseRef.current = streamed.pose;
+              setBubbleLifeKind(lifeTurn.kind);
+              actLandedAt.current = Date.now();
+            }
           }
           if (live) {
             setCaption(live);
@@ -990,23 +994,30 @@ function RaiReady() {
       const line = shapeSpoken(parsedLine) || "…";
       store.patchMessage(threadId, assistant.id, { content: line });
       setCaption(line);
-      setEmotion(act.emotion);
       const lifeTitle = parseTrackTitle(lastUser);
       const named = lifeTitle ? null : namedPoseFromText(lastUser);
-      const next = poseForCallReply({
-        namedPose: named,
-        modelPose: act.pose,
-        emotion: act.emotion,
-        spoken: Boolean(line),
-        nowPlayingJustSet: lifeTurn.kind === "track_change",
-        chartBeat: chartTurn.kind === "daily",
-        chartTintPose: chartTurn.tintPose,
-        lifeTintPose: lifeTurn.tintPose,
-        seed: line,
-        currentPose: poseAtTurnRef.current,
-      });
-      setPose(next);
-      poseRef.current = next;
+      if (named === false) {
+        const keep = poseAtTurnRef.current ?? "idle";
+        setEmotion("bratty");
+        setPose(keep);
+        poseRef.current = keep;
+      } else {
+        setEmotion(act.emotion);
+        const next = poseForCallReply({
+          namedPose: named,
+          modelPose: act.pose,
+          emotion: act.emotion,
+          spoken: Boolean(line),
+          nowPlayingJustSet: lifeTurn.kind === "track_change",
+          chartBeat: chartTurn.kind === "daily",
+          chartTintPose: chartTurn.tintPose,
+          lifeTintPose: lifeTurn.tintPose,
+          seed: line,
+          currentPose: poseAtTurnRef.current,
+        });
+        setPose(next);
+        poseRef.current = next;
+      }
       setBubbleLifeKind(lifeTurn.kind);
       actLandedAt.current = Date.now();
       if (act.memories.length) useMemoryStore.getState().addMany(act.memories);

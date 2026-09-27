@@ -1,7 +1,7 @@
-import { actForChartTurn, type ChartTurn } from "./chart.ts";
+import { actForChartTurn, detectChartIntent, type ChartTurn } from "./chart.ts";
 import { actForClockTurn, filterClockSpokenLine, type ClockTurn } from "./clock.ts";
 import { actForLifeTurn, parseTrackTitle, type LifeTurn } from "./life.ts";
-import { localBrainKeyFor, pickLocalBrainLine, usedDefaultBank } from "./local-brain.ts";
+import { localBrainKeyFor, parseLocalBrain, pickLocalBrainLine, usedDefaultBank } from "./local-brain.ts";
 import {
   DEFAULT_EMOTION,
   namedPoseFromText,
@@ -9,7 +9,7 @@ import {
   type EmotionId,
   type PoseId,
 } from "./rai.ts";
-import { filterEchoedLine, localTrackAct, localTrackKey } from "./track.ts";
+import { filterEchoedLine, isBareGreeting, localTrackAct } from "./track.ts";
 
 export type BrainMessage = { role: "user" | "assistant"; content: string };
 
@@ -103,6 +103,34 @@ function tintSpokenAct(
   return { ...act, pose };
 }
 
+/** Horoscope / Chart / zodiac copy. A fallback line that matches this is not spoken. */
+const ZODIAC_LORE_RE =
+  /\b(?:horoscope|zodiac|sun sign|star sign|libra|aries|taurus|gemini|cancer|leo|virgo|scorpio|sagittarius|capricorn|aquarius|pisces)\b/i;
+
+function isZodiacLore(line: string): boolean {
+  return ZODIAC_LORE_RE.test(line);
+}
+
+/**
+ * A mood aside ("I am tired") can open a Chart daily turn. That turn's local
+ * line is a horoscope. The fallback does not recite it.
+ */
+function isUnaskedMoodAside(userText: string): boolean {
+  if (detectChartIntent(userText) !== "none") return false;
+  return /\b(?:tired|sleepy|exhausted|wiped|drained)\b/i.test(userText);
+}
+
+/** Idle-bank line when a tracker has nothing, or its line is Chart lore / a talk caption. */
+function spokenFallbackLine(userText: string, line: string): string {
+  const talk = new Set((parseLocalBrain().get("talk") ?? []).map((row) => row.line));
+  if (!line.trim() || isZodiacLore(line) || (isBareGreeting(userText) && talk.has(line))) {
+    const idle = pickLocalBrainLine("idle");
+    if (!isZodiacLore(idle.line) && !talk.has(idle.line)) return idle.line;
+    return pickLocalBrainLine("_default").line;
+  }
+  return line;
+}
+
 /**
  * Offline Star Rai brain for GitHub Pages (no server API).
  * Lines come from artifacts/star-rai-local-brain.txt, keyed by the current
@@ -175,7 +203,7 @@ export function composeAct(
     if (mem?.length) act.mem = mem;
     return finish(tintSpokenAct(act, tintCtx));
   }
-  if (chartAct) {
+  if (chartAct && !isUnaskedMoodAside(lastUser)) {
     const mem = extractMemCandidate(lastUser);
     const act: BrainAct = { emotion: chartAct.emotion, line: chartAct.line };
     if (chartAct.pose) act.pose = chartAct.pose;
@@ -190,36 +218,37 @@ export function composeAct(
   });
   const mem = extractMemCandidate(lastUser);
 
-  // Corrections and permission-asks stay on their spec rows. They are not a pose swap.
-  if (keyed == null && localTrackKey(lastUser)) {
-    const tracked = localTrackAct(lastUser);
-    if (tracked) {
-      const act: BrainAct = { emotion: tracked.emotion, line: tracked.line };
-      if (mem?.length) act.mem = mem;
-      return finish(tintSpokenAct(act, { ...tintCtx, namedPose: keyed }));
-    }
+  // Kiss stays on the body already showing. Idle stays idle — no talk tint.
+  // The line is that sheet's bank, or idle lines when the sheet has no rows.
+  if (keyed === false) {
+    const bankKey = currentPose && !usedDefaultBank(currentPose) ? currentPose : "idle";
+    const row = pickLocalBrainLine(bankKey);
+    const act: BrainAct = {
+      emotion: DEFAULT_EMOTION,
+      line: spokenFallbackLine(lastUser, row.line),
+      pose: currentPose ?? "idle",
+    };
+    if (mem?.length) act.mem = mem;
+    return finish(act);
   }
 
-  // Command or tint already chose the sheet. Speak one line from that set.
-  // A missing pose key uses idle lines and does not invent a different body.
-  const spokenPose: PoseId | null = keyed
-    ? keyed
-    : resolveSpokenPose({
-        namedPose: keyed,
-        emotion: DEFAULT_EMOTION,
-        spoken: true,
-        currentPose,
-        seed: lastUser,
-        chartBeat: chartTurn?.kind === "daily",
-        chartTintPose: chartTurn?.tintPose,
-        nowPlayingJustSet: lifeTurn?.kind === "track_change",
-        lifeTintPose: lifeTurn?.tintPose,
-      });
-  const lineKey = spokenPose && !usedDefaultBank(spokenPose) ? spokenPose : poseKey;
-  const row = pickLocalBrainLine(lineKey);
-  const act: BrainAct = { emotion: row.emotion, line: row.line };
-  if (keyed) act.pose = keyed;
-  else if (spokenPose) act.pose = spokenPose;
+  // Generic chat tracks the last user line. The row emotion never picks the sheet.
+  if (keyed == null) {
+    const tracked = localTrackAct(lastUser);
+    const line = spokenFallbackLine(lastUser, tracked?.line ?? "");
+    const act: BrainAct = { emotion: DEFAULT_EMOTION, line };
+    if (mem?.length) act.mem = mem;
+    return finish(tintSpokenAct(act, { ...tintCtx, namedPose: null }));
+  }
+
+  // Named command already swapped the sheet. Speak that bank (idle lines if it has none).
+  const bankKey = usedDefaultBank(poseKey) ? "idle" : poseKey;
+  const row = pickLocalBrainLine(bankKey);
+  const act: BrainAct = {
+    emotion: DEFAULT_EMOTION,
+    line: spokenFallbackLine(lastUser, row.line),
+    pose: keyed,
+  };
   if (mem?.length) act.mem = mem;
   return finish(tintSpokenAct(act, { ...tintCtx, namedPose: keyed }));
 }

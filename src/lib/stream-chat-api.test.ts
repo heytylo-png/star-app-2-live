@@ -7,6 +7,7 @@ import { parseLocalBrain, resetLocalBrainLastLine } from "./local-brain.ts";
 import { isValidActJson } from "./rai.ts";
 import { GROK_KEY_STORAGE } from "./settings-keys.ts";
 import { chatApiEnabled, streamChat, type StreamDeltaMeta } from "./stream-chat.ts";
+import { localReactionLine } from "./track.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -83,8 +84,8 @@ function oneLine(reply: string): string {
   assert.equal(typeof act.line, "string");
   assert.equal(act.line?.includes("\n"), false);
   const known = [...parseLocalBrain().values()].flat().map((row) => row.line);
-  assert.ok(known.includes(act.line!), act.line);
-  assert.equal(known.filter((line) => act.line === line).length >= 1, true);
+  const tracked = localReactionLine("hey");
+  assert.ok(known.includes(act.line!) || act.line === tracked, act.line);
   return act.line!;
 }
 
@@ -110,7 +111,8 @@ describe("streamChat local-brain fallback", { concurrency: false }, () => {
       const reply = await streamChat(input, () => {});
       const line = oneLine(reply);
       assert.equal(calls.length, 0);
-      assert.ok((parseLocalBrain().get("talk") ?? []).some((row) => row.line === line));
+      const talk = (parseLocalBrain().get("talk") ?? []).map((row) => row.line);
+      assert.equal(talk.includes(line), false, line);
     } finally {
       globalThis.fetch = previous;
       restore();

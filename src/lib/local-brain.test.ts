@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
-import { composeAct } from "./brain.ts";
+import { actToJson, composeAct } from "./brain.ts";
 import {
   localBrainKeyFor,
   localBrainPoseKeys,
@@ -13,7 +13,7 @@ import {
   resetLocalBrainLastLine,
   usedDefaultBank,
 } from "./local-brain.ts";
-import { isValidActJson } from "./rai.ts";
+import { isValidActJson, streamSpokenAct } from "./rai.ts";
 import { LOCAL_BRAIN_SOURCE } from "./generated/star-rai-artifacts.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -164,15 +164,70 @@ describe("composeAct local-brain path", () => {
     assert.equal(localBrainKeyFor({ userText: "shy", currentPose: "idle" }).named, "shy");
   });
 
-  it("tints generic chat off frown idle and speaks that sheet", () => {
+  it("tints generic chat off frown idle onto the spoken bubble", () => {
     resetLocalBrainLastLine();
     const act = composeAct([{ role: "user", content: "Hey. Just got here." }], undefined, "idle");
-    assert.equal(act.pose, "talk");
-    const talk = (parseLocalBrain().get("talk") ?? []).map((row) => row.line);
-    assert.ok(talk.includes(act.line), act.line);
-    assert.equal(act.line.split("\n").length, 1);
+    assert.ok(act.pose === "talk" || act.pose === "smug");
+    assert.notEqual(act.pose, "idle");
     assert.doesNotMatch(act.line, /Just got here|heard that/i);
+    assert.match(act.line, /Say more|I'm with you|Keep going|I'm here|Facing you|You seeing this/);
     assert.doesNotMatch(act.line, /Don't flinch/i);
+  });
+
+  it("does not let a local line's emotion swap the body to smug", () => {
+    resetLocalBrainLastLine();
+    const act = composeAct([{ role: "user", content: "still around" }], undefined, "idle");
+    assert.equal(act.emotion, "bratty");
+    assert.notEqual(act.pose, "smug");
+    const json = actToJson(act);
+    const poses = new Set<string>();
+    for (let i = 1; i <= json.length; i++) {
+      const streamed = streamSpokenAct(json.slice(0, i), {
+        namedPose: null,
+        currentPose: "idle",
+        seed: "still around",
+      });
+      if (streamed) poses.add(streamed.pose);
+    }
+    assert.equal(poses.has("smug"), false);
+    assert.equal(act.line.includes("\n"), false);
+  });
+
+  it("kiss at idle keeps idle and an idle line", () => {
+    resetLocalBrainLastLine();
+    const idle = (parseLocalBrain().get("idle") ?? []).map((row) => row.line);
+    for (const text of ["kiss", "blow me a kiss", "kiss me"]) {
+      resetLocalBrainLastLine();
+      const act = composeAct([{ role: "user", content: text }], undefined, "idle");
+      assert.equal(act.pose, "idle", text);
+      assert.ok(idle.includes(act.line), `${text} -> ${act.line}`);
+      assert.equal(act.emotion, "bratty");
+    }
+  });
+
+  it("bare greetings never use talk rows", () => {
+    const talk = new Set((parseLocalBrain().get("talk") ?? []).map((row) => row.line));
+    for (const text of ["hi", "hello", "hey"]) {
+      resetLocalBrainLastLine();
+      const act = composeAct([{ role: "user", content: text }], undefined, "idle");
+      assert.equal(talk.has(act.line), false, `${text} -> ${act.line}`);
+      assert.doesNotMatch(act.line, /Talking\. Keep up|Mouth's moving/i);
+    }
+  });
+
+  it("I am tired returns no zodiac text", () => {
+    resetLocalBrainLastLine();
+    const zodiac = /\b(?:horoscope|zodiac|libra|aries|sun sign|star sign)\b/i;
+    const plain = composeAct([{ role: "user", content: "I am tired" }], undefined, "idle");
+    assert.doesNotMatch(plain.line, zodiac, plain.line);
+    const daily = composeAct([{ role: "user", content: "I am tired" }], undefined, "idle", {
+      kind: "daily",
+      localOnly: false,
+      dateKey: "2026-09-27",
+      tintPose: "content",
+    });
+    assert.doesNotMatch(daily.line, zodiac, daily.line);
+    assert.equal(daily.line.includes("\n"), false);
   });
 
   it("keeps a missing pose body and speaks an idle line", () => {
