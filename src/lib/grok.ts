@@ -1,9 +1,16 @@
 /** Client-side xAI Grok brain. Key lives in localStorage only — never bake secrets into the build. */
 
-import { composeGrokSystem } from "@/lib/memory-slots";
-import { RAI_SYSTEM } from "@/lib/rai";
+import { composeGrokSystem } from "./memory-slots.ts";
+import { RAI_SYSTEM } from "./rai.ts";
+import {
+  GROK_KEY_STORAGE,
+  getStoredGrokKey,
+  maskSecret,
+  redactSecrets,
+  setStoredGrokKey,
+} from "./settings-keys.ts";
 
-export const XAI_KEY_STORAGE = "star-rai-xai-key";
+export const XAI_KEY_STORAGE = GROK_KEY_STORAGE;
 
 const XAI_CHAT_URL = "https://api.x.ai/v1/chat/completions";
 
@@ -16,35 +23,25 @@ export const GROK_TIMEOUT_MS = 12_000;
 export type GrokMessage = { role: "system" | "user" | "assistant"; content: string };
 
 export function getStoredXaiKey(): string | null {
-  try {
-    const v = localStorage.getItem(XAI_KEY_STORAGE);
-    if (!v) return null;
-    const trimmed = v.trim();
-    return trimmed.length > 0 ? trimmed : null;
-  } catch {
-    return null;
-  }
+  return getStoredGrokKey();
 }
 
 export function setStoredXaiKey(key: string | null): void {
-  try {
-    if (!key || !key.trim()) localStorage.removeItem(XAI_KEY_STORAGE);
-    else localStorage.setItem(XAI_KEY_STORAGE, key.trim());
-  } catch {
-    /* private mode / quota */
-  }
+  setStoredGrokKey(key);
 }
 
 export function hasXaiKey(): boolean {
-  return Boolean(getStoredXaiKey());
+  return Boolean(getStoredGrokKey());
 }
 
 /** Mask for UI — never echo full key after save. */
 export function maskXaiKey(key: string | null | undefined): string {
-  if (!key) return "";
-  const t = key.trim();
-  if (t.length <= 4) return "••••";
-  return `••••${t.slice(-4)}`;
+  return maskSecret(key);
+}
+
+/** Error text safe to throw. The key is stripped before the message leaves this module. */
+export function describeGrokFailure(status: number, body: string, key: string): Error {
+  return new Error(redactSecrets(`xAI ${status}: ${body.slice(0, 160)}`, [key]));
 }
 
 function proxyBase(): string | null {
@@ -112,7 +109,8 @@ type ChatCompletionJson = {
 async function readSseStream(
   body: ReadableStream<Uint8Array>,
   onDelta: (text: string) => void,
-  signal?: AbortSignal,
+  signal: AbortSignal | undefined,
+  apiKey: string,
 ): Promise<boolean> {
   const reader = body.getReader();
   const decoder = new TextDecoder();
@@ -138,7 +136,7 @@ async function readSseStream(
       } catch {
         continue;
       }
-      if (json.error?.message) throw new Error(json.error.message);
+      if (json.error?.message) throw describeGrokFailure(0, json.error.message, apiKey);
       const delta = json.choices?.[0]?.delta?.content;
       if (typeof delta === "string" && delta) {
         got = true;
@@ -242,12 +240,12 @@ export async function streamGrok(
         if (res.status === 401 || res.status === 403) {
           throw new Error(`XAI_AUTH:${res.status}`);
         }
-        lastErr = new Error(`xAI ${res.status}: ${body.slice(0, 160)}`);
+        lastErr = describeGrokFailure(res.status, body, apiKey);
         continue;
       }
 
       if (res.body) {
-        const got = await readSseStream(res.body, onDelta, combined);
+        const got = await readSseStream(res.body, onDelta, combined, apiKey);
         if (got) return;
       }
 
@@ -270,11 +268,11 @@ export async function streamGrok(
           throw new Error(`XAI_AUTH:${res.status}`);
         }
         const body = await res.text().catch(() => "");
-        lastErr = new Error(`xAI ${res.status}: ${body.slice(0, 160)}`);
+        lastErr = describeGrokFailure(res.status, body, apiKey);
         continue;
       }
       const json = (await res.json()) as ChatCompletionJson;
-      if (json.error?.message) throw new Error(json.error.message);
+      if (json.error?.message) throw describeGrokFailure(res.status, json.error.message, apiKey);
       const content = json.choices?.[0]?.message?.content ?? "";
       if (!content) {
         lastErr = new Error("empty completion");
@@ -288,7 +286,11 @@ export async function streamGrok(
     }
   }
 
-  throw lastErr instanceof Error ? lastErr : new Error("XAI_FAILED");
+  if (lastErr instanceof Error) {
+    const safe = redactSecrets(lastErr.message, [apiKey]);
+    throw safe === lastErr.message ? lastErr : new Error(safe);
+  }
+  throw new Error("XAI_FAILED");
 }
 
 export function grokProxyConfigured(): boolean {
