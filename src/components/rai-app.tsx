@@ -26,9 +26,9 @@ import {
 import { useChatStore } from "@/lib/chat-store";
 import {
   DEFAULT_EMOTION,
-  isDedicatedPose,
   namedPoseFromText,
   parseAct,
+  settledRestPose,
   spokenBubbleResetDelay,
   streamLine,
   streamSpokenAct,
@@ -526,29 +526,27 @@ function RaiReady() {
       setEmotion("glance");
       return;
     }
-    // That caption is still her reply. Frown idle is the next rest, after
-    // this bubble is gone — not under the line she just said. Blink is on
-    // (approved by TyLo on 2026-09-26, 807-referenced painted lids, pass 4b).
-    // Music Set (track_change → talk|content|smug) also stays if the caption flag drops.
-    const listenCaption = callListenLabel();
-    const captionLive =
-      Boolean(caption.trim()) && caption !== "Listening…" && caption !== listenCaption;
+    // She has finished the line (not sending, not talking). A transcript
+    // caption that stays on screen is not a live bubble — do not freeze
+    // think / pout / tired as the standing face. Next rest is official idle.
+    // Music Set (track_change → talk|content|smug) still holds.
+    // Blink is on (approved by TyLo on 2026-09-26, 807-referenced painted lids, pass 4b).
     const delay = spokenBubbleResetDelay({
       pose,
       emotion,
       talking: false,
       actLandedAt: actLandedAt.current,
       lifeKind: bubbleLifeKind,
-      captionLive,
+      captionLive: false,
     });
     if (delay == null) return;
     const id = window.setTimeout(() => {
-      setPose("idle");
+      setPose(settledRestPose());
       setBubbleLifeKind("none");
       setEmotion(DEFAULT_EMOTION);
     }, delay);
     return () => window.clearTimeout(id);
-  }, [draft, sending, talking, holding, callListening, pose, emotion, bubbleLifeKind, caption]);
+  }, [draft, sending, talking, holding, callListening, pose, emotion, bubbleLifeKind]);
 
   function clearCallListenTimers() {
     if (listenRestartTimerRef.current) {
@@ -800,10 +798,10 @@ function RaiReady() {
     const namedThisTurn = parseTrackTitle(lastUserForTint)
       ? null
       : namedPoseFromText(lastUserForTint);
-    // Frown idle is rest only. Leave it before the empty "…" bubble paints so
-    // that in-progress line is not the glare sheet. Named poses already swapped.
-    // A dedicated body stays until tint inference. Kiss does not invent a sheet.
-    if (!namedThisTurn && !isDedicatedPose(poseAtTurnRef.current)) {
+    // Frown idle is rest only. A new spoken line re-resolves — leftover
+    // think / pout / tired must not sit under this bubble. Named poses
+    // already swapped. Unmapped kiss does not invent a sheet.
+    if (namedThisTurn == null) {
       setPose("talk");
       poseRef.current = "talk";
       actLandedAt.current = Date.now();
