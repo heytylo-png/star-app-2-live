@@ -50,6 +50,7 @@ import {
   localDateKey,
   natalFromSetup,
   resolveChartTurn,
+  shapeChartSpokenLine,
 } from "@/lib/chart";
 import { resolveClockTurn } from "@/lib/clock";
 import { useChartStore } from "@/lib/chart-store";
@@ -60,7 +61,7 @@ import { isSuggestAsk, parseTrackTitle, resolveLifeTurn, type LifeSlots } from "
 import { reduceChartMenu } from "@/lib/chart-menu";
 import { reduceLifeMenu } from "@/lib/life-menu";
 import { useSpotifyPlayback } from "@/lib/use-spotify-playback";
-import { chatOpenForTab, DEFAULT_SHELL_TAB, type ShellTab } from "@/lib/shell";
+import { chatOpenForTab, DEFAULT_SHELL_TAB, lastDiaryEntry, type ShellTab } from "@/lib/shell";
 import { stagePlace, stageSourceFor, type StagePlace } from "@/lib/stage-source";
 import { usePrefersReducedMotion } from "@/lib/use-reduced-motion";
 import { newId, type ChatMessage } from "@/lib/helix";
@@ -361,8 +362,9 @@ function RaiReady() {
   };
 
   const askHerFromChart = (prompt: string) => {
-    setDraft(prompt);
+    tabRef.current = "chat";
     selectTab("chat");
+    void send(prompt);
   };
 
   useEffect(() => {
@@ -841,6 +843,7 @@ function RaiReady() {
       alreadyFiredDate: chartStore.lastFiredDate,
       askedBirthday: chartStore.askedBirthday,
       existingDiary: chartStore.diaryFor(today),
+      diaryNote: lastDiaryEntry(chartStore.diaryByDay)?.text,
       timeZone: clockTurn.now.timeZone,
     });
     if (clockTurn.localOnly && !chartTurn.localOnly) {
@@ -923,7 +926,8 @@ function RaiReady() {
         (delta, meta) => {
           if (meta?.reset) raw = "";
           raw += delta;
-          const live = streamLine(raw);
+          const streamedLine = streamLine(raw);
+          const live = chartTurn.kind !== "none" ? shapeChartSpokenLine(streamedLine) : streamedLine;
           const lifeTitle = parseTrackTitle(lastUser);
           const named = lifeTitle ? null : namedPoseFromText(lastUser);
           const streamed = streamSpokenAct(raw, {
@@ -952,7 +956,8 @@ function RaiReady() {
 
       const act = parseAct(raw);
       const parsed = act.line.trim();
-      const line = spokenCallLine(parsed) || spokenCallLine(raw) || streamLine(raw) || "…";
+      const parsedLine = spokenCallLine(parsed) || spokenCallLine(raw) || streamLine(raw) || "…";
+      const line = chartTurn.kind !== "none" ? shapeChartSpokenLine(parsedLine) || "…" : parsedLine;
       store.patchMessage(threadId, assistant.id, { content: line });
       setCaption(line);
       setEmotion(act.emotion);

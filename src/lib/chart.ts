@@ -64,6 +64,7 @@ export type ChartTurn = {
   factsBlock?: string;
   userSun?: string;
   lastTopic?: string;
+  mood?: string;
 };
 
 export type ResolveChartTurnInput = {
@@ -76,6 +77,8 @@ export type ResolveChartTurnInput = {
   alreadyFiredDate?: string | null;
   askedBirthday?: boolean;
   existingDiary?: string | null;
+  /** Last diary page for the prompt. Never copied into the user bubble. */
+  diaryNote?: string | null;
   now?: Date;
   timeZone?: string;
   /** Injected sky. undefined = compute client-side. null = fail-soft omit. */
@@ -151,6 +154,8 @@ const PLANET_RE =
   /\b(mercury|venus|mars|jupiter|saturn|uranus|neptune|pluto|ascendant|rising|houses?|transit|conjunction)\b/i;
 
 const READING_BAN_RE = /your reading for today is/i;
+const NATAL_WHEEL_RE = /natal wheel/i;
+const ESSAY_RE = /\b(?:reading essay|compatibility essay|planet list)\b/i;
 
 const HER_SIGN_RE =
   /\b(?:what(?:'s| is) your (?:sun )?sign|your (?:sun )?sign|your zodiac|are you an? libra|what sign are you)\b/i;
@@ -162,10 +167,10 @@ const HER_ORIGIN_RE =
   /\b(?:where are you from|where were you born|what(?:'s| is) your hometown|your hometown|which city are you from)\b/i;
 
 const DIARY_RE =
-  /\b(?:write (?:me |your |a |today'?s )?diary|show (?:me )?(?:your |the |today'?s )?diary|open (?:your |the )?diary|diary entry|today'?s diary|(?:your |the )?journal entry)\b/i;
+  /\b(?:write (?:me |your |a |today'?s )?diary|show (?:me )?(?:your |the |today'?s )?diary|open (?:your |the )?diary|diary entry|today'?s diary|(?:your |the )?journal entry|your diary|the diary|what did you write|what'?d you write|what have you written)\b/i;
 
 const ASKED_CHART_RE =
-  /\b(?:horoscope|sun sign|star sign|zodiac|compatibility|natal|birth chart|(?:today'?s|todays) (?:reading|stars|vibe)|reading for today|stars today|our signs|match(?:es)? (?:with you|our signs)|what(?:'s| is) my (?:sun )?sign|what sign am i)\b/i;
+  /\b(?:horoscope|sun sign|star sign|zodiac|compatibility|natal|birth chart|(?:today'?s|todays) (?:reading|stars|vibe)|reading for today|stars today|our signs|match(?:es)? (?:with you|our signs)|what(?:'s| is) my (?:sun )?sign|what sign am i|what(?:'s| is) (?:in )?my chart(?: today)?|what do you make of my chart|what do you make of this page)\b/i;
 
 const NEED_BIRTHDAY_RE =
   /\b(?:match|compatible|compatibility|horoscope|today'?s reading|reading for today|what(?:'s| is) my (?:sun )?sign|what sign am i|our signs)\b/i;
@@ -348,7 +353,24 @@ export function isDayOrMoodTopic(lastTopic?: string, mood?: string): boolean {
 }
 
 export function isChartBannedLine(line: string): boolean {
-  return READING_BAN_RE.test(line) || PLANET_RE.test(line);
+  return READING_BAN_RE.test(line) || PLANET_RE.test(line) || NATAL_WHEEL_RE.test(line) || ESSAY_RE.test(line);
+}
+
+const CHART_BEAT_FALLBACK = "Libra sky today. You'll want to pick a fight and then apologize.";
+const CHART_META_RE = /not a reading|one glance|quiet page/i;
+
+/** One spoken beat. A short line stays. An essay keeps its first sentence. */
+export function shapeChartSpokenLine(line: string): string {
+  const t = line.replace(/\s+/g, " ").trim().replace(/\s*[—–]\s*/g, ", ");
+  if (!t) return "";
+  if (isChartBannedLine(t) || CHART_META_RE.test(t)) return CHART_BEAT_FALLBACK;
+  const words = t.split(/\s+/).filter(Boolean);
+  const alreadyOneBeat = t.length <= 140 && words.length <= 18;
+  const first = (t.split(/(?<=[.!?])\s+/).find(Boolean) ?? t).trim();
+  const beat = alreadyOneBeat ? t : first;
+  const capped = beat.length > 140 ? `${beat.slice(0, 137).trimEnd()}…` : beat;
+  if (isChartBannedLine(capped) || CHART_META_RE.test(capped)) return CHART_BEAT_FALLBACK;
+  return capped;
 }
 
 export function pickChartTintPose(dateKey: string): ChartTintPose {
@@ -373,16 +395,22 @@ export function formatChartFactsBlock(opts: {
   todayDate: string;
   userSun?: string;
   lastTopic?: string;
+  diaryNote?: string | null;
   sky?: SkyFacts | null;
 }): string {
   const lines = ["CHART", `today_date: ${opts.todayDate}`, `her_sun: ${HER_CHART.her_sun}`];
   if (opts.userSun?.trim()) lines.push(`user_sun: ${opts.userSun.trim()}`);
   if (opts.lastTopic?.trim()) lines.push(`last_topic: ${clip(opts.lastTopic, 72)}`);
+  const diary = opts.diaryNote?.replace(/\s+/g, " ").trim();
+  if (diary) lines.push(`diary: ${clip(diary, 280)}`);
   lines.push(...formatSkyFactLines(opts.sky));
   lines.push("");
+  lines.push("One spoken beat. No natal wheel. No planet list. Not a reading essay.");
+  lines.push("Speak naturally. Never say \"not a reading\", \"one glance\", or \"quiet page\". No em dashes.");
   lines.push('Tint one line only. Never say "your reading for today is." Never list planets.');
+  lines.push("Diary and sky stay in this block. Do not paste them into the line.");
   if (opts.userSun?.trim()) {
-    lines.push("At most one you+me glance. Not a compatibility essay.");
+    lines.push("At most one you and me line. Not a compatibility essay.");
   }
   lines.push("Prefer pose content|think|smug|tired|talk|idle. Never kiss.");
   lines.push("Sky keys are facts, not a topic. Do not invent Fukuoka local sky.");
@@ -407,6 +435,7 @@ export function formatHerDayFactsBlock(opts: {
   lines.push("");
   lines.push("This is Star Rai's Chart pane — HER day, first person.");
   lines.push("1-3 short lines / sparse beats. Not their you+me glance.");
+  lines.push("One spoken beat. No natal wheel. No planet list. Not a reading essay.");
   lines.push('Never say "your reading for today is." Never list planets.');
   lines.push("Never dump Fukuoka, Osaka, 03:33, or natal houses as a topic.");
   lines.push("Sky keys are facts. Do not invent Fukuoka local sky.");
@@ -481,30 +510,39 @@ export function composeDiaryEntry(opts: {
   userSun?: string;
   mood?: string;
 }): string {
-  const sentences: string[] = [`Quiet page for ${opts.todayDate}.`];
-  if (opts.mood?.trim()) {
-    sentences.push(`They sounded ${clip(opts.mood, 24)}.`);
-  }
-  if (opts.lastTopic?.trim()) {
-    sentences.push(`Last beat: ${clip(opts.lastTopic, 48)}.`);
-  }
-  if (opts.userSun?.trim()) {
-    sentences.push(`${opts.userSun} next to Libra air — one glance.`);
-  } else {
-    sentences.push("No birthday on file.");
-  }
-  sentences.push("Still here. Not a report.");
-  const kept = sentences.slice(0, 5);
-  while (kept.length < 3) kept.push("Short day.");
-  return kept.join(" ");
+  const sentences: string[] = [];
+  if (opts.mood?.trim()) sentences.push(`You sounded ${clip(opts.mood, 24)}.`);
+  else sentences.push("You showed up.");
+  if (opts.lastTopic?.trim()) sentences.push(`I kept ${clip(opts.lastTopic, 48)} on the page.`);
+  else sentences.push("Nothing heavy. I wrote it anyway.");
+  if (opts.userSun?.trim()) sentences.push(`Your ${opts.userSun.trim()} sun was sitting next to my Libra.`);
+  else sentences.push("You still owe me a birthday.");
+  sentences.push("That's the whole page.");
+  return sentences.slice(0, 5).join(" ");
 }
 
 function localDailyLine(userSun?: string, lastTopic?: string): string {
-  if (userSun?.trim()) {
-    const topic = lastTopic?.trim() ? clip(lastTopic, 40) : "what they said";
-    return `${userSun} across Libra air — one glance, then ${topic}.`;
+  const sun = userSun?.trim();
+  if (sun && !lastTopic?.trim()) {
+    return `${sun} sun, Libra sky today. You'll want to pick a fight and then apologize.`;
   }
-  return "Day's got a tilt. Not a reading.";
+  if (sun) {
+    return `${sun} sun today. Still on ${clip(lastTopic!, 40)}, and I'm not dropping it.`;
+  }
+  return "Libra sky today. You'll want to pick a fight and then apologize.";
+}
+
+function diarySpokenLine(mood?: string, lastTopic?: string): string {
+  if (mood?.trim()) return `I wrote about you being ${clip(mood, 24)} last night. You're not reading it.`;
+  if (lastTopic?.trim()) return `I wrote about ${clip(lastTopic, 40)}. You're not reading it.`;
+  return "I wrote it down. You're not reading it.";
+}
+
+/** A chart or diary ask is not a topic to write back into the page. */
+function topicBesideAsk(lastTopic?: string): string | undefined {
+  const topic = lastTopic?.replace(/\s+/g, " ").trim();
+  if (!topic || detectChartIntent(topic) !== "none") return undefined;
+  return topic;
 }
 
 export type ChartAct = {
@@ -513,41 +551,32 @@ export type ChartAct = {
   line: string;
 };
 
+function chartAct(emotion: ChartAct["emotion"], pose: PoseId | undefined, line: string): ChartAct {
+  const act: ChartAct = { emotion, line: shapeChartSpokenLine(line) || CHART_BEAT_FALLBACK };
+  if (pose) act.pose = pose;
+  return act;
+}
+
 export function actForChartTurn(turn: ChartTurn): ChartAct | null {
   const dateKey = turn.dateKey ?? "";
   switch (turn.kind) {
     case "ask_sign":
-      return {
-        emotion: "smug",
-        pose: "smug",
-        line: `Libra. ${pickSignTease(dateKey)}`,
-      };
+      return chartAct("smug", "smug", `Libra. ${pickSignTease(dateKey)}`);
     case "ask_birthday":
-      return { emotion: "bratty", pose: "idle", line: "Sept 29." };
+      return chartAct("bratty", "idle", "Sept 29.");
     case "ask_origin":
-      return {
-        emotion: "bratty",
-        pose: "talk",
-        line: `${pickOriginCity(dateKey)}. That's the city.`,
-      };
+      return chartAct("bratty", "talk", `${pickOriginCity(dateKey)}. That's the city.`);
     case "ask_need_birthday":
-      return {
-        emotion: "glance",
-        pose: "think",
-        line: "Tell me your birthday if you want that.",
-      };
+      return chartAct("glance", "think", "Tell me your birthday if you want that.");
     case "diary":
-      return {
-        emotion: "soft",
-        pose: "content",
-        line: turn.diaryText ?? "Quiet page. Ask again if you want it written.",
-      };
+      // The page stays on Chart. Chat gets one beat, never the stored entry.
+      return chartAct("soft", "content", diarySpokenLine(turn.mood, turn.lastTopic));
     case "daily":
-      return {
-        emotion: turn.userSun ? "smug" : "tired",
-        pose: turn.tintPose ?? pickChartTintPose(dateKey),
-        line: localDailyLine(turn.userSun, turn.lastTopic),
-      };
+      return chartAct(
+        turn.userSun ? "smug" : "tired",
+        turn.tintPose ?? pickChartTintPose(dateKey),
+        localDailyLine(turn.userSun, turn.lastTopic),
+      );
     default:
       return null;
   }
@@ -564,11 +593,18 @@ export function resolveChartTurn(input: ResolveChartTurnInput): ChartTurn {
   if (rawIntent === "diary") {
     const diaryText = input.existingDiary?.trim() || composeDiaryEntry({
       todayDate: today,
-      lastTopic: input.lastTopic,
+      lastTopic: topicBesideAsk(input.lastTopic),
       userSun: input.userSun,
       mood: input.mood,
     });
-    return { kind: "diary", localOnly: true, dateKey: today, diaryText };
+    return {
+      kind: "diary",
+      localOnly: true,
+      dateKey: today,
+      diaryText,
+      mood: input.mood,
+      lastTopic: topicBesideAsk(input.lastTopic),
+    };
   }
 
   if (short && rawIntent === "ask_sign") {
@@ -633,11 +669,12 @@ export function resolveChartTurn(input: ResolveChartTurnInput): ChartTurn {
     dateKey: today,
     tintPose,
     userSun: input.userSun,
-    lastTopic: input.lastTopic,
+    lastTopic: fireBecauseAsked ? undefined : input.lastTopic,
     factsBlock: formatChartFactsBlock({
       todayDate: today,
       userSun: input.userSun,
-      lastTopic: input.lastTopic,
+      lastTopic: fireBecauseAsked ? topicBesideAsk(input.lastTopic) : input.lastTopic,
+      diaryNote: input.diaryNote,
       sky,
     }),
   };

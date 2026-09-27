@@ -15,6 +15,7 @@ import {
   formatChartFactsBlock,
   formatHerDayFactsBlock,
   isChartBannedLine,
+  shapeChartSpokenLine,
   isDayOrMoodTopic,
   localDateKey,
   natalFromSetup,
@@ -24,7 +25,11 @@ import {
   sunFromBirthDate,
   sunFromMonthDay,
 } from "./chart.ts";
+import { chartAskHandoff } from "./chart-menu.ts";
 import { composeGrokSystem, formatMemoryFacts } from "./memory-slots.ts";
+import { LIVE_POSE_FILES } from "./rai.ts";
+import { chatOpenForTab } from "./shell.ts";
+import { stageSourceFor } from "./stage-source.ts";
 import { CHART_V1_SOURCE, RAI_SYSTEM } from "./generated/star-rai-artifacts.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -368,5 +373,186 @@ describe("Grok request composition", () => {
     assert.equal(act.line, "Sept 29.");
     assert.equal(act.pose, "talk");
     assert.notEqual(act.pose, "idle");
+  });
+});
+
+describe("chart ask path", () => {
+  it("opening the Chart tab makes no brain call and adds no Chat message", () => {
+    const open = resolveChartTurn({
+      userText: "",
+      chatOpen: chatOpenForTab("chart"),
+      userSun: "Aries",
+      lastTopic: "rough day",
+      mood: "tired",
+      now: NOW,
+      timeZone: TZ,
+    });
+    assert.equal(open.kind, "none");
+    assert.equal(open.factsBlock, undefined);
+    assert.equal(actForChartTurn(open), null);
+
+    const app = readFileSync(join(root, "src/components/rai-app.tsx"), "utf8");
+    const paneAt = app.indexOf('id="star-pane-chart"');
+    const pane = app.slice(paneAt, paneAt + 220);
+    assert.match(pane, /star-pane-chart/);
+    assert.doesNotMatch(pane, /send\(|streamChat|streamGrok|requestHerDay|composeAct/);
+    assert.match(app, /useState<ShellTab>\(DEFAULT_SHELL_TAB\)/);
+    assert.doesNotMatch(app, /morning push|autoChart|requestHerDayCopy/);
+  });
+
+  it("Ask her in Chat switches to Chat and produces one ask and one reply beat", () => {
+    const handoff = chartAskHandoff(null);
+    assert.equal(handoff.tab, "chat");
+    assert.equal(handoff.sent, true);
+    assert.equal(handoff.draft, "What's in my chart today?");
+
+    const turn = resolveChartTurn({
+      userText: handoff.draft,
+      chatOpen: true,
+      userSun: "Aries",
+      lastTopic: "What's in my chart today?",
+      diaryNote: "You sounded tired. I kept the night on the page. Your Aries sun was sitting next to my Libra. That's the whole page.",
+      now: NOW,
+      timeZone: TZ,
+    });
+    assert.equal(turn.kind, "daily");
+    assert.equal(turn.lastTopic, undefined);
+    assert.match(turn.factsBlock ?? "", /^diary: You sounded tired/m);
+    assert.doesNotMatch(handoff.draft, /tired|diary/);
+    const act = actForChartTurn(turn)!;
+    assert.equal(act.line, "Aries sun, Libra sky today. You'll want to pick a fight and then apologize.");
+    assert.doesNotMatch(act.line, /not a reading|one glance|quiet page|—/);
+    assert.equal(isChartBannedLine(act.line), false);
+
+    const withPage = chartAskHandoff({ text: "You sounded tired. That's the whole page." });
+    assert.equal(withPage.draft, "What did you write?");
+    const withSun = chartAskHandoff({ text: "You sounded tired. That's the whole page.", userSun: "Aries" });
+    assert.equal(withSun.draft, "What's in my chart today?");
+    const pageTurn = resolveChartTurn({
+      userText: withSun.draft,
+      chatOpen: true,
+      userSun: "Aries",
+      diaryNote: "You sounded tired. That's the whole page.",
+      now: NOW,
+      timeZone: TZ,
+    });
+    assert.equal(pageTurn.kind, "daily");
+    assert.match(pageTurn.factsBlock ?? "", /diary: You sounded tired/);
+    assert.ok((actForChartTurn(pageTurn)!.line.split(/\s+/).filter(Boolean).length ?? 0) <= 18);
+
+    const app = readFileSync(join(root, "src/components/rai-app.tsx"), "utf8");
+    const askAt = app.indexOf("const askHerFromChart");
+    const ask = app.slice(askAt, app.indexOf("useEffect", askAt));
+    assert.match(ask, /selectTab\("chat"\)/);
+    assert.match(ask, /void send\(prompt\)/);
+    assert.equal((ask.match(/send\(/g) ?? []).length, 1);
+    assert.doesNotMatch(ask, /setDraft/);
+  });
+
+  it("writes the diary once per local day and reuses it on the second ask", () => {
+    assert.equal(detectChartIntent("what did you write"), "diary");
+    assert.equal(detectChartIntent("your diary"), "diary");
+    assert.equal(detectChartIntent("what's my chart"), "daily");
+
+    const first = resolveChartTurn({
+      userText: "what did you write",
+      chatOpen: true,
+      lastTopic: "night talking",
+      userSun: "Aries",
+      now: NOW,
+      timeZone: TZ,
+    });
+    assert.equal(first.kind, "diary");
+    assert.equal(first.localOnly, true);
+    const stored = first.diaryText ?? "";
+    const count = stored.split(/(?<=[.!?])\s+/).filter(Boolean).length;
+    assert.ok(count >= 3 && count <= 5, stored);
+    assert.doesNotMatch(stored, /\d{4}-\d{2}-\d{2}|quiet page|one glance|not a reading|\bthey\b/i);
+    assert.match(stored, /\bYou\b/);
+    const spoken = actForChartTurn(first)!.line;
+    assert.notEqual(spoken, stored);
+    assert.ok(spoken.split(/\s+/).filter(Boolean).length <= 18);
+    assert.doesNotMatch(spoken, /quiet page|one glance|not a reading|—/i);
+
+    const second = resolveChartTurn({
+      userText: "your diary",
+      chatOpen: true,
+      existingDiary: stored,
+      lastTopic: "something else entirely",
+      userSun: "Leo",
+      mood: "tired",
+      now: NOW,
+      timeZone: TZ,
+    });
+    assert.equal(second.diaryText, stored);
+    assert.notEqual(second.diaryText, composeDiaryEntry({
+      todayDate: "2026-09-19",
+      lastTopic: "something else entirely",
+      userSun: "Leo",
+      mood: "tired",
+    }));
+    assert.match(actForChartTurn(second)!.line, /tired/);
+    assert.notEqual(actForChartTurn(second)!.line, stored);
+  });
+
+  it("keeps the puppet mounted through a diary ask", () => {
+    const turn = resolveChartTurn({
+      userText: "what did you write",
+      chatOpen: true,
+      mood: "tired",
+      now: NOW,
+      timeZone: TZ,
+    });
+    const act = composeAct([{ role: "user", content: "what did you write" }], "", "tired", turn);
+    assert.equal(turn.kind, "diary");
+    assert.equal(act.pose, "content");
+    assert.ok(LIVE_POSE_FILES[act.pose!]);
+    assert.equal(stageSourceFor({ place: "chat" }).kind, "png");
+    assert.equal(stageSourceFor({ place: "chart" }).kind, "png");
+    const app = readFileSync(join(root, "src/components/rai-app.tsx"), "utf8");
+    assert.equal((app.match(/<PresenceStage/g) ?? []).length, 1);
+    assert.doesNotMatch(app, /chartTurn\.kind === "diary"[\s\S]{0,180}return null/);
+    assert.doesNotMatch(app, /kind === "diary"[\s\S]{0,80}<PresenceStage/);
+  });
+
+  it("answers a match ask with no user_sun in one birthday line", () => {
+    for (const userText of ["are we compatible", "what's our match", "compatibility"]) {
+      const turn = resolveChartTurn({
+        userText,
+        chatOpen: true,
+        askedBirthday: false,
+        now: NOW,
+        timeZone: TZ,
+      });
+      assert.equal(turn.kind, "ask_need_birthday", userText);
+      assert.equal(actForChartTurn(turn)?.line, "Tell me your birthday if you want that.");
+    }
+    const app = readFileSync(join(root, "src/components/rai-app.tsx"), "utf8");
+    const needAt = app.indexOf('chartTurn.kind === "ask_need_birthday"');
+    const need = app.slice(needAt, needAt + 180);
+    assert.match(need, /markAskedBirthday\(\)/);
+    assert.doesNotMatch(need, /setBirthOpen|birthOpen|ChartSetupCard/);
+  });
+
+  it("filters banned chart phrasing and caps an essay to one beat", () => {
+    const banned = shapeChartSpokenLine(
+      "Your reading for today is a long natal wheel essay. Mercury is loud. Then another sentence.",
+    );
+    assert.equal(banned, "Libra sky today. You'll want to pick a fight and then apologize.");
+    assert.equal(
+      shapeChartSpokenLine("Aries across Libra air, one glance, not a reading."),
+      "Libra sky today. You'll want to pick a fight and then apologize.",
+    );
+    assert.equal(isChartBannedLine("the natal wheel says so"), true);
+    assert.equal(isChartBannedLine("here is a planet list"), true);
+
+    const essay =
+      "First glance only. Then a second sentence that turns it into an essay about the whole sky and keeps going well past one beat.";
+    assert.equal(shapeChartSpokenLine(essay), "First glance only.");
+
+    const block = formatChartFactsBlock({ todayDate: "2026-09-19", userSun: "Aries" });
+    assert.match(block, /One spoken beat/);
+    assert.match(block, /No natal wheel/);
+    assert.match(block, /Never say "your reading for today is\."/);
   });
 });
