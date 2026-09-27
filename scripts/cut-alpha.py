@@ -58,9 +58,12 @@ HAIR_ZONES = [(0, 0, 415, 345), (625, 150, 1008, 345)]  # x0, y0, x1, y1 (centro
 HAIR_FG_LUMA = 40      # thin strands in the hair zone un-mix toward dark hair
 HAIR_UNMIX_ZONE = (0, 0, 1008, 330)
 HAIR_SPECK_LUMA = 145
+HAIR_BUMP_LUMA = 100
 FLOOR_ZONE = (0, 1640, 1008, 1792)
+FLOOR_BUMP_LUMA = 80
 FLOOR_FG_LUMA = 40     # floor shadow becomes translucent dark
 RAMP_DEPTH, FLOOR_RAMP_DEPTH, RAMP_TOL = 6, 90, 4.0
+LOW_ALPHA_LO, LOW_ALPHA_HI = 0.15, 0.40  # colour blend band for faint edge pixels
 
 
 def load_rgb(path):
@@ -107,13 +110,15 @@ def build_mask(rgb):
     floor = zone_mask(bg.shape, FLOOR_ZONE)
     depth_cap = np.where(floor, FLOOR_RAMP_DEPTH, RAMP_DEPTH)
     ramp = np.zeros_like(bg)
-    prev = bg.copy()
+    # The ramp only advances outward, one ring per step (city-block distance k from the
+    # background), so it cannot leak sideways along a thin strand's interior.
+    ring = ndi.distance_transform_cdt(~bg, metric="taxicab")
     prevL = np.where(bg, 255.0, -1.0)
     for k in range(1, FLOOR_RAMP_DEPTH + 1):
         best = np.full(bg.shape, -1.0)
         for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
             best = np.maximum(best, np.roll(np.roll(prevL, dy, 0), dx, 1))
-        cand = ~bg & ~ramp & (best >= 0) & (L <= best + RAMP_TOL) & (k <= depth_cap)
+        cand = ~bg & ~ramp & (best >= 0) & (L <= best + RAMP_TOL) & (k <= depth_cap) & (ring == k)
         if not cand.any():
             break
         ramp |= cand
@@ -129,10 +134,24 @@ def build_mask(rgb):
     for _ in range(2):
         touch = ndi.binary_dilation(bg | ramp, structure=np.ones((3, 3), bool))
         ramp |= hz & touch & ~bg & ~ramp & ~kept_white & (L > HAIR_SPECK_LUMA)
+    # Hair zone: a mid-grey pixel (L > 100) sitting right against a still-light ramp pixel is the
+    # tail of that antialias ramp (the luma bumped up by a hair's width), not a highlight. Real
+    # highlights on the hair rim sit behind the dark outline, whose ramp pixels are dark.
+    for _ in range(2):
+        lr = ramp & (L > HAIR_BUMP_LUMA)
+        t4 = ndi.binary_dilation(lr)  # 4-neighbour touch
+        ramp |= hz & t4 & ~bg & ~ramp & ~kept_white & (L > HAIR_BUMP_LUMA) & (ring <= 3)
     # Floor: the soft shadow under the shoes is reached from the background through light pixels
     # (L > 150); shoe highlights are walled in by brown leather and are never reached.
     floor_soft = ndi.binary_propagation(bg & floor, mask=(bg | (L > 150)) & floor) & ~bg
     ramp |= floor_soft
+    # Floor: grey antialias pixels between the shadow and the shoe's dark outline (neutral, L > 80,
+    # right against a lighter soft pixel) are the tail of that ramp, not leather.
+    chroma = mx - mn
+    for _ in range(2):
+        lr = (ramp | bg) & floor & (L > 150)
+        lr |= ramp & floor & (L > FLOOR_BUMP_LUMA)
+        ramp |= floor & ndi.binary_dilation(lr) & ~bg & ~ramp & (L > FLOOR_BUMP_LUMA) & (chroma < 24)
     # Anywhere: tiny light islands (<= 6px) left opaque against the background are matte, not art.
     light = ~bg & ~ramp & (L > 200)
     ilab, ni = ndi.label(light, structure=np.ones((3, 3), bool))
@@ -164,12 +183,22 @@ def apply_mask(rgb, alpha):
     out = rgb.astype(np.float64)
     part = (a > 0) & (a < 1)
     aa = a[part][:, None]
-    out[part] = np.clip((out[part] - (1 - aa) * 255.0) / aa, 0, 255)
-    # Fully transparent pixels take the nearest visible colour (no white under filtering).
+    decon = np.clip((out[part] - (1 - aa) * 255.0) / aa, 0, 255)
+    solid = out.copy()
+    solid[part] = decon
+    # Nearest solid pixel (alpha >= 0.5): the colour a faint edge pixel is really made of.
+    _, (iy, ix) = ndi.distance_transform_edt(a < 0.5, return_indices=True)
+    core = solid[iy, ix]
+    # Un-mixing amplifies noise as alpha -> 0 (a 3-level tint in a 2%-alpha pixel becomes pure
+    # green). Below ~40% coverage lean on the nearest solid colour instead of the noisy un-mix.
+    # The floor shadow is neutral grey with no solid colour of its own (its nearest solid pixel is
+    # the shoe), so it keeps the plain un-mix, which lands on a smooth translucent dark.
+    t = np.clip((aa - LOW_ALPHA_LO) / (LOW_ALPHA_HI - LOW_ALPHA_LO), 0, 1)
+    t[zone_mask(alpha.shape, FLOOR_ZONE)[part]] = 1.0
+    out[part] = t * decon + (1 - t) * core[part]
+    # Fully transparent pixels take the nearest solid colour (no white or noise under filtering).
     clear = alpha == 0
-    if clear.any():
-        _, (iy, ix) = ndi.distance_transform_edt(clear, return_indices=True)
-        out[clear] = out[iy[clear], ix[clear]]
+    out[clear] = core[clear]
     rgba = np.dstack([np.round(out).astype(np.uint8), alpha])
     return rgba
 

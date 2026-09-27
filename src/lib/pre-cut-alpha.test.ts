@@ -11,6 +11,7 @@ import {
   SPRITES,
   spriteNeedsWhitePunch,
 } from "./rai.ts";
+import { punchedSpriteUrl } from "./punch-white.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -68,9 +69,83 @@ describe("pre-cut RGBA idle + blink sheets", () => {
     assert.equal(sha("rai/idle_blink_01_open.png"), sha("rai/idle.png"));
   });
 
-  it("routes pre-cut sheets around punchedSpriteUrl in the puppet", () => {
-    const src = readFileSync(join(root, "src/components/puppet.tsx"), "utf8");
-    assert.match(src, /const preCut = !spriteNeedsWhitePunch\(src\);/);
-    assert.match(src, /preCut \? preCutSpriteUrl\(src\) : punchedSpriteUrl\(src\)/);
+});
+
+/** Just enough Image/canvas/URL for punchedSpriteUrl in node; counts real punches. */
+function stubBrowser(cornerAlpha: number) {
+  const calls = { punched: 0, decoded: [] as string[] };
+  const g = globalThis as unknown as Record<string, unknown>;
+  const saved = { Image: g.Image, document: g.document, createObjectURL: URL.createObjectURL };
+  class FakeImage {
+    decoding = "";
+    src = "";
+    naturalWidth = 4;
+    naturalHeight = 4;
+    async decode() {
+      calls.decoded.push(this.src);
+    }
+  }
+  const ctx = {
+    drawImage() {},
+    getImageData(_x: number, _y: number, w: number, h: number) {
+      const data = new Uint8ClampedArray(w * h * 4).fill(255);
+      for (let i = 0; i < w * h; i++) data[i * 4 + 3] = cornerAlpha;
+      return { data, width: w, height: h };
+    },
+    putImageData() {},
+  };
+  const canvas = {
+    width: 0,
+    height: 0,
+    getContext: () => ctx,
+    toBlob(cb: (b: Blob | null) => void) {
+      calls.punched++;
+      cb(new Blob(["png"]));
+    },
+  };
+  g.Image = FakeImage;
+  g.document = { createElement: () => canvas };
+  URL.createObjectURL = () => "blob:punched";
+  const restore = () => {
+    g.Image = saved.Image;
+    g.document = saved.document;
+    URL.createObjectURL = saved.createObjectURL;
+  };
+  return { calls, restore };
+}
+
+describe("punchedSpriteUrl skips the punch for pre-cut sheets", () => {
+  it("returns the pre-cut idle and blink files as-is (decoded, never punched)", async () => {
+    const { calls, restore } = stubBrowser(0);
+    try {
+      for (const src of [SPRITES.poses.idle, ...idleBlinkFrameUrls()]) {
+        assert.equal(await punchedSpriteUrl(src), src, src);
+        assert.ok(calls.decoded.includes(src), `${src} decoded before use`);
+      }
+      assert.equal(calls.punched, 0);
+    } finally {
+      restore();
+    }
+  });
+
+  it("still punches a stale opaque RGB copy of a pre-cut file", async () => {
+    const { calls, restore } = stubBrowser(255);
+    try {
+      assert.equal(await punchedSpriteUrl(`${SPRITES.poses.idle}?stale=1`), "blob:punched");
+      assert.equal(calls.punched, 1);
+    } finally {
+      restore();
+    }
+  });
+
+  it("still punches the RGB-on-white sheets", async () => {
+    const { calls, restore } = stubBrowser(0);
+    try {
+      assert.equal(await punchedSpriteUrl(SPRITES.poses.talk), "blob:punched");
+      assert.equal(await punchedSpriteUrl(SPRITES.poses.wave), "blob:punched");
+      assert.equal(calls.punched, 2);
+    } finally {
+      restore();
+    }
   });
 });

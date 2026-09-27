@@ -9,7 +9,6 @@ import {
   isRetiredBlinkSrc,
   layersFor,
   POSE_CROSSFADE_MS,
-  spriteNeedsWhitePunch,
   USE_EXPO_TALK_BUST,
   type EmotionId,
   type PoseId,
@@ -26,7 +25,7 @@ import {
   puppetRigTransform,
   type IdleBlinkFrame,
 } from "@/lib/rai-motion";
-import { preCutSpriteUrl, punchedSpriteUrl } from "@/lib/punch-white";
+import { punchedSpriteUrl } from "@/lib/punch-white";
 import { sheetBox } from "@/lib/rai-sheet-box";
 import { cn } from "@/lib/utils";
 
@@ -123,11 +122,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     const ordered = [...blinkFrames, ...urls.filter((src) => !blinkSet.has(src))];
     for (const src of ordered) {
       if (isRetiredBlinkSrc(src)) continue;
-      // Pre-cut RGBA sheets (idle + blink frames) skip punch-white and are decoded as-is.
-      const preCut = !spriteNeedsWhitePunch(src);
-      const job = preCut ? preCutSpriteUrl(src) : punchedSpriteUrl(src);
-      void job.then(async (url) => {
-        if (blinkSet.has(src) || preCut) {
+      void punchedSpriteUrl(src).then(async (url) => {
+        if (blinkSet.has(src)) {
           const img = new Image();
           img.decoding = "async";
           img.src = url;
