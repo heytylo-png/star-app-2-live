@@ -120,9 +120,11 @@ describe("tab chrome", () => {
     assert.equal(chartReadingRequested(false), false);
     assert.equal(chartReadingRequested(true), true);
     const panel = readFileSync(join(root, "src/components/chart-panel.tsx"), "utf8");
-    assert.doesNotMatch(panel, /requestHerDayCopy|ZodiacWheel|<svg/);
-    assert.match(panel, /dash\.view\.labels/);
-    assert.match(panel, /her\.heading/);
+    assert.doesNotMatch(panel, /requestHerDayCopy|ZodiacWheel|<svg|backdrop-blur|localHerDay/);
+    assert.match(panel, /id="star-chart-menu"/);
+    assert.match(panel, /Edit date · time · place/);
+    assert.match(panel, /Ask her in Chat/);
+    assert.doesNotMatch(panel, /dash\.view\.labels|her\.heading/);
   });
 
   it("Life now-playing is the title and Stop, with no login wall", () => {

@@ -9,7 +9,7 @@ import {
 import { AppTabs } from "@/components/app-tabs";
 import { ChatThread } from "@/components/chat-thread";
 import { InstallHint } from "@/components/install-hint";
-import { ChartPanel } from "@/components/chart-panel";
+import { ChartMenu } from "@/components/chart-panel";
 import { ChartSetupCard } from "@/components/chart-setup-card";
 import { LifeMenu } from "@/components/life-panel";
 import { PresenceStage } from "@/components/presence-stage";
@@ -47,7 +47,6 @@ import {
 } from "@/lib/return-memory";
 import { formatMemoryFacts } from "@/lib/memory-slots";
 import {
-  composeDiaryEntry,
   localDateKey,
   natalFromSetup,
   resolveChartTurn,
@@ -58,6 +57,7 @@ import { useHerMusicStore } from "@/lib/her-music-store";
 import { pickLocalSuggestions } from "@/lib/her-music";
 import { lockHerDailyMood, requestLifeSuggestions } from "@/lib/her-suggest";
 import { isSuggestAsk, parseTrackTitle, resolveLifeTurn, type LifeSlots } from "@/lib/life";
+import { reduceChartMenu } from "@/lib/chart-menu";
 import { reduceLifeMenu } from "@/lib/life-menu";
 import { useSpotifyPlayback } from "@/lib/use-spotify-playback";
 import { chatOpenForTab, DEFAULT_SHELL_TAB, type ShellTab } from "@/lib/shell";
@@ -174,14 +174,15 @@ function RaiReady() {
   const chatHydrated = useChatStore((s) => s.hydrated);
   const presenceHydrated = usePresenceStore((s) => s.hydrated);
   const chartSetup = useChartStore((s) => s.setup);
-  const diaryByDay = useChartStore((s) => s.diaryByDay);
   const affectionScore = useAffectionStore((s) => s.score);
   const streakDays = useAffectionStore((s) => s.streakDays);
   const tier = useMemo(() => scoreToTier(affectionScore), [affectionScore]);
 
   const [tab, setTab] = useState<ShellTab>(DEFAULT_SHELL_TAB);
   const [lifeMenuOpen, setLifeMenuOpen] = useState(false);
+  const [chartMenuOpen, setChartMenuOpen] = useState(false);
   const lifeTabRef = useRef<HTMLButtonElement>(null);
+  const chartTabRef = useRef<HTMLButtonElement>(null);
   const [deskPlaybackFailed, setDeskPlaybackFailed] = useState(false);
   const [trackedStage, setTrackedStage] = useState<StagePlace>(DEFAULT_SHELL_TAB);
   const reducedMotion = usePrefersReducedMotion();
@@ -258,8 +259,6 @@ function RaiReady() {
   );
   const empty = !thread || thread.messages.length === 0;
   const showSetup = chartHydrated && chartSetup === "pending" && !slots.user_birth_date;
-  const todayKey = localDateKey();
-  const todayDiary = diaryByDay[todayKey];
 
   useEffect(() => {
     draftRef.current = draft;
@@ -303,14 +302,26 @@ function RaiReady() {
         : reduceLifeMenu({ tab, open: true, callActive: false }, { type: "call", active: true });
     setLifeMenuOpen(reduced.open);
   }
+  if (chartMenuOpen && (tab !== "chart" || callBusy)) {
+    const reduced =
+      tab !== "chart"
+        ? reduceChartMenu({ tab: "chart", open: true, callActive: callBusy }, { type: "select-tab", tab })
+        : reduceChartMenu({ tab, open: true, callActive: false }, { type: "call", active: true });
+    setChartMenuOpen(reduced.open);
+  }
 
   const selectTab = (next: ShellTab) => {
     const reduced = reduceLifeMenu(
       { tab, open: lifeMenuOpen, callActive: callBusy },
       { type: "select-tab", tab: next },
     );
+    const chartReduced = reduceChartMenu(
+      { tab, open: chartMenuOpen, callActive: callBusy },
+      { type: "select-tab", tab: next },
+    );
     setTab(reduced.tab);
     setLifeMenuOpen(reduced.open);
+    setChartMenuOpen(chartReduced.open);
   };
 
   const toggleLifeMenu = () => {
@@ -329,6 +340,29 @@ function RaiReady() {
     );
     setLifeMenuOpen(reduced.open);
     lifeTabRef.current?.focus();
+  };
+
+  const toggleChartMenu = () => {
+    const reduced = reduceChartMenu(
+      { tab, open: chartMenuOpen, callActive: callBusy },
+      { type: "toggle-chart" },
+    );
+    setTab(reduced.tab);
+    setChartMenuOpen(reduced.open);
+  };
+
+  const closeChartMenu = () => {
+    const reduced = reduceChartMenu(
+      { tab, open: chartMenuOpen, callActive: callBusy },
+      { type: "escape" },
+    );
+    setChartMenuOpen(reduced.open);
+    chartTabRef.current?.focus();
+  };
+
+  const askHerFromChart = (prompt: string) => {
+    setDraft(prompt);
+    selectTab("chat");
   };
 
   useEffect(() => {
@@ -1371,14 +1405,12 @@ function RaiReady() {
           />
         </div>
         ) : tab === "chart" ? (
-          <div className="pointer-events-auto flex min-h-0 flex-1 flex-col justify-end pt-1">
-            <ChartPanel
-              userSun={slots.user_sun}
-              birthDate={slots.user_birth_date}
-              birthTime={slots.user_birth_time}
-              birthPlace={slots.user_birth_place}
-            />
-          </div>
+          <div
+            id="star-pane-chart"
+            role="tabpanel"
+            aria-labelledby="star-tab-chart"
+            className="min-h-0 flex-1"
+          />
         ) : (
           <div
             id="star-pane-life"
@@ -1541,6 +1573,22 @@ function RaiReady() {
           lifeMenuOpen={lifeMenuOpen}
           onToggleLifeMenu={toggleLifeMenu}
           lifeTabRef={lifeTabRef}
+          chartMenuOpen={chartMenuOpen}
+          onToggleChartMenu={toggleChartMenu}
+          chartTabRef={chartTabRef}
+          chartMenu={
+            tab === "chart" ? (
+              <ChartMenu
+                open={chartMenuOpen}
+                userSun={slots.user_sun}
+                birthDate={slots.user_birth_date}
+                birthTime={slots.user_birth_time}
+                birthPlace={slots.user_birth_place}
+                onAsk={askHerFromChart}
+                onClose={closeChartMenu}
+              />
+            ) : null
+          }
           lifeMenu={
             tab === "life" ? (
               <LifeMenu
@@ -1604,33 +1652,6 @@ function RaiReady() {
                 </p>
               </div>
             ) : null}
-            <div className="mb-3 rounded-md bg-elevated px-3 py-2 shadow-[var(--shadow-border)]">
-              <p className="text-[0.65rem] tracking-wide text-subtle uppercase">Diary</p>
-              {todayDiary ? (
-                <p className="mt-1 text-sm leading-relaxed">{todayDiary}</p>
-              ) : (
-                <p className="mt-1 text-sm text-muted">On ask only. One page per local day. Not auto-posted to Chat.</p>
-              )}
-              <button
-                type="button"
-                className="mt-2 text-xs text-muted hover:text-fg"
-                onClick={() => {
-                  const dateKey = localDateKey();
-                  const existing = useChartStore.getState().diaryFor(dateKey);
-                  const text =
-                    existing ??
-                    composeDiaryEntry({
-                      todayDate: dateKey,
-                      lastTopic: useMemoryStore.getState().slots.last_topic,
-                      userSun: useMemoryStore.getState().slots.user_sun,
-                      mood: useMemoryStore.getState().slots.mood,
-                    });
-                  useChartStore.getState().saveDiary(dateKey, text);
-                }}
-              >
-                {todayDiary ? "Today's page is written" : "Write today's diary"}
-              </button>
-            </div>
             {memories.length === 0 ? (
               hasSlots ? null : (
                 <p className="text-sm text-muted">

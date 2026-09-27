@@ -512,8 +512,9 @@ body.chat-thread-resizing {
   background: transparent;
 }
 
-/* Compact Life menu. Anchored to the Life tab, not a sheet over the desk. */
-.life-menu {
+/* Compact tab menus. Life stays on the Life tab; Chart uses the same chrome on Chart. */
+.life-menu,
+.chart-menu {
   position: absolute;
   right: 0;
   bottom: calc(100% + 0.4rem);
@@ -532,6 +533,18 @@ body.chat-thread-resizing {
   box-shadow: 0 10px 28px rgba(28, 25, 22, 0.12), var(--shadow-border);
   padding: 0.45rem 0.5rem 0.5rem;
   animation: life-menu-in 150ms var(--ease-smooth-out);
+}
+
+.chart-menu {
+  left: 50%;
+  right: auto;
+  translate: -50% 0;
+  min-width: 13.5rem;
+}
+
+.chart-menu[data-editing="true"] {
+  min-width: 16rem;
+  max-height: min(22rem, 68dvh);
 }
 
 @keyframes life-menu-in {
