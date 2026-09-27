@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   allSpriteUrls,
   canIdleBlink,
@@ -26,6 +26,7 @@ import {
   type IdleBlinkFrame,
 } from "@/lib/rai-motion";
 import { punchedSpriteUrl } from "@/lib/punch-white";
+import { sheetBox } from "@/lib/rai-sheet-box";
 import { cn } from "@/lib/utils";
 
 type PuppetProps = {
@@ -279,6 +280,66 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     };
   }, []);
 
+  // Sharpness: size and place the sheet box in whole device pixels (the long-shot
+  // zoom used to be transform: scale on top of a composited rig, which
+  // resampled the sheet twice). CSS calc() fallbacks cover the first paint.
+  useLayoutEffect(() => {
+    const stage = stageRef.current;
+    const rig = stage?.querySelector<HTMLElement>("[data-rai-rig]");
+    if (!stage || !rig) return;
+    let queued = 0;
+    const apply = () => {
+      queued = 0;
+      const cs = getComputedStyle(rig);
+      const rigW = parseFloat(cs.width);
+      const rigH = parseFloat(cs.height);
+      const zoom = parseFloat(cs.getPropertyValue("--rai-sheet-zoom"));
+      const topFrac = parseFloat(cs.getPropertyValue("--rai-sheet-top"));
+      if (!(rigW > 0 && rigH > 0)) return;
+      const sr = stage.getBoundingClientRect();
+      const box = sheetBox({
+        originX: sr.left + stage.clientLeft + (parseFloat(cs.left) || 0),
+        originY: sr.top + stage.clientTop + (parseFloat(cs.top) || 0),
+        rigW,
+        rigH,
+        zoom: Number.isFinite(zoom) ? zoom : 1,
+        topFrac: Number.isFinite(topFrac) ? topFrac : 0,
+        dpr: window.devicePixelRatio || 1,
+      });
+      rig.style.setProperty("--rai-sheet-x", `${box.x}px`);
+      rig.style.setProperty("--rai-sheet-y", `${box.y}px`);
+      rig.style.setProperty("--rai-sheet-w", `${box.w}px`);
+      rig.style.setProperty("--rai-sheet-h", `${box.h}px`);
+    };
+    const schedule = () => {
+      if (!queued) queued = requestAnimationFrame(apply);
+    };
+    apply();
+    const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedule);
+    ro?.observe(stage);
+    ro?.observe(rig);
+    window.addEventListener("resize", schedule);
+    window.visualViewport?.addEventListener("resize", schedule);
+    let mq: MediaQueryList | null = null;
+    const watchDpr = () => {
+      mq?.removeEventListener("change", onDpr);
+      mq = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+      mq.addEventListener("change", onDpr);
+    };
+    const onDpr = () => {
+      watchDpr();
+      schedule();
+    };
+    watchDpr();
+    return () => {
+      if (queued) cancelAnimationFrame(queued);
+      ro?.disconnect();
+      window.removeEventListener("resize", schedule);
+      window.visualViewport?.removeEventListener("resize", schedule);
+      mq?.removeEventListener("change", onDpr);
+    };
+  }, []);
+
   // Idle life + look-at lean + amp smoothing — DOM transforms, minimal React.
   useEffect(() => {
     const tick = (now: number) => {
@@ -318,7 +379,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       const node = stageRef.current?.querySelector<HTMLElement>("[data-rai-rig]");
       const ahoge = stageRef.current?.querySelector<HTMLElement>("[data-rai-ahoge]");
       if (node) {
-        node.style.transform = puppetRigTransform(motion);
+        node.style.transform = puppetRigTransform(motion, window.devicePixelRatio || 1);
       }
       if (ahoge) {
         ahoge.style.transform = `rotate(${motion.hairDeg.toFixed(2)}deg) scaleY(${(

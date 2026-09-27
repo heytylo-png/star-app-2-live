@@ -73,8 +73,12 @@ export function idleBlinkSchedule(): IdleBlinkStep[] {
 export const IDLE_MAX_TRANSLATE_Y_PX = 1.2;
 /** Weight-shift rock, excluding look-at lean. */
 export const IDLE_MAX_ROCK_DEG = 0.65;
-export const IDLE_BREATHE_MIN = 0.988;
-export const IDLE_BREATHE_MAX = 1.014;
+/**
+ * Rest scale is exactly 1. The sheet is sized once, in whole device pixels, by
+ * the stage (see puppet.tsx). A breathe scale here resampled it a second time
+ * every frame and made her face soft on high-DPR phones.
+ */
+export const IDLE_REST_SCALE = 1;
 
 export type PuppetMotion = {
   translateX: number;
@@ -106,14 +110,16 @@ export function puppetIdleMotion(tSeconds: number, opts: PuppetMotionOpts = {}):
       translateX: look * 2,
       translateY: 0,
       rotateZ: look * -0.35,
-      scale: 1,
+      scale: IDLE_REST_SCALE,
       hairDeg: 0,
     };
   }
 
-  const breathe = 1 + Math.sin(tSeconds * 1.12) * 0.0075 + Math.sin(tSeconds * 0.43) * 0.0025;
   const swayX = Math.sin(tSeconds * 0.52) * 2.4 + Math.sin(tSeconds * 0.21) * 0.9;
-  const rock = Math.sin(tSeconds * 0.46) * 0.48 + look * -0.85;
+  // No idle rock: any rotateZ resamples the whole sheet every frame (measured:
+  // face sharpness ~400 with the 0.48deg rock vs ~695 without at DPR 3). The
+  // weight shift is whole-pixel X sway; rotation is kept only for look-at lean.
+  const rock = look * -0.85;
   const lookX = look * 5.5;
   const settleY = Math.sin(tSeconds * 1.12) * 0.55;
   const talkBob = talking ? Math.sin(tSeconds * 5.1) * jaw * 1.05 : 0;
@@ -123,16 +129,31 @@ export function puppetIdleMotion(tSeconds: number, opts: PuppetMotionOpts = {}):
     translateX: swayX + lookX,
     translateY: settleY + talkBob,
     rotateZ: rock,
-    scale: breathe,
+    scale: IDLE_REST_SCALE,
     hairDeg: hair,
   };
 }
 
-export function puppetRigTransform(motion: PuppetMotion): string {
-  return [
-    `translateX(${motion.translateX.toFixed(2)}px)`,
-    `translateY(${motion.translateY.toFixed(2)}px)`,
-    `rotateZ(${motion.rotateZ.toFixed(2)}deg)`,
-    `scale(${motion.scale.toFixed(4)})`,
-  ].join(" ");
+/** Below this the look-at lean is omitted from the rig transform. */
+export const ROCK_EPSILON_DEG = 0.05;
+
+/** Snap a CSS length to whole device pixels (whole CSS px when dpr is 1). */
+export function snapToDevicePx(px: number, dpr = 1): number {
+  const d = Number.isFinite(dpr) && dpr > 0 ? dpr : 1;
+  const v = Math.round(px * d) / d;
+  return Object.is(v, -0) ? 0 : v;
+}
+
+/**
+ * Rig transform: whole-pixel translate (+ look-at lean only). No scale() at all, so the sheet
+ * is never resampled by a zoom here. Pass `devicePixelRatio` so the translate
+ * lands on whole device pixels (at dpr 1 this is plain Math.round).
+ */
+export function puppetRigTransform(motion: PuppetMotion, dpr = 1): string {
+  const x = snapToDevicePx(motion.translateX, dpr);
+  const y = snapToDevicePx(motion.translateY, dpr);
+  const parts = [`translate(${x}px, ${y}px)`];
+  // Sub-0.05deg lean (look easing back to centre) is dropped so rest stays pixel-exact.
+  if (Math.abs(motion.rotateZ) >= ROCK_EPSILON_DEG) parts.push(`rotateZ(${motion.rotateZ.toFixed(2)}deg)`);
+  return parts.join(" ");
 }

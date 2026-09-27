@@ -11,13 +11,13 @@ import {
   IDLE_BLINK_STEP_MS,
   idleBlinkSchedule,
   idleBlinkStepName,
-  IDLE_BREATHE_MAX,
-  IDLE_BREATHE_MIN,
+  IDLE_REST_SCALE,
   IDLE_MAX_ROCK_DEG,
   IDLE_MAX_TRANSLATE_Y_PX,
   POSE_CROSSFADE_MS,
   puppetIdleMotion,
   puppetRigTransform,
+  snapToDevicePx,
 } from "./rai-motion.ts";
 
 const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles.css"), "utf8");
@@ -29,15 +29,51 @@ describe("official PNG puppet motion", () => {
       const m = puppetIdleMotion(t, { look: 0, talking: false, jaw: 0 });
       assert.ok(Math.abs(m.translateY) <= IDLE_MAX_TRANSLATE_Y_PX, `floaty Y ${m.translateY} at t=${t}`);
       assert.ok(Math.abs(m.rotateZ) <= IDLE_MAX_ROCK_DEG, `rock ${m.rotateZ} at t=${t}`);
-      assert.ok(m.scale >= IDLE_BREATHE_MIN && m.scale <= IDLE_BREATHE_MAX, `scale ${m.scale}`);
+      assert.equal(m.scale, 1, `rest scale ${m.scale}`);
       assert.ok(Math.abs(m.translateX) < 4, `sway X ${m.translateX}`);
     }
     const cssForm = puppetRigTransform(puppetIdleMotion(1.3));
-    assert.match(cssForm, /translateX\(/);
-    assert.match(cssForm, /rotateZ\(/);
-    assert.match(cssForm, /scale\(/);
+    assert.match(cssForm, /translate\(/);
+    // Idle rest: whole-pixel sway only; no rotation resample unless she leans to look.
+    assert.doesNotMatch(cssForm, /rotate/);
+    assert.match(puppetRigTransform(puppetIdleMotion(1.3, { look: 0.8 })), /rotateZ\(-0\.68deg\)/);
+    assert.doesNotMatch(puppetRigTransform(puppetIdleMotion(1.3, { look: 0.02 })), /rotate/);
+    // Sharpness: no zoom in the rig transform, rest scale exactly 1.
+    assert.equal(IDLE_REST_SCALE, 1);
+    assert.doesNotMatch(cssForm, /scale/);
     assert.doesNotMatch(cssForm, /rotateY/);
     assert.doesNotMatch(cssForm, /perspective/);
+  });
+
+  it("translates the rig by whole pixels only (no fractional resample)", () => {
+    for (let i = 0; i < 120; i++) {
+      const m = puppetIdleMotion(i * 0.173, { look: 0.3, talking: i % 2 === 0, jaw: 0.7 });
+      const px = puppetRigTransform(m).match(/translate\((-?[0-9.]+)px, (-?[0-9.]+)px\)/);
+      assert.ok(px, puppetRigTransform(m));
+      assert.ok(Number.isInteger(Number(px[1])) && Number.isInteger(Number(px[2])), px[0]);
+      for (const dpr of [2, 3, 3.5]) {
+        const d = puppetRigTransform(m, dpr).match(/translate\((-?[0-9.e-]+)px, (-?[0-9.e-]+)px\)/);
+        assert.ok(d);
+        for (const v of [Number(d[1]), Number(d[2])]) {
+          assert.ok(Math.abs(v * dpr - Math.round(v * dpr)) < 1e-6, `${v}px @${dpr}`);
+        }
+      }
+    }
+    assert.equal(snapToDevicePx(2.4), 2);
+    assert.equal(snapToDevicePx(-0.4), 0);
+    assert.equal(snapToDevicePx(1.2, 3.5), 8 / 7);
+  });
+
+  it("drops will-change and transform-scale zoom so the sheet is resampled once", () => {
+    const rig = css.match(/\.rai-rig\s*\{[^}]*\}/)?.[0] ?? "";
+    assert.doesNotMatch(rig, /will-change\s*:/);
+    const layers = css.match(/\.rai-layer\s*\{[^}]*\}/g) ?? [];
+    assert.ok(layers.length > 0);
+    for (const block of layers) assert.doesNotMatch(block, /scale\(/);
+    assert.match(layers[0], /image-rendering:\s*auto/);
+    // translateZ(0) was measured to re-introduce a compositor resample; keep the layer unpromoted.
+    assert.match(layers[0], /transform:\s*none/);
+    for (const block of layers) assert.doesNotMatch(block, /transform:\s*translateZ|will-change\s*:/);
   });
 
   it("zeros micro-motion when reduced-motion is on", () => {
