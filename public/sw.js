@@ -36,6 +36,11 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+/** mp4 is not precached. A cached 200 answers Range with the wrong body and Android Chrome will not play it. */
+function bypassMedia(url) {
+  return url.pathname.endsWith(".mp4");
+}
+
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
@@ -44,6 +49,9 @@ self.addEventListener("fetch", (event) => {
 
   // Leave cross-origin alone (api.x.ai, Google Fonts, etc.)
   if (url.origin !== self.location.origin) return;
+
+  // diary-loop.mp4 (and any later clip) stays on the network so range requests work.
+  if (bypassMedia(url)) return;
 
   // Never cache API probes / future backends
   if (url.pathname.includes("/api/")) return;

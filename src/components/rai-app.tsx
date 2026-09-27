@@ -60,6 +60,8 @@ import { lockHerDailyMood, requestLifeSuggestions } from "@/lib/her-suggest";
 import { isSuggestAsk, parseTrackTitle, resolveLifeTurn, type LifeSlots } from "@/lib/life";
 import { useSpotifyPlayback } from "@/lib/use-spotify-playback";
 import { chatOpenForTab, DEFAULT_SHELL_TAB, type ShellTab } from "@/lib/shell";
+import { stagePlace, stageSourceFor, type StagePlace } from "@/lib/stage-source";
+import { usePrefersReducedMotion } from "@/lib/use-reduced-motion";
 import { newId, type ChatMessage } from "@/lib/helix";
 import { streamChat } from "@/lib/stream-chat";
 import {
@@ -177,6 +179,10 @@ function RaiReady() {
   const tier = useMemo(() => scoreToTier(affectionScore), [affectionScore]);
 
   const [tab, setTab] = useState<ShellTab>(DEFAULT_SHELL_TAB);
+  const [deskPlaybackFailed, setDeskPlaybackFailed] = useState(false);
+  const [trackedStage, setTrackedStage] = useState<StagePlace>(DEFAULT_SHELL_TAB);
+  const reducedMotion = usePrefersReducedMotion();
+  const onDeskFail = useCallback(() => setDeskPlaybackFailed(true), []);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [memoryOpen, setMemoryOpen] = useState(false);
@@ -279,6 +285,12 @@ function RaiReady() {
   useEffect(() => {
     tabRef.current = tab;
   }, [tab]);
+
+  const stageAt = stagePlace({ tab, callActive: callActive || callStarting });
+  if (trackedStage !== stageAt) {
+    setTrackedStage(stageAt);
+    if (stageAt !== "life") setDeskPlaybackFailed(false);
+  }
 
   useEffect(() => {
     if (!spotify.justConnected) return;
@@ -1196,6 +1208,12 @@ function RaiReady() {
     }
   }
 
+  const desk = stageSourceFor({
+    place: stageAt,
+    reducedMotion,
+    playbackFailed: deskPlaybackFailed,
+  });
+
   const slotFacts = formatMemoryFacts(slots);
   const hasSlots = Boolean(slotFacts);
 
@@ -1219,7 +1237,15 @@ function RaiReady() {
 
   return (
     <div className="relative h-dvh overflow-hidden bg-bg text-fg">
-      <PresenceStage pose={pose} emotion={emotion} talking={talking} amplitude={amp} className="absolute inset-0" />
+      <PresenceStage
+        pose={pose}
+        emotion={emotion}
+        talking={talking}
+        amplitude={amp}
+        className="absolute inset-0"
+        desk={desk}
+        onDeskFail={onDeskFail}
+      />
 
       {/* Barge-in tap target while on call + speaking */}
       {callActive && (talking || sending) ? (
