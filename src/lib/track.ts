@@ -84,6 +84,7 @@ const TIRED_RE = /\b(?:tired|sleepy|exhausted|wiped|drained)\b/i;
 const DOING_RE = /\bwhat(?:'re| are|'?s| is)? (?:you |ya |u )?(?:doing|up to)\b/i;
 
 const REACTION_BANKS: { test: (text: string) => boolean; lines: readonly string[] }[] = [
+  { test: (text) => isBareGreeting(text), lines: ["There you are :3", "You caught me~"] },
   { test: (text) => COFFEE_RE.test(text), lines: ["Save me a sip :3", "Pour it. I'm watching~"] },
   { test: (text) => TIRED_RE.test(text), lines: ["Then sit. I'm not making you move~", "Low battery. Stay anyway :3"] },
   { test: (text) => DOING_RE.test(text), lines: ["Standing here. You called~", "Nothing you get to grade :3"] },
@@ -192,8 +193,8 @@ export function filterEchoedLine(line: string, userText: string, opts?: { exempt
 /**
  * Local-brain line for generic chat (no named pose).
  * Corrections / permission-asks use table rows. Other lines react.
- * They never get their own words back. Bare greetings return null
- * so the idle pose bank can still fire.
+ * They never get their own words back. Greetings get a short reaction,
+ * not the pose-bank caption.
  */
 export function localTrackAct(userText: string): TrackedAct | null {
   const cleaned = cleanText(userText);
@@ -204,8 +205,6 @@ export function localTrackAct(userText: string): TrackedAct | null {
     const row = pickLocalBrainLine(key);
     return { emotion: row.emotion, line: row.line };
   }
-
-  if (isBareGreeting(cleaned)) return null;
 
   return {
     emotion: DEFAULT_EMOTION,
