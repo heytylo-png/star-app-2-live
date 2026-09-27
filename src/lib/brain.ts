@@ -2,12 +2,14 @@ import { actForChartTurn, detectChartIntent, type ChartTurn } from "./chart.ts";
 import { actForClockTurn, filterClockSpokenLine, type ClockTurn } from "./clock.ts";
 import { actForLifeTurn, parseTrackTitle, type LifeTurn } from "./life.ts";
 import { localBrainKeyFor, parseLocalBrain, pickLocalBrainLine, usedDefaultBank } from "./local-brain.ts";
+import { poseForCallReply } from "./call.ts";
 import {
   DEFAULT_EMOTION,
   namedPoseFromText,
   resolveSpokenPose,
   type EmotionId,
   type PoseId,
+  type ResolveSpokenPoseOpts,
 } from "./rai.ts";
 import { filterEchoedLine, isBareGreeting, localTrackAct } from "./track.ts";
 
@@ -19,6 +21,8 @@ export type BrainAct = {
   pose?: PoseId | null;
   line: string;
   mem?: string[];
+  /** Set only by the local brain. Grok replies do not carry this. */
+  source?: "local";
 };
 
 const NAME_STOP = new Set(
@@ -166,7 +170,7 @@ export function composeAct(
     if (clockTurn?.kind !== "ask_time" && poseCommand == null) {
       line = filterEchoedLine(line, lastUser);
     }
-    return line === act.line ? act : { ...act, line };
+    return { ...act, line, source: "local" };
   };
   const lifeTitle = parseTrackTitle(lastUser);
   const named = lifeTitle ? null : namedPoseFromText(lastUser);
@@ -253,11 +257,34 @@ export function composeAct(
   return finish(tintSpokenAct(act, { ...tintCtx, namedPose: keyed }));
 }
 
+/** True once a local-brain act has announced itself. Grok JSON never sets this. */
+export function isLocalBrainReply(raw: string): boolean {
+  return /"source"\s*:\s*"local"/.test(raw);
+}
+
+/**
+ * Kiss hold is local-brain only. A Grok reply that mentions kiss still uses
+ * Grok's pose and emotion, including when the word is only part of the sentence.
+ */
+export function shouldHoldLocalKiss(raw: string, named: PoseId | false | null): boolean {
+  return named === false && isLocalBrainReply(raw);
+}
+
+/** Final sheet for a landed reply. Local kiss keeps the current body. Grok uses the resolver. */
+export function poseForLandedReply(
+  opts: ResolveSpokenPoseOpts & { raw: string },
+): { pose: PoseId; emotion: EmotionId } {
+  if (shouldHoldLocalKiss(opts.raw, opts.namedPose ?? null)) {
+    return { pose: opts.currentPose ?? "idle", emotion: DEFAULT_EMOTION };
+  }
+  return { emotion: opts.emotion, pose: poseForCallReply(opts) };
+}
+
 export function actToJson(act: BrainAct): string {
-  const body: Record<string, unknown> = {
-    emotion: act.emotion,
-    line: act.line,
-  };
+  const body: Record<string, unknown> = {};
+  if (act.source === "local") body.source = "local";
+  body.emotion = act.emotion;
+  body.line = act.line;
   if (act.pose) body.pose = act.pose;
   if (act.mem?.length) body.mem = act.mem;
   return JSON.stringify(body);

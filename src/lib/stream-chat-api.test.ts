@@ -3,8 +3,9 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
+import { isLocalBrainReply, poseForLandedReply } from "./brain.ts";
 import { parseLocalBrain, resetLocalBrainLastLine } from "./local-brain.ts";
-import { isValidActJson } from "./rai.ts";
+import { isValidActJson, namedPoseFromText, parseAct, type PoseId } from "./rai.ts";
 import { GROK_KEY_STORAGE } from "./settings-keys.ts";
 import { chatApiEnabled, streamChat, type StreamDeltaMeta } from "./stream-chat.ts";
 import { localReactionLine } from "./track.ts";
@@ -164,6 +165,82 @@ describe("streamChat local-brain fallback", { concurrency: false }, () => {
     } finally {
       globalThis.fetch = previous;
       restore();
+      resetLocalBrainLastLine();
+    }
+  });
+
+  it("lets a successful Grok pose win on kiss, and holds only a local kiss", async () => {
+    const previous = globalThis.fetch;
+    const restore = installStorage({ [GROK_KEY_STORAGE]: "brain-test-key" });
+    const grok = async (user: string, act: { emotion: string; pose: PoseId; line: string }, current: PoseId) => {
+      const payload = JSON.stringify({ choices: [{ delta: { content: JSON.stringify(act) } }] });
+      globalThis.fetch = (async () =>
+        new Response(`data: ${payload}\n\ndata: [DONE]\n`, { status: 200 })) as typeof fetch;
+      const reply = await streamChat(
+        { ...input, messages: [{ role: "user", content: user }], currentPose: current },
+        () => {},
+      );
+      assert.equal(isLocalBrainReply(reply), false);
+      const parsed = parseAct(reply);
+      return poseForLandedReply({
+        raw: reply,
+        namedPose: namedPoseFromText(user),
+        modelPose: parsed.pose,
+        emotion: parsed.emotion,
+        spoken: true,
+        currentPose: current,
+        seed: parsed.line,
+      });
+    };
+    try {
+      const hearts = await grok(
+        "blow me a kiss",
+        { emotion: "hype", pose: "hearts", line: "Catch." },
+        "idle",
+      );
+      assert.equal(hearts.pose, "hearts");
+      assert.equal(hearts.emotion, "hype");
+
+      const smug = await grok("kiss", { emotion: "smug", pose: "smug", line: "There." }, "idle");
+      assert.equal(smug.pose, "smug");
+      assert.equal(smug.emotion, "smug");
+
+      const cat = await grok(
+        "my cat kisses me every morning",
+        { emotion: "bratty", pose: "talk", line: "Your cat." },
+        "idle",
+      );
+      assert.equal(cat.pose, "talk");
+      assert.equal(cat.emotion, "bratty");
+    } finally {
+      globalThis.fetch = previous;
+      restore();
+    }
+
+    resetLocalBrainLastLine();
+    const localRestore = installStorage();
+    try {
+      const reply = await streamChat(
+        { ...input, messages: [{ role: "user", content: "kiss" }], currentPose: "idle" },
+        () => {},
+      );
+      assert.equal(isLocalBrainReply(reply), true);
+      const parsed = parseAct(reply);
+      const idle = (parseLocalBrain().get("idle") ?? []).map((row) => row.line);
+      assert.ok(idle.includes(parsed.line), parsed.line);
+      const held = poseForLandedReply({
+        raw: reply,
+        namedPose: namedPoseFromText("kiss"),
+        modelPose: parsed.pose,
+        emotion: parsed.emotion,
+        spoken: true,
+        currentPose: "idle",
+        seed: parsed.line,
+      });
+      assert.equal(held.pose, "idle");
+      assert.equal(held.emotion, "bratty");
+    } finally {
+      localRestore();
       resetLocalBrainLastLine();
     }
   });
