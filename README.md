@@ -203,12 +203,9 @@ Tokens (`access_token` / `refresh_token`) stay in `localStorage` (`star-rai-spot
 5. Life also shows **her** daily mood (read-only), suggestions (optional **Play suggestion** via Spotify search/play), and her favorite lists. Suggesting is not a Chat comment.
 6. Not connected / free-tier / SDK fail → fail soft. Chat still works.
 
-There is **no** server API on Pages (unless you deploy the optional Worker). Client also probes:
+There is **no** server API on Pages (unless you deploy the optional Worker). The static build does not POST `/api/chat`. Rebuild with `VITE_CHAT_API=1` only when that backend exists.
 
-- `/star-app-2-live/api/chat`
-- `/star-app-2-live/api/tts`
-
-Future env: `VITE_API_BASE` — leave unset for pure Pages. `VITE_GROK_PROXY_URL` — optional CORS proxy base URL. `VITE_SPOTIFY_CLIENT_ID` — optional Spotify app Client ID (PKCE; no secret).
+Future env: `VITE_API_BASE` — leave unset for pure Pages. `VITE_GROK_PROXY_URL` — optional CORS proxy base URL. `VITE_SPOTIFY_CLIENT_ID` — optional Spotify app Client ID (PKCE; no secret). `VITE_CHAT_API` — set to `1` to enable the optional `/api/chat` client.
 
 ## Persist keys (stable)
 
