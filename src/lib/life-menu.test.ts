@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import { composeAct } from "./brain.ts";
-import { actForLifeTurn, resolveLifeTurn } from "./life.ts";
+import { actForLifeTurn, resolveLifeTurn, showLifeConnectMusic } from "./life.ts";
 import { reduceLifeMenu, type LifeMenuState } from "./life-menu.ts";
 import { stageSourceAfterLeave, stageSourceFor } from "./stage-source.ts";
 
@@ -83,12 +83,32 @@ describe("Life menu does not cover the desk", () => {
     assert.match(panel, /role="region"/);
     assert.match(panel, /aria-labelledby="star-tab-life"/);
     assert.match(panel, /Connect music/);
+    assert.match(panel, /showLifeConnectMusic\(/);
     assert.match(tabs, /aria-expanded=/);
     assert.match(tabs, /aria-controls=\{life \? "star-pane-life star-life-menu"/);
     assert.match(app, /reduceLifeMenu\(/);
     assert.match(app, /id="star-pane-life"/);
     assert.doesNotMatch(app, /max-h-\[min\(36rem,74%\)\]/);
     assert.doesNotMatch(app, /<LifePanel/);
+  });
+});
+
+describe("Connect music row", () => {
+  it("shows only when music is disconnected and nothing is playing", () => {
+    assert.equal(showLifeConnectMusic({ connected: false, sessionOn: false }), true);
+    assert.equal(
+      showLifeConnectMusic({ connected: false, sessionOn: true, nowPlaying: "   " }),
+      true,
+    );
+    assert.equal(
+      showLifeConnectMusic({ connected: false, sessionOn: true, nowPlaying: "Super Shy" }),
+      false,
+    );
+    assert.equal(showLifeConnectMusic({ connected: true, sessionOn: false }), false);
+    assert.equal(
+      showLifeConnectMusic({ connected: true, sessionOn: true, nowPlaying: "Super Shy" }),
+      false,
+    );
   });
 });
 

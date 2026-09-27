@@ -5,7 +5,7 @@ import { localDateKey } from "@/lib/chart";
 import { clockTimeZone } from "@/lib/clock";
 import { useHerMusicStore } from "@/lib/her-music-store";
 import { lockHerDailyMood, requestLifeSuggestions, shouldRefreshSuggestions } from "@/lib/her-suggest";
-import type { LifeSlots } from "@/lib/life";
+import { showLifeConnectMusic, type LifeSlots } from "@/lib/life";
 import { useMemoryStore } from "@/lib/memory-store";
 import type { SpotifyPlaybackApi } from "@/lib/use-spotify-playback";
 
@@ -95,7 +95,11 @@ export function LifeMenu({ open, life, onStop, onPlayTitle, onClose, anchorRef, 
         Today · <span className="font-medium text-fg">{moodToday && mood ? mood : "later"}</span>
       </p>
 
-      {spotify.connected ? null : (
+      {showLifeConnectMusic({
+        connected: spotify.connected,
+        sessionOn,
+        nowPlaying: life?.now_playing,
+      }) ? (
         <Button
           type="button"
           variant="ghost"
@@ -106,7 +110,7 @@ export function LifeMenu({ open, life, onStop, onPlayTitle, onClose, anchorRef, 
         >
           {spotify.connecting ? "Connecting…" : "Connect music"}
         </Button>
-      )}
+      ) : null}
 
       <div className="mt-2 border-t border-border pt-1.5">
         <p className="px-0.5 text-[0.65rem] tracking-wide text-subtle uppercase">Her suggestion</p>

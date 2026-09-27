@@ -46,6 +46,19 @@ export function lifeNowPlayingChrome(opts: {
     showConnect: false,
   };
 }
+
+/**
+ * One small Connect row in the Life menu.
+ * Hidden once Spotify is connected, and never beside a now-playing title.
+ */
+export function showLifeConnectMusic(opts: {
+  connected: boolean;
+  sessionOn: boolean;
+  nowPlaying?: string | null;
+}): boolean {
+  if (opts.connected) return false;
+  return !lifeNowPlayingChrome({ sessionOn: opts.sessionOn, title: opts.nowPlaying }).showStop;
+}
 export type LifeTintPose = (typeof LIFE_TINT_POSES)[number];
 
 export const PLAYLIST_MIN = 4;
