@@ -521,10 +521,18 @@ export function composeDiaryEntry(opts: {
 
 function localDailyLine(userSun?: string, lastTopic?: string): string {
   if (userSun?.trim()) {
-    const topic = lastTopic?.trim() ? clip(lastTopic, 40) : "what they said";
+    if (!lastTopic?.trim()) return `${userSun} across Libra air — one glance, not a reading.`;
+    const topic = clip(lastTopic, 40);
     return `${userSun} across Libra air — one glance, then ${topic}.`;
   }
   return "Day's got a tilt. Not a reading.";
+}
+
+/** A chart or diary ask is not a topic to write back into the page. */
+function topicBesideAsk(lastTopic?: string): string | undefined {
+  const topic = lastTopic?.replace(/\s+/g, " ").trim();
+  if (!topic || detectChartIntent(topic) !== "none") return undefined;
+  return topic;
 }
 
 export type ChartAct = {
@@ -575,7 +583,7 @@ export function resolveChartTurn(input: ResolveChartTurnInput): ChartTurn {
   if (rawIntent === "diary") {
     const diaryText = input.existingDiary?.trim() || composeDiaryEntry({
       todayDate: today,
-      lastTopic: input.lastTopic,
+      lastTopic: topicBesideAsk(input.lastTopic),
       userSun: input.userSun,
       mood: input.mood,
     });
@@ -644,7 +652,7 @@ export function resolveChartTurn(input: ResolveChartTurnInput): ChartTurn {
     dateKey: today,
     tintPose,
     userSun: input.userSun,
-    lastTopic: input.lastTopic,
+    lastTopic: fireBecauseAsked ? undefined : input.lastTopic,
     factsBlock: formatChartFactsBlock({
       todayDate: today,
       userSun: input.userSun,

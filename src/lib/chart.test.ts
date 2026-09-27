@@ -413,10 +413,12 @@ describe("chart ask path", () => {
       timeZone: TZ,
     });
     assert.equal(turn.kind, "daily");
+    assert.equal(turn.lastTopic, undefined);
     const act = actForChartTurn(turn)!;
     const beats = act.line.split(/(?<=[.!?])\s+/).filter(Boolean);
     assert.equal(beats.length, 1);
-    assert.ok(act.line.split(/\s+/).length <= 18);
+    assert.equal(act.line, "Aries across Libra air — one glance, not a reading.");
+    assert.doesNotMatch(act.line, /what do you make of|night talking/i);
     assert.equal(isChartBannedLine(act.line), false);
 
     const withPage = chartAskHandoff({ text: "Quiet page for today. She stayed." });
