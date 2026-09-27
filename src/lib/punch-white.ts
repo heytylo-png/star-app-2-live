@@ -4,6 +4,8 @@
  * connected backdrop from the edges so the shirt's shaded white stays.
  */
 
+import { spriteNeedsWhitePunch } from "./rai.ts";
+
 export const STUDIO_LUMA_MIN = 238;
 export const STUDIO_CHROMA_MAX = 18;
 const FRINGE_LUMA_MIN = 224;
@@ -106,11 +108,34 @@ async function punchSrc(src: string): Promise<string> {
   return URL.createObjectURL(blob);
 }
 
-/** Decode a sprite and return an object URL with the studio card punched out. */
+/**
+ * Pre-cut RGBA sheet (see PRE_CUT_ALPHA_FILES): decode it and use the file
+ * as-is. If a stale cache still serves the old RGB-on-white file (opaque
+ * top-left corner), fall back to the punch so no white card shows.
+ */
+async function preCutSrc(src: string): Promise<string> {
+  const img = new Image();
+  img.decoding = "async";
+  img.src = src;
+  await img.decode();
+  const canvas = document.createElement("canvas");
+  canvas.width = 1;
+  canvas.height = 1;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return src;
+  ctx.drawImage(img, 0, 0, 1, 1, 0, 0, 1, 1);
+  const cornerAlpha = ctx.getImageData(0, 0, 1, 1).data[3] ?? 255;
+  return cornerAlpha < 255 ? src : punchSrc(src);
+}
+
+/**
+ * Decode a sprite and return an object URL with the studio card punched out.
+ * Pre-cut RGBA sheets skip the punch and resolve to their own URL.
+ */
 export function punchedSpriteUrl(src: string): Promise<string> {
   const hit = punchedCache.get(src);
   if (hit) return hit;
-  const job = punchSrc(src).catch(() => src);
+  const job = (spriteNeedsWhitePunch(src) ? punchSrc(src) : preCutSrc(src)).catch(() => src);
   punchedCache.set(src, job);
   return job;
 }

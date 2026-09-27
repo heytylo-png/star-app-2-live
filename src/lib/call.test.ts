@@ -467,7 +467,7 @@ describe("pose commands + tint still apply on a voice turn", () => {
       angle: 0,
     })[0]!.src;
     assert.match(src, /talk_official/);
-    assert.doesNotMatch(src, /\/idle\.png$/);
+    assert.doesNotMatch(src, /\/idle\.png(?:\?|$)/);
 
     const music = {
       namedPose: null,
@@ -490,7 +490,7 @@ describe("pose commands + tint still apply on a voice turn", () => {
         amplitude: 0,
         angle: 0,
       })[0]!.src,
-      /\/idle\.png$/,
+      /\/idle\.png(?:\?|$)/,
     );
     assert.equal(namedPoseFromText("kiss"), false);
     assert.equal(normalizePose("kiss"), null);
@@ -512,7 +512,7 @@ describe("pose commands + tint still apply on a voice turn", () => {
       angle: 0,
     })[0]!.src;
     assert.match(src, /talk_official/);
-    assert.doesNotMatch(src, /\/idle\.png$/);
+    assert.doesNotMatch(src, /\/idle\.png(?:\?|$)/);
     // Mid-line: still speaking, stay off idle.
     assert.equal(
       poseResetDelayMs({
@@ -542,7 +542,7 @@ describe("pose commands + tint still apply on a voice turn", () => {
         amplitude: 0,
         angle: 0,
       })[0]!.src,
-      /idle_blink_01_open\.png$/,
+      /idle_blink_01_open\.png(?:\?|$)/,
     );
   });
 });

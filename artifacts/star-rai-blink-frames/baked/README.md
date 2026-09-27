@@ -47,3 +47,10 @@ Nothing outside the eye box is rewritten.
 Runtime hard-swaps a single `<img>` / texture (no stack, no dual PNG). Blink is on, approved by TyLo on 2026-09-26 (807-referenced painted lids, pass 4b).
 
 Rebuild sheets: `python3 scripts/paint-blink-lids.py` (pass 4 painter; needs numpy, pillow, scipy). `scripts/rebake-eyes-only-blink.py` is the retired 807-paste method — do not use it.
+
+## RGBA (2026-09-27)
+
+These four frames (and `public/rai/idle.png`) are now RGBA, cut by `scripts/cut-alpha.py` with one shared
+alpha mask; see `artifacts/star-rai-alpha/README.md`. The RGB sheets from the blink pass are kept in
+`artifacts/star-rai-alpha/rgb-src/`. RGB outside the eye box is still identical across all frames,
+and 01 is still a byte copy of `idle.png`.

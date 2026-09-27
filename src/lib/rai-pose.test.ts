@@ -439,7 +439,7 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(layers[0]!.id, IDLE_REST_LAYER_ID);
     assert.equal(layers[0]!.src, idleRestSrc());
     assert.equal(layers[0]!.src, SPRITES.idleBlinkOpen);
-    assert.match(layers[0]!.src, /idle_blink_01_open\.png$/);
+    assert.match(layers[0]!.src, /idle_blink_01_open\.png(?:\?|$)/);
   });
 
   it("hard-cuts one blink image through 02-03-04-03-02 then holds 01", () => {
@@ -457,7 +457,7 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(closed[0]!.id, IDLE_REST_LAYER_ID);
     assert.equal(closed[0]!.src, idleBlinkFrameSrc(4));
     assert.equal(closed[0]!.src, SPRITES.idleBlinkClosed);
-    assert.match(closed[0]!.src, /idle_blink_04_closed\.png$/);
+    assert.match(closed[0]!.src, /idle_blink_04_closed\.png(?:\?|$)/);
     assert.doesNotMatch(closed.map((l) => l.src).join(" "), /face_eyes|mouth_speak|mouth_oh/);
     assert.equal(idleBlinkFrameSrc(0), SPRITES.idleBlinkOpen);
     assert.equal(idleBlinkFrameSrc(1), SPRITES.idleBlinkOpen);
@@ -593,7 +593,8 @@ describe("layersFor talking vs pose hold", () => {
       const frame = decodePng(runtime);
       assert.equal(frame.width, IDLE_FRAME_SIZE.width, runtimeRel);
       assert.equal(frame.height, IDLE_FRAME_SIZE.height, runtimeRel);
-      assert.equal(frame.colorType, 2, runtimeRel);
+      // True RGBA since the offline alpha cut (scripts/cut-alpha.py), one shared mask.
+      assert.equal(frame.colorType, 6, runtimeRel);
       if (bakedName.endsWith("01_open.png")) openRgba = frame.rgba;
     }
     if (!openRgba) throw new Error("missing 01_open pixels");
@@ -634,7 +635,7 @@ describe("layersFor talking vs pose hold", () => {
     }
     assert.equal(IDLE_BLINK_ENABLED, true);
     assert.equal(idleRestSrc(), SPRITES.idleBlinkOpen);
-    assert.match(idleRestSrc(), /idle_blink_01_open\.png$/);
+    assert.match(idleRestSrc(), /idle_blink_01_open\.png(?:\?|$)/);
 
     const gif = readFileSync(join(bakedRoot, "proof_standing_full.gif"));
     assert.equal(gif.subarray(0, 6).toString(), "GIF89a");
@@ -960,7 +961,7 @@ describe("pose tint", () => {
       angle: 0,
     })[0]!.src;
     assert.match(src, /talk_official/);
-    assert.doesNotMatch(src, /\/idle\.png$/);
+    assert.doesNotMatch(src, /\/idle\.png(?:\?|$)/);
     assert.doesNotMatch(src, /idle_blink/);
 
     // Still saying the line — do not snap to frown idle.
@@ -994,7 +995,7 @@ describe("pose tint", () => {
     })[0]!.src;
     assert.equal(restSrc, idleRestSrc());
     assert.equal(restSrc, SPRITES.idleBlinkOpen);
-    assert.match(restSrc, /idle_blink_01_open\.png$/);
+    assert.match(restSrc, /idle_blink_01_open\.png(?:\?|$)/);
     assert.equal(
       canIdleBlink({ pose: "idle", emotion: DEFAULT_EMOTION, talking: false }),
       true,
@@ -1022,7 +1023,7 @@ describe("pose tint", () => {
         amplitude: 0,
         angle: 0,
       })[0]!.src;
-      assert.doesNotMatch(src, /\/idle\.png$/);
+      assert.doesNotMatch(src, /\/idle\.png(?:\?|$)/);
       assert.doesNotMatch(src, /tired_official/);
     }
 
@@ -1102,7 +1103,7 @@ describe("pose tint", () => {
       amplitude: 0,
       angle: 0,
     })[0]!.src;
-    assert.doesNotMatch(src, /\/idle\.png$/);
+    assert.doesNotMatch(src, /\/idle\.png(?:\?|$)/);
 
     // Model idle must not win on this same turn — CoS saw frown idle under the reply.
     const grokIdle = parseAct('{"line":"ETA. Yeah, that one~","emotion":"tired","pose":"idle"}');
@@ -1202,7 +1203,7 @@ describe("spoken pose re-resolves each line", () => {
         angle: 0,
       })[0]!.src;
       assert.doesNotMatch(src, /think_official/);
-      assert.doesNotMatch(src, /\/idle\.png$/);
+      assert.doesNotMatch(src, /\/idle\.png(?:\?|$)/);
       assert.doesNotMatch(src, /idle_blink/);
       current = pose;
     }
@@ -1259,7 +1260,7 @@ describe("spoken pose re-resolves each line", () => {
       angle: 0,
     })[0]!.src;
     assert.match(talkingSrc, /talk_official/);
-    assert.doesNotMatch(talkingSrc, /\/idle\.png$/);
+    assert.doesNotMatch(talkingSrc, /\/idle\.png(?:\?|$)/);
     assert.doesNotMatch(talkingSrc, /think_official/);
 
     const delay = spokenBubbleResetDelay({
@@ -1281,7 +1282,7 @@ describe("spoken pose re-resolves each line", () => {
       angle: 0,
     })[0]!.src;
     assert.equal(restSrc, idleRestSrc());
-    assert.match(restSrc, /idle_blink_01_open\.png$/);
+    assert.match(restSrc, /idle_blink_01_open\.png(?:\?|$)/);
     assert.doesNotMatch(restSrc, /think_official/);
     assert.equal(
       canIdleBlink({ pose: settledRestPose(), emotion: DEFAULT_EMOTION, talking: false }),
