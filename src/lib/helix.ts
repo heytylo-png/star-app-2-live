@@ -1,4 +1,4 @@
-import { RAI_SYSTEM } from "@/lib/rai";
+import { RAI_SYSTEM } from "./rai.ts";
 
 /** Local presence brain id — kept stable for zustand chat persist. */
 export const DEFAULT_MODEL = "star-rai-local";
@@ -59,6 +59,11 @@ export const PERSONALITIES: {
     system: RAI_SYSTEM,
   },
 ];
+
+/** Spoken name from the character config. Call labels use this — never a mishear. */
+export function characterDisplayName(id: PersonalityId = "default"): string {
+  return personalityById(id).name.trim();
+}
 
 export const STARTERS = [
   {
