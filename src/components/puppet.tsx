@@ -113,6 +113,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const fadeTimers = useRef<Map<string, number>>(new Map());
   const fadingIn = useRef<Set<string>>(new Set());
   const fadeRaf = useRef(0);
+  /** Outgoing ids whose opacity-0 is waiting on the shared fade-in timer. */
+  const pendingOutIds = useRef<string[]>([]);
   const [blinkMode, setBlinkMode] = useState<BlinkFadeMode>("off");
   const blinkRef = useRef<IdleBlinkFrame>(0);
   const punchOneRef = useRef<(src: string) => Promise<void>>(async () => {});
@@ -611,31 +613,83 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       }
     }
 
+    const incomingDelay = 48;
+    // Start the outgoing fade in the same tick as the incoming one, so a long
+    // main-thread task cannot let the compositor finish the fade-out first.
+    const deferOut = incoming.length > 0;
+    const outgoing: string[] = [];
+    const queueOut = (id: string) => {
+      if (!outgoing.includes(id)) outgoing.push(id);
+    };
+
     for (const [id, layer] of merged) {
       if (!next.has(id) && layer.opacity > 0) {
         fadingIn.current.delete(id);
-        merged.set(id, { ...layer, opacity: 0 });
+        if (deferOut) queueOut(id);
+        else merged.set(id, { ...layer, opacity: 0 });
         const existingTimer = fadeTimers.current.get(id);
         if (existingTimer) window.clearTimeout(existingTimer);
         const fadeMs = fadeMsFor(layer, talking, blinkModeLive);
-        const removeAfter = fadeMs + 40;
+        const removeAfter = fadeMs + 40 + (deferOut ? incomingDelay : 0);
         const timer = window.setTimeout(() => {
           prevIds.current.delete(id);
           fadeTimers.current.delete(id);
+          pendingOutIds.current = pendingOutIds.current.filter((pending) => pending !== id);
           setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
         }, removeAfter);
         fadeTimers.current.set(id, timer);
       }
     }
 
+    // A newer crossfade clears the 48ms timer. Ids still waiting must fade
+    // with this one, or drop if this frame brought them back.
+    for (const id of pendingOutIds.current) {
+      if (next.has(id) || outgoing.includes(id)) continue;
+      const layer = merged.get(id);
+      if (!layer || layer.opacity <= 0) continue;
+      if (deferOut) {
+        queueOut(id);
+        if (!fadeTimers.current.has(id)) {
+          const fadeMs = fadeMsFor(layer, talking, blinkModeLive);
+          const timer = window.setTimeout(() => {
+            prevIds.current.delete(id);
+            fadeTimers.current.delete(id);
+            pendingOutIds.current = pendingOutIds.current.filter((pending) => pending !== id);
+            setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
+          }, fadeMs + 40 + incomingDelay);
+          fadeTimers.current.set(id, timer);
+        }
+      } else {
+        merged.set(id, { ...layer, opacity: 0 });
+        if (!fadeTimers.current.has(id)) {
+          const fadeMs = fadeMsFor(layer, talking, blinkModeLive);
+          const timer = window.setTimeout(() => {
+            prevIds.current.delete(id);
+            fadeTimers.current.delete(id);
+            setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
+          }, fadeMs + 40);
+          fadeTimers.current.set(id, timer);
+        }
+      }
+    }
+    pendingOutIds.current = deferOut ? outgoing.slice() : [];
+
     prevIds.current = merged;
     setDisplay(Array.from(merged.values()).sort((a, b) => a.z - b.z));
 
     if (incoming.length) {
       if (fadeRaf.current) window.clearTimeout(fadeRaf.current);
+      const batch = outgoing.slice();
       // Wait one paint at opacity 0 so CSS can interpolate 0 → target (not a hard cut in).
-      const incomingDelay = 48;
       fadeRaf.current = window.setTimeout(() => {
+        fadeRaf.current = 0;
+        for (const id of batch) {
+          if (!pendingOutIds.current.includes(id)) continue;
+          const layer = prevIds.current.get(id);
+          if (layer) prevIds.current.set(id, { ...layer, opacity: 0 });
+        }
+        const dropped = new Set(batch);
+        pendingOutIds.current = pendingOutIds.current.filter((id) => !dropped.has(id));
         for (const [id, layer] of incoming) {
           if (!prevIds.current.has(id)) continue;
           prevIds.current.set(id, layer);
