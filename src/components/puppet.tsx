@@ -1,14 +1,18 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
-  allSpriteUrls,
+  blinkPassInFlight,
   canIdleBlink,
+  deferredSpriteUrls,
   IDLE_BLINK_ENABLED,
   IDLE_REST_LAYER_ID,
   idleBlinkFrameUrls,
   idleRestSrc,
   isRetiredBlinkSrc,
   layersFor,
+  openRestFallback,
   POSE_CROSSFADE_MS,
+  priorityPoseSrc,
+  startupSpriteUrls,
   USE_EXPO_TALK_BUST,
   type EmotionId,
   type PoseId,
@@ -109,20 +113,60 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const fadeTimers = useRef<Map<string, number>>(new Map());
   const fadingIn = useRef<Set<string>>(new Set());
   const fadeRaf = useRef(0);
+  /** Outgoing ids whose opacity-0 is waiting on the shared fade-in timer. */
+  const pendingOutIds = useRef<string[]>([]);
   const [blinkMode, setBlinkMode] = useState<BlinkFadeMode>("off");
   const blinkRef = useRef<IdleBlinkFrame>(0);
+  const punchOneRef = useRef<(src: string) => Promise<void>>(async () => {});
 
   // Punch studio-white cards to alpha, then decode so pose swaps never flash a plate.
-  // Blink frames are decoded before they enter `sheets`, so a src swap is one image.
+  // Startup is idle.png then blink 01–04, one file at a time. Every other live
+  // pose sheet waits for requestIdleCallback (setTimeout fallback) so it is not
+  // one startup task. Blink frames are decoded before they enter `sheets`.
   useEffect(() => {
     let cancelled = false;
-    const blinkFrames = idleBlinkFrameUrls();
-    const blinkSet = new Set(blinkFrames);
-    const urls = allSpriteUrls();
-    const ordered = [...blinkFrames, ...urls.filter((src) => !blinkSet.has(src))];
-    for (const src of ordered) {
-      if (isRetiredBlinkSrc(src)) continue;
-      void punchedSpriteUrl(src).then(async (url) => {
+    let idleHandle = 0;
+    let timeoutHandle = 0;
+    const blinkSet = new Set(idleBlinkFrameUrls());
+    const restSrc = idleRestSrc();
+    const jobs = new Map<string, Promise<void>>();
+
+    const clearSchedule = () => {
+      if (idleHandle) {
+        window.cancelIdleCallback(idleHandle);
+        idleHandle = 0;
+      }
+      if (timeoutHandle) {
+        window.clearTimeout(timeoutHandle);
+        timeoutHandle = 0;
+      }
+    };
+
+    const store = (src: string, url: string, aliasRest: boolean) => {
+      if (cancelled) return;
+      setSheets((prev) => {
+        const next = { ...prev };
+        let changed = false;
+        if (next[src] !== url) {
+          next[src] = url;
+          changed = true;
+        }
+        // 01 open is a byte copy of idle.png. Paint that punched URL so the
+        // rest layer does not wait on a second identical punch.
+        if (aliasRest && next[restSrc] == null) {
+          next[restSrc] = url;
+          changed = true;
+        }
+        return changed ? next : prev;
+      });
+    };
+
+    const punchOne = (src: string, aliasRest: boolean) => {
+      const existing = jobs.get(src);
+      if (existing) return existing;
+      const job = (async () => {
+        if (isRetiredBlinkSrc(src)) return;
+        const url = await punchedSpriteUrl(src);
         if (blinkSet.has(src)) {
           const img = new Image();
           img.decoding = "async";
@@ -133,12 +177,73 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
             // Store the URL anyway. The blink timer stays off until every frame lands.
           }
         }
-        if (cancelled) return;
-        setSheets((prev) => (prev[src] === url ? prev : { ...prev, [src]: url }));
+        store(src, url, aliasRest);
+      })();
+      jobs.set(src, job);
+      return job;
+    };
+    punchOneRef.current = (src) => punchOne(src, false);
+
+    const afterPaint = () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
       });
-    }
+
+    const scheduleIdle = (run: () => void) => {
+      if (typeof window.requestIdleCallback === "function") {
+        idleHandle = window.requestIdleCallback(
+          () => {
+            idleHandle = 0;
+            run();
+          },
+          { timeout: 1500 },
+        );
+        return;
+      }
+      timeoutHandle = window.setTimeout(() => {
+        timeoutHandle = 0;
+        run();
+      }, 1);
+    };
+
+    const run = async () => {
+      const startup = startupSpriteUrls();
+      for (let i = 0; i < startup.length; i++) {
+        if (cancelled) return;
+        const src = startup[i]!;
+        await punchOne(src, i === 0 && src !== restSrc);
+        if (cancelled) return;
+        if (i === 0) await afterPaint();
+      }
+      const deferred = deferredSpriteUrls();
+      let index = 0;
+      const step = () => {
+        if (cancelled || index >= deferred.length) return;
+        // A lid cut is 60ms. A deferred punch on that slice stretches the blink.
+        if (blinkPassInFlight(blinkRef.current)) {
+          timeoutHandle = window.setTimeout(() => {
+            timeoutHandle = 0;
+            step();
+          }, 16);
+          return;
+        }
+        while (index < deferred.length && jobs.has(deferred[index]!)) index += 1;
+        if (index >= deferred.length) return;
+        const src = deferred[index]!;
+        index += 1;
+        void punchOne(src, false).then(() => {
+          if (cancelled) return;
+          scheduleIdle(step);
+        });
+      };
+      scheduleIdle(step);
+    };
+
+    void run();
     return () => {
       cancelled = true;
+      punchOneRef.current = async () => {};
+      clearSchedule();
     };
   }, []);
 
@@ -250,6 +355,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     return () => {
       cancelled = true;
       stop();
+      // Leaving rest (a pose, talk, or emotion) cancels the lid pass.
+      // The open-frame fallback paints that same commit; this drops the lid state.
       const midBlink = blinkRef.current > 0;
       blinkRef.current = 0;
       setBlink(0);
@@ -422,10 +529,35 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       }),
     [pose, emotion, talking, ampLive, blinkShown, reducedMotion],
   );
-  const plates = useMemo(
-    () => desired.filter((layer) => layer.role !== "eyes" && !isRetiredBlinkSrc(layer.src)),
-    [desired],
-  );
+  const shownPlates = useRef<SpriteLayer[]>([]);
+  const plates = useMemo(() => {
+    const next = desired.filter((layer) => layer.role !== "eyes" && !isRetiredBlinkSrc(layer.src));
+    const ready = next.length > 0 && next.every((layer) => sheets[layer.src] != null);
+    // Unready pose: keep the last punched plates (idle, or the frame already up).
+    const chosen = ready ? next : openRestFallback(shownPlates.current, idleRestSrc());
+    const prev = shownPlates.current;
+    const same =
+      prev.length === chosen.length &&
+      prev.every(
+        (layer, i) =>
+          layer.id === chosen[i]!.id &&
+          layer.src === chosen[i]!.src &&
+          layer.opacity === chosen[i]!.opacity &&
+          layer.role === chosen[i]!.role,
+      );
+    if (same) return prev;
+    shownPlates.current = chosen;
+    return chosen;
+  }, [desired, sheets]);
+
+  // A pose asked for before its sheet is punched jumps the idle queue.
+  // The punch cache makes a later queue pass a no-op. Plates show it only
+  // while it is still the requested src.
+  useEffect(() => {
+    const src = priorityPoseSrc(desired, sheets);
+    if (!src || isRetiredBlinkSrc(src)) return;
+    void punchOneRef.current(src);
+  }, [desired, sheets]);
 
   // Drop snap timing once the cancelled blink has cut to the new sheet.
   useEffect(() => {
@@ -481,31 +613,83 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       }
     }
 
+    const incomingDelay = 48;
+    // Start the outgoing fade in the same tick as the incoming one, so a long
+    // main-thread task cannot let the compositor finish the fade-out first.
+    const deferOut = incoming.length > 0;
+    const outgoing: string[] = [];
+    const queueOut = (id: string) => {
+      if (!outgoing.includes(id)) outgoing.push(id);
+    };
+
     for (const [id, layer] of merged) {
       if (!next.has(id) && layer.opacity > 0) {
         fadingIn.current.delete(id);
-        merged.set(id, { ...layer, opacity: 0 });
+        if (deferOut) queueOut(id);
+        else merged.set(id, { ...layer, opacity: 0 });
         const existingTimer = fadeTimers.current.get(id);
         if (existingTimer) window.clearTimeout(existingTimer);
         const fadeMs = fadeMsFor(layer, talking, blinkModeLive);
-        const removeAfter = fadeMs + 40;
+        const removeAfter = fadeMs + 40 + (deferOut ? incomingDelay : 0);
         const timer = window.setTimeout(() => {
           prevIds.current.delete(id);
           fadeTimers.current.delete(id);
+          pendingOutIds.current = pendingOutIds.current.filter((pending) => pending !== id);
           setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
         }, removeAfter);
         fadeTimers.current.set(id, timer);
       }
     }
 
+    // A newer crossfade clears the 48ms timer. Ids still waiting must fade
+    // with this one, or drop if this frame brought them back.
+    for (const id of pendingOutIds.current) {
+      if (next.has(id) || outgoing.includes(id)) continue;
+      const layer = merged.get(id);
+      if (!layer || layer.opacity <= 0) continue;
+      if (deferOut) {
+        queueOut(id);
+        if (!fadeTimers.current.has(id)) {
+          const fadeMs = fadeMsFor(layer, talking, blinkModeLive);
+          const timer = window.setTimeout(() => {
+            prevIds.current.delete(id);
+            fadeTimers.current.delete(id);
+            pendingOutIds.current = pendingOutIds.current.filter((pending) => pending !== id);
+            setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
+          }, fadeMs + 40 + incomingDelay);
+          fadeTimers.current.set(id, timer);
+        }
+      } else {
+        merged.set(id, { ...layer, opacity: 0 });
+        if (!fadeTimers.current.has(id)) {
+          const fadeMs = fadeMsFor(layer, talking, blinkModeLive);
+          const timer = window.setTimeout(() => {
+            prevIds.current.delete(id);
+            fadeTimers.current.delete(id);
+            setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
+          }, fadeMs + 40);
+          fadeTimers.current.set(id, timer);
+        }
+      }
+    }
+    pendingOutIds.current = deferOut ? outgoing.slice() : [];
+
     prevIds.current = merged;
     setDisplay(Array.from(merged.values()).sort((a, b) => a.z - b.z));
 
     if (incoming.length) {
       if (fadeRaf.current) window.clearTimeout(fadeRaf.current);
+      const batch = outgoing.slice();
       // Wait one paint at opacity 0 so CSS can interpolate 0 → target (not a hard cut in).
-      const incomingDelay = 48;
       fadeRaf.current = window.setTimeout(() => {
+        fadeRaf.current = 0;
+        for (const id of batch) {
+          if (!pendingOutIds.current.includes(id)) continue;
+          const layer = prevIds.current.get(id);
+          if (layer) prevIds.current.set(id, { ...layer, opacity: 0 });
+        }
+        const dropped = new Set(batch);
+        pendingOutIds.current = pendingOutIds.current.filter((id) => !dropped.has(id));
         for (const [id, layer] of incoming) {
           if (!prevIds.current.has(id)) continue;
           prevIds.current.set(id, layer);
@@ -532,8 +716,11 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   // the way in or out; once that handoff is done, paint only this sprite.
   const restPlate = plates.length === 1 && plates[0]?.id === IDLE_REST_LAYER_ID ? plates[0] : null;
   const poseHandoff = display.some((layer) => layer.id !== IDLE_REST_LAYER_ID && layer.opacity > 0.01);
-  const restOnly = Boolean(restPlate) && !poseHandoff;
-  const restOnlySrc = restPlate ? sheets[restPlate.src] : undefined;
+  const restOnly = Boolean(restPlate && sheets[restPlate.src]) && !poseHandoff;
+  // One list, stable keys. The rest <img> stays mounted when a pose fades in,
+  // so the stage does not drop the decoded idle frame and decode it again.
+  const layers: DisplayLayer[] =
+    restOnly && restPlate ? [{ ...restPlate, opacity: 1, z: 1 }] : display;
 
   return (
     <div
@@ -549,50 +736,36 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
     >
       <div data-rai-rig className="rai-rig">
-        {restOnly && restOnlySrc ? (
-          <img
-            key={IDLE_REST_LAYER_ID}
-            src={restOnlySrc}
-            alt=""
-            draggable={false}
-            decoding="sync"
-            className="rai-layer"
-            data-rai-role="body"
-            data-rai-sheet={blinkFrame}
-            style={{ opacity: 1, zIndex: 1, transition: "none" }}
-          />
-        ) : (
-          display.map((layer) => {
-            if (layer.role === "eyes" || isRetiredBlinkSrc(layer.src)) return null;
-            const src = sheets[layer.src];
-            if (!src) return null;
-            const fadeMs = fadeMsFor(layer, talking, blinkModeLive);
-            // A visible rest frame never opacity-blends. Src swaps are a cut.
-            // Fading this sheet out for a pose still uses the pose crossfade.
-            const restHardCut = layer.id === IDLE_REST_LAYER_ID && layer.opacity > 0;
-            const style = {
-              opacity: layer.opacity,
-              zIndex: layer.z,
-              transition:
-                restHardCut || isInstantLayer(layer, talking) || fadeMs === 0
-                  ? "none"
-                  : `opacity ${fadeMs}ms var(--ease-smooth-out)`,
-            };
-            return (
-              <img
-                key={layer.id}
-                src={src}
-                alt=""
-                draggable={false}
-                decoding="async"
-                className="rai-layer"
-                data-rai-role={layer.role}
-                data-rai-sheet={layer.id === IDLE_REST_LAYER_ID ? blinkFrame : undefined}
-                style={style}
-              />
-            );
-          })
-        )}
+        {layers.map((layer) => {
+          if (layer.role === "eyes" || isRetiredBlinkSrc(layer.src)) return null;
+          const src = sheets[layer.src];
+          if (!src) return null;
+          const fadeMs = fadeMsFor(layer, talking, blinkModeLive);
+          // A visible rest frame never opacity-blends. Src swaps are a cut.
+          // Fading this sheet out for a pose still uses the pose crossfade.
+          const restHardCut = layer.id === IDLE_REST_LAYER_ID && layer.opacity > 0;
+          const hardCut = restHardCut || isInstantLayer(layer, talking) || fadeMs === 0;
+          const style = hardCut
+            ? { opacity: layer.opacity, zIndex: layer.z, transition: "none" }
+            : {
+                opacity: layer.opacity,
+                zIndex: layer.z,
+                transition: `opacity ${fadeMs}ms var(--ease-smooth-out)`,
+              };
+          return (
+            <img
+              key={layer.id}
+              src={src}
+              alt=""
+              draggable={false}
+              decoding={layer.id === IDLE_REST_LAYER_ID ? "sync" : "async"}
+              className="rai-layer"
+              data-rai-role={layer.role}
+              data-rai-sheet={layer.id === IDLE_REST_LAYER_ID ? blinkFrame : undefined}
+              style={style}
+            />
+          );
+        })}
         {/* Ahoge / hair tip proxy — rotates over the crown */}
         <span data-rai-ahoge className="rai-ahoge" />
       </div>
