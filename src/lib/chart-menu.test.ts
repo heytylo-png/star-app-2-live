@@ -11,7 +11,7 @@ import {
   reduceChartMenu,
   type ChartMenuState,
 } from "./chart-menu.ts";
-import { stageSourceFor } from "./stage-source.ts";
+import { stagePlace, stageSourceFor } from "./stage-source.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const onChart = (open: boolean): ChartMenuState => ({ tab: "chart", open, callActive: false });
@@ -71,6 +71,35 @@ describe("Chart menu contents", () => {
     assert.match(handoff.draft, /What do you make of this page\?/);
     assert.match(handoff.draft, /Quiet page/);
     assert.equal(chartAskDraft(null), "What do you make of my chart?");
+  });
+});
+
+describe("Chart menu keeps the puppet", () => {
+  it("leaves the PNG puppet mounted while the Chart menu is open", () => {
+    const open = reduceChartMenu(
+      { tab: "chat", open: false, callActive: false },
+      { type: "select-tab", tab: "chart" },
+    );
+    assert.equal(open.open, true);
+    assert.equal(open.tab, "chart");
+    const stage = stageSourceFor({ place: stagePlace({ tab: "chart", callActive: false }) });
+    assert.equal(stage.kind, "png");
+
+    const app = readFileSync(join(root, "src/components/rai-app.tsx"), "utf8");
+    const puppet = readFileSync(join(root, "src/components/puppet.tsx"), "utf8");
+    const presenceAt = app.indexOf("<PresenceStage");
+    const chartAt = app.indexOf('id="star-pane-chart"');
+    assert.ok(presenceAt > 0 && chartAt > presenceAt);
+    const presence = app.slice(presenceAt, app.indexOf("/>", presenceAt) + 2);
+    assert.match(presence, /desk=\{desk\}/);
+    assert.doesNotMatch(presence, /chartMenuOpen/);
+    assert.equal((app.match(/<PresenceStage/g) ?? []).length, 1);
+    const pane = app.slice(chartAt, chartAt + 220);
+    assert.match(pane, /star-pane-chart/);
+    assert.doesNotMatch(pane, /bg-|backdrop|hidden|opacity-0|PresenceStage|Puppet/);
+    assert.match(puppet, /data-rai-engine="png-puppet"/);
+    assert.match(puppet, /className="rai-layer"/);
+    assert.doesNotMatch(readFileSync(join(root, "src/components/chart-panel.tsx"), "utf8"), /rai-stage|PresenceStage|Puppet/);
   });
 });
 
