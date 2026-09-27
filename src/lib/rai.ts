@@ -385,6 +385,25 @@ export function idleBlinkFrameUrls(): string[] {
   return [1, 2, 3, 4].map((frame) => idleBlinkFrameSrc(frame));
 }
 
+/**
+ * Sheets that ship as true RGBA (cut offline by scripts/cut-alpha.py: enclosed
+ * white pockets removed, soft decontaminated edge). The runtime studio-white
+ * punch must not run on these; it would only re-fringe them.
+ */
+export const PRE_CUT_ALPHA_FILES = [
+  "rai/idle.png",
+  "rai/idle_blink_01_open.png",
+  "rai/idle_blink_02_closing.png",
+  "rai/idle_blink_03_half.png",
+  "rai/idle_blink_04_closed.png",
+] as const;
+
+/** False for pre-cut RGBA sheets; true for the RGB-on-white sheets that still need punch-white. */
+export function spriteNeedsWhitePunch(src: string): boolean {
+  const path = src.split(/[?#]/)[0] ?? src;
+  return !PRE_CUT_ALPHA_FILES.some((file) => path === file || path.endsWith(`/${file}`));
+}
+
 /** Flat list of every sprite URL referenced by SPRITES — use for preload. */
 export function allSpriteUrls(): string[] {
   return [

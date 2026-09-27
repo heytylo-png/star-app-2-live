@@ -593,7 +593,8 @@ describe("layersFor talking vs pose hold", () => {
       const frame = decodePng(runtime);
       assert.equal(frame.width, IDLE_FRAME_SIZE.width, runtimeRel);
       assert.equal(frame.height, IDLE_FRAME_SIZE.height, runtimeRel);
-      assert.equal(frame.colorType, 2, runtimeRel);
+      // True RGBA since the offline alpha cut (scripts/cut-alpha.py), one shared mask.
+      assert.equal(frame.colorType, 6, runtimeRel);
       if (bakedName.endsWith("01_open.png")) openRgba = frame.rgba;
     }
     if (!openRgba) throw new Error("missing 01_open pixels");

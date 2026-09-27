@@ -114,3 +114,29 @@ export function punchedSpriteUrl(src: string): Promise<string> {
   punchedCache.set(src, job);
   return job;
 }
+
+/**
+ * Pre-cut RGBA sheet: use the file as-is (no punch). If a stale cache still
+ * hands back the old RGB-on-white file (opaque top-left corner), fall back to
+ * the punch so no white card shows.
+ */
+export function preCutSpriteUrl(src: string): Promise<string> {
+  const hit = punchedCache.get(src);
+  if (hit) return hit;
+  const job = (async () => {
+    const img = new Image();
+    img.decoding = "async";
+    img.src = src;
+    await img.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 1;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return src;
+    ctx.drawImage(img, 0, 0, 1, 1, 0, 0, 1, 1);
+    const cornerAlpha = ctx.getImageData(0, 0, 1, 1).data[3] ?? 0;
+    return cornerAlpha < 255 ? src : punchSrc(src);
+  })().catch(() => src);
+  punchedCache.set(src, job);
+  return job;
+}
