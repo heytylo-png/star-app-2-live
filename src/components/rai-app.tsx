@@ -52,7 +52,7 @@ import {
   resolveChartTurn,
   shapeChartSpokenLine,
 } from "@/lib/chart";
-import { resolveClockTurn } from "@/lib/clock";
+import { filterClockSpokenLine, resolveClockTurn } from "@/lib/clock";
 import { useChartStore } from "@/lib/chart-store";
 import { useHerMusicStore } from "@/lib/her-music-store";
 import { pickLocalSuggestions } from "@/lib/her-music";
@@ -905,6 +905,19 @@ function RaiReady() {
     const systemExtra = [clockTurn.factsBlock, factsBlock, chartTurn.factsBlock, lifeTurn.factsBlock]
       .filter(Boolean)
       .join("\n\n");
+    const recentUserText = current.messages
+      .filter((m) => m.role === "user")
+      .slice(-6)
+      .map((m) => m.content)
+      .join("\n");
+    const shapeSpoken = (text: string) => {
+      const charted = chartTurn.kind !== "none" ? shapeChartSpokenLine(text) : text;
+      return filterClockSpokenLine(charted, {
+        now: clockTurn.now,
+        recentText: recentUserText,
+        askedTime: clockTurn.kind === "ask_time",
+      });
+    };
 
     let raw = "";
     let speakFinishedClean = false;
@@ -927,7 +940,7 @@ function RaiReady() {
           if (meta?.reset) raw = "";
           raw += delta;
           const streamedLine = streamLine(raw);
-          const live = chartTurn.kind !== "none" ? shapeChartSpokenLine(streamedLine) : streamedLine;
+          const live = shapeSpoken(streamedLine);
           const lifeTitle = parseTrackTitle(lastUser);
           const named = lifeTitle ? null : namedPoseFromText(lastUser);
           const streamed = streamSpokenAct(raw, {
@@ -957,7 +970,7 @@ function RaiReady() {
       const act = parseAct(raw);
       const parsed = act.line.trim();
       const parsedLine = spokenCallLine(parsed) || spokenCallLine(raw) || streamLine(raw) || "…";
-      const line = chartTurn.kind !== "none" ? shapeChartSpokenLine(parsedLine) || "…" : parsedLine;
+      const line = shapeSpoken(parsedLine) || "…";
       store.patchMessage(threadId, assistant.id, { content: line });
       setCaption(line);
       setEmotion(act.emotion);

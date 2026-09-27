@@ -4,7 +4,9 @@
  */
 
 import { applyHerDayGrokRaw, formatHerDayFactsBlock, localHerDay } from "./chart.ts";
+import { clockTimeZone, formatClockFactsBlock, readLocalNow } from "./clock.ts";
 import { getStoredXaiKey, streamGrok } from "./grok.ts";
+import { useMemoryStore } from "./memory-store.ts";
 import type { HerDayCopy, SkyFacts } from "./sky.ts";
 
 const HER_DAY_ASK = "Chart/her-day";
@@ -32,10 +34,15 @@ export async function requestHerDayCopy(opts: {
       await streamGrok(
         {
           messages: [{ role: "user", content: HER_DAY_ASK }],
-          systemExtra: formatHerDayFactsBlock({
-            todayDate: opts.todayDate,
-            sky: opts.sky,
-          }),
+          systemExtra: [
+            formatClockFactsBlock(
+              readLocalNow(new Date(), clockTimeZone(useMemoryStore.getState().slots.timezone)),
+            ),
+            formatHerDayFactsBlock({
+              todayDate: opts.todayDate,
+              sky: opts.sky,
+            }),
+          ].join("\n\n"),
         },
         (delta) => {
           raw += delta;
