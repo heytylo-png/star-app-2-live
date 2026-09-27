@@ -489,3 +489,25 @@ body.chat-thread-resizing {
   pointer-events: none;
   user-select: none;
 }
+
+/* Life desk loop. Sibling of the puppet stage, same box. Not .rai-rig / .rai-layer. */
+.rai-desk-stage {
+  z-index: 1;
+  overflow: hidden;
+  background: var(--color-bg);
+  pointer-events: none;
+}
+
+.rai-desk-loop {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: contain;
+  object-position: center center;
+  pointer-events: none;
+  user-select: none;
+  background: transparent;
+}
