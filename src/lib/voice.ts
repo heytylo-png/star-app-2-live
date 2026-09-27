@@ -14,6 +14,143 @@ export type ElevenTtsPlan = {
   body: string;
 };
 
+/** Longest first so `^_^` wins over `^^` and `:-)` wins over `:)`. */
+const EMOTICON_TOKENS = [
+  ">_<",
+  ">.<",
+  ">.>",
+  "<.<",
+  "^_^",
+  "^.^",
+  "T_T",
+  "-_-",
+  "o_o",
+  "O_O",
+  ";_;",
+  "</3",
+  "<3",
+  ":-3",
+  ":-D",
+  ":-P",
+  ":-p",
+  ":-O",
+  ":-o",
+  ":-)",
+  ":-(",
+  ";-)",
+  ":')",
+  ":'(",
+  "xD",
+  "XD",
+  "xP",
+  "XP",
+  "TwT",
+  "^^",
+  ":3",
+  ":D",
+  ":P",
+  ":p",
+  ":O",
+  ":o",
+  ";)",
+  ";P",
+  ";p",
+  ":)",
+  ":(",
+  ":/",
+  ":\\",
+  ":|",
+  "=)",
+  "=(",
+  "=D",
+  "B)",
+  "8)",
+  "owo",
+  "uwu",
+  "OwO",
+  "UwU",
+].sort((a, b) => b.length - a.length);
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+const EMOTICON_RE = new RegExp(
+  `(?:^|(?<=\\s|[([{"'.,!?]))(?:${EMOTICON_TOKENS.map(escapeRegExp).join("|")})(?=$|\\s|[.,!?;:)"'\\]])`,
+  "gi",
+);
+
+const EMOJI_RE =
+  /\p{Extended_Pictographic}(?:\p{Emoji_Modifier}|\uFE0F|\uFE0E)?(?:\u200D\p{Extended_Pictographic}(?:\p{Emoji_Modifier}|\uFE0F|\uFE0E)?)*|\p{Emoji_Modifier}|\uFE0F|\uFE0E|\u200D/gu;
+
+const TIME_OR_RATIO_RE = /\d{1,4}:\d{1,4}/g;
+
+function stripEmoji(text: string): string {
+  return text.replace(EMOJI_RE, " ");
+}
+
+function stripEmoticonTokens(text: string): string {
+  return text.replace(EMOTICON_RE, " ");
+}
+
+function parenIsKaomoji(inner: string): boolean {
+  const core = inner.trim();
+  if (!core) return true;
+  if (/^\d{1,4}:\d{1,4}$/.test(core)) return false;
+  const withoutFaces = stripEmoticonTokens(stripEmoji(core))
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+  const words = withoutFaces.match(/\p{L}+/gu) ?? [];
+  if (words.some((word) => !/^(owo|uwu|xd)$/i.test(word))) return false;
+  if (/\p{N}/u.test(withoutFaces) && words.length === 0) return false;
+  return true;
+}
+
+function stripParenKaomoji(text: string): string {
+  return text.replace(/(\(|（)([^()（）\n]{0,48})(\)|）)/g, (full, _open, inner: string) =>
+    parenIsKaomoji(inner) ? " " : full,
+  );
+}
+
+function stripActionAsterisks(text: string): string {
+  return text.replace(/\*([^*\n]{1,40})\*/g, (full, inner: string) => {
+    const body = inner.trim();
+    if (!/[A-Za-z]/.test(body)) return full;
+    if (/[.!?]/.test(body)) return full;
+    return " ";
+  });
+}
+
+function collapseSpeech(text: string): string {
+  const collapsed = text
+    .replace(/\s+([.,!?;:])/g, "$1")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\(\s*\)|（\s*）/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  if (!/[\p{L}\p{N}]/u.test(collapsed)) return "";
+  return collapsed.replace(/^[,\s]+|[,\s]+$/g, "").trim();
+}
+
+/**
+ * Text safe to send to speech. Emoticons, kaomoji, emoji, and *actions* go.
+ * The chat bubble keeps the original line. Times and ratios stay.
+ * Empty string means there is nothing to speak.
+ */
+export function speechTextForTts(text: string): string {
+  const saved: string[] = [];
+  let out = stripActionAsterisks(stripParenKaomoji(stripEmoji(text)));
+  out = out.replace(TIME_OR_RATIO_RE, (match) => {
+    const token = `\uE000${saved.length}\uE000`;
+    saved.push(match);
+    return token;
+  });
+  out = stripEmoticonTokens(out);
+  out = out.replace(/\uE000(\d+)\uE000/g, (_full, index: string) => saved[Number(index)] ?? "");
+  return collapseSpeech(out);
+}
+
 function ensureContext() {
   if (!ctx) ctx = new AudioContext();
   if (ctx.state === "suspended") void ctx.resume();
@@ -66,7 +203,7 @@ export function elevenTtsPlan(
 ): ElevenTtsPlan | null {
   const trimmedKey = key?.trim() ?? "";
   const id = voiceId?.trim() ?? "";
-  const line = text.trim();
+  const line = speechTextForTts(text);
   if (!trimmedKey || !id || !line) return null;
   return {
     url: ELEVEN_TTS_URL + encodeURIComponent(id),
