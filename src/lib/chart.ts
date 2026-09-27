@@ -151,6 +151,8 @@ const PLANET_RE =
   /\b(mercury|venus|mars|jupiter|saturn|uranus|neptune|pluto|ascendant|rising|houses?|transit|conjunction)\b/i;
 
 const READING_BAN_RE = /your reading for today is/i;
+const NATAL_WHEEL_RE = /natal wheel/i;
+const ESSAY_RE = /\b(?:reading essay|compatibility essay|planet list)\b/i;
 
 const HER_SIGN_RE =
   /\b(?:what(?:'s| is) your (?:sun )?sign|your (?:sun )?sign|your zodiac|are you an? libra|what sign are you)\b/i;
@@ -162,10 +164,10 @@ const HER_ORIGIN_RE =
   /\b(?:where are you from|where were you born|what(?:'s| is) your hometown|your hometown|which city are you from)\b/i;
 
 const DIARY_RE =
-  /\b(?:write (?:me |your |a |today'?s )?diary|show (?:me )?(?:your |the |today'?s )?diary|open (?:your |the )?diary|diary entry|today'?s diary|(?:your |the )?journal entry)\b/i;
+  /\b(?:write (?:me |your |a |today'?s )?diary|show (?:me )?(?:your |the |today'?s )?diary|open (?:your |the )?diary|diary entry|today'?s diary|(?:your |the )?journal entry|your diary|the diary|what did you write|what'?d you write|what have you written)\b/i;
 
 const ASKED_CHART_RE =
-  /\b(?:horoscope|sun sign|star sign|zodiac|compatibility|natal|birth chart|(?:today'?s|todays) (?:reading|stars|vibe)|reading for today|stars today|our signs|match(?:es)? (?:with you|our signs)|what(?:'s| is) my (?:sun )?sign|what sign am i)\b/i;
+  /\b(?:horoscope|sun sign|star sign|zodiac|compatibility|natal|birth chart|(?:today'?s|todays) (?:reading|stars|vibe)|reading for today|stars today|our signs|match(?:es)? (?:with you|our signs)|what(?:'s| is) my (?:sun )?sign|what sign am i|what(?:'s| is) my chart|what do you make of my chart|what do you make of this page)\b/i;
 
 const NEED_BIRTHDAY_RE =
   /\b(?:match|compatible|compatibility|horoscope|today'?s reading|reading for today|what(?:'s| is) my (?:sun )?sign|what sign am i|our signs)\b/i;
@@ -348,7 +350,23 @@ export function isDayOrMoodTopic(lastTopic?: string, mood?: string): boolean {
 }
 
 export function isChartBannedLine(line: string): boolean {
-  return READING_BAN_RE.test(line) || PLANET_RE.test(line);
+  return READING_BAN_RE.test(line) || PLANET_RE.test(line) || NATAL_WHEEL_RE.test(line) || ESSAY_RE.test(line);
+}
+
+const CHART_BEAT_FALLBACK = "Day's got a tilt. Not a reading.";
+
+/** One spoken beat. A short line stays. An essay keeps its first sentence. */
+export function shapeChartSpokenLine(line: string): string {
+  const t = line.replace(/\s+/g, " ").trim();
+  if (!t) return "";
+  if (isChartBannedLine(t)) return CHART_BEAT_FALLBACK;
+  const words = t.split(/\s+/).filter(Boolean);
+  const alreadyOneBeat = t.length <= 140 && words.length <= 18;
+  const first = (t.split(/(?<=[.!?])\s+/).find(Boolean) ?? t).trim();
+  const beat = alreadyOneBeat ? t : first;
+  const capped = beat.length > 140 ? `${beat.slice(0, 137).trimEnd()}…` : beat;
+  if (isChartBannedLine(capped)) return CHART_BEAT_FALLBACK;
+  return capped;
 }
 
 export function pickChartTintPose(dateKey: string): ChartTintPose {
@@ -380,6 +398,7 @@ export function formatChartFactsBlock(opts: {
   if (opts.lastTopic?.trim()) lines.push(`last_topic: ${clip(opts.lastTopic, 72)}`);
   lines.push(...formatSkyFactLines(opts.sky));
   lines.push("");
+  lines.push("One spoken beat. No natal wheel. No planet list. Not a reading essay.");
   lines.push('Tint one line only. Never say "your reading for today is." Never list planets.');
   if (opts.userSun?.trim()) {
     lines.push("At most one you+me glance. Not a compatibility essay.");
@@ -407,6 +426,7 @@ export function formatHerDayFactsBlock(opts: {
   lines.push("");
   lines.push("This is Star Rai's Chart pane — HER day, first person.");
   lines.push("1-3 short lines / sparse beats. Not their you+me glance.");
+  lines.push("One spoken beat. No natal wheel. No planet list. Not a reading essay.");
   lines.push('Never say "your reading for today is." Never list planets.');
   lines.push("Never dump Fukuoka, Osaka, 03:33, or natal houses as a topic.");
   lines.push("Sky keys are facts. Do not invent Fukuoka local sky.");
@@ -486,14 +506,14 @@ export function composeDiaryEntry(opts: {
     sentences.push(`They sounded ${clip(opts.mood, 24)}.`);
   }
   if (opts.lastTopic?.trim()) {
-    sentences.push(`Last beat: ${clip(opts.lastTopic, 48)}.`);
+    sentences.push(`Still on ${clip(opts.lastTopic, 48)}.`);
   }
   if (opts.userSun?.trim()) {
-    sentences.push(`${opts.userSun} next to Libra air — one glance.`);
+    sentences.push(`${opts.userSun} beside me, one glance.`);
   } else {
-    sentences.push("No birthday on file.");
+    sentences.push("No birthday on the page.");
   }
-  sentences.push("Still here. Not a report.");
+  sentences.push("I wrote it down.");
   const kept = sentences.slice(0, 5);
   while (kept.length < 3) kept.push("Short day.");
   return kept.join(" ");
@@ -513,41 +533,32 @@ export type ChartAct = {
   line: string;
 };
 
+function chartAct(emotion: ChartAct["emotion"], pose: PoseId | undefined, line: string): ChartAct {
+  const act: ChartAct = { emotion, line: shapeChartSpokenLine(line) || CHART_BEAT_FALLBACK };
+  if (pose) act.pose = pose;
+  return act;
+}
+
 export function actForChartTurn(turn: ChartTurn): ChartAct | null {
   const dateKey = turn.dateKey ?? "";
   switch (turn.kind) {
     case "ask_sign":
-      return {
-        emotion: "smug",
-        pose: "smug",
-        line: `Libra. ${pickSignTease(dateKey)}`,
-      };
+      return chartAct("smug", "smug", `Libra. ${pickSignTease(dateKey)}`);
     case "ask_birthday":
-      return { emotion: "bratty", pose: "idle", line: "Sept 29." };
+      return chartAct("bratty", "idle", "Sept 29.");
     case "ask_origin":
-      return {
-        emotion: "bratty",
-        pose: "talk",
-        line: `${pickOriginCity(dateKey)}. That's the city.`,
-      };
+      return chartAct("bratty", "talk", `${pickOriginCity(dateKey)}. That's the city.`);
     case "ask_need_birthday":
-      return {
-        emotion: "glance",
-        pose: "think",
-        line: "Tell me your birthday if you want that.",
-      };
+      return chartAct("glance", "think", "Tell me your birthday if you want that.");
     case "diary":
-      return {
-        emotion: "soft",
-        pose: "content",
-        line: turn.diaryText ?? "Quiet page. Ask again if you want it written.",
-      };
+      // The page stays on Chart. Chat gets one beat, never the stored entry.
+      return chartAct("soft", "content", "Wrote a quiet page, not a reading.");
     case "daily":
-      return {
-        emotion: turn.userSun ? "smug" : "tired",
-        pose: turn.tintPose ?? pickChartTintPose(dateKey),
-        line: localDailyLine(turn.userSun, turn.lastTopic),
-      };
+      return chartAct(
+        turn.userSun ? "smug" : "tired",
+        turn.tintPose ?? pickChartTintPose(dateKey),
+        localDailyLine(turn.userSun, turn.lastTopic),
+      );
     default:
       return null;
   }

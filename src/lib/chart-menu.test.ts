@@ -59,14 +59,14 @@ describe("Chart menu contents", () => {
     assert.equal(chartMenuSun({ birthDate: "not a date" }), null);
   });
 
-  it("keeps the diary excerpt short and prefills Chat without sending", () => {
+  it("keeps the diary excerpt short and sends Ask her into Chat", () => {
     const page = "Quiet page for today. She stayed. The long version keeps going past the menu.";
     const excerpt = chartDiaryExcerpt(page, 32);
     assert.ok(excerpt.endsWith("…"));
     assert.ok(excerpt.length <= 33);
     const handoff = chartAskHandoff({ text: page });
     assert.equal(handoff.tab, "chat");
-    assert.equal(handoff.sent, false);
+    assert.equal(handoff.sent, true);
     assert.equal(handoff.draft, chartAskDraft({ text: page }));
     assert.match(handoff.draft, /What do you make of this page\?/);
     assert.match(handoff.draft, /Quiet page/);
@@ -136,10 +136,13 @@ describe("Chart menu does not cover the puppet", () => {
     assert.doesNotMatch(app, /<ChartPanel/);
     assert.doesNotMatch(app, /Write today's diary/);
     assert.doesNotMatch(app, /max-h-\[min\(40rem,78%\)\]/);
-    const ask = app.slice(app.indexOf("const askHerFromChart"), app.indexOf("const askHerFromChart") + 160);
-    assert.match(ask, /setDraft\(prompt\)/);
+    const askAt = app.indexOf("const askHerFromChart");
+    const ask = app.slice(askAt, app.indexOf("useEffect", askAt));
+    assert.match(ask, /tabRef\.current = "chat"/);
     assert.match(ask, /selectTab\("chat"\)/);
-    assert.doesNotMatch(ask, /send\(/);
+    assert.match(ask, /void send\(prompt\)/);
+    assert.equal((ask.match(/send\(/g) ?? []).length, 1);
+    assert.doesNotMatch(ask, /setDraft/);
     const chartPane = app.slice(app.indexOf('tab === "chart"'), app.indexOf('tab === "chart"') + 280);
     assert.doesNotMatch(chartPane, /ChartPanel|backdrop-blur|diary-loop/);
   });

@@ -63,7 +63,7 @@ export function chartDiaryExcerpt(text: string, max = 84): string {
   return `${clean.slice(0, max).trimEnd()}…`;
 }
 
-/** Composer prefill. The handoff never sends. */
+/** The line Ask her sends into Chat. One ask, then she answers there. */
 export function chartAskDraft(entry?: { text?: string | null } | null): string {
   const excerpt = entry?.text ? chartDiaryExcerpt(entry.text) : "";
   if (!excerpt) return "What do you make of my chart?";
@@ -73,7 +73,7 @@ export function chartAskDraft(entry?: { text?: string | null } | null): string {
 export function chartAskHandoff(entry?: { text?: string | null } | null): {
   tab: "chat";
   draft: string;
-  sent: false;
+  sent: true;
 } {
-  return { tab: "chat", draft: chartAskDraft(entry), sent: false };
+  return { tab: "chat", draft: chartAskDraft(entry), sent: true };
 }

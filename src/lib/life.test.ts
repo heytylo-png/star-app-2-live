@@ -408,7 +408,9 @@ describe("Grok request composition — session on vs off", () => {
       { kind: "diary", localOnly: true, diaryText: "Quiet page for today. Short day. Still here." },
       { kind: "ask_listening", localOnly: true, nowPlaying: "Super Shy", tintPose: "talk" },
     );
-    assert.match(act.line, /Quiet page/);
+    assert.match(act.line, /quiet page/i);
+    assert.doesNotMatch(act.line, /Still here/);
+    assert.notEqual(act.line, "Quiet page for today. Short day. Still here.");
     assert.doesNotMatch(act.line, /Super Shy/);
   });
 });
