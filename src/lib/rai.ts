@@ -413,7 +413,57 @@ export function idleBlinkFrameUrls(): string[] {
   return [1, 2, 3, 4].map((frame) => idleBlinkFrameSrc(frame));
 }
 
-/** Flat list of every sprite URL referenced by SPRITES — use for preload. */
+/**
+ * Critical path. idle.png, then blink 01 → 04 in the baked order.
+ * 01 stays after idle.png even though it is a byte copy: the rest layer
+ * mounts that URL, and the blink timer waits on all four.
+ */
+export function startupSpriteUrls(): string[] {
+  return [SPRITES.poses.idle, ...idleBlinkFrameUrls()];
+}
+
+/**
+ * Pose sheets the default PNG puppet can mount after first paint.
+ * Live keys only (`SPRITES.poses`). Angle sheets, legacy idle-talk,
+ * Expo busts, and unused Helix extras stay out — `layersFor` never
+ * references them while `USE_EXPO_TALK_BUST` is off and angle is 0.
+ */
+export function deferredSpriteUrls(): string[] {
+  const skip = new Set(startupSpriteUrls());
+  const seen = new Set<string>();
+  const urls: string[] = [];
+  for (const src of Object.values(SPRITES.poses)) {
+    if (skip.has(src) || seen.has(src)) continue;
+    seen.add(src);
+    urls.push(src);
+  }
+  return urls;
+}
+
+/**
+ * Catalog URLs the default PNG path never requests.
+ * Includes `star-rai/angles/*` (front, three-quarter, side, back).
+ * Spine (`?spine=rai`) loads its own cutout pack and does not use these.
+ */
+export function unusedPngSpriteUrls(): string[] {
+  const live = new Set([...startupSpriteUrls(), ...deferredSpriteUrls()]);
+  const seen = new Set<string>();
+  const urls: string[] = [];
+  for (const src of [
+    ...Object.values(SPRITES.angles),
+    SPRITES.talk,
+    ...Object.values(SPRITES.talkBust),
+    ...Object.values(SPRITES.alts),
+    ...Object.values(SPRITES.extras),
+  ]) {
+    if (live.has(src) || seen.has(src)) continue;
+    seen.add(src);
+    urls.push(src);
+  }
+  return urls;
+}
+
+/** Full SPRITES catalog. Preload uses startupSpriteUrls / deferredSpriteUrls. */
 export function allSpriteUrls(): string[] {
   return [
     ...idleBlinkFrameUrls(),

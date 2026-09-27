@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
-  allSpriteUrls,
   canIdleBlink,
+  deferredSpriteUrls,
   IDLE_BLINK_ENABLED,
   IDLE_REST_LAYER_ID,
   idleBlinkFrameUrls,
@@ -9,6 +9,7 @@ import {
   isRetiredBlinkSrc,
   layersFor,
   POSE_CROSSFADE_MS,
+  startupSpriteUrls,
   USE_EXPO_TALK_BUST,
   type EmotionId,
   type PoseId,
@@ -113,32 +114,111 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const blinkRef = useRef<IdleBlinkFrame>(0);
 
   // Punch studio-white cards to alpha, then decode so pose swaps never flash a plate.
-  // Blink frames are decoded before they enter `sheets`, so a src swap is one image.
+  // Startup is idle.png then blink 01–04, one file at a time. Every other live
+  // pose sheet waits for requestIdleCallback (setTimeout fallback) so it is not
+  // one startup task. Blink frames are decoded before they enter `sheets`.
   useEffect(() => {
     let cancelled = false;
-    const blinkFrames = idleBlinkFrameUrls();
-    const blinkSet = new Set(blinkFrames);
-    const urls = allSpriteUrls();
-    const ordered = [...blinkFrames, ...urls.filter((src) => !blinkSet.has(src))];
-    for (const src of ordered) {
-      if (isRetiredBlinkSrc(src)) continue;
-      void punchedSpriteUrl(src).then(async (url) => {
-        if (blinkSet.has(src)) {
-          const img = new Image();
-          img.decoding = "async";
-          img.src = url;
-          try {
-            await img.decode();
-          } catch {
-            // Store the URL anyway. The blink timer stays off until every frame lands.
-          }
+    let idleHandle = 0;
+    let timeoutHandle = 0;
+    const blinkSet = new Set(idleBlinkFrameUrls());
+    const restSrc = idleRestSrc();
+
+    const clearSchedule = () => {
+      if (idleHandle) {
+        window.cancelIdleCallback(idleHandle);
+        idleHandle = 0;
+      }
+      if (timeoutHandle) {
+        window.clearTimeout(timeoutHandle);
+        timeoutHandle = 0;
+      }
+    };
+
+    const store = (src: string, url: string, aliasRest: boolean) => {
+      if (cancelled) return;
+      setSheets((prev) => {
+        const next = { ...prev };
+        let changed = false;
+        if (next[src] !== url) {
+          next[src] = url;
+          changed = true;
         }
-        if (cancelled) return;
-        setSheets((prev) => (prev[src] === url ? prev : { ...prev, [src]: url }));
+        // 01 open is a byte copy of idle.png. Paint that punched URL so the
+        // rest layer does not wait on a second identical punch.
+        if (aliasRest && next[restSrc] == null) {
+          next[restSrc] = url;
+          changed = true;
+        }
+        return changed ? next : prev;
       });
-    }
+    };
+
+    const punchOne = async (src: string, aliasRest: boolean) => {
+      if (isRetiredBlinkSrc(src)) return;
+      const url = await punchedSpriteUrl(src);
+      if (blinkSet.has(src)) {
+        const img = new Image();
+        img.decoding = "async";
+        img.src = url;
+        try {
+          await img.decode();
+        } catch {
+          // Store the URL anyway. The blink timer stays off until every frame lands.
+        }
+      }
+      store(src, url, aliasRest);
+    };
+
+    const afterPaint = () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
+
+    const scheduleIdle = (run: () => void) => {
+      if (typeof window.requestIdleCallback === "function") {
+        idleHandle = window.requestIdleCallback(
+          () => {
+            idleHandle = 0;
+            run();
+          },
+          { timeout: 1500 },
+        );
+        return;
+      }
+      timeoutHandle = window.setTimeout(() => {
+        timeoutHandle = 0;
+        run();
+      }, 1);
+    };
+
+    const run = async () => {
+      const startup = startupSpriteUrls();
+      for (let i = 0; i < startup.length; i++) {
+        if (cancelled) return;
+        const src = startup[i]!;
+        await punchOne(src, i === 0 && src !== restSrc);
+        if (cancelled) return;
+        if (i === 0) await afterPaint();
+      }
+      const deferred = deferredSpriteUrls();
+      let index = 0;
+      const step = () => {
+        if (cancelled || index >= deferred.length) return;
+        const src = deferred[index]!;
+        index += 1;
+        void punchOne(src, false).then(() => {
+          if (cancelled) return;
+          scheduleIdle(step);
+        });
+      };
+      scheduleIdle(step);
+    };
+
+    void run();
     return () => {
       cancelled = true;
+      clearSchedule();
     };
   }, []);
 
@@ -422,10 +502,26 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       }),
     [pose, emotion, talking, ampLive, blinkShown, reducedMotion],
   );
-  const plates = useMemo(
-    () => desired.filter((layer) => layer.role !== "eyes" && !isRetiredBlinkSrc(layer.src)),
-    [desired],
-  );
+  const shownPlates = useRef<SpriteLayer[]>([]);
+  const plates = useMemo(() => {
+    const next = desired.filter((layer) => layer.role !== "eyes" && !isRetiredBlinkSrc(layer.src));
+    const ready = next.length > 0 && next.every((layer) => sheets[layer.src] != null);
+    // Unready pose: keep the last punched plates (idle, or the frame already up).
+    const chosen = ready ? next : shownPlates.current;
+    const prev = shownPlates.current;
+    const same =
+      prev.length === chosen.length &&
+      prev.every(
+        (layer, i) =>
+          layer.id === chosen[i]!.id &&
+          layer.src === chosen[i]!.src &&
+          layer.opacity === chosen[i]!.opacity &&
+          layer.role === chosen[i]!.role,
+      );
+    if (same) return prev;
+    shownPlates.current = chosen;
+    return chosen;
+  }, [desired, sheets]);
 
   // Drop snap timing once the cancelled blink has cut to the new sheet.
   useEffect(() => {
