@@ -54,6 +54,12 @@ describe("her suggestions", () => {
     assert.ok(picks.every((row) => row.title && row.source === "local"));
     assert.ok(!picks.some((row) => row.title === "NewJeans - Hype Boy"));
     assert.ok(picks.every((row) => cleanTrackTitle(row.title)));
+    const playing = pickLocalSuggestions({
+      today: "2026-09-20",
+      mood: "bratty",
+      avoid: ["Super Shy"],
+    });
+    assert.ok(!playing.some((row) => row.title === "NewJeans - Super Shy" || row.title === "Super Shy"));
   });
 
   it("keeps Grok suggestions when they are titles-only JSON", () => {

@@ -7,6 +7,7 @@
  */
 
 import { detectChartIntent, localDateKey } from "./chart.ts";
+import { lifeTitlesMatch } from "./life-menu.ts";
 import type { ClockBand } from "./clock.ts";
 import {
   NOW_PLAYING_TINT_POSES,
@@ -364,14 +365,11 @@ export function herDailyMoodPatch(input: {
 
 export function compactPlaylist(list?: string[]): string[] | undefined {
   if (!list?.length) return undefined;
-  const seen = new Set<string>();
   const out: string[] = [];
   for (const raw of list) {
     const t = clip(cleanToken(raw), 48);
     if (!t) continue;
-    const key = t.toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
+    if (out.some((have) => lifeTitlesMatch(have, t))) continue;
     out.push(t);
   }
   if (!out.length) return undefined;
