@@ -1,10 +1,10 @@
-import { actToJson, composeAct } from "@/lib/brain";
-import type { ChartTurn } from "@/lib/chart";
-import type { ClockTurn } from "@/lib/clock";
-import type { LifeTurn } from "@/lib/life";
-import { getStoredXaiKey, streamGrok } from "@/lib/grok";
-import { isValidActJson, type PoseId } from "@/lib/rai";
-import { formatLastUserCue, packChatTurns } from "@/lib/track";
+import { actToJson, composeAct } from "./brain.ts";
+import type { ChartTurn } from "./chart.ts";
+import type { ClockTurn } from "./clock.ts";
+import type { LifeTurn } from "./life.ts";
+import { getStoredXaiKey, streamGrok } from "./grok.ts";
+import { isValidActJson, type PoseId } from "./rai.ts";
+import { formatLastUserCue, packChatTurns } from "./track.ts";
 
 export type StreamChatInput = {
   model: string;
@@ -55,7 +55,12 @@ function isAbort(err: unknown): boolean {
   );
 }
 
-/** Optional legacy Pages /api/chat probe (kept for future backends). */
+/** Pages leaves this unset. Set VITE_CHAT_API=1 only when a real /api/chat backend exists. */
+export function chatApiEnabled(): boolean {
+  return import.meta.env?.VITE_CHAT_API === "1";
+}
+
+/** Optional /api/chat backend (kept for a future server). Not called on the static Pages build. */
 async function tryLocalApi(
   input: StreamChatInput,
   onDelta: (text: string, meta?: StreamDeltaMeta) => void,
@@ -147,12 +152,14 @@ export async function streamChat(
     }
   }
 
-  // 2) Optional future /api/chat backend
-  try {
-    const used = await tryLocalApi(input, onDelta, signal);
-    if (used && isValidActJson(used)) return used;
-  } catch (err) {
-    if (isAbort(err)) throw err;
+  // 2) Optional /api/chat backend. Off unless the build opts in.
+  if (chatApiEnabled()) {
+    try {
+      const used = await tryLocalApi(input, onDelta, signal);
+      if (used && isValidActJson(used)) return used;
+    } catch (err) {
+      if (isAbort(err)) throw err;
+    }
   }
 
   // 3) Offline local-brain.txt — always works on Pages
