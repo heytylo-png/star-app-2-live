@@ -6,6 +6,43 @@
 
 import type { ShellTab } from "./shell.ts";
 
+function menuTitle(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+/**
+ * One title, one place. The current track stays in the now-playing row.
+ * Suggestions claim a title before Daily, and neither list repeats it.
+ */
+export function lifeMenuTracks(opts: {
+  nowPlaying?: string | null;
+  suggestions?: string[];
+  daily?: string[];
+}): { nowPlaying: string | null; suggestions: string[]; daily: string[] } {
+  const now = opts.nowPlaying ? menuTitle(opts.nowPlaying) : "";
+  const seen = new Set<string>();
+  if (now) seen.add(now.toLowerCase());
+
+  const take = (list: string[] | undefined) => {
+    const out: string[] = [];
+    for (const raw of list ?? []) {
+      const title = menuTitle(raw);
+      if (!title) continue;
+      const key = title.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(title);
+    }
+    return out;
+  };
+
+  return {
+    nowPlaying: now || null,
+    suggestions: take(opts.suggestions),
+    daily: take(opts.daily),
+  };
+}
+
 export type LifeMenuState = {
   tab: ShellTab;
   open: boolean;

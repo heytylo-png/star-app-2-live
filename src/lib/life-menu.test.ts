@@ -4,8 +4,8 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import { composeAct } from "./brain.ts";
-import { actForLifeTurn, resolveLifeTurn, showLifeConnectMusic } from "./life.ts";
-import { reduceLifeMenu, type LifeMenuState } from "./life-menu.ts";
+import { actForLifeTurn, applyLifePatch, extractLifePatch, lifeNowPlayingChrome, resolveLifeTurn, showLifeConnectMusic } from "./life.ts";
+import { lifeMenuTracks, reduceLifeMenu, type LifeMenuState } from "./life-menu.ts";
 import { stageSourceAfterLeave, stageSourceFor } from "./stage-source.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -106,9 +106,85 @@ describe("Connect music row", () => {
     );
     assert.equal(showLifeConnectMusic({ connected: true, sessionOn: false }), false);
     assert.equal(
+      showLifeConnectMusic({ connected: false, sessionOn: false, nowPlaying: "Bags" }),
+      false,
+    );
+    assert.equal(
       showLifeConnectMusic({ connected: true, sessionOn: true, nowPlaying: "Super Shy" }),
       false,
     );
+  });
+});
+
+describe("Life menu track rows", () => {
+  it("keeps the current title out of suggestions and daily, with no duplicate titles", () => {
+    const menu = lifeMenuTracks({
+      nowPlaying: "Bags",
+      suggestions: ["Bags", "bags", "ETA", "ETA"],
+      daily: ["Bags", "ETA", "Ditto", "Ditto", "How Sweet"],
+    });
+    assert.equal(menu.nowPlaying, "Bags");
+    assert.deepEqual(menu.suggestions, ["ETA"]);
+    assert.deepEqual(menu.daily, ["Ditto", "How Sweet"]);
+    const titles = [menu.nowPlaying, ...menu.suggestions, ...menu.daily].map((title) => title!.toLowerCase());
+    assert.equal(new Set(titles).size, titles.length);
+  });
+
+  it("shows Stop while the session is on and Play after Stop, still on that title", () => {
+    const playing = lifeNowPlayingChrome({ sessionOn: true, title: "Bags" });
+    assert.equal(playing.title, "Bags");
+    assert.equal(playing.showStop, true);
+    assert.equal(playing.showPlay, false);
+
+    const session = applyLifePatch(undefined, extractLifePatch("I'm listening to Bags"));
+    const stopped = applyLifePatch(session, { on: false });
+    assert.equal(stopped?.on, false);
+    assert.equal(stopped?.now_playing, "Bags");
+    const paused = lifeNowPlayingChrome({
+      sessionOn: Boolean(stopped?.on),
+      title: stopped?.now_playing,
+    });
+    assert.equal(paused.showStop, false);
+    assert.equal(paused.showPlay, true);
+    assert.equal(paused.title, "Bags");
+
+    const resumed = applyLifePatch(stopped, extractLifePatch("I'm listening to Bags", stopped));
+    assert.equal(resumed?.on, true);
+    assert.equal(resumed?.now_playing, "Bags");
+    assert.equal(
+      resolveLifeTurn({
+        userText: "I'm listening to Bags",
+        before: stopped,
+        after: resumed,
+      }).kind,
+      "none",
+    );
+  });
+
+  it("plays a list title once, moves it to the top, and leaves a single comment", () => {
+    const before = applyLifePatch(undefined, extractLifePatch("I'm listening to Bags"));
+    const after = applyLifePatch(before, extractLifePatch("I'm listening to ETA", before));
+    assert.equal(after?.now_playing, "ETA");
+    const menu = lifeMenuTracks({
+      nowPlaying: after?.now_playing,
+      suggestions: ["Bags", "ETA", "Ditto"],
+      daily: after?.daily_playlist,
+    });
+    assert.equal(menu.nowPlaying, "ETA");
+    assert.equal(menu.suggestions.includes("ETA"), false);
+    assert.equal((menu.daily ?? []).includes("ETA"), false);
+    assert.equal(menu.suggestions.includes("Bags") || menu.daily.includes("Bags"), true);
+
+    const turn = resolveLifeTurn({
+      userText: "I'm listening to ETA",
+      before,
+      after,
+    });
+    assert.equal(turn.kind, "track_change");
+    const act = actForLifeTurn(turn);
+    assert.ok(act);
+    assert.equal(act.line.split(/\n+/).filter((row) => row.trim()).length, 1);
+    assert.doesNotMatch(act.line, /setlist|concert|lecture/i);
   });
 });
 
