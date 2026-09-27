@@ -870,12 +870,18 @@ function RaiReady() {
           avoid: [
             ...(lifeAfter?.daily_playlist ?? []),
             ...(lifeAfter?.now_playing ? [lifeAfter.now_playing] : []),
+            ...(spotify.title ? [spotify.title] : []),
           ],
         })[0]
       : undefined;
     if (isSuggestAsk(lastUser)) {
       useHerMusicStore.getState().markAsked(today);
-      void requestLifeSuggestions({ today, life: lifeAfter, force: true });
+      void requestLifeSuggestions({
+        today,
+        life: lifeAfter,
+        force: true,
+        alsoAvoid: spotify.title ? [spotify.title] : [],
+      });
     }
     const lifeTurn = chartTurn.localOnly || clockTurn.localOnly
       ? { kind: "none" as const, localOnly: false }

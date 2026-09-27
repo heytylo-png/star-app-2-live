@@ -26,6 +26,8 @@ export function localLifeSuggestions(opts: {
   today: string;
   life?: LifeSlots;
   lists?: ReturnType<typeof useHerMusicStore.getState>["lists"];
+  /** Live Spotify title, when memory's now_playing has not caught up. */
+  alsoAvoid?: string[];
 }): LifeSuggestion[] {
   return pickLocalSuggestions({
     today: opts.today,
@@ -34,6 +36,7 @@ export function localLifeSuggestions(opts: {
     avoid: [
       ...(opts.life?.daily_playlist ?? []),
       ...(opts.life?.now_playing ? [opts.life.now_playing] : []),
+      ...(opts.alsoAvoid ?? []),
     ],
   });
 }
@@ -47,6 +50,7 @@ export async function requestLifeSuggestions(opts: {
   life?: LifeSlots;
   force?: boolean;
   signal?: AbortSignal;
+  alsoAvoid?: string[];
 }): Promise<LifeSuggestion[]> {
   const store = useHerMusicStore.getState();
   if (
@@ -61,6 +65,7 @@ export async function requestLifeSuggestions(opts: {
     today: opts.today,
     life: opts.life,
     lists: store.lists,
+    alsoAvoid: opts.alsoAvoid,
   });
   store.saveSuggestions(opts.today, local);
   if (!getStoredXaiKey()) return local;

@@ -3,6 +3,7 @@
  * Titles only. She owns the picks. Spotify is search/play, never her list store.
  */
 
+import { lifeTitlesMatch } from "./life-menu.ts";
 import {
   compactPlaylist,
   isLifeMoodTag,
@@ -173,8 +174,7 @@ export function catalogForMood(lists: FavoriteList[], mood?: LifeMoodTag): strin
 }
 
 function alreadyHeard(title: string, avoid: string[]): boolean {
-  const key = titleKey(title);
-  return avoid.some((a) => titleKey(a) === key);
+  return avoid.some((row) => lifeTitlesMatch(row, title));
 }
 
 export function pickLocalSuggestions(opts: {
@@ -192,12 +192,9 @@ export function pickLocalSuggestions(opts: {
   const source = pool.length ? pool : catalogForMood(lists, mood);
   const start = hashString(`${opts.today}|${mood}|${avoid.join(",")}`) % source.length;
   const out: LifeSuggestion[] = [];
-  const seen = new Set<string>();
   for (let i = 0; i < source.length && out.length < count; i++) {
     const title = source[(start + i) % source.length]!;
-    const key = titleKey(title);
-    if (seen.has(key)) continue;
-    seen.add(key);
+    if (out.some((row) => lifeTitlesMatch(row.title, title))) continue;
     const notes = NOTE_BANK[mood];
     out.push({
       title,
@@ -224,15 +221,12 @@ export function parseSuggestionPayload(raw: string): LifeSuggestion[] {
         ? [{ title: parsed.title }]
         : [];
     const out: LifeSuggestion[] = [];
-    const seen = new Set<string>();
     for (const row of rows) {
       if (!row || typeof row !== "object") continue;
       const rec = row as { title?: unknown; note?: unknown };
       const title = typeof rec.title === "string" ? cleanTrackTitle(rec.title) : undefined;
       if (!title) continue;
-      const key = titleKey(title);
-      if (seen.has(key)) continue;
-      seen.add(key);
+      if (out.some((have) => lifeTitlesMatch(have.title, title))) continue;
       const note = typeof rec.note === "string" ? clip(rec.note, 48) : undefined;
       const item: LifeSuggestion = { title, source: "grok" };
       if (note) item.note = note;
@@ -261,7 +255,7 @@ export function adoptHeardTitle(
   const clean = title ? cleanTrackTitle(title) : undefined;
   if (!clean) return mergeHerLists(lists);
   const next = mergeHerLists(lists);
-  if (allHerTitles(next).some((t) => titleKey(t) === titleKey(clean))) return next;
+  if (allHerTitles(next).some((t) => lifeTitlesMatch(t, clean))) return next;
   const id = listIdForMood(mood);
   return next.map((row) => {
     if (row.id !== id) return row;

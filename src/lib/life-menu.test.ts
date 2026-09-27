@@ -4,8 +4,8 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import { composeAct } from "./brain.ts";
-import { actForLifeTurn, applyLifePatch, extractLifePatch, lifeNowPlayingChrome, resolveLifeTurn, showLifeConnectMusic } from "./life.ts";
-import { lifeMenuTracks, reduceLifeMenu, type LifeMenuState } from "./life-menu.ts";
+import { actForLifeTurn, applyLifePatch, compactPlaylist, extractLifePatch, lifeNowPlayingChrome, resolveLifeTurn, showLifeConnectMusic } from "./life.ts";
+import { lifeMenuTracks, lifeTitlesMatch, lifeTrackFromPlayback, normalizeLifeTitle, reduceLifeMenu, type LifeMenuState } from "./life-menu.ts";
 import { stageSourceAfterLeave, stageSourceFor } from "./stage-source.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -185,6 +185,119 @@ describe("Life menu track rows", () => {
     assert.ok(act);
     assert.equal(act.line.split(/\n+/).filter((row) => row.trim()).length, 1);
     assert.doesNotMatch(act.line, /setlist|concert|lecture/i);
+  });
+
+  it("normalizes titles before matching", () => {
+    assert.equal(normalizeLifeTitle("  Bags  "), "bags");
+    assert.equal(normalizeLifeTitle("bags"), "bags");
+    assert.equal(normalizeLifeTitle("Bags - Clairo"), "bags");
+    assert.equal(normalizeLifeTitle("Bags   -   Clairo"), "bags");
+    assert.equal(normalizeLifeTitle("Bags (feat. Clairo)"), "bags");
+    assert.equal(normalizeLifeTitle("Bags [Explicit]"), "bags");
+    assert.equal(normalizeLifeTitle("Bags - Remastered 2011"), "bags");
+    assert.equal(normalizeLifeTitle("\u201CBags\u201D"), "bags");
+    assert.equal(lifeTitlesMatch("Bags", "Bags - Clairo"), true);
+    assert.equal(lifeTitlesMatch("Bags", "bags"), true);
+    assert.equal(lifeTitlesMatch("Clairo - Bags", "Bags"), true);
+    assert.equal(lifeTitlesMatch("Clairo - Bags", "Bags - Clairo"), true);
+    assert.equal(lifeTitlesMatch("Clairo - Bags", "Clairo - Sofia"), false);
+  });
+
+  it("shows Bags once when Spotify playback is the only current source", () => {
+    const currentlyPlaying = {
+      is_playing: true,
+      item: {
+        id: "6U0FI1bags",
+        uri: "spotify:track:6U0FI1bags",
+        name: "Bags",
+        artists: [{ name: "Clairo" }],
+      },
+    };
+    const spotify = lifeTrackFromPlayback(currentlyPlaying);
+    assert.ok(spotify);
+    assert.equal(spotify.paused, false);
+    assert.equal(spotify.id, "spotify:track:6U0FI1bags");
+    assert.match(spotify.title ?? "", /Bags/);
+
+    const menu = lifeMenuTracks({
+      spotify,
+      suggestions: ["Bags", "Bags - Clairo", "bags", "ETA"],
+      daily: ["Bags", "\u201CBags\u201D", "Bags (feat. Clairo)", "Bags [Explicit]", "Ditto"],
+    });
+    const visible = [menu.nowPlaying, ...menu.suggestions, ...menu.daily].filter(
+      (title): title is string => Boolean(title),
+    );
+    const bags = visible.filter((title) => lifeTitlesMatch(title, "Bags"));
+    assert.equal(bags.length, 1);
+    assert.equal(menu.nowPlaying, spotify.title);
+    assert.equal(menu.suggestions.includes("ETA"), true);
+    assert.deepEqual(menu.daily, ["Ditto"]);
+    assert.equal(menu.suggestions.some((title) => lifeTitlesMatch(title, "Bags")), false);
+  });
+
+  it("matches the same Spotify uri even when the title strings differ", () => {
+    const player = lifeTrackFromPlayback({
+      paused: false,
+      track_window: {
+        current_track: {
+          id: "6U0FI1bags",
+          uri: "spotify:track:6U0FI1bags",
+          name: "Bags",
+          artists: [{ name: "Clairo" }],
+        },
+      },
+    });
+    assert.ok(player);
+    const menu = lifeMenuTracks({
+      spotify: player,
+      suggestions: [{ title: "Not the printed title", id: "spotify:track:6U0FI1bags" }, { title: "ETA" }],
+      daily: [{ title: "Bags - Clairo", id: "6U0FI1bags" }, { title: "Clairo - Sofia", id: "spotify:track:sofia" }],
+    });
+    const visible = [menu.nowPlaying, ...menu.suggestions, ...menu.daily].filter(
+      (title): title is string => Boolean(title),
+    );
+    assert.equal(visible.filter((title) => lifeTitlesMatch(title, "Bags") || title === "Not the printed title").length, 1);
+    assert.equal(menu.nowPlaying, player.title);
+    assert.deepEqual(menu.suggestions, ["ETA"]);
+    assert.deepEqual(menu.daily, ["Clairo - Sofia"]);
+  });
+
+  it("keeps the stopped title in the top row and out of both lists", () => {
+    const menu = lifeMenuTracks({
+      nowPlaying: "Clairo - Bags",
+      lastPlayed: "Bags",
+      spotify: { title: "Clairo - Bags", id: "spotify:track:6U0FI1bags", paused: true },
+      suggestions: ["Bags - Clairo", "ETA"],
+      daily: ["bags", "How Sweet"],
+    });
+    const visible = [menu.nowPlaying, ...menu.suggestions, ...menu.daily].filter(
+      (title): title is string => Boolean(title),
+    );
+    assert.equal(visible.filter((title) => lifeTitlesMatch(title, "Bags")).length, 1);
+    assert.equal(menu.suggestions.includes("ETA"), true);
+    assert.deepEqual(menu.daily, ["How Sweet"]);
+    const chrome = lifeNowPlayingChrome({ sessionOn: false, title: menu.nowPlaying });
+    assert.equal(chrome.showPlay, true);
+    assert.equal(chrome.showStop, false);
+    assert.equal(compactPlaylist(["Bags", "Bags - Clairo", "bags", "Clairo - Sofia"])?.length, 2);
+  });
+
+  it("renders the Life menu through one deduped path", () => {
+    const panel = readFileSync(join(root, "src/components/life-panel.tsx"), "utf8");
+    const app = readFileSync(join(root, "src/components/rai-app.tsx"), "utf8");
+    const chart = readFileSync(join(root, "src/components/chart-panel.tsx"), "utf8");
+    assert.equal((panel.match(/<NowPlayingBar/g) ?? []).length, 1);
+    assert.equal((app.match(/<NowPlayingBar/g) ?? []).length, 0);
+    assert.equal((app.match(/<LifeMenu/g) ?? []).length, 1);
+    assert.match(panel, /lifeMenuTracks\(/);
+    assert.match(panel, /spotify\.trackId/);
+    assert.match(panel, /lastPlayed:/);
+    assert.match(panel, /nowPlaying=\{tracks\.nowPlaying/);
+    assert.doesNotMatch(panel, /aria-label="Stop"/);
+    assert.equal((panel.match(/<TrackPlayRow/g) ?? []).length, 2);
+    const memory = app.slice(app.indexOf("Daily playlist"), app.indexOf("Daily playlist") + 500);
+    assert.doesNotMatch(memory, /Stop|onStop|Play /);
+    assert.doesNotMatch(chart, /daily_playlist|NowPlayingBar|onStop/);
   });
 });
 
