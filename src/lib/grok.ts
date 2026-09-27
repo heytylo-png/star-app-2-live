@@ -45,7 +45,7 @@ export function describeGrokFailure(status: number, body: string, key: string): 
 }
 
 function proxyBase(): string | null {
-  const raw = (import.meta.env.VITE_GROK_PROXY_URL as string | undefined)?.trim();
+  const raw = import.meta.env?.VITE_GROK_PROXY_URL?.trim();
   if (!raw) return null;
   return raw.replace(/\/$/, "");
 }

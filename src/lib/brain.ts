@@ -1,9 +1,17 @@
-import { actForChartTurn, type ChartTurn } from "./chart.ts";
+import { actForChartTurn, detectChartIntent, type ChartTurn } from "./chart.ts";
 import { actForClockTurn, filterClockSpokenLine, type ClockTurn } from "./clock.ts";
 import { actForLifeTurn, parseTrackTitle, type LifeTurn } from "./life.ts";
-import { localBrainKeyFor, pickLocalBrainLine } from "./local-brain.ts";
-import { namedPoseFromText, resolveSpokenPose, type EmotionId, type PoseId } from "./rai.ts";
-import { filterEchoedLine, localTrackAct } from "./track.ts";
+import { localBrainKeyFor, parseLocalBrain, pickLocalBrainLine, usedDefaultBank } from "./local-brain.ts";
+import { poseForCallReply } from "./call.ts";
+import {
+  DEFAULT_EMOTION,
+  namedPoseFromText,
+  resolveSpokenPose,
+  type EmotionId,
+  type PoseId,
+  type ResolveSpokenPoseOpts,
+} from "./rai.ts";
+import { filterEchoedLine, isBareGreeting, localTrackAct } from "./track.ts";
 
 export type BrainMessage = { role: "user" | "assistant"; content: string };
 
@@ -13,6 +21,8 @@ export type BrainAct = {
   pose?: PoseId | null;
   line: string;
   mem?: string[];
+  /** Set only by the local brain. Grok replies do not carry this. */
+  source?: "local";
 };
 
 const NAME_STOP = new Set(
@@ -97,6 +107,34 @@ function tintSpokenAct(
   return { ...act, pose };
 }
 
+/** Horoscope / Chart / zodiac copy. A fallback line that matches this is not spoken. */
+const ZODIAC_LORE_RE =
+  /\b(?:horoscope|zodiac|sun sign|star sign|libra|aries|taurus|gemini|cancer|leo|virgo|scorpio|sagittarius|capricorn|aquarius|pisces)\b/i;
+
+function isZodiacLore(line: string): boolean {
+  return ZODIAC_LORE_RE.test(line);
+}
+
+/**
+ * A mood aside ("I am tired") can open a Chart daily turn. That turn's local
+ * line is a horoscope. The fallback does not recite it.
+ */
+function isUnaskedMoodAside(userText: string): boolean {
+  if (detectChartIntent(userText) !== "none") return false;
+  return /\b(?:tired|sleepy|exhausted|wiped|drained)\b/i.test(userText);
+}
+
+/** Idle-bank line when a tracker has nothing, or its line is Chart lore / a talk caption. */
+function spokenFallbackLine(userText: string, line: string): string {
+  const talk = new Set((parseLocalBrain().get("talk") ?? []).map((row) => row.line));
+  if (!line.trim() || isZodiacLore(line) || (isBareGreeting(userText) && talk.has(line))) {
+    const idle = pickLocalBrainLine("idle");
+    if (!isZodiacLore(idle.line) && !talk.has(idle.line)) return idle.line;
+    return pickLocalBrainLine("_default").line;
+  }
+  return line;
+}
+
 /**
  * Offline Star Rai brain for GitHub Pages (no server API).
  * Lines come from artifacts/star-rai-local-brain.txt, keyed by the current
@@ -132,7 +170,7 @@ export function composeAct(
     if (clockTurn?.kind !== "ask_time" && poseCommand == null) {
       line = filterEchoedLine(line, lastUser);
     }
-    return line === act.line ? act : { ...act, line };
+    return { ...act, line, source: "local" };
   };
   const lifeTitle = parseTrackTitle(lastUser);
   const named = lifeTitle ? null : namedPoseFromText(lastUser);
@@ -169,7 +207,7 @@ export function composeAct(
     if (mem?.length) act.mem = mem;
     return finish(tintSpokenAct(act, tintCtx));
   }
-  if (chartAct) {
+  if (chartAct && !isUnaskedMoodAside(lastUser)) {
     const mem = extractMemCandidate(lastUser);
     const act: BrainAct = { emotion: chartAct.emotion, line: chartAct.line };
     if (chartAct.pose) act.pose = chartAct.pose;
@@ -184,31 +222,69 @@ export function composeAct(
   });
   const mem = extractMemCandidate(lastUser);
 
-  // Named pose commands still use the pose-keyed bank. Kiss stays unmapped.
-  // Generic chat tracks the last user line instead of a stock pose beat.
-  if (keyed == null) {
-    const tracked = localTrackAct(lastUser);
-    if (tracked) {
-      const act: BrainAct = { emotion: tracked.emotion, line: tracked.line };
-      if (mem?.length) act.mem = mem;
-      return finish(tintSpokenAct(act, { ...tintCtx, namedPose: keyed }));
-    }
+  // Kiss stays on the body already showing. Idle stays idle — no talk tint.
+  // The line is that sheet's bank, or idle lines when the sheet has no rows.
+  if (keyed === false) {
+    const bankKey = currentPose && !usedDefaultBank(currentPose) ? currentPose : "idle";
+    const row = pickLocalBrainLine(bankKey);
+    const act: BrainAct = {
+      emotion: DEFAULT_EMOTION,
+      line: spokenFallbackLine(lastUser, row.line),
+      pose: currentPose ?? "idle",
+    };
+    if (mem?.length) act.mem = mem;
+    return finish(act);
   }
 
-  const row = pickLocalBrainLine(poseKey);
+  // Generic chat tracks the last user line. The row emotion never picks the sheet.
+  if (keyed == null) {
+    const tracked = localTrackAct(lastUser);
+    const line = spokenFallbackLine(lastUser, tracked?.line ?? "");
+    const act: BrainAct = { emotion: DEFAULT_EMOTION, line };
+    if (mem?.length) act.mem = mem;
+    return finish(tintSpokenAct(act, { ...tintCtx, namedPose: null }));
+  }
 
-  const act: BrainAct = { emotion: row.emotion, line: row.line };
-  // Named pose commands already swapped the sheet; echo the key. Kiss / omitted → tint.
-  if (keyed) act.pose = keyed;
+  // Named command already swapped the sheet. Speak that bank (idle lines if it has none).
+  const bankKey = usedDefaultBank(poseKey) ? "idle" : poseKey;
+  const row = pickLocalBrainLine(bankKey);
+  const act: BrainAct = {
+    emotion: DEFAULT_EMOTION,
+    line: spokenFallbackLine(lastUser, row.line),
+    pose: keyed,
+  };
   if (mem?.length) act.mem = mem;
   return finish(tintSpokenAct(act, { ...tintCtx, namedPose: keyed }));
 }
 
+/** True once a local-brain act has announced itself. Grok JSON never sets this. */
+export function isLocalBrainReply(raw: string): boolean {
+  return /"source"\s*:\s*"local"/.test(raw);
+}
+
+/**
+ * Kiss hold is local-brain only. A Grok reply that mentions kiss still uses
+ * Grok's pose and emotion, including when the word is only part of the sentence.
+ */
+export function shouldHoldLocalKiss(raw: string, named: PoseId | false | null): boolean {
+  return named === false && isLocalBrainReply(raw);
+}
+
+/** Final sheet for a landed reply. Local kiss keeps the current body. Grok uses the resolver. */
+export function poseForLandedReply(
+  opts: ResolveSpokenPoseOpts & { raw: string },
+): { pose: PoseId; emotion: EmotionId } {
+  if (shouldHoldLocalKiss(opts.raw, opts.namedPose ?? null)) {
+    return { pose: opts.currentPose ?? "idle", emotion: DEFAULT_EMOTION };
+  }
+  return { emotion: opts.emotion, pose: poseForCallReply(opts) };
+}
+
 export function actToJson(act: BrainAct): string {
-  const body: Record<string, unknown> = {
-    emotion: act.emotion,
-    line: act.line,
-  };
+  const body: Record<string, unknown> = {};
+  if (act.source === "local") body.source = "local";
+  body.emotion = act.emotion;
+  body.line = act.line;
   if (act.pose) body.pose = act.pose;
   if (act.mem?.length) body.mem = act.mem;
   return JSON.stringify(body);

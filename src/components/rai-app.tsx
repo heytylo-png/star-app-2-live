@@ -23,6 +23,7 @@ import {
   TIER_LABEL,
   useAffectionStore,
 } from "@/lib/affection-store";
+import { poseForLandedReply, shouldHoldLocalKiss } from "@/lib/brain";
 import { useChatStore } from "@/lib/chat-store";
 import {
   DEFAULT_EMOTION,
@@ -960,21 +961,24 @@ function RaiReady() {
           const live = shapeSpoken(streamedLine);
           const lifeTitle = parseTrackTitle(lastUser);
           const named = lifeTitle ? null : namedPoseFromText(lastUser);
-          const streamed = streamSpokenAct(raw, {
-            namedPose: named,
-            nowPlayingJustSet: lifeTurn.kind === "track_change",
-            chartBeat: chartTurn.kind === "daily",
-            chartTintPose: chartTurn.tintPose,
-            lifeTintPose: lifeTurn.tintPose,
-            seed: live || lastUser,
-            currentPose: poseAtTurnRef.current,
-          });
-          if (streamed) {
-            setEmotion(streamed.emotion);
-            setPose(streamed.pose);
-            poseRef.current = streamed.pose;
-            setBubbleLifeKind(lifeTurn.kind);
-            actLandedAt.current = Date.now();
+          // Local kiss keeps the body already on stage. A Grok reply is not held.
+          if (!shouldHoldLocalKiss(raw, named)) {
+            const streamed = streamSpokenAct(raw, {
+              namedPose: named,
+              nowPlayingJustSet: lifeTurn.kind === "track_change",
+              chartBeat: chartTurn.kind === "daily",
+              chartTintPose: chartTurn.tintPose,
+              lifeTintPose: lifeTurn.tintPose,
+              seed: live || lastUser,
+              currentPose: poseAtTurnRef.current,
+            });
+            if (streamed) {
+              setEmotion(streamed.emotion);
+              setPose(streamed.pose);
+              poseRef.current = streamed.pose;
+              setBubbleLifeKind(lifeTurn.kind);
+              actLandedAt.current = Date.now();
+            }
           }
           if (live) {
             setCaption(live);
@@ -990,10 +994,10 @@ function RaiReady() {
       const line = shapeSpoken(parsedLine) || "…";
       store.patchMessage(threadId, assistant.id, { content: line });
       setCaption(line);
-      setEmotion(act.emotion);
       const lifeTitle = parseTrackTitle(lastUser);
       const named = lifeTitle ? null : namedPoseFromText(lastUser);
-      const next = poseForCallReply({
+      const landed = poseForLandedReply({
+        raw,
         namedPose: named,
         modelPose: act.pose,
         emotion: act.emotion,
@@ -1005,8 +1009,9 @@ function RaiReady() {
         seed: line,
         currentPose: poseAtTurnRef.current,
       });
-      setPose(next);
-      poseRef.current = next;
+      setEmotion(landed.emotion);
+      setPose(landed.pose);
+      poseRef.current = landed.pose;
       setBubbleLifeKind(lifeTurn.kind);
       actLandedAt.current = Date.now();
       if (act.memories.length) useMemoryStore.getState().addMany(act.memories);

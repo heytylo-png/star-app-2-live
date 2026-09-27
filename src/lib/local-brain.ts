@@ -16,6 +16,41 @@ export type LocalBrainRow = {
 
 let lastLine = "";
 
+/** Last used row index per pose key. Survives reload so the cycle does not restart at line 1. */
+const INDEX_STORAGE = "star-rai-local-brain-index";
+let memoryIndex: Record<string, number> = {};
+
+function readIndex(): Record<string, number> {
+  try {
+    if (typeof localStorage !== "undefined") {
+      const raw = localStorage.getItem(INDEX_STORAGE);
+      if (raw) {
+        const parsed = JSON.parse(raw) as unknown;
+        if (parsed && typeof parsed === "object") {
+          const out: Record<string, number> = {};
+          for (const [key, value] of Object.entries(parsed)) {
+            if (typeof value === "number" && Number.isInteger(value) && value >= 0) out[key] = value;
+          }
+          memoryIndex = out;
+          return out;
+        }
+      }
+    }
+  } catch {
+    /* private mode / bad JSON — keep the in-memory cursor */
+  }
+  return memoryIndex;
+}
+
+function writeIndex(map: Record<string, number>): void {
+  memoryIndex = map;
+  try {
+    if (typeof localStorage !== "undefined") localStorage.setItem(INDEX_STORAGE, JSON.stringify(map));
+  } catch {
+    /* quota */
+  }
+}
+
 /** Parse the pose-keyed local-brain table (comments and kiss keys skipped). */
 export function parseLocalBrain(source: string = LOCAL_BRAIN_SOURCE): Map<string, LocalBrainRow[]> {
   const map = new Map<string, LocalBrainRow[]>();
@@ -47,7 +82,9 @@ export function localBrainPoseKeys(): string[] {
 
 function rowsFor(poseKey: string): LocalBrainRow[] {
   const key = poseKey.trim().toLowerCase();
-  return BANK.get(key) ?? BANK.get("_default") ?? [];
+  if (BANK.has(key)) return BANK.get(key) ?? [];
+  // Unknown, kiss, or a live pose with no rows: idle lines. Never the whole table.
+  return BANK.get("idle") ?? BANK.get("_default") ?? [];
 }
 
 export function usedDefaultBank(poseKey: string): boolean {
@@ -56,29 +93,44 @@ export function usedDefaultBank(poseKey: string): boolean {
 }
 
 /**
- * Pick one line for a pose key. Avoids repeating lastLine when another
- * row exists. Unknown keys (and kiss) use `_default`.
+ * One line for a pose key. Cycles the set in order and does not repeat the
+ * previous line when another row exists. The index is stored per pose so a
+ * reload continues the cycle. Unknown keys (and kiss) use idle lines.
  */
 export function pickLocalBrainLine(poseKey: string, avoid: string = lastLine): LocalBrainRow {
-  const rows = rowsFor(poseKey);
+  const key = poseKey.trim().toLowerCase();
+  const bankKey = BANK.has(key) ? key : "idle";
+  const rows = rowsFor(bankKey);
   if (!rows.length) {
     const fallback: LocalBrainRow = {
-      poseKey: "_default",
+      poseKey: "idle",
       emotion: DEFAULT_EMOTION,
-      line: "Say that again — with the real detail~",
+      line: "Facing you. Front and center~",
     };
     lastLine = fallback.line;
     return fallback;
   }
-  const filtered = avoid ? rows.filter((r) => r.line !== avoid) : rows;
-  const pool = filtered.length ? filtered : rows;
-  const row = pool[Math.floor(Math.random() * pool.length)] ?? rows[0]!;
+  const map = readIndex();
+  const stored = map[bankKey];
+  let index = stored == null ? 0 : (stored + 1) % rows.length;
+  if (avoid && rows.length > 1 && rows[index]!.line === avoid) {
+    index = (index + 1) % rows.length;
+  }
+  const row = rows[index]!;
+  map[bankKey] = index;
+  writeIndex(map);
   lastLine = row.line;
   return row;
 }
 
 export function resetLocalBrainLastLine(): void {
   lastLine = "";
+  memoryIndex = {};
+  try {
+    if (typeof localStorage !== "undefined") localStorage.removeItem(INDEX_STORAGE);
+  } catch {
+    /* ignore */
+  }
 }
 
 /** Resolve which pose key the local brain should speak for. */

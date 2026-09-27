@@ -3,12 +3,17 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
-import { isValidActJson } from "./rai.ts";
-import { chatApiEnabled, streamChat } from "./stream-chat.ts";
+import { isLocalBrainReply, poseForLandedReply } from "./brain.ts";
+import { parseLocalBrain, resetLocalBrainLastLine } from "./local-brain.ts";
+import { isValidActJson, namedPoseFromText, parseAct, type PoseId } from "./rai.ts";
+import { GROK_KEY_STORAGE } from "./settings-keys.ts";
+import { chatApiEnabled, streamChat, type StreamDeltaMeta } from "./stream-chat.ts";
+import { localReactionLine } from "./track.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
-describe("streamChat skips /api/chat on the static build", () => {
+describe("stream chat", { concurrency: false }, () => {
+describe("streamChat skips /api/chat on the static build", { concurrency: false }, () => {
   it("keeps the probe behind VITE_CHAT_API=1", () => {
     const source = readFileSync(join(root, "src/lib/stream-chat.ts"), "utf8");
     assert.match(source, /export function chatApiEnabled\(\)/);
@@ -48,4 +53,196 @@ describe("streamChat skips /api/chat on the static build", () => {
       globalThis.fetch = previous;
     }
   });
+});
+
+function memoryStorage() {
+  const store = new Map<string, string>();
+  return {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      store.set(key, value);
+    },
+    removeItem: (key: string) => {
+      store.delete(key);
+    },
+  };
+}
+
+function installStorage(seed: Record<string, string> = {}) {
+  const storage = memoryStorage();
+  for (const [key, value] of Object.entries(seed)) storage.setItem(key, value);
+  const previous = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+  Object.defineProperty(globalThis, "localStorage", { configurable: true, value: storage });
+  return () => {
+    if (previous) Object.defineProperty(globalThis, "localStorage", previous);
+    else delete (globalThis as { localStorage?: unknown }).localStorage;
+  };
+}
+
+function oneLine(reply: string): string {
+  assert.equal(isValidActJson(reply), true);
+  const act = JSON.parse(reply) as { line?: string };
+  assert.equal(typeof act.line, "string");
+  assert.equal(act.line?.includes("\n"), false);
+  const known = [...parseLocalBrain().values()].flat().map((row) => row.line);
+  const tracked = localReactionLine("hey");
+  assert.ok(known.includes(act.line!) || act.line === tracked, act.line);
+  return act.line!;
+}
+
+describe("streamChat local-brain fallback", { concurrency: false }, () => {
+  const input = {
+    model: "test",
+    personality: "rai",
+    reasoning: "low" as const,
+    messages: [{ role: "user" as const, content: "hey" }],
+    currentPose: "idle" as const,
+  };
+
+  it("returns one local line when the Grok key is empty and does not fetch", async () => {
+    resetLocalBrainLastLine();
+    const calls: string[] = [];
+    const previous = globalThis.fetch;
+    globalThis.fetch = (async (url: RequestInfo | URL) => {
+      calls.push(String(url));
+      throw new TypeError("Failed to fetch");
+    }) as typeof fetch;
+    const restore = installStorage();
+    try {
+      const reply = await streamChat(input, () => {});
+      const line = oneLine(reply);
+      assert.equal(calls.length, 0);
+      const talk = (parseLocalBrain().get("talk") ?? []).map((row) => row.line);
+      assert.equal(talk.includes(line), false, line);
+    } finally {
+      globalThis.fetch = previous;
+      restore();
+      resetLocalBrainLastLine();
+    }
+  });
+
+  it("returns one local line when Grok answers 401", async () => {
+    resetLocalBrainLastLine();
+    const calls: string[] = [];
+    const previous = globalThis.fetch;
+    globalThis.fetch = (async (url: RequestInfo | URL) => {
+      calls.push(String(url));
+      return new Response("unauthorized", { status: 401 });
+    }) as typeof fetch;
+    const restore = installStorage({ [GROK_KEY_STORAGE]: "brain-test-key" });
+    try {
+      let reset = false;
+      const reply = await streamChat(input, (_text, meta?: StreamDeltaMeta) => {
+        if (meta?.reset) reset = true;
+      });
+      oneLine(reply);
+      assert.ok(calls.length >= 1);
+      assert.equal(reset, true);
+      assert.doesNotMatch(reply, /unauthorized|offline|api/i);
+    } finally {
+      globalThis.fetch = previous;
+      restore();
+      resetLocalBrainLastLine();
+    }
+  });
+
+  it("returns one local line when fetch throws and when the act JSON is invalid", async () => {
+    const previous = globalThis.fetch;
+    const restore = installStorage({ [GROK_KEY_STORAGE]: "brain-test-key" });
+    try {
+      resetLocalBrainLastLine();
+      globalThis.fetch = (async () => {
+        throw new TypeError("Failed to fetch");
+      }) as typeof fetch;
+      oneLine(await streamChat(input, () => {}));
+
+      resetLocalBrainLastLine();
+      const sse = `data: ${JSON.stringify({ choices: [{ delta: { content: "not an act" } }] })}\n\ndata: [DONE]\n`;
+      globalThis.fetch = (async () => new Response(sse, { status: 200 })) as typeof fetch;
+      const reply = await streamChat(input, () => {});
+      const line = oneLine(reply);
+      assert.notEqual(line, "not an act");
+    } finally {
+      globalThis.fetch = previous;
+      restore();
+      resetLocalBrainLastLine();
+    }
+  });
+
+  it("lets a successful Grok pose win on kiss, and holds only a local kiss", async () => {
+    const previous = globalThis.fetch;
+    const restore = installStorage({ [GROK_KEY_STORAGE]: "brain-test-key" });
+    const grok = async (user: string, act: { emotion: string; pose: PoseId; line: string }, current: PoseId) => {
+      const payload = JSON.stringify({ choices: [{ delta: { content: JSON.stringify(act) } }] });
+      globalThis.fetch = (async () =>
+        new Response(`data: ${payload}\n\ndata: [DONE]\n`, { status: 200 })) as typeof fetch;
+      const reply = await streamChat(
+        { ...input, messages: [{ role: "user", content: user }], currentPose: current },
+        () => {},
+      );
+      assert.equal(isLocalBrainReply(reply), false);
+      const parsed = parseAct(reply);
+      return poseForLandedReply({
+        raw: reply,
+        namedPose: namedPoseFromText(user),
+        modelPose: parsed.pose,
+        emotion: parsed.emotion,
+        spoken: true,
+        currentPose: current,
+        seed: parsed.line,
+      });
+    };
+    try {
+      const hearts = await grok(
+        "blow me a kiss",
+        { emotion: "hype", pose: "hearts", line: "Catch." },
+        "idle",
+      );
+      assert.equal(hearts.pose, "hearts");
+      assert.equal(hearts.emotion, "hype");
+
+      const smug = await grok("kiss", { emotion: "smug", pose: "smug", line: "There." }, "idle");
+      assert.equal(smug.pose, "smug");
+      assert.equal(smug.emotion, "smug");
+
+      const cat = await grok(
+        "my cat kisses me every morning",
+        { emotion: "bratty", pose: "talk", line: "Your cat." },
+        "idle",
+      );
+      assert.equal(cat.pose, "talk");
+      assert.equal(cat.emotion, "bratty");
+    } finally {
+      globalThis.fetch = previous;
+      restore();
+    }
+
+    resetLocalBrainLastLine();
+    const localRestore = installStorage();
+    try {
+      const reply = await streamChat(
+        { ...input, messages: [{ role: "user", content: "kiss" }], currentPose: "idle" },
+        () => {},
+      );
+      assert.equal(isLocalBrainReply(reply), true);
+      const parsed = parseAct(reply);
+      const idle = (parseLocalBrain().get("idle") ?? []).map((row) => row.line);
+      assert.ok(idle.includes(parsed.line), parsed.line);
+      const held = poseForLandedReply({
+        raw: reply,
+        namedPose: namedPoseFromText("kiss"),
+        modelPose: parsed.pose,
+        emotion: parsed.emotion,
+        spoken: true,
+        currentPose: "idle",
+        seed: parsed.line,
+      });
+      assert.equal(held.pose, "idle");
+      assert.equal(held.emotion, "bratty");
+    } finally {
+      localRestore();
+      resetLocalBrainLastLine();
+    }
+  });
+});
 });
