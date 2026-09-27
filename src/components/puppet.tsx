@@ -8,21 +8,22 @@ import {
   idleRestSrc,
   isRetiredBlinkSrc,
   layersFor,
-  POSE_CROSSFADE_MS,
   USE_EXPO_TALK_BUST,
   type EmotionId,
   type PoseId,
-  type SpriteLayer,
 } from "@/lib/rai";
 import {
-  IDLE_BEAT_FADE_MS,
   IDLE_BLINK_FIRST_MS,
   IDLE_BLINK_GAP_MAX_MS,
   IDLE_BLINK_GAP_MIN_MS,
+  framingTopRatio,
+  framingZoomForViewport,
   idleBlinkSchedule,
   idleBlinkStepName,
   puppetIdleMotion,
   puppetRigTransform,
+  snapPuppetSheet,
+  snapStageHeight,
   type IdleBlinkFrame,
 } from "@/lib/rai-motion";
 import { punchedSpriteUrl } from "@/lib/punch-white";
@@ -36,7 +37,7 @@ type PuppetProps = {
   className?: string;
 };
 
-type DisplayLayer = SpriteLayer & { z: number };
+type SheetBox = { width: number; height: number; top: number; left: number };
 
 const LOOK_LERP = 6.5; // higher = snappier; frame-rate independent
 const AMP_LERP = 10;
@@ -58,31 +59,16 @@ function syntheticJaw(t: number): number {
   return 0.25 + 0.55 * Math.abs(Math.sin(t * 11)) * Math.abs(Math.sin(t * 3.3));
 }
 
-function isInstantLayer(layer: SpriteLayer, talking: boolean): boolean {
-  if (layer.role === "eyes") return true;
-  return talking && (layer.id === "talk" || layer.role === "talk");
-}
-
-/** off = pose timing. snap = cut to the new sheet when a blink is cancelled. */
-type BlinkFadeMode = "off" | "snap";
-
-function fadeMsFor(layer: SpriteLayer, talking: boolean, blinkMode: BlinkFadeMode): number {
-  if (isInstantLayer(layer, talking)) return 0;
-  if (layer.id.startsWith("idle-beat")) return IDLE_BEAT_FADE_MS;
-  if (layer.id === "expo-talk") return 180;
-  // Pose / talk / emotion swap mid-blink: cut, don't ease the closed frame out.
-  if (blinkMode === "snap") return 0;
-  return POSE_CROSSFADE_MS;
-}
-
 /**
  * Star Rai 2D puppet — planted idle life, look-at lean, talk/mood sheets.
- * Studio-white cards are punched to alpha. Layers crossfade by stable id.
+ * Studio-white cards are punched to alpha. Exactly one body image.
+ * Pose, talk, and blink are hard src cuts. No opacity crossfade and no
+ * second sheet stacked under the body.
  * Spoken bubble holds talk/mood through the line; frown idle is rest-only.
  * Rest idle is one full-frame image. Blink is on (IDLE_BLINK_ENABLED):
  * hard cuts 02 → 03 → 04 → 03 → 02 in ~300ms, then hold 01.
  * Approved by TyLo on 2026-09-26 (807-referenced painted lids, pass 4b).
- * No eye strip, no hole overlay, no second <img> for lids. Expo bust
+ * No eye strip, no hole overlay, no second image for lids. Expo bust
  * mouth/eye crops stay off. Dedicated poses do not blink.
  */
 export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
@@ -102,13 +88,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const [ampLive, setAmpLive] = useState(0);
   const [blink, setBlink] = useState<IdleBlinkFrame>(0);
   const [reducedMotion, setReducedMotion] = useState(false);
-  const [display, setDisplay] = useState<DisplayLayer[]>([]);
   const [sheets, setSheets] = useState<Record<string, string>>({});
-  const prevIds = useRef<Map<string, DisplayLayer>>(new Map());
-  const fadeTimers = useRef<Map<string, number>>(new Map());
-  const fadingIn = useRef<Set<string>>(new Set());
-  const fadeRaf = useRef(0);
-  const [blinkMode, setBlinkMode] = useState<BlinkFadeMode>("off");
+  const [sheetBox, setSheetBox] = useState<SheetBox | null>(null);
   const blinkRef = useRef<IdleBlinkFrame>(0);
 
   // Punch studio-white cards to alpha, then decode so pose swaps never flash a plate.
@@ -249,10 +230,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     return () => {
       cancelled = true;
       stop();
-      const midBlink = blinkRef.current > 0;
       blinkRef.current = 0;
       setBlink(0);
-      if (midBlink) setBlinkMode("snap");
     };
   }, [restingBlink, framesReady]);
 
@@ -321,9 +300,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
         node.style.transform = puppetRigTransform(motion);
       }
       if (ahoge) {
-        ahoge.style.transform = `rotate(${motion.hairDeg.toFixed(2)}deg) scaleY(${(
-          1 + Math.sin(t * 2.05) * 0.03
-        ).toFixed(3)})`;
+        ahoge.style.transform = `rotate(${motion.hairDeg.toFixed(2)}deg)`;
       }
 
       raf.current = requestAnimationFrame(tick);
@@ -339,12 +316,6 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       : framesReady
         ? blink
         : 0;
-  // Pose / talk / emotion can change a frame before the blink timer cleans up.
-  // Derive snap in that render so the next sheet cuts in instead of easing from a closed frame.
-  let blinkModeLive: BlinkFadeMode = blinkMode;
-  if (!USE_EXPO_TALK_BUST && !restingBlink && blinkShown > 0) {
-    blinkModeLive = "snap";
-  }
 
   const desired = useMemo(
     () =>
@@ -362,117 +333,58 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     [pose, emotion, talking, ampLive, blinkShown, reducedMotion],
   );
   const plates = useMemo(
-    () => desired.filter((layer) => layer.role !== "eyes" && !isRetiredBlinkSrc(layer.src)),
+    () => desired.filter((layer) => layer.role === "body" && !isRetiredBlinkSrc(layer.src)),
     [desired],
   );
 
-  // Drop snap timing once the cancelled blink has cut to the new sheet.
+  // Whole-pixel stage height and a 1008:1792 sheet. Framing zoom is an integer size.
   useEffect(() => {
-    if (blinkMode !== "snap") return;
-    const timer = window.setTimeout(() => {
-      setBlinkMode((mode) => (mode === "snap" ? "off" : mode));
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, [blinkMode]);
+    const stage = stageRef.current;
+    if (!stage) return;
 
-  // Crossfade pool: incoming fades from 0, outgoing fades to 0, overlap both.
-  // Rest blink keeps IDLE_REST_LAYER_ID, so a frame step updates that one layer.
-  useEffect(() => {
-    if (fadeRaf.current) {
-      window.clearTimeout(fadeRaf.current);
-      fadeRaf.current = 0;
-    }
+    const apply = () => {
+      const parent = stage.parentElement;
+      const rawH = (parent ?? stage).getBoundingClientRect().height;
+      const snapped = snapStageHeight(rawH);
+      if (snapped > 0) stage.style.height = `${snapped}px`;
 
-    const next = new Map<string, DisplayLayer>();
-    plates.forEach((layer, i) => {
-      // Body starts at 1 so sheets sit above .rai-rig::after (contact shadow at z 0).
-      const z = layer.role === "talk" ? 20 + i : i + 1;
-      next.set(layer.id, { ...layer, z });
-    });
+      const rig = stage.querySelector<HTMLElement>("[data-rai-rig]");
+      if (!rig) return;
+      const box = rig.getBoundingClientRect();
+      if (box.width <= 0 || box.height <= 0) return;
+      const zoom = framingZoomForViewport(window.innerWidth, window.innerHeight);
+      const sheet = snapPuppetSheet(box.height, zoom);
+      const top = Math.round(box.height * framingTopRatio(window.innerWidth));
+      const left = Math.round((box.width - sheet.width) / 2);
+      setSheetBox((prev) =>
+        prev &&
+        prev.width === sheet.width &&
+        prev.height === sheet.height &&
+        prev.top === top &&
+        prev.left === left
+          ? prev
+          : { width: sheet.width, height: sheet.height, top, left },
+      );
+    };
 
-    const merged = new Map(prevIds.current);
-    const incoming: Array<[string, DisplayLayer]> = [];
-    const firstPaint = prevIds.current.size === 0;
-
-    for (const [id, layer] of next) {
-      const existingTimer = fadeTimers.current.get(id);
-      if (existingTimer) {
-        window.clearTimeout(existingTimer);
-        fadeTimers.current.delete(id);
-      }
-      const prev = merged.get(id);
-      if (!prev) {
-        if (isInstantLayer(layer, talking) || firstPaint || blinkModeLive === "snap") {
-          // First paint and cancelled blinks snap on — fading from empty left a blank or a stuck lid.
-          merged.set(id, layer);
-        } else {
-          // Incoming on top at 0 so the outgoing PNG stays visible until the fade starts.
-          merged.set(id, { ...layer, opacity: 0, z: 10 + layer.z });
-          fadingIn.current.add(id);
-          incoming.push([id, layer]);
-        }
-      } else if (fadingIn.current.has(id) && blinkModeLive !== "snap") {
-        // Keep the fade-in; don't snap to target when talkPhase retriggers.
-        merged.set(id, { ...layer, opacity: prev.opacity });
-      } else {
-        if (blinkModeLive === "snap") fadingIn.current.delete(id);
-        merged.set(id, layer);
-      }
-    }
-
-    for (const [id, layer] of merged) {
-      if (!next.has(id) && layer.opacity > 0) {
-        fadingIn.current.delete(id);
-        merged.set(id, { ...layer, opacity: 0 });
-        const existingTimer = fadeTimers.current.get(id);
-        if (existingTimer) window.clearTimeout(existingTimer);
-        const fadeMs = fadeMsFor(layer, talking, blinkModeLive);
-        const removeAfter = fadeMs + 40;
-        const timer = window.setTimeout(() => {
-          prevIds.current.delete(id);
-          fadeTimers.current.delete(id);
-          setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
-        }, removeAfter);
-        fadeTimers.current.set(id, timer);
-      }
-    }
-
-    prevIds.current = merged;
-    setDisplay(Array.from(merged.values()).sort((a, b) => a.z - b.z));
-
-    if (incoming.length) {
-      if (fadeRaf.current) window.clearTimeout(fadeRaf.current);
-      // Wait one paint at opacity 0 so CSS can interpolate 0 → target (not a hard cut in).
-      const incomingDelay = 48;
-      fadeRaf.current = window.setTimeout(() => {
-        for (const [id, layer] of incoming) {
-          if (!prevIds.current.has(id)) continue;
-          prevIds.current.set(id, layer);
-          fadingIn.current.delete(id);
-        }
-        setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
-      }, incomingDelay);
-    }
-  }, [plates, talking, blinkModeLive]);
-
-  useEffect(() => {
+    apply();
+    const ro = new ResizeObserver(apply);
+    if (stage.parentElement) ro.observe(stage.parentElement);
+    window.addEventListener("resize", apply);
     return () => {
-      for (const t of fadeTimers.current.values()) window.clearTimeout(t);
-      fadeTimers.current.clear();
-      if (fadeRaf.current) window.clearTimeout(fadeRaf.current);
+      ro.disconnect();
+      window.removeEventListener("resize", apply);
     };
   }, []);
 
   const restPunched = sheets[idleRestSrc()];
   const stageReady = Boolean(restPunched);
-  const talkOverlay = display.find((layer) => layer.role === "talk");
   const blinkFrame = restingBlink ? idleBlinkStepName(blinkShown) : "off";
-  // Rest blink is one full frame. Pose crossfade may still overlap a sheet on
-  // the way in or out; once that handoff is done, paint only this sprite.
-  const restPlate = plates.length === 1 && plates[0]?.id === IDLE_REST_LAYER_ID ? plates[0] : null;
-  const poseHandoff = display.some((layer) => layer.id !== IDLE_REST_LAYER_ID && layer.opacity > 0.01);
-  const restOnly = Boolean(restPlate) && !poseHandoff;
-  const restOnlySrc = restPlate ? sheets[restPlate.src] : undefined;
+  // One body plate. Rest blink keeps IDLE_REST_LAYER_ID and only swaps src.
+  const bodyPlate = plates[0] ?? null;
+  const restOnly = Boolean(bodyPlate && plates.length === 1 && bodyPlate.id === IDLE_REST_LAYER_ID);
+  const restOnlySrc = restOnly && bodyPlate ? sheets[bodyPlate.src] : undefined;
+  const shownSrc = bodyPlate ? sheets[bodyPlate.src] : undefined;
 
   return (
     <div
@@ -485,53 +397,30 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       data-rai-talking={talking ? "1" : "0"}
       data-rai-blink={blinkShown > 0 && restingBlink ? "1" : "0"}
       data-rai-blink-frame={blinkFrame}
-      data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
+      data-rai-talk-flap="0"
     >
       <div data-rai-rig className="rai-rig">
-        {restOnly && restOnlySrc ? (
+        {shownSrc && bodyPlate ? (
           <img
-            key={IDLE_REST_LAYER_ID}
-            src={restOnlySrc}
+            key={restOnly ? IDLE_REST_LAYER_ID : bodyPlate.id}
+            src={restOnly ? restOnlySrc : shownSrc}
             alt=""
             draggable={false}
             decoding="sync"
             className="rai-layer"
             data-rai-role="body"
-            data-rai-sheet={blinkFrame}
-            style={{ opacity: 1, zIndex: 1, transition: "none" }}
+            data-rai-sheet={restOnly ? blinkFrame : undefined}
+            style={{
+              opacity: 1,
+              zIndex: 1,
+              transition: "none",
+              width: sheetBox ? `${sheetBox.width}px` : undefined,
+              height: sheetBox ? `${sheetBox.height}px` : undefined,
+              top: sheetBox ? `${sheetBox.top}px` : undefined,
+              left: sheetBox ? `${sheetBox.left}px` : undefined,
+            }}
           />
-        ) : (
-          display.map((layer) => {
-            if (layer.role === "eyes" || isRetiredBlinkSrc(layer.src)) return null;
-            const src = sheets[layer.src];
-            if (!src) return null;
-            const fadeMs = fadeMsFor(layer, talking, blinkModeLive);
-            // A visible rest frame never opacity-blends. Src swaps are a cut.
-            // Fading this sheet out for a pose still uses the pose crossfade.
-            const restHardCut = layer.id === IDLE_REST_LAYER_ID && layer.opacity > 0;
-            const style = {
-              opacity: layer.opacity,
-              zIndex: layer.z,
-              transition:
-                restHardCut || isInstantLayer(layer, talking) || fadeMs === 0
-                  ? "none"
-                  : `opacity ${fadeMs}ms var(--ease-smooth-out)`,
-            };
-            return (
-              <img
-                key={layer.id}
-                src={src}
-                alt=""
-                draggable={false}
-                decoding="async"
-                className="rai-layer"
-                data-rai-role={layer.role}
-                data-rai-sheet={layer.id === IDLE_REST_LAYER_ID ? blinkFrame : undefined}
-                style={style}
-              />
-            );
-          })
-        )}
+        ) : null}
         {/* Ahoge / hair tip proxy — rotates over the crown */}
         <span data-rai-ahoge className="rai-ahoge" />
       </div>

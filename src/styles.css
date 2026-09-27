@@ -313,7 +313,7 @@ body.chat-thread-resizing {
   top: calc(env(safe-area-inset-top, 0px) + var(--rai-top-bar) + 0.2rem);
   /* Composer + tabs only — feet continue toward the compact Chat band. */
   bottom: clamp(5.1rem, 15vh, 7.25rem);
-  /* Hip origin: planted weight-shift / breathe. JS owns transform (no rotateY). */
+  /* Hip origin: planted weight-shift. JS owns transform (whole pixels, no scale). */
   transform-origin: 50% 72%;
   will-change: transform;
   background: transparent;
@@ -357,23 +357,21 @@ body.chat-thread-resizing {
 
 .rai-layer {
   position: absolute;
-  inset: 0;
   display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  object-fit: fill;
   object-position: 50% 0%;
   pointer-events: none;
   user-select: none;
   background: transparent;
   z-index: 1;
   /*
-    Crown-origin long shot: modest zoom so the full body stays in frame
-    (ahoge safe, feet toward Chat). Phone scale is the pulled-back 1.08 crop.
-    Not a face-filling mid-shot / bust.
+    Crown-origin long shot. Framing C (phone ~1.08) is an integer pixel
+    size on the img. translateZ(0) stays on this element; sway writes
+    its own transform on [data-rai-rig] and does not replace it.
   */
   top: 2%;
-  transform: scale(var(--rai-long-shot));
+  image-rendering: auto;
+  transform: translateZ(0);
   transform-origin: 50% 0%;
   /* 1px amber rim on the punched sprite. Keep ahoge crisp; no cyan. */
   filter:
@@ -385,13 +383,6 @@ body.chat-thread-resizing {
 @media (max-width: 639px) {
   .rai-layer {
     top: 1.25%;
-    transform: scale(var(--rai-long-shot-phone));
-  }
-}
-
-@media (min-width: 640px) and (min-height: 900px) {
-  .rai-layer {
-    transform: scale(var(--rai-long-shot-tall));
   }
 }
 

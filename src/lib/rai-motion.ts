@@ -73,8 +73,17 @@ export function idleBlinkSchedule(): IdleBlinkStep[] {
 export const IDLE_MAX_TRANSLATE_Y_PX = 1.2;
 /** Weight-shift rock, excluding look-at lean. */
 export const IDLE_MAX_ROCK_DEG = 0.65;
-export const IDLE_BREATHE_MIN = 0.988;
-export const IDLE_BREATHE_MAX = 1.014;
+/**
+ * Rest and idle scale stay exactly 1. The old breathe scale (~±0.75%)
+ * resampled the sheet off the pixel grid and looked blurry on the live
+ * long shot. There is no scale() in the rig transform.
+ */
+export const IDLE_BREATHE_MIN = 1;
+export const IDLE_BREATHE_MAX = 1;
+
+/** Official idle / blink sheet. CSS size is derived from this ratio. */
+export const RAI_SHEET_W = 1008;
+export const RAI_SHEET_H = 1792;
 
 export type PuppetMotion = {
   translateX: number;
@@ -111,7 +120,6 @@ export function puppetIdleMotion(tSeconds: number, opts: PuppetMotionOpts = {}):
     };
   }
 
-  const breathe = 1 + Math.sin(tSeconds * 1.12) * 0.0075 + Math.sin(tSeconds * 0.43) * 0.0025;
   const swayX = Math.sin(tSeconds * 0.52) * 2.4 + Math.sin(tSeconds * 0.21) * 0.9;
   const rock = Math.sin(tSeconds * 0.46) * 0.48 + look * -0.85;
   const lookX = look * 5.5;
@@ -123,16 +131,55 @@ export function puppetIdleMotion(tSeconds: number, opts: PuppetMotionOpts = {}):
     translateX: swayX + lookX,
     translateY: settleY + talkBob,
     rotateZ: rock,
-    scale: breathe,
+    scale: 1,
     hairDeg: hair,
   };
 }
 
+/**
+ * Framing C zoom, matching the CSS tokens. Phone long shot stays 1.08.
+ * Applied as an integer pixel size, not as CSS scale().
+ */
+export function framingZoomForViewport(width: number, height: number): number {
+  if (width <= 639) return 1.08;
+  if (width >= 640 && height >= 900) return 1;
+  return 1.04;
+}
+
+/** Crown inset. Phone was 1.25% of the rig; other viewports 2%. */
+export function framingTopRatio(width: number): number {
+  return width <= 639 ? 0.0125 : 0.02;
+}
+
+/** Stage box height on a whole CSS pixel. */
+export function snapStageHeight(px: number): number {
+  return Math.max(0, Math.round(px));
+}
+
+/**
+ * Integer CSS size for the 1008×1792 sheet. Height is the rig box times
+ * the framing zoom, rounded. Width follows that height at the sheet ratio.
+ */
+export function snapPuppetSheet(
+  boxHeightPx: number,
+  zoom: number,
+): { width: number; height: number } {
+  const height = Math.max(1, Math.round(boxHeightPx * zoom));
+  const width = Math.max(1, Math.round((height * RAI_SHEET_W) / RAI_SHEET_H));
+  return { width, height };
+}
+
+/**
+ * Hip-origin sway. Translates are whole pixels. translateZ(0) stays in
+ * this string so a later write cannot drop it. No scale() — rest scale is 1.
+ */
 export function puppetRigTransform(motion: PuppetMotion): string {
+  const x = Math.round(motion.translateX) || 0;
+  const y = Math.round(motion.translateY) || 0;
   return [
-    `translateX(${motion.translateX.toFixed(2)}px)`,
-    `translateY(${motion.translateY.toFixed(2)}px)`,
+    `translateX(${x}px)`,
+    `translateY(${y}px)`,
     `rotateZ(${motion.rotateZ.toFixed(2)}deg)`,
-    `scale(${motion.scale.toFixed(4)})`,
+    `translateZ(0)`,
   ].join(" ");
 }
