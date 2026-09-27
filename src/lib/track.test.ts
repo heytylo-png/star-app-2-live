@@ -10,10 +10,12 @@ import {
   GROK_TURN_MAX,
   STOCK_FLIRT_RE,
   clipUserBeat,
+  filterEchoedLine,
   formatLastUserCue,
   isBareGreeting,
   isCorrectionTurn,
   isPermissionAsk,
+  lineEchoesUser,
   localTrackAct,
   localTrackKey,
   packChatTurns,
@@ -87,12 +89,44 @@ describe("local track acts", () => {
     assert.doesNotMatch(act.line, /looking at you|don'?t flinch/i);
   });
 
-  it("echoes generic chat with their words", () => {
+  it("reacts to generic chat without repeating their words", () => {
     resetLocalBrainLastLine();
     const act = localTrackAct("Hey. Just got here.");
     assert.ok(act);
-    assert.match(act.line, /Just got here/);
+    assert.equal(lineEchoesUser(act.line, "Hey. Just got here."), false);
+    assert.doesNotMatch(act.line, /Just got here|heard that/i);
     assert.doesNotMatch(act.line, STOCK_FLIRT_RE);
+  });
+});
+
+describe("echo filter", () => {
+  const samples = ["I made coffee.", "hello", "I'm tired", "what are you doing"] as const;
+
+  it("strips a mocked model echo and does not leave the ack", () => {
+    for (const text of samples) {
+      const echoed = `${text.replace(/[.!?]+$/g, "")}. Yeah, I heard that`;
+      const line = filterEchoedLine(echoed, text);
+      assert.equal(lineEchoesUser(line, text), false, `${text} -> ${line}`);
+      assert.doesNotMatch(line, /heard that/i);
+      assert.notEqual(line.toLowerCase(), text.toLowerCase());
+    }
+  });
+
+  it("local fallback does not parrot coffee, hello, tired, or what are you doing", () => {
+    for (const text of samples) {
+      resetLocalBrainLastLine();
+      for (let i = 0; i < 4; i++) {
+        const act = composeAct([{ role: "user", content: text }], undefined, "idle");
+        assert.equal(lineEchoesUser(act.line, text), false, `${text} -> ${act.line}`);
+        assert.doesNotMatch(act.line, /heard that/i);
+      }
+    }
+  });
+
+  it("keeps a clock time-ask line that is the real hour", () => {
+    const ask = "What time is it where you are?";
+    const hour = "It's 8:00 here. You're up early.";
+    assert.equal(filterEchoedLine(hour, ask, { exempt: true }), hour);
   });
 });
 

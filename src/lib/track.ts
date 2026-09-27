@@ -55,7 +55,7 @@ export function isBareGreeting(text: string): boolean {
   return /^(hi|hey|hello|yo|sup|good morning|good evening|just got here|i'?m here)$/i.test(t);
 }
 
-/** Short phrase from their last line so a local fallback can still use their words. */
+/** Short phrase from their last line for topic hints. Not for her spoken line. */
 export function clipUserBeat(text: string, max = 42): string {
   let t = cleanText(text).replace(/^["'“”]+|["'“”]+$/g, "");
   const parts = t
@@ -79,10 +79,122 @@ export function localTrackKey(userText: string): "_correction" | "_permission" |
   return null;
 }
 
+const COFFEE_RE = /\b(?:coffee|latte|espresso)\b/i;
+const TIRED_RE = /\b(?:tired|sleepy|exhausted|wiped|drained)\b/i;
+const DOING_RE = /\bwhat(?:'re| are|'?s| is)? (?:you |ya |u )?(?:doing|up to)\b/i;
+
+const REACTION_BANKS: { test: (text: string) => boolean; lines: readonly string[] }[] = [
+  { test: (text) => isBareGreeting(text), lines: ["There you are :3", "You caught me~"] },
+  { test: (text) => COFFEE_RE.test(text), lines: ["Save me a sip :3", "Pour it. I'm watching~"] },
+  { test: (text) => TIRED_RE.test(text), lines: ["Then sit. I'm not making you move~", "Low battery. Stay anyway :3"] },
+  { test: (text) => DOING_RE.test(text), lines: ["Standing here. You called~", "Nothing you get to grade :3"] },
+  {
+    test: (text) => /\?\s*$/.test(text) || /\b(?:what|why|how|where|when|who)\b/i.test(text),
+    lines: ["You first. I'm listening~", "Asking me? Bold :3"],
+  },
+];
+
+const GENERIC_REACTIONS = [
+  "Okay. Say more~",
+  "Mm. I'm with you :3",
+  "Cute. Keep going :3",
+  "Your turn. I'm here~",
+] as const;
+
+const ECHO_ACK_RE = /\byeah,?\s+i heard that\b|\bi heard that\b/i;
+
+/** Words for overlap checks. Apostrophes fold so "I'm" and "im" match. */
+export function speechTokens(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/['’]/g, "")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function longestSharedRun(clause: string[], user: string[]): number {
+  let best = 0;
+  for (let i = 0; i < clause.length; i++) {
+    for (let j = 0; j < user.length; j++) {
+      let k = 0;
+      while (i + k < clause.length && j + k < user.length && clause[i + k] === user[j + k]) k += 1;
+      if (k > best) best = k;
+    }
+  }
+  return best;
+}
+
+/** Share of the user's words that appear in the clause. */
+function userTokenOverlap(clause: string[], user: string[]): number {
+  const unique = [...new Set(user)];
+  if (!unique.length) return 0;
+  const have = new Set(clause);
+  let hit = 0;
+  for (const token of unique) if (have.has(token)) hit += 1;
+  return hit / unique.length;
+}
+
+/**
+ * True when a clause repeats the latest user message:
+ * 4+ consecutive words, or more than 60% of their tokens.
+ */
+export function clauseEchoesUser(clause: string, userText: string): boolean {
+  const left = speechTokens(clause);
+  const right = speechTokens(userText);
+  if (!left.length || !right.length) return false;
+  if (longestSharedRun(left, right) >= 4) return true;
+  return userTokenOverlap(left, right) > 0.6;
+}
+
+export function lineEchoesUser(line: string, userText: string): boolean {
+  const clauses = line
+    .split(/(?<=[.!?])\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const parts = clauses.length ? clauses : [line];
+  return parts.some((part) => clauseEchoesUser(part, userText) || ECHO_ACK_RE.test(part));
+}
+
+function pickStable(lines: readonly string[], seed: string): string {
+  let hash = 2166136261;
+  for (const ch of seed) hash = Math.imul(hash ^ ch.charCodeAt(0), 16777619);
+  return lines[(hash >>> 0) % lines.length]!;
+}
+
+/** In-voice reaction to what they said. Never their words. */
+export function localReactionLine(userText: string): string {
+  const cleaned = cleanText(userText);
+  const bank = REACTION_BANKS.find((row) => row.test(cleaned));
+  const line = pickStable(bank?.lines ?? GENERIC_REACTIONS, cleaned.toLowerCase());
+  if (!clauseEchoesUser(line, cleaned) && !ECHO_ACK_RE.test(line)) return line;
+  return "Mm. Your move~";
+}
+
+/**
+ * Drop a clause that repeats the latest user message or is the
+ * "yeah I heard that" ack. If nothing is left, one local reaction.
+ * Clock time-ask lines pass `exempt` and stay the real hour.
+ */
+export function filterEchoedLine(line: string, userText: string, opts?: { exempt?: boolean }): string {
+  const raw = line.replace(/\s+/g, " ").trim();
+  if (!raw || opts?.exempt) return raw;
+  const user = cleanText(userText);
+  if (!user) return raw;
+  const kept = raw
+    .split(/(?<=[.!?])\s+/)
+    .map((part) => part.trim())
+    .filter((part) => part && !clauseEchoesUser(part, user) && !ECHO_ACK_RE.test(part));
+  if (kept.length) return kept.join(" ");
+  return localReactionLine(user);
+}
+
 /**
  * Local-brain line for generic chat (no named pose).
- * Corrections / permission-asks use table rows; other lines echo their words.
- * Bare greetings return null so the idle pose bank can still fire.
+ * Corrections / permission-asks use table rows. Other lines react.
+ * They never get their own words back. Greetings get a short reaction,
+ * not the pose-bank caption.
  */
 export function localTrackAct(userText: string): TrackedAct | null {
   const cleaned = cleanText(userText);
@@ -94,13 +206,9 @@ export function localTrackAct(userText: string): TrackedAct | null {
     return { emotion: row.emotion, line: row.line };
   }
 
-  if (isBareGreeting(cleaned)) return null;
-
-  const beat = clipUserBeat(cleaned);
-  if (!beat) return null;
   return {
     emotion: DEFAULT_EMOTION,
-    line: `${beat}. Yeah, I heard that~`,
+    line: localReactionLine(cleaned),
   };
 }
 
@@ -119,5 +227,5 @@ export function packChatTurns(messages: ChatTurn[], max: number = GROK_TURN_MAX)
 export function formatLastUserCue(messages: ChatTurn[]): string {
   const last = [...messages].reverse().find((m) => m.role === "user")?.content.trim();
   if (!last) return "";
-  return `LAST USER SAID\n${last}\nTrack that line. One beat. If they corrected you, acknowledge and pivot.`;
+  return `LAST USER SAID\n${last}\nAnswer that line. One beat. Do not repeat or quote it. If they corrected you, acknowledge and pivot.`;
 }

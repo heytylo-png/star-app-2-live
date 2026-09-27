@@ -53,6 +53,7 @@ import {
   shapeChartSpokenLine,
 } from "@/lib/chart";
 import { filterClockSpokenLine, resolveClockTurn } from "@/lib/clock";
+import { filterEchoedLine } from "@/lib/track";
 import { useChartStore } from "@/lib/chart-store";
 import { useHerMusicStore } from "@/lib/her-music-store";
 import { pickLocalSuggestions } from "@/lib/her-music";
@@ -912,11 +913,15 @@ function RaiReady() {
       .join("\n");
     const shapeSpoken = (text: string) => {
       const charted = chartTurn.kind !== "none" ? shapeChartSpokenLine(text) : text;
-      return filterClockSpokenLine(charted, {
+      const clocked = filterClockSpokenLine(charted, {
         now: clockTurn.now,
         recentText: recentUserText,
         askedTime: clockTurn.kind === "ask_time",
       });
+      if (clockTurn.kind === "ask_time") return clocked;
+      const poseCommand = parseTrackTitle(lastUser) ? null : namedPoseFromText(lastUser);
+      if (poseCommand != null) return clocked;
+      return filterEchoedLine(clocked, lastUser);
     };
 
     let raw = "";
