@@ -4,11 +4,13 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
-  CHAT_THREAD_DEFAULT_VH,
+  CHAT_THREAD_CEILING_PX,
+  CHAT_THREAD_CEILING_REM,
   CHAT_THREAD_HEIGHT_KEY,
   CHAT_THREAD_MAX_VH,
   CHAT_THREAD_MIN_PX,
   CHAT_THREAD_RIG_BAND,
+  CHAT_THREAD_VISIBLE_BEATS,
   RAI_RIG_BOTTOM_MAX_REM,
   RAI_RIG_BOTTOM_MIN_REM,
   RAI_RIG_BOTTOM_VH,
@@ -17,6 +19,8 @@ import {
   maxChatThreadHeightPx,
   parseStoredChatThreadHeight,
   raiRigHeightPx,
+  restingChatBeats,
+  visibleBeatWindowPx,
 } from "./chat-thread-height.ts";
 
 const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles.css"), "utf8");
@@ -25,14 +29,13 @@ const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../style
 const VIEWPORTS = [640, 700, 720, 800, 900] as const;
 
 describe("chat transcript height", () => {
-  it("defaults to the Expo-style bottom third, then the hem band", () => {
+  it("defaults to the two-beat ceiling, not a thigh-high stack", () => {
     for (const vh of VIEWPORTS) {
       const next = defaultChatThreadHeightPx(vh);
-      const uncapped = Math.round(vh * CHAT_THREAD_DEFAULT_VH);
-      assert.equal(next, clampChatThreadHeightPx(uncapped, vh));
-      assert.ok(next >= CHAT_THREAD_MIN_PX);
-      assert.ok(next <= maxChatThreadHeightPx(vh));
+      assert.equal(next, maxChatThreadHeightPx(vh));
+      assert.ok(next <= CHAT_THREAD_CEILING_PX);
       assert.ok(next <= vh * 0.32);
+      assert.ok(next < Math.round(vh * 0.28), `default still covers the thighs at ${vh}`);
     }
   });
 
@@ -79,8 +82,50 @@ describe("chat transcript height", () => {
     assert.equal(RAI_RIG_BOTTOM_MIN_REM, 5.1);
     assert.equal(RAI_RIG_BOTTOM_VH, 0.15);
     assert.equal(RAI_RIG_BOTTOM_MAX_REM, 7.25);
-    assert.match(css, /\.chat-thread-frame\s*\{[^}]*max-height:/s);
-    assert.match(css, /32dvh/);
-    assert.match(css, /\/\s*3/);
+    assert.match(css, /\.chat-thread-frame\s*\{[^}]*max-height:\s*8\.5rem/s);
+    assert.equal(CHAT_THREAD_CEILING_REM, 8.5);
+    assert.doesNotMatch(css, /\.chat-thread-frame\s*\{[^}]*32dvh/s);
+    assert.match(css, /\.chat-thread-mask\s*\{[^}]*mask-image:\s*linear-gradient/s);
+  });
+});
+
+describe("visible chat thread", () => {
+  const thread = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../components/chat-thread.tsx"), "utf8");
+  const app = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../components/rai-app.tsx"), "utf8");
+  const puppet = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../components/puppet.tsx"), "utf8");
+
+  it("shows at most two beats at rest and hides older lines in that same strip", () => {
+    assert.equal(CHAT_THREAD_VISIBLE_BEATS, 2);
+    const lines = ["one", "two", "three", "four", "five"];
+    assert.deepEqual(restingChatBeats(lines), ["four", "five"]);
+    assert.equal(restingChatBeats(lines).length, 2);
+
+    const boxes = [0, 36, 72, 108, 144].map((offsetTop) => ({ offsetTop, offsetHeight: 30 }));
+    const windowPx = visibleBeatWindowPx(boxes);
+    const lastTwo = boxes.slice(-2);
+    const lastTwoHeight =
+      lastTwo[1]!.offsetTop + lastTwo[1]!.offsetHeight - lastTwo[0]!.offsetTop;
+    const allHeight = boxes[4]!.offsetTop + boxes[4]!.offsetHeight - boxes[0]!.offsetTop;
+    assert.ok(windowPx < allHeight);
+    assert.ok(windowPx <= lastTwoHeight + 16 + 8);
+    assert.ok(windowPx < visibleBeatWindowPx(boxes, 5));
+    assert.ok(windowPx <= CHAT_THREAD_CEILING_PX);
+
+    assert.match(thread, /visibleBeatWindowPx\(/);
+    assert.match(thread, /data-chat-visible-beats=\{CHAT_THREAD_VISIBLE_BEATS\}/);
+    assert.match(thread, /data-chat-beat/);
+    assert.match(thread, /chat-thread-mask/);
+    assert.match(thread, /maxHeight: windowPx/);
+    assert.doesNotMatch(thread, /chat-thread-handle|Resize transcript/);
+  });
+
+  it("keeps the PNG puppet mounted behind the chat thread", () => {
+    const presenceAt = app.indexOf("<PresenceStage");
+    const threadAt = app.indexOf("<ChatThread");
+    assert.ok(presenceAt > 0 && threadAt > presenceAt);
+    assert.equal((app.match(/<PresenceStage/g) ?? []).length, 1);
+    assert.match(puppet, /data-rai-engine="png-puppet"/);
+    assert.match(puppet, /className="rai-layer"/);
+    assert.doesNotMatch(thread, /PresenceStage|Puppet|rai-stage/);
   });
 });

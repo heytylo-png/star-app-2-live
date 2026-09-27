@@ -172,60 +172,13 @@
   animation: helix-pulse 1.2s ease-in-out infinite;
 }
 
-/* Bottom band only: dark quiet bubbles on the hem / mid-skirt.
-   Max height = lower third of .rai-rig so face + ahoge stay clear.
-   Resize grip can shrink; CSS max-height is the climb ceiling. */
+/* Short stack just above the input: two compact beats.
+   Older lines scroll inside this strip. 8.5rem matches CHAT_THREAD_CEILING_REM.
+   Face, torso, and thighs stay clear. No card. */
 .chat-thread-frame {
   display: flex;
   flex-direction: column;
-  max-height: min(
-    32dvh,
-    calc(
-      (
-          100dvh - env(safe-area-inset-top, 0px) - var(--rai-top-bar) - 0.2rem -
-            clamp(5.1rem, 15vh, 7.25rem)
-        ) / 3
-    )
-  );
-}
-
-.chat-thread-handle {
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 1.75rem;
-  cursor: ns-resize;
-  touch-action: none;
-  user-select: none;
-}
-
-.chat-thread-handle-pill {
-  pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 1.15rem;
-  border-radius: 999px;
-  color: #f4efe8;
-  background: color-mix(in oklab, #2a2436 72%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.chat-thread-handle:hover .chat-thread-handle-pill,
-.chat-thread-handle:focus-visible .chat-thread-handle-pill {
-  background: color-mix(in oklab, #2a2436 88%, transparent);
-}
-
-.chat-thread-handle:focus-visible {
-  outline: none;
-}
-
-.chat-thread-handle:focus-visible .chat-thread-handle-pill {
-  outline: 2px solid var(--color-ring);
-  outline-offset: 2px;
+  max-height: 8.5rem;
 }
 
 .chat-thread {
@@ -235,6 +188,12 @@
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
+}
+
+/* Older beats sit above the window. The fade hides the cut, not her legs. */
+.chat-thread-mask {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 1rem);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 1rem);
 }
 
 .chat-bubble {
@@ -271,11 +230,6 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: color-mix(in oklab, #f4efe8 62%, transparent);
-}
-
-body.chat-thread-resizing {
-  cursor: ns-resize;
-  user-select: none;
 }
 
 /*
