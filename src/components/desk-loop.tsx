@@ -62,6 +62,10 @@ function DeskVideo({
     el.defaultMuted = true;
     el.setAttribute("muted", "");
     el.setAttribute("playsinline", "");
+    // Cleanup clears src (and Strict Mode replays that cleanup). Put it back
+    // before play(), or the element stays on the poster with an empty src.
+    const absolute = new URL(src, window.location.href).href;
+    if (el.currentSrc !== absolute) el.src = src;
     let cancelled = false;
     const pending = el.play();
     if (pending && typeof pending.catch === "function") {

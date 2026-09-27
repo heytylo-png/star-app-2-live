@@ -95,6 +95,7 @@ describe("Life desk loop stage source", () => {
     assert.match(desk, /controls=\{source\.controls\}/);
     assert.match(desk, /el\.pause\(\)/);
     assert.match(desk, /removeAttribute\("src"\)/);
+    assert.match(desk, /el\.src = src/);
     assert.match(desk, /withBasePath\(/);
     assert.match(desk, /className="rai-desk-loop"/);
     assert.match(stage, /desk\.kind !== "png"/);
