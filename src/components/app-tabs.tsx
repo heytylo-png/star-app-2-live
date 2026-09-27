@@ -17,6 +17,10 @@ type AppTabsProps = {
   onToggleLifeMenu?: () => void;
   lifeMenu?: ReactNode;
   lifeTabRef?: RefObject<HTMLButtonElement | null>;
+  chartMenuOpen?: boolean;
+  onToggleChartMenu?: () => void;
+  chartMenu?: ReactNode;
+  chartTabRef?: RefObject<HTMLButtonElement | null>;
 };
 
 function anchorMenu(node: ReactNode, anchorRef: RefObject<HTMLDivElement | null>) {
@@ -32,9 +36,15 @@ export function AppTabs({
   onToggleLifeMenu,
   lifeMenu,
   lifeTabRef,
+  chartMenuOpen = false,
+  onToggleChartMenu,
+  chartMenu,
+  chartTabRef,
 }: AppTabsProps) {
   const anchorRef = useRef<HTMLDivElement>(null);
+  const chartAnchorRef = useRef<HTMLDivElement>(null);
   const lifeOpen = tab === "life" && lifeMenuOpen;
+  const chartOpen = tab === "chart" && chartMenuOpen;
 
   return (
     <nav
@@ -46,18 +56,20 @@ export function AppTabs({
           const Icon = TAB_ICON[id];
           const active = tab === id;
           const life = id === "life";
+          const chart = id === "chart";
           const tabButton = (
             <button
-              key={id}
-              ref={life ? lifeTabRef : undefined}
+              key={life || chart ? undefined : id}
+              ref={life ? lifeTabRef : chart ? chartTabRef : undefined}
               type="button"
               role="tab"
               aria-selected={active}
-              aria-controls={life ? "star-pane-life star-life-menu" : `star-pane-${id}`}
-              aria-expanded={life ? lifeOpen : undefined}
+              aria-controls={life ? "star-pane-life star-life-menu" : chart ? "star-pane-chart star-chart-menu" : `star-pane-${id}`}
+              aria-expanded={life ? lifeOpen : chart ? chartOpen : undefined}
               id={`star-tab-${id}`}
               onClick={() => {
                 if (life && tab === "life") onToggleLifeMenu?.();
+                else if (chart && tab === "chart") onToggleChartMenu?.();
                 else onChange(id);
               }}
               className={cn(
@@ -74,6 +86,33 @@ export function AppTabs({
               {SHELL_TAB_LABEL[id]}
             </button>
           );
+          if (chart) {
+            return (
+              <div key={id} ref={chartAnchorRef} className="relative">
+                {anchorMenu(chartMenu, chartAnchorRef)}
+                {tabButton}
+                <button
+                  type="button"
+                  aria-label="Chart menu"
+                  aria-expanded={chartOpen}
+                  aria-controls="star-chart-menu"
+                  onClick={() => {
+                    if (tab !== "chart") onChange("chart");
+                    else {
+                      onToggleChartMenu?.();
+                      if (chartOpen) chartTabRef?.current?.focus();
+                    }
+                  }}
+                  className="absolute top-0.5 right-0.5 flex size-5 items-center justify-center rounded-sm text-muted hover:text-fg"
+                >
+                  <ChevronUp
+                    className={cn("size-3 transition-transform duration-150", chartOpen && "rotate-180")}
+                    aria-hidden
+                  />
+                </button>
+              </div>
+            );
+          }
           if (!life) return tabButton;
           return (
             <div key={id} ref={anchorRef} className="relative">
