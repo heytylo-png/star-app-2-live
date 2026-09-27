@@ -19,6 +19,7 @@ import {
   maxChatThreadHeightPx,
   parseStoredChatThreadHeight,
   raiRigHeightPx,
+  restingBeatScrollTop,
   restingChatBeats,
   visibleBeatWindowPx,
 } from "./chat-thread-height.ts";
@@ -85,7 +86,10 @@ describe("chat transcript height", () => {
     assert.match(css, /\.chat-thread-frame\s*\{[^}]*max-height:\s*8\.5rem/s);
     assert.equal(CHAT_THREAD_CEILING_REM, 8.5);
     assert.doesNotMatch(css, /\.chat-thread-frame\s*\{[^}]*32dvh/s);
-    assert.match(css, /\.chat-thread-mask\s*\{[^}]*mask-image:\s*linear-gradient/s);
+    assert.match(
+      css,
+      /\.chat-thread-mask\s*\{[^}]*mask-image:\s*linear-gradient\(\s*to bottom,\s*transparent 0,\s*transparent 1\.25rem,\s*#000 2\.75rem/s,
+    );
   });
 });
 
@@ -105,13 +109,17 @@ describe("visible chat thread", () => {
     const lastTwo = boxes.slice(-2);
     const lastTwoHeight =
       lastTwo[1]!.offsetTop + lastTwo[1]!.offsetHeight - lastTwo[0]!.offsetTop;
+    const olderBottom = boxes[2]!.offsetTop + boxes[2]!.offsetHeight;
     const allHeight = boxes[4]!.offsetTop + boxes[4]!.offsetHeight - boxes[0]!.offsetTop;
+    assert.equal(windowPx, lastTwoHeight + 4);
     assert.ok(windowPx < allHeight);
-    assert.ok(windowPx <= lastTwoHeight + 16 + 8);
     assert.ok(windowPx < visibleBeatWindowPx(boxes, 5));
     assert.ok(windowPx <= CHAT_THREAD_CEILING_PX);
+    assert.equal(restingBeatScrollTop(boxes), lastTwo[0]!.offsetTop);
+    assert.ok(restingBeatScrollTop(boxes) >= olderBottom);
 
     assert.match(thread, /visibleBeatWindowPx\(/);
+    assert.match(thread, /restingBeatScrollTop\(/);
     assert.match(thread, /data-chat-visible-beats=\{CHAT_THREAD_VISIBLE_BEATS\}/);
     assert.match(thread, /data-chat-beat/);
     assert.match(thread, /chat-thread-mask/);

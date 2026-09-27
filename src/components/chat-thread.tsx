@@ -4,6 +4,7 @@ import type { ChatMessage } from "@/lib/helix";
 import {
   CHAT_THREAD_CEILING_PX,
   CHAT_THREAD_VISIBLE_BEATS,
+  restingBeatScrollTop,
   visibleBeatWindowPx,
 } from "@/lib/chat-thread-height";
 
@@ -51,6 +52,7 @@ export function ChatThread({
   const nearBottomRef = useRef(true);
   const prevLenRef = useRef(messages.length);
   const [windowPx, setWindowPx] = useState<number | null>(null);
+  const [atRest, setAtRest] = useState(true);
 
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
   const lastStored = lastMessageContent(messages);
@@ -79,7 +81,11 @@ export function ChatThread({
     prevLenRef.current = messages.length;
     if (appended && last?.role === "user") nearBottomRef.current = true;
     if (!nearBottomRef.current) return;
-    el.scrollTop = el.scrollHeight;
+    const nodes = [...el.querySelectorAll<HTMLElement>("[data-chat-beat]")];
+    el.scrollTop = restingBeatScrollTop(
+      nodes.map((node) => ({ offsetTop: node.offsetTop, offsetHeight: node.offsetHeight })),
+    );
+    setAtRest(true);
   }, [messages, captionText, showListening, windowPx]);
 
   if (empty && !captionText && !callActive && !showSetup) {
@@ -113,9 +119,12 @@ export function ChatThread({
         onScroll={() => {
           const el = scrollerRef.current;
           if (!el) return;
-          nearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_PX;
+          const gap = el.scrollHeight - el.scrollTop - el.clientHeight;
+          nearBottomRef.current = gap < NEAR_BOTTOM_PX;
+          const pinned = gap < 2;
+          setAtRest((prev) => (prev === pinned ? prev : pinned));
         }}
-        className={cn("chat-thread px-1 pb-1", older && "chat-thread-mask")}
+        className={cn("chat-thread px-1 pb-1", older && !atRest && "chat-thread-mask")}
         style={windowPx ? { maxHeight: windowPx } : undefined}
       >
         <div className="flex flex-col justify-end gap-1.5">

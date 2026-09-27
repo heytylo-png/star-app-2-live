@@ -190,10 +190,22 @@
   scrollbar-width: thin;
 }
 
-/* Older beats sit above the window. The fade hides the cut, not her legs. */
+/* While scrolling, older bubbles dissolve across a tall band. Fully
+   transparent at the top so a clipped edge cannot read as a gray sliver.
+   The resting window does not include that band. */
 .chat-thread-mask {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 1rem);
-  mask-image: linear-gradient(to bottom, transparent 0, #000 1rem);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 1.25rem,
+    #000 2.75rem
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 1.25rem,
+    #000 2.75rem
+  );
 }
 
 .chat-bubble {

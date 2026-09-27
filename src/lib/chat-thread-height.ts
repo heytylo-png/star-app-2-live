@@ -17,8 +17,12 @@ export const CHAT_THREAD_VISIBLE_BEATS = 2;
 export const CHAT_THREAD_CEILING_REM = 8.5;
 export const CHAT_THREAD_CEILING_PX = Math.round(CHAT_THREAD_CEILING_REM * 16);
 
-/** Top fade when older beats sit above the window. Matches `.chat-thread-mask`. */
-export const CHAT_THREAD_FADE_PX = 16;
+/**
+ * Scroll mask band (fully transparent, then a fade). Not added to the resting
+ * window — a partial older bubble must not sit in the opaque part of the mask.
+ * Matches `.chat-thread-mask` (transparent through 1.25rem, opaque by 2.75rem).
+ */
+export const CHAT_THREAD_FADE_PX = 44;
 
 /** Kept so a stored drag from the old tall band still clamps down. */
 export const CHAT_THREAD_DEFAULT_VH = 0.28;
@@ -73,8 +77,9 @@ export function defaultChatThreadHeightPx(viewportHeight: number): number {
 export type BeatBox = { offsetTop: number; offsetHeight: number };
 
 /**
- * Pixel height of the resting window: the last `beats` bubbles, plus a fade
- * when older bubbles sit above them. Not the height of the whole thread.
+ * Pixel height of the resting window: exactly the last `beats` bubbles plus
+ * bottom padding. Older bubbles stay above this edge so a clipped sliver
+ * cannot show at rest.
  */
 export function visibleBeatWindowPx(
   boxes: readonly BeatBox[],
@@ -86,8 +91,19 @@ export function visibleBeatWindowPx(
   const top = slice[0]?.offsetTop ?? 0;
   const last = slice[slice.length - 1];
   const bottom = (last?.offsetTop ?? 0) + (last?.offsetHeight ?? 0);
-  const fade = boxes.length > beats ? CHAT_THREAD_FADE_PX : 0;
-  return Math.max(0, Math.ceil(bottom - top + pad + fade));
+  return Math.max(0, Math.round(bottom - top + pad));
+}
+
+/**
+ * Scroll offset that aligns the window with the first resting beat.
+ * Anything above that beat — including a partial older bubble — is clipped.
+ */
+export function restingBeatScrollTop(
+  boxes: readonly BeatBox[],
+  beats = CHAT_THREAD_VISIBLE_BEATS,
+): number {
+  if (boxes.length <= beats || beats <= 0) return 0;
+  return boxes[boxes.length - beats]?.offsetTop ?? 0;
 }
 
 /** Beats shown at rest. Older messages stay mounted above this slice. */
