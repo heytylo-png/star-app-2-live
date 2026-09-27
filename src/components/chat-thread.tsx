@@ -1,14 +1,11 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
-import { GripHorizontal } from "lucide-react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { ChatMessage } from "@/lib/helix";
 import {
-  CHAT_THREAD_DEFAULT_PX,
-  CHAT_THREAD_MIN_PX,
-  clampChatThreadHeightPx,
-  loadChatThreadHeightPx,
-  maxChatThreadHeightPx,
-  saveChatThreadHeightPx,
+  CHAT_THREAD_CEILING_PX,
+  CHAT_THREAD_VISIBLE_BEATS,
+  restingBeatScrollTop,
+  visibleBeatWindowPx,
 } from "@/lib/chat-thread-height";
 
 const NEAR_BOTTOM_PX = 56;
@@ -35,68 +32,10 @@ function lastMessageContent(messages: ChatMessage[]): string {
   return "";
 }
 
-function useChatThreadHeight() {
-  const [heightPx, setHeightPx] = useState(() =>
-    typeof window === "undefined" ? CHAT_THREAD_DEFAULT_PX : loadChatThreadHeightPx(window.innerHeight),
-  );
-  const dragRef = useRef<{ pointerId: number; startY: number; startH: number } | null>(null);
-
-  useEffect(() => {
-    const onResize = () => {
-      setHeightPx((h) => clampChatThreadHeightPx(h, window.innerHeight));
-    };
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-
-  const onPointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    e.currentTarget.focus();
-    e.currentTarget.setPointerCapture(e.pointerId);
-    dragRef.current = { pointerId: e.pointerId, startY: e.clientY, startH: heightPx };
-    document.body.classList.add("chat-thread-resizing");
-  }, [heightPx]);
-
-  const onPointerMove = useCallback((e: PointerEvent<HTMLDivElement>) => {
-    const drag = dragRef.current;
-    if (!drag || drag.pointerId !== e.pointerId) return;
-    const next = clampChatThreadHeightPx(drag.startH + (drag.startY - e.clientY), window.innerHeight);
-    setHeightPx(next);
-  }, []);
-
-  const endDrag = useCallback((e: PointerEvent<HTMLDivElement>) => {
-    const drag = dragRef.current;
-    if (!drag || drag.pointerId !== e.pointerId) return;
-    dragRef.current = null;
-    document.body.classList.remove("chat-thread-resizing");
-    try {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    } catch {
-      /* already released */
-    }
-    setHeightPx((h) => saveChatThreadHeightPx(h, window.innerHeight));
-  }, []);
-
-  const onKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
-    const vh = window.innerHeight;
-    let next = heightPx;
-    if (e.key === "ArrowUp") next += 16;
-    else if (e.key === "ArrowDown") next -= 16;
-    else if (e.key === "Home") next = CHAT_THREAD_MIN_PX;
-    else if (e.key === "End") next = maxChatThreadHeightPx(vh);
-    else return;
-    e.preventDefault();
-    setHeightPx(saveChatThreadHeightPx(next, vh));
-  }, [heightPx]);
-
-  return { heightPx, onPointerDown, onPointerMove, endDrag, onKeyDown };
-}
-
 /**
- * Bottom-band transcript: dark quiet bubbles on the hem / mid-skirt.
- * Hard-capped to the lower third of `.rai-rig` so face + ahoge stay clear.
- * No wrapping white card. Top-edge grip resizes inside that ceiling.
+ * Bottom-anchored transcript: the last two beats sit just above the input.
+ * Older lines stay in that same strip (top fade) and come back by scrolling.
+ * No card. Face, torso, and thighs stay clear.
  */
 export function ChatThread({
   messages,
@@ -112,7 +51,8 @@ export function ChatThread({
   const scrollerRef = useRef<HTMLDivElement>(null);
   const nearBottomRef = useRef(true);
   const prevLenRef = useRef(messages.length);
-  const { heightPx, onPointerDown, onPointerMove, endDrag, onKeyDown } = useChatThreadHeight();
+  const [windowPx, setWindowPx] = useState<number | null>(null);
+  const [atRest, setAtRest] = useState(true);
 
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
   const lastStored = lastMessageContent(messages);
@@ -125,13 +65,28 @@ export function ChatThread({
   useLayoutEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
+    const nodes = [...el.querySelectorAll<HTMLElement>("[data-chat-beat]")];
+    const next = visibleBeatWindowPx(
+      nodes.map((node) => ({ offsetTop: node.offsetTop, offsetHeight: node.offsetHeight })),
+    );
+    const capped = next > 0 ? Math.min(next, CHAT_THREAD_CEILING_PX) : null;
+    setWindowPx((prev) => (prev === capped ? prev : capped));
+  }, [messages, captionText, showListening, showCaption]);
+
+  useLayoutEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
     const appended = messages.length > prevLenRef.current;
     const last = messages[messages.length - 1];
     prevLenRef.current = messages.length;
     if (appended && last?.role === "user") nearBottomRef.current = true;
     if (!nearBottomRef.current) return;
-    el.scrollTop = el.scrollHeight;
-  }, [messages, captionText, showListening, heightPx]);
+    const nodes = [...el.querySelectorAll<HTMLElement>("[data-chat-beat]")];
+    el.scrollTop = restingBeatScrollTop(
+      nodes.map((node) => ({ offsetTop: node.offsetTop, offsetHeight: node.offsetHeight })),
+    );
+    setAtRest(true);
+  }, [messages, captionText, showListening, windowPx]);
 
   if (empty && !captionText && !callActive && !showSetup) {
     return (
@@ -143,38 +98,18 @@ export function ChatThread({
 
   if (empty && !captionText && !showListening) return null;
 
-  const minPx = CHAT_THREAD_MIN_PX;
-  const maxPx = typeof window === "undefined" ? 320 : maxChatThreadHeightPx(window.innerHeight);
+  const beatCount =
+    messages.filter((m) => m.content.trim() || m.role === "assistant").length +
+    (showListening ? 1 : 0) +
+    (showCaption ? 1 : 0);
+  const older = beatCount > CHAT_THREAD_VISIBLE_BEATS;
 
   return (
     <div
       className="chat-thread-frame pointer-events-auto mx-auto mb-1 w-full max-w-md min-h-0"
-      style={{ height: heightPx, maxHeight: maxPx }}
       data-testid="chat-thread-frame"
+      data-chat-visible-beats={CHAT_THREAD_VISIBLE_BEATS}
     >
-      <div
-        role="slider"
-        tabIndex={0}
-        aria-label="Resize transcript"
-        aria-orientation="vertical"
-        aria-valuemin={minPx}
-        aria-valuemax={maxPx}
-        aria-valuenow={heightPx}
-        aria-valuetext={`${heightPx} pixels`}
-        title="Drag to resize transcript"
-        data-testid="chat-thread-resize"
-        className="chat-thread-handle"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-        onLostPointerCapture={endDrag}
-        onKeyDown={onKeyDown}
-      >
-        <span className="chat-thread-handle-pill">
-          <GripHorizontal className="size-4" aria-hidden />
-        </span>
-      </div>
       <div
         ref={scrollerRef}
         role="log"
@@ -184,9 +119,13 @@ export function ChatThread({
         onScroll={() => {
           const el = scrollerRef.current;
           if (!el) return;
-          nearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_PX;
+          const gap = el.scrollHeight - el.scrollTop - el.clientHeight;
+          nearBottomRef.current = gap < NEAR_BOTTOM_PX;
+          const pinned = gap < 2;
+          setAtRest((prev) => (prev === pinned ? prev : pinned));
         }}
-        className="chat-thread px-1 pb-1"
+        className={cn("chat-thread px-1 pb-1", older && !atRest && "chat-thread-mask")}
+        style={windowPx ? { maxHeight: windowPx } : undefined}
       >
         <div className="flex flex-col justify-end gap-1.5">
           {messages.map((m) => {
@@ -197,6 +136,7 @@ export function ChatThread({
             return (
               <div
                 key={m.id}
+                data-chat-beat=""
                 className={cn(
                   "chat-bubble",
                   isAssistant ? "chat-bubble-assistant mr-auto" : "chat-bubble-user ml-auto",
@@ -215,10 +155,13 @@ export function ChatThread({
             );
           })}
           {showListening ? (
-            <p className="px-1 text-center text-xs text-muted">{listeningCaption}</p>
+            <p data-chat-beat="" className="px-1 text-center text-xs text-muted">
+              {listeningCaption}
+            </p>
           ) : null}
           {showCaption ? (
             <div
+              data-chat-beat=""
               className={cn(
                 "chat-bubble",
                 listening ? "chat-bubble-user ml-auto" : "chat-bubble-assistant mx-auto",

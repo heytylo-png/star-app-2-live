@@ -1,20 +1,36 @@
 /**
- * Chat transcript height — bottom band only.
- * Bubbles sit on the hem / mid-skirt (lower third of `.rai-rig`).
- * Face + ahoge stay clear. Transparent frame, no white card.
- * Optional drag handle persists a pixel height in localStorage;
- * drag cannot grow past this ceiling.
+ * Chat transcript height — a short stack just above the input.
+ * At rest only the last two beats are in the window. Older lines stay in
+ * that same strip and come back by scrolling. Face, torso, and thighs stay
+ * clear. Transparent frame, no card.
  */
 
 export const CHAT_THREAD_HEIGHT_KEY = "star-rai-chat-thread-height";
 
-/** Default = Expo-style bottom-third of the viewport, then clamped to the band. */
+/** Resting readable beats. Older lines scroll inside this window. */
+export const CHAT_THREAD_VISIBLE_BEATS = 2;
+
+/**
+ * Safety ceiling for the strip (two wrapped compact beats + fade).
+ * A 5-line tease must not grow into the thighs. Matches `.chat-thread-frame`.
+ */
+export const CHAT_THREAD_CEILING_REM = 8.5;
+export const CHAT_THREAD_CEILING_PX = Math.round(CHAT_THREAD_CEILING_REM * 16);
+
+/**
+ * Scroll mask band (fully transparent, then a fade). Not added to the resting
+ * window — a partial older bubble must not sit in the opaque part of the mask.
+ * Matches `.chat-thread-mask` (transparent through 1.25rem, opaque by 2.75rem).
+ */
+export const CHAT_THREAD_FADE_PX = 44;
+
+/** Kept so a stored drag from the old tall band still clamps down. */
 export const CHAT_THREAD_DEFAULT_VH = 0.28;
 
-/** Fallback px when viewport is unknown (0.28 × 800). */
-export const CHAT_THREAD_DEFAULT_PX = Math.round(800 * CHAT_THREAD_DEFAULT_VH);
+/** Fallback px when viewport is unknown — the two-beat ceiling, not 28vh. */
+export const CHAT_THREAD_DEFAULT_PX = CHAT_THREAD_CEILING_PX;
 
-/** One compact bubble + grip. */
+/** One compact bubble. */
 export const CHAT_THREAD_MIN_PX = Math.round(5.75 * 16);
 
 /**
@@ -50,12 +66,50 @@ export function maxChatThreadHeightPx(viewportHeight: number): number {
   const vh = Number.isFinite(viewportHeight) && viewportHeight > 0 ? viewportHeight : 800;
   const byVh = Math.round(vh * CHAT_THREAD_MAX_VH);
   const byRig = Math.round(raiRigHeightPx(vh) * CHAT_THREAD_RIG_BAND);
-  return Math.max(CHAT_THREAD_MIN_PX, Math.min(byVh, byRig));
+  const torso = Math.max(CHAT_THREAD_MIN_PX, Math.min(byVh, byRig));
+  return Math.min(torso, CHAT_THREAD_CEILING_PX);
 }
 
 export function defaultChatThreadHeightPx(viewportHeight: number): number {
-  const vh = Number.isFinite(viewportHeight) && viewportHeight > 0 ? viewportHeight : 800;
-  return clampChatThreadHeightPx(Math.round(vh * CHAT_THREAD_DEFAULT_VH), vh);
+  return maxChatThreadHeightPx(viewportHeight);
+}
+
+export type BeatBox = { offsetTop: number; offsetHeight: number };
+
+/**
+ * Pixel height of the resting window: exactly the last `beats` bubbles plus
+ * bottom padding. Older bubbles stay above this edge so a clipped sliver
+ * cannot show at rest.
+ */
+export function visibleBeatWindowPx(
+  boxes: readonly BeatBox[],
+  beats = CHAT_THREAD_VISIBLE_BEATS,
+  pad = 4,
+): number {
+  if (!boxes.length || beats <= 0) return 0;
+  const slice = boxes.slice(-beats);
+  const top = slice[0]?.offsetTop ?? 0;
+  const last = slice[slice.length - 1];
+  const bottom = (last?.offsetTop ?? 0) + (last?.offsetHeight ?? 0);
+  return Math.max(0, Math.round(bottom - top + pad));
+}
+
+/**
+ * Scroll offset that aligns the window with the first resting beat.
+ * Anything above that beat — including a partial older bubble — is clipped.
+ */
+export function restingBeatScrollTop(
+  boxes: readonly BeatBox[],
+  beats = CHAT_THREAD_VISIBLE_BEATS,
+): number {
+  if (boxes.length <= beats || beats <= 0) return 0;
+  return boxes[boxes.length - beats]?.offsetTop ?? 0;
+}
+
+/** Beats shown at rest. Older messages stay mounted above this slice. */
+export function restingChatBeats<T>(messages: readonly T[], visible = CHAT_THREAD_VISIBLE_BEATS): T[] {
+  if (visible <= 0) return [];
+  return messages.slice(-visible);
 }
 
 export function clampChatThreadHeightPx(px: number, viewportHeight: number): number {
