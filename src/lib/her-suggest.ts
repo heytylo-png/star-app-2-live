@@ -4,7 +4,7 @@
  */
 
 import { localDateKey } from "./chart.ts";
-import { clockTimeZone, readLocalNow } from "./clock.ts";
+import { clockTimeZone, formatClockFactsBlock, readLocalNow } from "./clock.ts";
 import { getStoredXaiKey, streamGrok } from "./grok.ts";
 import {
   applySuggestionGrokRaw,
@@ -80,11 +80,16 @@ export async function requestLifeSuggestions(opts: {
       await streamGrok(
         {
           messages: [{ role: "user", content: SUGGEST_ASK }],
-          systemExtra: formatSuggestFactsBlock({
-            today: opts.today,
-            life: opts.life,
-            lists: store.lists,
-          }),
+          systemExtra: [
+            formatClockFactsBlock(
+              readLocalNow(new Date(), clockTimeZone(useMemoryStore.getState().slots.timezone)),
+            ),
+            formatSuggestFactsBlock({
+              today: opts.today,
+              life: opts.life,
+              lists: store.lists,
+            }),
+          ].join("\n\n"),
         },
         (delta) => {
           raw += delta;

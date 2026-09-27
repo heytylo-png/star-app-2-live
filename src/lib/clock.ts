@@ -17,6 +17,10 @@ export type ClockNow = {
   weekday: string;
   /** Local hour 0–23 in `timeZone`. */
   hour: number;
+  /** Local minute 0–59 in `timeZone`. */
+  minute: number;
+  /** ISO-8601 local wall time with numeric offset, computed at call time. */
+  localNow: string;
   timeZone: string;
   tzLabel: string;
   band: ClockBand;
@@ -128,9 +132,42 @@ function localHour(now: Date, timeZone: string): number {
   return ((hour % 24) + 24) % 24;
 }
 
+function localField(now: Date, timeZone: string, field: "minute" | "second" | "year" | "month" | "day"): number {
+  const options: Intl.DateTimeFormatOptions =
+    field === "year"
+      ? { year: "numeric" }
+      : field === "month" || field === "day"
+        ? { [field]: "2-digit" }
+        : { [field]: "2-digit" };
+  const raw = part(now, timeZone, options, field);
+  const n = Number.parseInt(raw, 10);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function pad2(n: number): string {
+  return String(Math.trunc(Math.abs(n))).padStart(2, "0");
+}
+
+/** Wall-clock ISO with the zone's numeric offset (`2026-09-23T08:00:00-05:00`). */
+export function formatLocalNowIso(now: Date, timeZone: string): string {
+  const year = localField(now, timeZone, "year");
+  const month = localField(now, timeZone, "month");
+  const day = localField(now, timeZone, "day");
+  const hour = localHour(now, timeZone);
+  const minute = ((localField(now, timeZone, "minute") % 60) + 60) % 60;
+  const second = ((localField(now, timeZone, "second") % 60) + 60) % 60;
+  const asUtc = Date.UTC(year, month - 1, day, hour, minute, second);
+  const diffMin = Math.round((asUtc - now.getTime()) / 60000);
+  const sign = diffMin >= 0 ? "+" : "-";
+  const abs = Math.abs(Number.isFinite(diffMin) ? diffMin : 0);
+  const offset = `${sign}${pad2(Math.floor(abs / 60))}:${pad2(abs % 60)}`;
+  return `${year}-${pad2(month)}-${pad2(day)}T${pad2(hour)}:${pad2(minute)}:${pad2(second)}${offset}`;
+}
+
 export function readLocalNow(now: Date = new Date(), timeZone: string = clockTimeZone()): ClockNow {
   const tz = isUsableTimeZone(timeZone) ? timeZone.trim() : CLOCK_TZ_FALLBACK;
   const hour = localHour(now, tz);
+  const minute = ((localField(now, tz, "minute") % 60) + 60) % 60;
   const weekdayRaw = part(now, tz, { weekday: "long" }, "weekday");
   const weekday = WEEKDAYS.find((d) => d.toLowerCase() === weekdayRaw.toLowerCase()) ?? weekdayRaw;
   const tzLabel =
@@ -138,6 +175,8 @@ export function readLocalNow(now: Date = new Date(), timeZone: string = clockTim
   return {
     weekday: weekday || "Saturday",
     hour,
+    minute,
+    localNow: formatLocalNowIso(now, tz),
     timeZone: tz,
     tzLabel,
     band: hourBand(hour),
@@ -153,36 +192,70 @@ export function spokenClockHour(hour: number): string {
   return `${h - 12} PM`;
 }
 
+/** 12-hour face with minutes — "8:00", "1:20", "12:05". */
+export function spokenClockFace(hour: number, minute: number): string {
+  const h = ((Math.trunc(hour) % 24) + 24) % 24;
+  const m = ((Math.trunc(minute) % 60) + 60) % 60;
+  const h12 = h % 12 || 12;
+  return `${h12}:${pad2(m)}`;
+}
+
+/** One short handback after the hour. Not a time monologue. */
+export function clockHandback(hour: number): string {
+  const h = ((Math.trunc(hour) % 24) + 24) % 24;
+  if (h <= 5 || h >= 22) return "You're up late.";
+  if (h < 9) return "You're up early.";
+  if (h <= 11) return "Morning.";
+  return "You're here.";
+}
+
+/** Deterministic ask-path line. The hour is the device hour. */
+export function spokenClockLine(now: ClockNow): string {
+  return `It's ${spokenClockFace(now.hour, now.minute)} here. ${clockHandback(now.hour)}`;
+}
+
 /**
  * Compact CLOCK block for every grok-4-latest system message.
- * Standing fact — not a speech topic dump.
+ * Standing fact — not a speech topic dump. Fresh at call time.
  */
 export function formatClockFactsBlock(now: ClockNow): string {
-  const tz = now.tzLabel && now.tzLabel !== now.timeZone ? `${now.timeZone} (${now.tzLabel})` : now.timeZone;
   return [
     "CLOCK",
     `weekday: ${now.weekday}`,
     `hour: ${now.hour}`,
-    `tz: ${tz}`,
+    `minute: ${now.minute}`,
+    `local_now: ${now.localNow}`,
+    `tz: ${now.timeZone}`,
+    `tz_label: ${now.tzLabel}`,
     `band: ${now.band}`,
     "with_user: true",
+    `spoken_time: ${spokenClockFace(now.hour, now.minute)}`,
     "",
     "Fact only — not a topic. She is in this zone with the user. Do not invent Fukuoka / Japan local.",
-    `"What time is it where you are?" → this hour, one beat.`,
+    "Do not open with the time. Do not greet with the hour. Time is not her personality.",
+    "A tired pose is not a clock. Do not talk night or late just because the pose or emotion is tired.",
+    "Only mention Japan time if they asked about Japan.",
+    `"What time is it where you are?" / "what time is it" / "what time is it there" / "is it late there" → spoken_time, one beat, then hand it back.`,
     `Stock "mornings drag" / "late nights thinking about you" only if band matches (morning / night) or they brought up sleep.`,
+    `Banned out of band: "mornings drag", "late nights", "late night", "just woke up", "up thinking about you", "can't sleep", "staying up".`,
+    `Late-night / can't sleep / staying up only in night (0–5) or late evening (22–23). "just woke up" / "mornings drag" only in morning (6–11). Unless they brought up sleep, tired, or bed.`,
   ].join("\n");
 }
 
 const CLOCK_ASK_RE =
-  /\b(?:what(?:'?s| is) the time|what time is it|time (?:is it )?where you are)\b/i;
+  /\b(?:what(?:'?s| is) the time(?: there)?|what time is it(?: there)?|time (?:is it )?where you are|is it late (?:there|where you are|for you))\b/i;
+
+/** Japan / city time is their question, not the device-clock ask. */
+const JAPAN_ASK_RE = /\b(?:japan|japanese|tokyo|osaka|fukuoka|jst)\b/i;
 
 const MEETUP_TIME_RE = /\b(meet|meeting|schedule|lunch|dinner|call me at|see you at)\b/i;
 
-/** True for "what time is it (where you are)?" — not meetup scheduling. */
+/** True for "what time is it (where you are / there)?" — not meetup scheduling or a Japan ask. */
 export function isClockAsk(text: string): boolean {
   const t = text.replace(/\s+/g, " ").trim();
   if (!t) return false;
   if (!CLOCK_ASK_RE.test(t)) return false;
+  if (JAPAN_ASK_RE.test(t)) return false;
   if (MEETUP_TIME_RE.test(t) && !/\bwhat time is it\b/i.test(t) && !/\bwhere you are\b/i.test(t)) {
     return false;
   }
@@ -207,8 +280,142 @@ export function actForClockTurn(turn: ClockTurn): ClockAct | null {
   return {
     emotion: "bratty",
     pose: "talk",
-    line: `${spokenClockHour(turn.now.hour)}.`,
+    line: spokenClockLine(turn.now),
   };
+}
+
+/**
+ * Stock bits that talk night / sleep / waking.
+ * Night bits are allowed only at 0–5 or 22–23.
+ * Morning bits are allowed only at 6–11.
+ * Either side is also allowed when the user brought up sleep, tired, or bed.
+ * A tired pose or emotion is not that mention.
+ */
+export const CLOCK_BANNED_NIGHT = [
+  "late nights",
+  "late night",
+  "late-night",
+  "up thinking about you",
+  "can't sleep",
+  "cant sleep",
+  "cannot sleep",
+  "couldn't sleep",
+  "couldnt sleep",
+  "staying up",
+  "stay up",
+  "stayed up",
+  "up all night",
+] as const;
+
+export const CLOCK_BANNED_MORNING = [
+  "mornings drag",
+  "morning drags",
+  "mornings dragging",
+  "just woke up",
+  "just woken up",
+] as const;
+
+export const CLOCK_BANNED_PHRASES = [...CLOCK_BANNED_NIGHT, ...CLOCK_BANNED_MORNING] as const;
+
+export const CLOCK_NEUTRAL_LINE = "Mm. I'm here.";
+
+const USER_SLEEP_RE =
+  /\b(?:sleep(?:y|ing|less)?|tired|bed|insomnia|woke|woken|exhausted|nap)\b/i;
+
+function phrasePattern(phrases: readonly string[]): RegExp {
+  const body = [...phrases]
+    .sort((a, b) => b.length - a.length)
+    .map((phrase) =>
+      phrase
+        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+        .replace(/'/g, "['’]")
+        .replace(/\\-/g, "[\\s-]")
+        .replace(/\s+/g, "\\s+"),
+    )
+    .join("|");
+  return new RegExp(`(?:${body})`, "i");
+}
+
+const NIGHT_BIT_RE = phrasePattern(CLOCK_BANNED_NIGHT);
+const MORNING_BIT_RE = phrasePattern(CLOCK_BANNED_MORNING);
+
+/** Place + clock language. Bare "Fukuoka." is not a time claim. */
+const JAPAN_TIME_RE =
+  /\bJST\b|\b(?:Fukuoka|Osaka|Tokyo|Japan)\b[^.!?]{0,48}\b(?:time|hour|o'?clock|a\.?m\.?|p\.?m\.?|\d{1,2}:\d{2})\b|\b(?:time|hour|o'?clock|\d{1,2}:\d{2}|a\.?m\.?|p\.?m\.?)\b[^.!?]{0,48}\b(?:Fukuoka|Osaka|Tokyo|Japan|JST)\b/i;
+
+const UNPROMPTED_CLOCK_RE =
+  /^it'?s\s+\d{1,2}(?::\d{2})?(?:\s*(?:a\.?m\.?|p\.?m\.?))?\s+here\b/i;
+
+export function userBroughtUpSleep(text: string): boolean {
+  return USER_SLEEP_RE.test(text);
+}
+
+export function userAskedAboutJapan(text: string): boolean {
+  return JAPAN_ASK_RE.test(text);
+}
+
+export function nightBitAllowed(hour: number, recentText: string): boolean {
+  const h = ((Math.trunc(hour) % 24) + 24) % 24;
+  if (h <= 5 || h >= 22) return true;
+  return userBroughtUpSleep(recentText);
+}
+
+export function morningBitAllowed(hour: number, recentText: string): boolean {
+  const h = ((Math.trunc(hour) % 24) + 24) % 24;
+  if (h >= 6 && h <= 11) return true;
+  return userBroughtUpSleep(recentText);
+}
+
+export function lineCarriesHour(line: string, hour: number): boolean {
+  const h24 = ((Math.trunc(hour) % 24) + 24) % 24;
+  const h12 = h24 % 12 || 12;
+  if (new RegExp(`\\b0?${h12}:\\d{2}\\b`).test(line)) return true;
+  const ap = h24 < 12 ? "a\\.?m\\.?" : "p\\.?m\\.?";
+  return new RegExp(`\\b${h12}\\s*${ap}\\b`, "i").test(line);
+}
+
+function splitClauses(line: string): string[] {
+  return line
+    .split(/(?<=[.!?])\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Post-filter for a spoken line.
+ * Out-of-band stock bits lose that clause; an empty remainder falls back
+ * to a neutral line. A time ask that misses the real hour, or that places
+ * her in Japan without being asked, is replaced with the device clock line.
+ */
+export function filterClockSpokenLine(
+  line: string,
+  opts: { now: ClockNow; recentText?: string; askedTime?: boolean },
+): string {
+  const raw = line.replace(/\s+/g, " ").trim();
+  if (!raw) return "";
+  const recent = opts.recentText ?? "";
+  const asked = Boolean(opts.askedTime);
+  const japanAsked = userAskedAboutJapan(recent);
+  const exact = spokenClockLine(opts.now);
+
+  if (asked && !japanAsked && (JAPAN_TIME_RE.test(raw) || !lineCarriesHour(raw, opts.now.hour))) {
+    return exact;
+  }
+
+  const allowNight = nightBitAllowed(opts.now.hour, recent);
+  const allowMorning = morningBitAllowed(opts.now.hour, recent);
+  const kept = splitClauses(raw).filter((clause) => {
+    if (!allowNight && NIGHT_BIT_RE.test(clause)) return false;
+    if (!allowMorning && MORNING_BIT_RE.test(clause)) return false;
+    if (!japanAsked && JAPAN_TIME_RE.test(clause)) return false;
+    if (!asked && UNPROMPTED_CLOCK_RE.test(clause)) return false;
+    return true;
+  });
+
+  if (!kept.length) return asked ? exact : CLOCK_NEUTRAL_LINE;
+  const next = kept.join(" ");
+  if (asked && !japanAsked && !lineCarriesHour(next, opts.now.hour)) return exact;
+  return next;
 }
 
 /**
