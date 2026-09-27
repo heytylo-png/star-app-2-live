@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { Button } from "@/components/ui/button";
 import { natalFromSetup } from "@/lib/chart";
-import { chartAskDraft, chartDiaryExcerpt, chartMenuSun } from "@/lib/chart-menu";
+import { chartAskDraft, chartDiaryDateLabel, chartDiaryExcerpt, chartMenuSun } from "@/lib/chart-menu";
 import { useChartStore } from "@/lib/chart-store";
 import { useMemoryStore } from "@/lib/memory-store";
 import { birthDateInputValue, lastDiaryEntry } from "@/lib/shell";
@@ -167,7 +167,7 @@ export function ChartMenu({
         <div className="mt-2 border-t border-border pt-1.5">
           <p className="px-0.5 text-[0.65rem] tracking-wide text-subtle uppercase">Diary</p>
           <p className="mt-1 px-0.5 text-sm leading-snug text-muted">
-            <span className="text-subtle">{last.dateKey} · </span>
+            <span className="text-subtle">{chartDiaryDateLabel(last.dateKey)} · </span>
             {excerpt}
           </p>
         </div>
@@ -176,7 +176,7 @@ export function ChartMenu({
       <button
         type="button"
         className="mt-2 w-full rounded-sm px-1.5 py-1 text-left text-sm text-fg hover:bg-bg"
-        onClick={() => onAsk(chartAskDraft(last))}
+        onClick={() => onAsk(chartAskDraft({ text: last?.text, userSun: sun }))}
       >
         Ask her in Chat
       </button>

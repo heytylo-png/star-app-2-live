@@ -61,7 +61,7 @@ import { isSuggestAsk, parseTrackTitle, resolveLifeTurn, type LifeSlots } from "
 import { reduceChartMenu } from "@/lib/chart-menu";
 import { reduceLifeMenu } from "@/lib/life-menu";
 import { useSpotifyPlayback } from "@/lib/use-spotify-playback";
-import { chatOpenForTab, DEFAULT_SHELL_TAB, type ShellTab } from "@/lib/shell";
+import { chatOpenForTab, DEFAULT_SHELL_TAB, lastDiaryEntry, type ShellTab } from "@/lib/shell";
 import { stagePlace, stageSourceFor, type StagePlace } from "@/lib/stage-source";
 import { usePrefersReducedMotion } from "@/lib/use-reduced-motion";
 import { newId, type ChatMessage } from "@/lib/helix";
@@ -843,6 +843,7 @@ function RaiReady() {
       alreadyFiredDate: chartStore.lastFiredDate,
       askedBirthday: chartStore.askedBirthday,
       existingDiary: chartStore.diaryFor(today),
+      diaryNote: lastDiaryEntry(chartStore.diaryByDay)?.text,
       timeZone: clockTurn.now.timeZone,
     });
     if (clockTurn.localOnly && !chartTurn.localOnly) {

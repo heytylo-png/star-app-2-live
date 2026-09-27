@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import {
   chartAskDraft,
   chartAskHandoff,
+  chartDiaryDateLabel,
   chartDiaryExcerpt,
   chartMenuSun,
   reduceChartMenu,
@@ -64,13 +65,15 @@ describe("Chart menu contents", () => {
     const excerpt = chartDiaryExcerpt(page, 32);
     assert.ok(excerpt.endsWith("…"));
     assert.ok(excerpt.length <= 33);
-    const handoff = chartAskHandoff({ text: page });
+    const handoff = chartAskHandoff({ text: page, userSun: "Aries" });
     assert.equal(handoff.tab, "chat");
     assert.equal(handoff.sent, true);
-    assert.equal(handoff.draft, chartAskDraft({ text: page }));
-    assert.match(handoff.draft, /What do you make of this page\?/);
-    assert.match(handoff.draft, /Quiet page/);
-    assert.equal(chartAskDraft(null), "What do you make of my chart?");
+    assert.equal(handoff.draft, "What's in my chart today?");
+    assert.equal(handoff.draft, chartAskDraft({ text: page, userSun: "Aries" }));
+    assert.doesNotMatch(handoff.draft, /Quiet page|2026|page\?/);
+    assert.equal(chartAskDraft({ text: page }), "What did you write?");
+    assert.equal(chartAskDraft(null), "What's in my chart today?");
+    assert.equal(chartDiaryDateLabel("2026-09-26"), "Sep 26");
   });
 });
 

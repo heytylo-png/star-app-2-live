@@ -63,11 +63,27 @@ export function chartDiaryExcerpt(text: string, max = 84): string {
   return `${clean.slice(0, max).trimEnd()}…`;
 }
 
-/** The line Ask her sends into Chat. One ask, then she answers there. */
-export function chartAskDraft(entry?: { text?: string | null } | null): string {
-  const excerpt = entry?.text ? chartDiaryExcerpt(entry.text) : "";
-  if (!excerpt) return "What do you make of my chart?";
-  return `What do you make of this page? ${excerpt}`;
+const DIARY_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** Menu label only. The stored page does not repeat this date. */
+export function chartDiaryDateLabel(dateKey: string): string {
+  const match = dateKey.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return dateKey;
+  const month = DIARY_MONTHS[Number(match[2]) - 1];
+  const day = Number(match[3]);
+  if (!month || !day) return dateKey;
+  return `${month} ${day}`;
+}
+
+/**
+ * Visible Ask her line. Short. Diary and sky stay in the chart prompt, not this bubble.
+ * A saved page with no sun asks what she wrote. Otherwise it's today's chart.
+ */
+export function chartAskDraft(entry?: { text?: string | null; userSun?: string | null } | null): string {
+  const diary = entry?.text?.replace(/\s+/g, " ").trim();
+  const sun = entry?.userSun?.replace(/\s+/g, " ").trim();
+  if (diary && !sun) return "What did you write?";
+  return "What's in my chart today?";
 }
 
 export function chartAskHandoff(entry?: { text?: string | null } | null): {
