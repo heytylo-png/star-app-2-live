@@ -10,6 +10,8 @@ type PresenceStageProps = {
   pose: PoseId;
   emotion: EmotionId;
   talking: boolean;
+  /** Bubble streaming or Call TTS. The PNG puppet uses this for the idle mouth. */
+  speaking?: boolean;
   amplitude: number;
   className?: string;
   /** Life desk clip. PNG (or omitted) keeps the official puppet. */
@@ -26,7 +28,7 @@ function readEngine(): RaiEngineId {
  * Official PNG puppet by default. Spine/cutout only when `?spine=1` (sample)
  * or `?spine=rai` (official layers — falls back if the cut pack is missing).
  */
-export function PresenceStage({ desk, onDeskFail, className, ...props }: PresenceStageProps) {
+export function PresenceStage({ desk, onDeskFail, className, speaking, ...props }: PresenceStageProps) {
   const [engine, setEngine] = useState<RaiEngineId>(readEngine);
 
   useEffect(() => {
@@ -38,7 +40,7 @@ export function PresenceStage({ desk, onDeskFail, className, ...props }: Presenc
   const body = isSpineDemoEngine(engine) ? (
     <SpineStage {...props} className={className} target={engine} />
   ) : (
-    <Puppet {...props} className={className} />
+    <Puppet {...props} speaking={speaking} className={className} />
   );
 
   return (

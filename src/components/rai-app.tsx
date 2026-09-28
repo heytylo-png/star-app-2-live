@@ -1363,6 +1363,7 @@ function RaiReady() {
         pose={pose}
         emotion={emotion}
         talking={talking}
+        speaking={Boolean(caption.trim()) && (sending || talking)}
         amplitude={amp}
         className="absolute inset-0"
         desk={desk}

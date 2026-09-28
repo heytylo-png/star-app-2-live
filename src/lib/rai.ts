@@ -1,3 +1,4 @@
+import { idleMouthFile } from "./idle-mouth.ts";
 import { POSE_CROSSFADE_MS, type IdleBlinkFrame } from "./rai-motion.ts";
 
 export { POSE_CROSSFADE_MS, type IdleBlinkFrame };
@@ -207,6 +208,11 @@ export const PRE_CUT_ALPHA_FILES = [
   "rai/idle_blink_02_closing.png",
   "rai/idle_blink_03_half.png",
   "rai/idle_blink_04_closed.png",
+  "rai/idle_mouth_01_closed.png",
+  "rai/idle_mouth_02_small.png",
+  "rai/idle_mouth_03_open.png",
+  "rai/idle_mouth_04_oo.png",
+  "rai/idle_mouth_05_wide.png",
 ] as const;
 
 /**
@@ -414,6 +420,22 @@ export function idleBlinkFrameUrls(): string[] {
 }
 
 /**
+ * Baked idle mouth sheets. 01 is a byte copy of blink 01 / idle.png.
+ * 02–05 change the mouth only. 06 smirk is omitted until that file exists.
+ * Not on the first-paint list — callers defer these until after idle and blink.
+ */
+export function idleMouthFrameSrc(frame: number): string {
+  const file = idleMouthFile(frame) ?? idleMouthFile(1)!;
+  return ASSET(file);
+}
+
+export function idleMouthFrameUrls(smirkPresent = false): string[] {
+  const frames = [1, 2, 3, 4, 5];
+  if (smirkPresent) frames.push(6);
+  return frames.map((frame) => idleMouthFrameSrc(frame));
+}
+
+/**
  * Critical path. idle.png, then blink 01 → 04 in the baked order.
  * 01 stays after idle.png even though it is a byte copy: the rest layer
  * mounts that URL, and the blink timer waits on all four.
@@ -503,6 +525,7 @@ export function unusedPngSpriteUrls(): string[] {
 export function allSpriteUrls(): string[] {
   return [
     ...idleBlinkFrameUrls(),
+    ...idleMouthFrameUrls(false),
     ...Object.values(SPRITES.poses),
     ...Object.values(SPRITES.angles),
     SPRITES.talk,
@@ -543,6 +566,12 @@ export type PuppetState = {
    * Expo talk bust (flag on) still uses 1/2 with face_eyes_* while speaking.
    */
   blink?: IdleBlinkFrame;
+  /**
+   * Idle mouth sheet while a spoken line stays on the idle body.
+   * 0 / omitted keeps the blink or talk sheet. 1–5 (6 smirk) swap that one
+   * idle image. Ignored once a dedicated pose or mood pin owns the stage.
+   */
+  mouth?: number;
   /** Brief idle variety beat from puppet timer (smile/grin). Official pack ignores Expo alts. */
   idleBeat?: IdleBeat;
   /** Skip mouth flap; show a static talk sheet. */
@@ -641,6 +670,7 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     talking,
     amplitude,
     blink = 0,
+    mouth = 0,
     reducedMotion = false,
   } = state;
 
@@ -663,6 +693,12 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
   }
   if (emotion === "hype") {
     return [body(SPRITES.poses.peace)];
+  }
+
+  // Talk-on-idle: the pose is still idle, so the mouth steps the idle sheet.
+  // talk_official is not a viseme. A dedicated pose already returned above.
+  if (mouth > 0) {
+    return [body(idleMouthFrameSrc(mouth), 1, IDLE_REST_LAYER_ID)];
   }
 
   if (talking) {
