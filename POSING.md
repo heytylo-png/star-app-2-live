@@ -83,11 +83,11 @@ Live chat keys use the **morning official pack** under `public/rai/`. Do not poi
 
 ## Talking
 
-- Live key `talk` uses `talk_official.png` (dedicated). It stays on that spoken bubble. Idle.png is the next rest, after the caption is no longer that reply.
-- Spoken bubble → talk/mood sheet. Idle is rest-only: never frown idle mid-line or on the spoken bubble. The live `talk` key holds `talk_official` through that bubble (no idle body underneath).
+- Speech stays on idle (`SPOKEN_TALK_TO_IDLE`, TyLo 2026-09-27). Bratty, a model `talk` key, and Music / Chart / life / clock `talk` tints all land on `idle` for a spoken line, and the idle talking mouth plays on the rest sheet (see [ANIMATION.md](./ANIMATION.md)).
+- Live key `talk` still maps to `talk_official.png` (dedicated). It only shows when the user names it ("talk"); it then holds through that bubble.
+- Mood sheets still hold their PNG through the spoken bubble; frown idle is not snapped in under a mood line.
 - Other dedicated poses still hold their own PNG through speech (PR #1). No mouth overlay on those sheets.
-- Rest idle + speaking (pose still idle, no mood pin) uses `talk_official` as the body — not Helix `idle-talk`, not Expo mouth busts.
-- Reduced motion: same talk/mood sheets (no flap).
+- Reduced motion: same mood/named sheets; idle holds the closed mouth (no flap).
 - Motion model: [ANIMATION.md](./ANIMATION.md).
 
 ## Add a new pose in 3 steps
@@ -98,4 +98,4 @@ Live chat keys use the **morning official pack** under `public/rai/`. Do not poi
 
 ## Act pose hold
 
-A spoken line keeps its talk or mood sheet on that bubble, including while the caption is still the reply. Frown `idle.png` is not that line. The next rest — caption cleared, no spoken bubble — may settle to the rest sheet (01 open, a byte copy of `idle.png`) after the usual hold (~3.4s from landing, at least ~2.8s). Rest blink is on (`IDLE_BLINK_ENABLED` is true), approved by TyLo on 2026-09-26 (807-referenced painted lids, pass 4b). Body-sheet crossfade ~380ms. Talking does not snap a dedicated pose (including `talk`) to frown idle.
+A spoken line keeps its mood or named sheet on that bubble (a plain line stays on idle with the mouth), including while the caption is still the reply. Frown `idle.png` is not that line. The next rest — caption cleared, no spoken bubble — may settle to the rest sheet (01 open, a byte copy of `idle.png`) after the usual hold (~3.4s from landing, at least ~2.8s). Rest blink is on (`IDLE_BLINK_ENABLED` is true), approved by TyLo on 2026-09-26 (807-referenced painted lids, pass 4b). Body-sheet crossfade ~380ms. Talking does not snap a dedicated pose (including `talk`) to frown idle.

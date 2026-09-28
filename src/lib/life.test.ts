@@ -351,10 +351,11 @@ describe("Grok request composition — session on vs off", () => {
     );
     assert.match(act.line, /Super Shy/);
     assert.doesNotMatch(act.line, /ETA|Cool With You|How Sweet|1\.|2\./);
-    assert.equal(act.pose, "talk");
+    // A "talk" tint on a spoken line lands on idle (idle mouth).
+    assert.equal(act.pose, "idle");
   });
 
-  it("Music Set is talk, content, or smug even when her mood is tired", () => {
+  it("Music Set is idle (talk tint), content, or smug even when her mood is tired", () => {
     const titles = ["Super Shy", "ETA", "Pink + White", "Good Days", "Snooze", "Getaway"];
     const seen = new Set<string>();
     for (const title of titles) {
@@ -372,8 +373,9 @@ describe("Grok request composition — session on vs off", () => {
         undefined,
         turn,
       );
-      assert.ok(act.pose === "talk" || act.pose === "content" || act.pose === "smug");
-      assert.notEqual(act.pose, "idle");
+      assert.ok(act.pose === "idle" || act.pose === "content" || act.pose === "smug");
+      assert.equal(act.pose === "idle", turn.tintPose === "talk");
+      assert.notEqual(act.pose, "talk");
       assert.notEqual(act.pose, "tired");
       assert.notEqual(act.pose, "shy");
       seen.add(act.pose!);

@@ -210,7 +210,8 @@ describe("streamChat local-brain fallback", { concurrency: false }, () => {
         { emotion: "bratty", pose: "talk", line: "Your cat." },
         "idle",
       );
-      assert.equal(cat.pose, "talk");
+      // A model "talk" key on a spoken line lands on idle (idle mouth).
+      assert.equal(cat.pose, "idle");
       assert.equal(cat.emotion, "bratty");
     } finally {
       globalThis.fetch = previous;

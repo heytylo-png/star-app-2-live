@@ -899,10 +899,11 @@ export function clampEmotion(value: unknown): EmotionId {
 
 /**
  * Emotion → pose when the act omitted / unknown / kiss (pose tint).
- * Idle is rest-only — bratty spoken lines use talk, not frown idle.
+ * Bratty spoken lines stay on idle and talk with the idle mouth
+ * (SPOKEN_TALK_TO_IDLE). Mood emotions still pin their own sheet.
  */
 export const EMOTION_TO_POSE: Record<EmotionId, PoseId> = {
-  bratty: "talk",
+  bratty: "idle",
   smug: "smug",
   tired: "tired",
   shy: "shy",
@@ -944,6 +945,26 @@ export function needsPoseTint(pose: PoseId | null | undefined): boolean {
 export function inferEmotionPose(emotion: EmotionId, seed = ""): PoseId {
   if (emotion === "hype") return pickTint(HYPE_TINT_POSES, seed || "hype");
   return EMOTION_TO_POSE[emotion];
+}
+
+/**
+ * Speech talks on the idle sheet. Approved by TyLo on 2026-09-27: every
+ * automatic route that would put a spoken line on the `talk` key (bratty tint,
+ * a model / local act `talk` key, Music Set / Chart / Life tints, clock lines,
+ * the turn-start placeholder) lands on `idle` instead, so the idle mouth plays.
+ * A user-named "talk" command still shows talk_official.png. The talk pose and
+ * its sheet stay in the catalog.
+ */
+export const SPOKEN_TALK_TO_IDLE = true;
+
+/** `talk` → `idle` for an automatically chosen spoken pose. Other keys pass through. */
+export function routeSpokenTalk(pose: PoseId): PoseId {
+  return SPOKEN_TALK_TO_IDLE && pose === "talk" ? "idle" : pose;
+}
+
+/** Pose placed on the stage when a new reply turn starts (before its act lands). */
+export function spokenTurnStartPose(): PoseId {
+  return routeSpokenTalk("talk");
 }
 
 export type ResolveSpokenPoseOpts = {
@@ -994,20 +1015,22 @@ export function resolveSpokenPose(opts: ResolveSpokenPoseOpts): PoseId {
       opts.lifeTintPose && (NOW_PLAYING_TINT_POSES as readonly string[]).includes(opts.lifeTintPose)
         ? opts.lifeTintPose
         : null;
-    if (tint && (needsPoseTint(opts.modelPose) || opts.modelPose === tint)) return tint;
-    if (!tint && needsPoseTint(opts.modelPose)) return pickTint(NOW_PLAYING_TINT_POSES, seed);
+    if (tint && (needsPoseTint(opts.modelPose) || opts.modelPose === tint)) return routeSpokenTalk(tint);
+    if (!tint && needsPoseTint(opts.modelPose)) {
+      return routeSpokenTalk(pickTint(NOW_PLAYING_TINT_POSES, seed));
+    }
   }
 
   // Tired is a rest face. Model/context keys like talk/peace/wave land as grins.
   if (opts.emotion === "tired") return EMOTION_TO_POSE.tired;
 
-  if (opts.modelPose && isDedicatedPose(opts.modelPose)) return opts.modelPose;
+  if (opts.modelPose && isDedicatedPose(opts.modelPose)) return routeSpokenTalk(opts.modelPose);
 
   if (opts.chartBeat) {
     if (opts.chartTintPose && (CHART_BEAT_TINT_POSES as readonly string[]).includes(opts.chartTintPose)) {
-      return opts.chartTintPose;
+      return routeSpokenTalk(opts.chartTintPose);
     }
-    return pickTint(CHART_BEAT_TINT_POSES, seed);
+    return routeSpokenTalk(pickTint(CHART_BEAT_TINT_POSES, seed));
   }
 
   // Kiss stays unmapped. Do not invent a sheet, and do not treat that as a
@@ -1017,7 +1040,7 @@ export function resolveSpokenPose(opts: ResolveSpokenPoseOpts): PoseId {
   }
 
   if (opts.spoken === false) return settledRestPose();
-  return inferEmotionPose(opts.emotion, seed);
+  return routeSpokenTalk(inferEmotionPose(opts.emotion, seed));
 }
 
 export function parseMemories(raw: string): { text: string; memories: string[] } {

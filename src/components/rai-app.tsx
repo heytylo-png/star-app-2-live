@@ -30,6 +30,7 @@ import {
   namedPoseFromText,
   parseAct,
   settledRestPose,
+  spokenTurnStartPose,
   spokenBubbleResetDelay,
   streamLine,
   streamSpokenAct,
@@ -814,12 +815,14 @@ function RaiReady() {
     const namedThisTurn = parseTrackTitle(lastUserForTint)
       ? null
       : namedPoseFromText(lastUserForTint);
-    // Frown idle is rest only. A new spoken line re-resolves — leftover
-    // think / pout / tired must not sit under this bubble. Named poses
-    // already swapped. Unmapped kiss does not invent a sheet.
+    // A new spoken line re-resolves — leftover think / pout / tired must not
+    // sit under this bubble. Speech talks on idle (SPOKEN_TALK_TO_IDLE), so the
+    // turn starts on idle, not talk_official. Named poses already swapped.
+    // Unmapped kiss does not invent a sheet.
     if (namedThisTurn == null) {
-      setPose("talk");
-      poseRef.current = "talk";
+      const startPose = spokenTurnStartPose();
+      setPose(startPose);
+      poseRef.current = startPose;
       actLandedAt.current = Date.now();
     }
     store.appendMessage(threadId, assistant);

@@ -187,8 +187,8 @@ describe("clock ask path + grok composition", () => {
       turn,
     );
     assert.equal(act.line, "It's 1:20 here. You're up late.");
-    assert.equal(act.pose, "talk");
-    assert.notEqual(act.pose, "idle");
+    // The clock act asks for talk; speech lands on idle (idle mouth).
+    assert.equal(act.pose, "idle");
   });
 
   it("does not steal a generic chat turn onto a time line when grok fails", () => {
