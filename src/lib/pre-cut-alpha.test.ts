@@ -68,12 +68,27 @@ describe("pre-cut RGBA idle + blink sheets", () => {
     assert.doesNotMatch(sw, /const CACHE = "star-rai-shell-v1";/);
   });
 
+  it("ships the shy sheet as a pre-cut RGBA file (no runtime punch, versioned URL)", () => {
+    assert.ok((PRE_CUT_ALPHA_FILES as readonly string[]).includes("rai/shy_official.png"));
+    assert.equal(spriteNeedsWhitePunch(SPRITES.poses.shy), false);
+    assert.ok(SPRITES.poses.shy.endsWith(`rai/shy_official.png?v=${PRE_CUT_ALPHA_VERSION}`), SPRITES.poses.shy);
+    assert.equal(PRE_CUT_ALPHA_VERSION, "rgba2");
+    const sha = createHash("sha256").update(pngInfo("rai/shy_official.png").bytes).digest("hex");
+    assert.equal(sha, "d5f8a39493c255f8614cffac93fa76ebcc92b1a3c7d5ddbb4ccbae110e1b4f7d");
+    const sw = readFileSync(join(root, "public/sw.js"), "utf8");
+    assert.match(sw, /const CACHE = "star-rai-shell-v4";/);
+  });
+
   it("ships those files as true RGBA with a transparent background", () => {
+    // Idle/blink/mouth share the 1008×1792 idle canvas; official pose sheets are 720×1280.
+    const expectedSize = (file: string): [number, number] =>
+      file === "rai/shy_official.png" ? [720, 1280] : [1008, 1792];
     for (const file of PRE_CUT_ALPHA_FILES) {
       const info = pngInfo(file);
       assert.equal(info.colorType, 6, `${file} must be RGBA (PNG colour type 6)`);
-      assert.equal(info.width, 1008);
-      assert.equal(info.height, 1792);
+      const [w, h] = expectedSize(file);
+      assert.equal(info.width, w, `${file} width`);
+      assert.equal(info.height, h, `${file} height`);
       assert.equal(info.firstPixel[3], 0, `${file} top-left must be transparent`);
     }
   });
