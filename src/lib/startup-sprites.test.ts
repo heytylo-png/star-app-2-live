@@ -128,12 +128,15 @@ describe("startup sprite lists", () => {
     assert.match(puppet, /punchedSpriteUrl/);
     assert.doesNotMatch(puppet, /allSpriteUrls/);
     assert.doesNotMatch(puppet, /star-rai\/angles/);
-    assert.match(puppet, /const firstPaint = prevIds\.current\.size === 0/);
+    assert.match(puppet, /new PoseCrossfadePool\(/);
     assert.match(puppet, /openRestFallback\(/);
     assert.match(puppet, /priorityPoseSrc\(/);
     assert.match(puppet, /blinkPassInFlight\(/);
     assert.match(puppet, /framesReady/);
-    assert.match(puppet, /decoding=\{layer\.id === IDLE_REST_LAYER_ID \? "sync" : "async"\}/);
+    // Every sheet is decoded before it can mount; the stage <img> never paints empty.
+    assert.match(puppet, /decoding="sync"/);
+    assert.doesNotMatch(puppet, /decoding=\{/);
+    assert.match(puppet, /await decodeSheet\(img\)/);
   });
 
   it("maps a mid-blink rest plate back to the open frame", () => {

@@ -37,7 +37,9 @@ import {
   type IdleMouthFrame,
   type IdleMouthStep,
 } from "@/lib/rai-motion";
+import { PoseCrossfadePool, type CrossfadeLayer } from "@/lib/pose-crossfade";
 import { punchedSpriteUrl } from "@/lib/punch-white";
+import { decodeSheet } from "@/lib/sheet-decode";
 import { sheetBox } from "@/lib/rai-sheet-box";
 import { cn } from "@/lib/utils";
 
@@ -51,7 +53,7 @@ type PuppetProps = {
   className?: string;
 };
 
-type DisplayLayer = SpriteLayer & { z: number };
+type DisplayLayer = CrossfadeLayer;
 
 const LOOK_LERP = 6.5; // higher = snappier; frame-rate independent
 const AMP_LERP = 10;
@@ -131,36 +133,34 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   const [reducedMotion, setReducedMotion] = useState(false);
   const [display, setDisplay] = useState<DisplayLayer[]>([]);
   const [sheets, setSheets] = useState<Record<string, string>>({});
-  const prevIds = useRef<Map<string, DisplayLayer>>(new Map());
-  const fadeTimers = useRef<Map<string, number>>(new Map());
-  const fadingIn = useRef<Set<string>>(new Set());
-  const fadeRaf = useRef(0);
-  /** Outgoing ids whose opacity-0 is waiting on the shared fade-in timer. */
-  const pendingOutIds = useRef<string[]>([]);
+  const crossfade = useRef<PoseCrossfadePool | null>(null);
   const [blinkMode, setBlinkMode] = useState<BlinkFadeMode>("off");
   const blinkRef = useRef<IdleBlinkFrame>(0);
   const [mouth, setMouth] = useState<IdleMouthFrame>(0);
   const mouthRef = useRef<IdleMouthFrame>(0);
   const punchOneRef = useRef<(src: string) => Promise<void>>(async () => {});
   /**
-   * Decoded blink/mouth <img> objects, held for the life of the stage. If they
-   * are dropped after decode(), the browser can evict the file from its
-   * in-memory image list, and the first hard cut to that sheet waits on a
-   * refetch (naturalWidth 0 for a few frames) instead of swapping in place.
+   * Decoded sheet <img> objects (rest, blink, mouth, and every pose sheet),
+   * held for the life of the stage. If they are dropped after decode(), the
+   * browser can evict the file from its in-memory image list, and the first
+   * cut to that sheet waits on a refetch (naturalWidth 0 for a few frames,
+   * an empty stage) instead of swapping in place.
    */
   const decodedFrames = useRef<HTMLImageElement[]>([]);
 
   // Punch studio-white cards to alpha, then decode so pose swaps never flash a plate.
-  // Startup is idle.png then blink 01–04, one file at a time. Every other live
-  // pose sheet waits for requestIdleCallback (setTimeout fallback) so it is not
-  // one startup task. Blink frames are decoded before they enter `sheets`.
+  // Startup is idle.png, blink 01–04, then mouth 02–06, one file at a time.
+  // Every other live pose sheet (wave, shy, talk, moods, …) is then punched and
+  // decoded on requestIdleCallback (setTimeout fallback), so the first switch
+  // to it is a plain cut. A pose asked for sooner jumps that queue.
+  //
+  // Decode before swap: no sheet enters `sheets` until decodeSheet() settles,
+  // and plates only show sheets that are in `sheets`. Until then the current
+  // frame (idle or the pose already up) stays on stage.
   useEffect(() => {
     let cancelled = false;
     let idleHandle = 0;
     let timeoutHandle = 0;
-    // Blink and mouth sheets are decoded before they enter `sheets`, so a
-    // hard cut never lands on an undecoded (blank) frame.
-    const blinkSet = new Set([...idleBlinkFrameUrls(), ...idleMouthFrameUrls()]);
     const restSrc = idleRestSrc();
     const jobs = new Map<string, Promise<void>>();
 
@@ -200,17 +200,24 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
       const job = (async () => {
         if (isRetiredBlinkSrc(src)) return;
         const url = await punchedSpriteUrl(src);
-        if (blinkSet.has(src)) {
-          const img = new Image();
-          img.decoding = "async";
-          img.src = url;
-          try {
-            await img.decode();
-          } catch {
-            // Store the URL anyway. The blink timer stays off until every frame lands.
-          }
-          decodedFrames.current.push(img);
+        if (cancelled) return;
+        const img = new Image();
+        img.decoding = "async";
+        img.src = url;
+        // decoded → plain cut. loaded (decode() slow past ~400ms, or rejected on a
+        // file that did load) → the stage <img> is decoding="sync", so that paint
+        // decodes it: a slow frame at worst, never an empty one.
+        const result = await decodeSheet(img);
+        if (cancelled) return;
+        const rest = aliasRest || src === restSrc;
+        if (result === "failed" && !rest) {
+          // Never mount a sheet that did not load: the current frame stays up
+          // (blink/mouth stay off without all their frames). A later request
+          // for this pose may retry.
+          jobs.delete(src);
+          return;
         }
+        decodedFrames.current.push(img);
         store(src, url, aliasRest);
       })();
       jobs.set(src, job);
@@ -652,142 +659,27 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
 
   // Crossfade pool: incoming fades from 0, outgoing fades to 0, overlap both.
   // Rest blink keeps IDLE_REST_LAYER_ID, so a frame step updates that one layer.
+  // An interrupted fade-in is re-armed or dropped (see PoseCrossfadePool), so a
+  // quick A → B → A never strands a sheet at opacity 0.
   useEffect(() => {
-    if (fadeRaf.current) {
-      window.clearTimeout(fadeRaf.current);
-      fadeRaf.current = 0;
+    if (!crossfade.current) {
+      crossfade.current = new PoseCrossfadePool(
+        {
+          set: (fn, ms) => window.setTimeout(fn, ms),
+          clear: (handle) => window.clearTimeout(handle),
+        },
+        setDisplay,
+      );
     }
-
-    const next = new Map<string, DisplayLayer>();
-    plates.forEach((layer, i) => {
-      // Body starts at 1 so sheets sit above .rai-rig::after (contact shadow at z 0).
-      const z = layer.role === "talk" ? 20 + i : i + 1;
-      next.set(layer.id, { ...layer, z });
+    crossfade.current.update(plates, {
+      snap: blinkModeLive === "snap",
+      isInstant: (layer) => isInstantLayer(layer, talking),
+      fadeMs: (layer) => fadeMsFor(layer, talking, blinkModeLive),
     });
-
-    const merged = new Map(prevIds.current);
-    const incoming: Array<[string, DisplayLayer]> = [];
-    const firstPaint = prevIds.current.size === 0;
-
-    for (const [id, layer] of next) {
-      const existingTimer = fadeTimers.current.get(id);
-      if (existingTimer) {
-        window.clearTimeout(existingTimer);
-        fadeTimers.current.delete(id);
-      }
-      const prev = merged.get(id);
-      if (!prev) {
-        if (isInstantLayer(layer, talking) || firstPaint || blinkModeLive === "snap") {
-          // First paint and cancelled blinks snap on — fading from empty left a blank or a stuck lid.
-          merged.set(id, layer);
-        } else {
-          // Incoming on top at 0 so the outgoing PNG stays visible until the fade starts.
-          merged.set(id, { ...layer, opacity: 0, z: 10 + layer.z });
-          fadingIn.current.add(id);
-          incoming.push([id, layer]);
-        }
-      } else if (fadingIn.current.has(id) && blinkModeLive !== "snap") {
-        // Keep the fade-in; don't snap to target when talkPhase retriggers.
-        merged.set(id, { ...layer, opacity: prev.opacity });
-      } else {
-        if (blinkModeLive === "snap") fadingIn.current.delete(id);
-        merged.set(id, layer);
-      }
-    }
-
-    const incomingDelay = 48;
-    // Start the outgoing fade in the same tick as the incoming one, so a long
-    // main-thread task cannot let the compositor finish the fade-out first.
-    const deferOut = incoming.length > 0;
-    const outgoing: string[] = [];
-    const queueOut = (id: string) => {
-      if (!outgoing.includes(id)) outgoing.push(id);
-    };
-
-    for (const [id, layer] of merged) {
-      if (!next.has(id) && layer.opacity > 0) {
-        fadingIn.current.delete(id);
-        if (deferOut) queueOut(id);
-        else merged.set(id, { ...layer, opacity: 0 });
-        const existingTimer = fadeTimers.current.get(id);
-        if (existingTimer) window.clearTimeout(existingTimer);
-        const fadeMs = fadeMsFor(layer, talking, blinkModeLive);
-        const removeAfter = fadeMs + 40 + (deferOut ? incomingDelay : 0);
-        const timer = window.setTimeout(() => {
-          prevIds.current.delete(id);
-          fadeTimers.current.delete(id);
-          pendingOutIds.current = pendingOutIds.current.filter((pending) => pending !== id);
-          setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
-        }, removeAfter);
-        fadeTimers.current.set(id, timer);
-      }
-    }
-
-    // A newer crossfade clears the 48ms timer. Ids still waiting must fade
-    // with this one, or drop if this frame brought them back.
-    for (const id of pendingOutIds.current) {
-      if (next.has(id) || outgoing.includes(id)) continue;
-      const layer = merged.get(id);
-      if (!layer || layer.opacity <= 0) continue;
-      if (deferOut) {
-        queueOut(id);
-        if (!fadeTimers.current.has(id)) {
-          const fadeMs = fadeMsFor(layer, talking, blinkModeLive);
-          const timer = window.setTimeout(() => {
-            prevIds.current.delete(id);
-            fadeTimers.current.delete(id);
-            pendingOutIds.current = pendingOutIds.current.filter((pending) => pending !== id);
-            setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
-          }, fadeMs + 40 + incomingDelay);
-          fadeTimers.current.set(id, timer);
-        }
-      } else {
-        merged.set(id, { ...layer, opacity: 0 });
-        if (!fadeTimers.current.has(id)) {
-          const fadeMs = fadeMsFor(layer, talking, blinkModeLive);
-          const timer = window.setTimeout(() => {
-            prevIds.current.delete(id);
-            fadeTimers.current.delete(id);
-            setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
-          }, fadeMs + 40);
-          fadeTimers.current.set(id, timer);
-        }
-      }
-    }
-    pendingOutIds.current = deferOut ? outgoing.slice() : [];
-
-    prevIds.current = merged;
-    setDisplay(Array.from(merged.values()).sort((a, b) => a.z - b.z));
-
-    if (incoming.length) {
-      if (fadeRaf.current) window.clearTimeout(fadeRaf.current);
-      const batch = outgoing.slice();
-      // Wait one paint at opacity 0 so CSS can interpolate 0 → target (not a hard cut in).
-      fadeRaf.current = window.setTimeout(() => {
-        fadeRaf.current = 0;
-        for (const id of batch) {
-          if (!pendingOutIds.current.includes(id)) continue;
-          const layer = prevIds.current.get(id);
-          if (layer) prevIds.current.set(id, { ...layer, opacity: 0 });
-        }
-        const dropped = new Set(batch);
-        pendingOutIds.current = pendingOutIds.current.filter((id) => !dropped.has(id));
-        for (const [id, layer] of incoming) {
-          if (!prevIds.current.has(id)) continue;
-          prevIds.current.set(id, layer);
-          fadingIn.current.delete(id);
-        }
-        setDisplay(Array.from(prevIds.current.values()).sort((a, b) => a.z - b.z));
-      }, incomingDelay);
-    }
   }, [plates, talking, blinkModeLive]);
 
   useEffect(() => {
-    return () => {
-      for (const t of fadeTimers.current.values()) window.clearTimeout(t);
-      fadeTimers.current.clear();
-      if (fadeRaf.current) window.clearTimeout(fadeRaf.current);
-    };
+    return () => crossfade.current?.dispose();
   }, []);
 
   const restPunched = sheets[idleRestSrc()];
@@ -842,7 +734,10 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
               src={src}
               alt=""
               draggable={false}
-              decoding={layer.id === IDLE_REST_LAYER_ID ? "sync" : "async"}
+              // Every sheet is decoded before it can be mounted (decodeSheet). sync
+              // makes the loaded-but-not-decoded fallback paint in that frame
+              // instead of showing an empty <img>.
+              decoding="sync"
               className="rai-layer"
               data-rai-role={layer.role}
               data-rai-sheet={
