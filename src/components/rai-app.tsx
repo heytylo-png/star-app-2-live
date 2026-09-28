@@ -814,12 +814,12 @@ function RaiReady() {
     const namedThisTurn = parseTrackTitle(lastUserForTint)
       ? null
       : namedPoseFromText(lastUserForTint);
-    // Frown idle is rest only. A new spoken line re-resolves — leftover
-    // think / pout / tired must not sit under this bubble. Named poses
-    // already swapped. Unmapped kiss does not invent a sheet.
+    // Generic speech stays on the idle sheet and chews. Leftover think /
+    // pout / tired must not sit under this bubble. Named poses already
+    // swapped. Unmapped kiss does not invent a sheet.
     if (namedThisTurn == null) {
-      setPose("talk");
-      poseRef.current = "talk";
+      setPose("idle");
+      poseRef.current = "idle";
       actLandedAt.current = Date.now();
     }
     store.appendMessage(threadId, assistant);

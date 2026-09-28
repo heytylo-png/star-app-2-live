@@ -152,7 +152,7 @@ describe("composeAct local-brain path", () => {
       "idle",
     );
     assert.notEqual(act.pose, "shy");
-    assert.notEqual(act.pose, "idle");
+    assert.equal(act.pose, "idle");
     assert.equal(
       localBrainKeyFor({
         userText: "I'm listening to Super Shy",
@@ -164,11 +164,11 @@ describe("composeAct local-brain path", () => {
     assert.equal(localBrainKeyFor({ userText: "shy", currentPose: "idle" }).named, "shy");
   });
 
-  it("tints generic chat off frown idle onto the spoken bubble", () => {
+  it("keeps generic chat on the idle sheet so the mouth can chew", () => {
     resetLocalBrainLastLine();
     const act = composeAct([{ role: "user", content: "Hey. Just got here." }], undefined, "idle");
-    assert.ok(act.pose === "talk" || act.pose === "smug");
-    assert.notEqual(act.pose, "idle");
+    assert.equal(act.pose, "idle");
+    assert.equal(act.emotion, "bratty");
     assert.doesNotMatch(act.line, /Just got here|heard that/i);
     assert.match(act.line, /Say more|I'm with you|Keep going|I'm here|Facing you|You seeing this/);
     assert.doesNotMatch(act.line, /Don't flinch/i);

@@ -9,6 +9,7 @@ import {
   IDLE_MOUTH_STEP_MAX_MS,
   IDLE_MOUTH_STEP_MIN_MS,
   blinkPausedForMouth,
+  blinkReopenFrames,
   idleMouthAllowed,
   idleMouthCycle,
   idleMouthFile,
@@ -28,6 +29,7 @@ import {
   idleMouthFrameUrls,
   isExpressiveEmotion,
   layersFor,
+  resolveSpokenPose,
   SPRITES,
   startupSpriteUrls,
   type EmotionId,
@@ -147,8 +149,12 @@ describe("idle mouth cycle", () => {
     assert.match(talkOnIdle[0]!.src, /idle_mouth_02_small\.png/);
     assert.equal(talkOnIdle[0]!.id, IDLE_REST_LAYER_ID);
 
-    const untouched = layersFor({ ...rest, talking: true });
-    assert.match(untouched[0]!.src, /talk_official/);
+    const generic = layersFor({ ...rest, talking: true, blink: 0 });
+    assert.match(generic[0]!.src, /idle_blink_01_open\.png/);
+    assert.doesNotMatch(generic[0]!.src, /talk_official/);
+
+    const namedTalk = layersFor({ ...rest, pose: "talk", talking: true, mouth: 3 });
+    assert.match(namedTalk[0]!.src, /talk_official/);
 
     const wave = layersFor({ ...rest, pose: "wave", mouth: 5 });
     assert.match(wave[0]!.src, /wave_official/);
@@ -176,6 +182,85 @@ describe("idle mouth cycle", () => {
     const startupAt = puppet.indexOf("startupSpriteUrls()");
     const mouthAt = puppet.indexOf("idleMouthFrameUrls(");
     assert.ok(startupAt >= 0 && mouthAt > startupAt);
+  });
+
+  it("keeps a generic spoken line on idle and lets a named pose cancel the mouth", () => {
+    const generic = resolveSpokenPose({
+      namedPose: null,
+      modelPose: null,
+      emotion: "bratty",
+      spoken: true,
+      currentPose: "idle",
+      seed: "hey there",
+    });
+    assert.equal(generic, "idle");
+    const omitted = resolveSpokenPose({
+      namedPose: null,
+      modelPose: "idle",
+      emotion: "bratty",
+      spoken: true,
+      seed: "hey there",
+    });
+    assert.equal(omitted, "idle");
+    const chewing = layersFor({
+      pose: generic,
+      emotion: "bratty",
+      talking: true,
+      amplitude: 0.4,
+      angle: 0,
+      mouth: 3,
+    });
+    assert.equal(chewing.length, 1);
+    assert.equal(chewing[0]!.id, IDLE_REST_LAYER_ID);
+    assert.match(chewing[0]!.src, /idle_mouth_03_open\.png/);
+
+    const explicitTalk = resolveSpokenPose({
+      namedPose: null,
+      modelPose: "talk",
+      emotion: "bratty",
+      spoken: true,
+    });
+    assert.equal(explicitTalk, "talk");
+    assert.match(
+      layersFor({
+        pose: explicitTalk,
+        emotion: "bratty",
+        talking: true,
+        amplitude: 0,
+        angle: 0,
+        mouth: 3,
+      })[0]!.src,
+      /talk_official/,
+    );
+
+    const wave = resolveSpokenPose({
+      namedPose: "wave",
+      modelPose: null,
+      emotion: "bratty",
+      spoken: true,
+      currentPose: "idle",
+    });
+    assert.equal(wave, "wave");
+    assert.match(
+      layersFor({
+        pose: wave,
+        emotion: "bratty",
+        talking: true,
+        amplitude: 0,
+        angle: 0,
+        mouth: 3,
+      })[0]!.src,
+      /wave_official/,
+    );
+    assert.equal(mouthFrameWhenCancelled(), 0);
+  });
+
+  it("reopens a mid-blink as 03 then 02 then 01 before the mouth", () => {
+    assert.deepEqual(blinkReopenFrames(4), [3, 2, 1]);
+    assert.deepEqual(blinkReopenFrames(3), [3, 2, 1]);
+    assert.deepEqual(blinkReopenFrames(2), [2, 1]);
+    assert.deepEqual(blinkReopenFrames(1), []);
+    assert.deepEqual(blinkReopenFrames(0), []);
   });
 
   it("keeps 01 byte-identical to the open blink and idle.png", () => {

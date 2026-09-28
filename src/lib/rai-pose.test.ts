@@ -391,12 +391,16 @@ describe("layersFor talking vs pose hold", () => {
     assert.ok(!layers.some((l) => l.role === "talk"));
   });
 
-  it("holds talk_official while the talk key is speaking — no frown idle mid-line", () => {
+  it("keeps a generic line on the idle sheet and holds talk_official for the talk key", () => {
     const idle = layersFor({ ...base, pose: "idle", emotion: "bratty", talking: true });
     assert.equal(idle.length, 1);
-    assert.match(idle[0]!.src, /talk_official/);
+    assert.match(idle[0]!.src, /idle_blink_01_open/);
+    assert.doesNotMatch(idle[0]!.src, /talk_official/);
     assert.doesNotMatch(idle[0]!.src, /rai\/idle\.png/);
     assert.ok(!idle.some((l) => l.role === "talk"));
+    const chewing = layersFor({ ...base, pose: "idle", emotion: "bratty", talking: true, mouth: 2 });
+    assert.match(chewing[0]!.src, /idle_mouth_02_small/);
+    assert.equal(chewing[0]!.id, IDLE_REST_LAYER_ID);
 
     const talk = layersFor({ ...base, pose: "talk", emotion: "bratty", talking: true });
     assert.equal(talk.length, 1);
@@ -412,7 +416,7 @@ describe("layersFor talking vs pose hold", () => {
     assert.ok(!layers.some((l) => l.role === "talk"));
   });
 
-  it("uses a static talk sheet when reduced-motion is on", () => {
+  it("keeps the idle sheet when reduced-motion is on for a generic line", () => {
     const layers = layersFor({
       ...base,
       pose: "idle",
@@ -421,7 +425,8 @@ describe("layersFor talking vs pose hold", () => {
       reducedMotion: true,
     });
     assert.equal(layers.length, 1);
-    assert.match(layers[0]!.src, /talk_official/);
+    assert.match(layers[0]!.src, /idle_blink_01_open/);
+    assert.doesNotMatch(layers[0]!.src, /talk_official/);
   });
 
   it("does not overlay Expo mouth or eye busts on the official pack", () => {
@@ -502,7 +507,8 @@ describe("layersFor talking vs pose hold", () => {
     }
 
     assert.equal(layersFor({ ...rest, talking: true }).length, 1);
-    assert.match(layersFor({ ...rest, talking: true })[0]!.src, /talk_official/);
+    assert.match(layersFor({ ...rest, talking: true })[0]!.src, /idle_blink_04_closed/);
+    assert.doesNotMatch(layersFor({ ...rest, talking: true })[0]!.src, /talk_official/);
     assert.match(layersFor({ ...rest, pose: "wave" })[0]!.src, /wave_official/);
     assert.match(layersFor({ ...rest, pose: "scold" })[0]!.src, /scold_official/);
     assert.match(layersFor({ ...rest, pose: "talk" })[0]!.src, /talk_official/);
@@ -556,7 +562,7 @@ describe("layersFor talking vs pose hold", () => {
     assert.match(puppetSrc, /transition: "none"/);
     assert.match(puppetSrc, /if \(!IDLE_BLINK_ENABLED\) return;/);
     const timerGate = puppetSrc.indexOf("if (!IDLE_BLINK_ENABLED) return;");
-    const cycleStart = puppetSrc.indexOf("setTimeout(runCycle");
+    const cycleStart = puppetSrc.indexOf("arm(runCycle");
     assert.ok(timerGate >= 0 && cycleStart > timerGate, "blink timer must return before it cycles frames");
     assert.equal(existsSync(join(srcRoot, "lib/idle-blink-paint.ts")), false);
     assert.equal(existsSync(join(publicRoot, "rai/idle_blink_open_brow.png")), false);
@@ -718,10 +724,11 @@ describe("layersFor talking vs pose hold", () => {
     assert.notEqual(shy, pout);
   });
 
-  it("does not invent kiss on the talk path", () => {
+  it("does not invent kiss on a generic spoken line", () => {
     const layers = layersFor({ ...base, pose: "idle", emotion: "bratty", talking: true });
     assert.ok(!layers.some((l) => /kiss/i.test(l.src)));
-    assert.match(layers[0]!.src, /talk_official/);
+    assert.match(layers[0]!.src, /idle_blink_01_open/);
+    assert.doesNotMatch(layers[0]!.src, /talk_official/);
   });
 });
 
@@ -797,10 +804,10 @@ describe("pose tint", () => {
     );
   });
 
-  it("infers bratty talking / soft / smug when pose is omitted", () => {
+  it("keeps omitted bratty on idle and still infers soft / smug", () => {
     assert.equal(
       resolveSpokenPose({ namedPose: null, modelPose: null, emotion: "bratty", spoken: true, currentPose: "idle" }),
-      "talk",
+      "idle",
     );
     assert.equal(
       resolveSpokenPose({ namedPose: null, modelPose: null, emotion: "soft", spoken: true, currentPose: "idle" }),
@@ -831,7 +838,7 @@ describe("pose tint", () => {
         spoken: true,
         currentPose: "wave",
       }),
-      "talk",
+      "idle",
     );
   });
 
@@ -931,7 +938,7 @@ describe("pose tint", () => {
     );
   });
 
-  it("does not snap a spoken bratty line back to idle", () => {
+  it("keeps a spoken bratty line on idle when the pose is idle or omitted", () => {
     const pose = resolveSpokenPose({
       namedPose: null,
       modelPose: "idle",
@@ -939,11 +946,10 @@ describe("pose tint", () => {
       spoken: true,
       currentPose: "idle",
     });
-    assert.equal(pose, "talk");
-    assert.notEqual(pose, "idle");
+    assert.equal(pose, "idle");
   });
 
-  it("holds talk on a playful line, then the rest sheet a few seconds after the line ends", () => {
+  it("chews a playful line on idle, then the rest sheet after the line ends", () => {
     const pose = resolveSpokenPose({
       namedPose: null,
       modelPose: null,
@@ -952,19 +958,20 @@ describe("pose tint", () => {
       currentPose: "idle",
       seed: "you're cute. Yeah, I heard that~",
     });
-    assert.equal(pose, "talk");
+    assert.equal(pose, "idle");
     const src = layersFor({
       pose,
       emotion: "bratty",
-      talking: false,
+      talking: true,
       amplitude: 0,
       angle: 0,
+      mouth: 3,
     })[0]!.src;
-    assert.match(src, /talk_official/);
+    assert.match(src, /idle_mouth_03_open/);
+    assert.doesNotMatch(src, /talk_official/);
     assert.doesNotMatch(src, /\/idle\.png(?:\?|$)/);
-    assert.doesNotMatch(src, /idle_blink/);
 
-    // Still saying the line — do not snap to frown idle.
+    // Still saying the line — do not start the rest timer.
     assert.equal(
       poseResetDelayMs({
         pose,
@@ -976,7 +983,7 @@ describe("pose tint", () => {
       null,
     );
 
-    // Line over, even a minute later: a few seconds, not stuck on talk.
+    // Line over on idle: short rest floor. An explicit talk key still holds.
     const restDelay = poseResetDelayMs({
       pose,
       emotion: "bratty",
@@ -984,7 +991,17 @@ describe("pose tint", () => {
       actLandedAt: 1_000,
       now: 61_000,
     });
-    assert.equal(restDelay, POSE_HOLD_AFTER_TALK_MS);
+    assert.equal(restDelay, 800);
+    assert.equal(
+      poseResetDelayMs({
+        pose: "talk",
+        emotion: "bratty",
+        talking: false,
+        actLandedAt: 1_000,
+        now: 61_000,
+      }),
+      POSE_HOLD_AFTER_TALK_MS,
+    );
     assert.ok((restDelay ?? Infinity) < 10_000);
     const restSrc = layersFor({
       pose: "idle",
@@ -1055,8 +1072,7 @@ describe("pose tint", () => {
       currentPose: "idle",
     });
     assert.ok(lineFirst);
-    assert.equal(lineFirst.pose, "talk");
-    assert.notEqual(lineFirst.pose, "idle");
+    assert.equal(lineFirst.pose, "idle");
     assert.equal(lineFirst.emotion, DEFAULT_EMOTION);
 
     const smug = streamSpokenAct('{"line":"Cute.","emotion":"smug"', { currentPose: "idle" });
@@ -1067,7 +1083,7 @@ describe("pose tint", () => {
     assert.equal(named?.pose, "wink");
 
     const fresh = streamSpokenAct('{"line":"Still waving."', { currentPose: "wave" });
-    assert.equal(fresh?.pose, "talk");
+    assert.equal(fresh?.pose, "idle");
     assert.notEqual(fresh?.pose, "wave");
     assert.notEqual(fresh?.pose, "think");
   });
@@ -1181,8 +1197,8 @@ describe("spoken pose re-resolves each line", () => {
     { emotion: "bratty" as const, seed: "bratty on purpose :3" },
   ];
 
-  it("resolves several tease lines in a row to talk or smug, never think", () => {
-    let current: "think" | "talk" | "smug" | "pout" | "tired" = "think";
+  it("resolves several tease lines in a row to idle or smug, never think", () => {
+    let current: "think" | "talk" | "smug" | "pout" | "tired" | "idle" = "think";
     for (const line of teaseLines) {
       const pose = resolveSpokenPose({
         namedPose: null,
@@ -1192,19 +1208,26 @@ describe("spoken pose re-resolves each line", () => {
         currentPose: current,
         seed: line.seed,
       });
-      assert.ok(pose === "talk" || pose === "smug", `${line.seed} → ${pose}`);
+      const onIdle = line.emotion === "bratty";
+      assert.equal(pose, onIdle ? "idle" : "smug", `${line.seed} → ${pose}`);
       assert.notEqual(pose, "think");
-      assert.notEqual(pose, "idle");
       const src = layersFor({
         pose,
         emotion: line.emotion,
         talking: true,
         amplitude: 0.2,
         angle: 0,
+        mouth: onIdle ? 2 : 0,
       })[0]!.src;
       assert.doesNotMatch(src, /think_official/);
-      assert.doesNotMatch(src, /\/idle\.png(?:\?|$)/);
-      assert.doesNotMatch(src, /idle_blink/);
+      if (onIdle) {
+        assert.match(src, /idle_mouth_02_small/);
+        assert.doesNotMatch(src, /talk_official/);
+      } else {
+        assert.match(src, /smug_official/);
+        assert.doesNotMatch(src, /\/idle\.png(?:\?|$)/);
+        assert.doesNotMatch(src, /idle_blink/);
+      }
       current = pose;
     }
   });
@@ -1228,7 +1251,7 @@ describe("spoken pose re-resolves each line", () => {
       currentPose: lineN,
       seed: "okay I'm done teasing",
     });
-    assert.equal(next, "talk");
+    assert.equal(next, "idle");
     assert.notEqual(next, "think");
 
     const callsThink = resolveSpokenPose({
@@ -1251,16 +1274,17 @@ describe("spoken pose re-resolves each line", () => {
       currentPose: "think",
       seed: "tease",
     });
-    assert.equal(spoken, "talk");
+    assert.equal(spoken, "idle");
     const talkingSrc = layersFor({
       pose: spoken,
       emotion: "bratty",
       talking: true,
       amplitude: 0,
       angle: 0,
+      mouth: 3,
     })[0]!.src;
-    assert.match(talkingSrc, /talk_official/);
-    assert.doesNotMatch(talkingSrc, /\/idle\.png(?:\?|$)/);
+    assert.match(talkingSrc, /idle_mouth_03_open/);
+    assert.doesNotMatch(talkingSrc, /talk_official/);
     assert.doesNotMatch(talkingSrc, /think_official/);
 
     const delay = spokenBubbleResetDelay({
@@ -1271,7 +1295,18 @@ describe("spoken pose re-resolves each line", () => {
       now: 61_000,
       captionLive: false,
     });
-    assert.equal(delay, POSE_HOLD_AFTER_TALK_MS);
+    assert.equal(delay, 800);
+    assert.equal(
+      spokenBubbleResetDelay({
+        pose: "talk",
+        emotion: "bratty",
+        talking: false,
+        actLandedAt: 1_000,
+        now: 61_000,
+        captionLive: false,
+      }),
+      POSE_HOLD_AFTER_TALK_MS,
+    );
     assert.equal(settledRestPose(), "idle");
     assert.notEqual(settledRestPose(), "think");
     const restSrc = layersFor({

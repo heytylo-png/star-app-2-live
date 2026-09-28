@@ -25,6 +25,7 @@ import {
   IDLE_BLINK_FIRST_MS,
   IDLE_BLINK_GAP_MAX_MS,
   IDLE_BLINK_GAP_MIN_MS,
+  IDLE_BLINK_STEP_MS,
   idleBlinkSchedule,
   idleBlinkStepName,
   puppetIdleMotion,
@@ -33,6 +34,7 @@ import {
 } from "@/lib/rai-motion";
 import {
   blinkPausedForMouth,
+  blinkReopenFrames,
   idleMouthAllowed,
   idleMouthCycle,
   idleMouthPeak,
@@ -141,6 +143,9 @@ export function Puppet({ pose, emotion, talking, speaking = false, amplitude, cl
   const pendingOutIds = useRef<string[]>([]);
   const [blinkMode, setBlinkMode] = useState<BlinkFadeMode>("off");
   const blinkRef = useRef<IdleBlinkFrame>(0);
+  const blinkTimerRef = useRef(0);
+  const reopenRef = useRef(false);
+  const mouthAllowedRef = useRef(false);
   const mouthRef = useRef(0);
   const mouthSkippedRef = useRef(false);
   const speakingRef = useRef(speaking);
@@ -358,19 +363,25 @@ export function Puppet({ pose, emotion, talking, speaking = false, amplitude, cl
     lineLive: speaking,
     reducedMotion,
   });
+  mouthAllowedRef.current = mouthAllowed;
   const restingBlink =
-    canIdleBlink({ pose, emotion, talking, reducedMotion }) && !blinkPausedForMouth(mouth);
+    canIdleBlink({ pose, emotion, talking, reducedMotion }) &&
+    !blinkPausedForMouth(mouth) &&
+    !reopenRef.current;
   const framesReady = idleBlinkFrameUrls().every((src) => sheets[src] != null);
   useEffect(() => {
     if (!IDLE_BLINK_ENABLED) return;
     if (USE_EXPO_TALK_BUST || !framesReady || !restingBlink) return;
 
     let cancelled = false;
-    let timer = 0;
 
     const stop = () => {
-      if (timer) window.clearTimeout(timer);
-      timer = 0;
+      if (blinkTimerRef.current) window.clearTimeout(blinkTimerRef.current);
+      blinkTimerRef.current = 0;
+    };
+    const arm = (fn: () => void, ms: number) => {
+      stop();
+      blinkTimerRef.current = window.setTimeout(fn, ms);
     };
 
     const gapMs = () =>
@@ -379,28 +390,30 @@ export function Puppet({ pose, emotion, talking, speaking = false, amplitude, cl
     // Chain one timeout per step, measured from when that frame is shown.
     // A 50ms half on this long shot is over before the eye band can be read.
     const runCycle = () => {
-      if (cancelled || reducedRef.current || talkingRef.current) return;
+      if (cancelled || reducedRef.current || talkingRef.current || reopenRef.current) return;
       const steps = idleBlinkSchedule();
       const show = (index: number) => {
-        if (cancelled || reducedRef.current || talkingRef.current) return;
+        if (cancelled || reducedRef.current || talkingRef.current || reopenRef.current) return;
         const step = steps[index];
         if (!step) return;
         blinkRef.current = step.blink;
         setBlink(step.blink);
         const upcoming = steps[index + 1];
         if (!upcoming) {
-          timer = window.setTimeout(runCycle, gapMs());
+          arm(runCycle, gapMs());
           return;
         }
-        timer = window.setTimeout(show, upcoming.at - step.at, index + 1);
+        arm(() => show(index + 1), upcoming.at - step.at);
       };
       show(0);
     };
 
-    timer = window.setTimeout(runCycle, IDLE_BLINK_FIRST_MS);
+    arm(runCycle, IDLE_BLINK_FIRST_MS);
     return () => {
       cancelled = true;
       stop();
+      // A line caught the lids mid-pass. The mouth stepper plays 03 → 02 → 01.
+      if (reopenRef.current) return;
       // Leaving rest (a pose, talk, or emotion) cancels the lid pass.
       // The open-frame fallback paints that same commit; this drops the lid state.
       const midBlink = blinkRef.current > 0;
@@ -453,15 +466,53 @@ export function Puppet({ pose, emotion, talking, speaking = false, amplitude, cl
       setMouth(frame);
       timer = window.setTimeout(() => tick(frames, index + 1), idleMouthStepMs());
     };
-    const peak = idleMouthPeak({
-      emotion: emotionRef.current,
-      pose: poseRef.current,
-      smirk: smirkRef.current,
-    });
-    tick(idleMouthCycle(peak), 0);
+    const startChew = () => {
+      reopenRef.current = false;
+      const peak = idleMouthPeak({
+        emotion: emotionRef.current,
+        pose: poseRef.current,
+        smirk: smirkRef.current,
+      });
+      tick(idleMouthCycle(peak), 0);
+    };
+    // Finish opening the lids before the mouth, instead of popping to 01.
+    if (blinkTimerRef.current) {
+      window.clearTimeout(blinkTimerRef.current);
+      blinkTimerRef.current = 0;
+    }
+    const reopen = blinkReopenFrames(blinkRef.current);
+    if (reopen.length) {
+      reopenRef.current = true;
+      const play = (index: number) => {
+        if (cancelled) return;
+        const frame = reopen[index] as IdleBlinkFrame;
+        blinkRef.current = frame;
+        setBlink(frame);
+        if (index + 1 < reopen.length) {
+          timer = window.setTimeout(() => play(index + 1), IDLE_BLINK_STEP_MS);
+          return;
+        }
+        timer = window.setTimeout(() => {
+          if (cancelled) return;
+          blinkRef.current = 0;
+          setBlink(0);
+          startChew();
+        }, IDLE_BLINK_STEP_MS);
+      };
+      play(0);
+    } else {
+      startChew();
+    }
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
+      const wasReopen = reopenRef.current;
+      reopenRef.current = false;
+      // Line ended (or a named pose took the sheet) before the lids finished.
+      if (wasReopen && mouthRef.current === 0) {
+        blinkRef.current = 0;
+        setBlink(0);
+      }
     };
   }, [mouthAllowed, mouthDecoded, pose, reducedMotion]);
 

@@ -656,9 +656,9 @@ function talkBustSrc(viseme: TalkViseme): string {
 /**
  * Pose state machine — live keys resolve through SPRITES.poses / LIVE_POSE_FILES.
  *
- * Dedicated act poses (including the spoken `talk` key) hold their sheet
- * through speech. Frown idle is rest-only — never the body under a spoken
- * bubble or mid-line. Mood pins still apply when the pose key is still idle.
+ * Dedicated act poses (including an explicit `talk` key) hold their sheet
+ * through speech. A generic line with no named pose stays on the idle
+ * blink / mouth sheet. Mood pins still apply when the pose key is still idle.
  * Expo mouth_* / face_eyes_* busts stay off — they are portrait crops and
  * would fight the long-shot pack. kiss is not a key — callers must keep the
  * current body.
@@ -695,24 +695,20 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     return [body(SPRITES.poses.peace)];
   }
 
-  // Talk-on-idle: the pose is still idle, so the mouth steps the idle sheet.
-  // talk_official is not a viseme. A dedicated pose already returned above.
+  // Talk-on-idle: generic speech keeps this sheet and the mouth cycle steps it.
+  // talk_official is a named pose, not a viseme. A dedicated pose already returned.
   if (mouth > 0) {
     return [body(idleMouthFrameSrc(mouth), 1, IDLE_REST_LAYER_ID)];
   }
 
-  if (talking) {
-    if (USE_EXPO_TALK_BUST) {
-      if (blink === 2) {
-        return [expoTalkBody(SPRITES.talkBust.eyesClosed)];
-      }
-      if (blink === 1) {
-        return [expoTalkBody(SPRITES.talkBust.eyesHalf)];
-      }
-      return [expoTalkBody(talkBustSrc(talkViseme(amplitude, emotion, pose)))];
+  if (talking && USE_EXPO_TALK_BUST) {
+    if (blink === 2) {
+      return [expoTalkBody(SPRITES.talkBust.eyesClosed)];
     }
-    // Spoken / talking never sits on frown idle. Hold the talk sheet.
-    return [body(SPRITES.poses.talk)];
+    if (blink === 1) {
+      return [expoTalkBody(SPRITES.talkBust.eyesHalf)];
+    }
+    return [expoTalkBody(talkBustSrc(talkViseme(amplitude, emotion, pose)))];
   }
 
   // One full frame. The layer id stays IDLE_REST_LAYER_ID so a blink
@@ -928,9 +924,10 @@ export type ResolveSpokenPoseOpts = {
  *    key, the emotion (think / thinking / glance), the user, or a Chart beat
  *    asks for it.
  * 5. Omitted / unknown / idle → context tint, else infer from emotion.
- *    A leftover think / pout / tired does not carry. Spoken fallback is talk
- *    (bratty), never chin-rest. Unmapped kiss keeps a dedicated current body.
- *    Never leave frown idle under a spoken line. Idle is the next rest.
+ *    A leftover think / pout / tired does not carry. Generic bratty speech
+ *    stays on idle so the mouth can chew — it does not jump to talk_official.
+ *    An explicit talk key, a named pose, and other mapped sheets still swap.
+ *    Unmapped kiss keeps a dedicated current body.
  */
 export function resolveSpokenPose(opts: ResolveSpokenPoseOpts): PoseId {
   if (opts.namedPose) return opts.namedPose;
@@ -967,7 +964,11 @@ export function resolveSpokenPose(opts: ResolveSpokenPoseOpts): PoseId {
   }
 
   if (opts.spoken === false) return settledRestPose();
-  return inferEmotionPose(opts.emotion, seed);
+  const inferred = inferEmotionPose(opts.emotion, seed);
+  // Bratty's table maps to talk. Generic lines (no pose / pose idle) stay
+  // on the idle sheet instead of talk_official. Explicit talk already returned.
+  if (inferred === "talk") return "idle";
+  return inferred;
 }
 
 export function parseMemories(raw: string): { text: string; memories: string[] } {

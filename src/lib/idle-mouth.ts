@@ -140,3 +140,14 @@ export function mouthFrameWhenCancelled(): 0 {
 export function mouthFrameAfterSnap(): 0 {
   return 0;
 }
+
+/**
+ * Lids to play before the mouth if a blink is already in progress.
+ * Closed or half: 03 → 02 → 01. Already at 02: finish 02 → 01.
+ * Open lids start the mouth immediately.
+ */
+export function blinkReopenFrames(current: number): number[] {
+  if (current >= 3) return [3, 2, 1];
+  if (current === 2) return [2, 1];
+  return [];
+}

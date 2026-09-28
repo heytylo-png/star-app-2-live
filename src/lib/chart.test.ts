@@ -364,15 +364,14 @@ describe("Grok request composition", () => {
     assert.doesNotMatch(keysOnly, /user_sun|last_topic|Fukuoka|Osaka|03:33|user_rising/);
   });
 
-  it("tints the birthday ask off frown idle on that spoken bubble", () => {
+  it("keeps the birthday ask on idle so the mouth can chew", () => {
     const act = composeAct([{ role: "user", content: "when is your birthday" }], "", "idle", {
       kind: "ask_birthday",
       localOnly: true,
       dateKey: "2026-09-19",
     });
     assert.equal(act.line, "Sept 29.");
-    assert.equal(act.pose, "talk");
-    assert.notEqual(act.pose, "idle");
+    assert.equal(act.pose, "idle");
   });
 });
 

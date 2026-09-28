@@ -460,17 +460,17 @@ describe("pose commands + tint still apply on a voice turn", () => {
     const chat = resolveSpokenPose(opts);
     const call = poseForCallReply(opts);
     assert.equal(call, chat);
-    assert.equal(call, "talk");
-    assert.notEqual(call, "idle");
+    assert.equal(call, "idle");
     const src = layersFor({
       pose: call,
       emotion: "bratty",
-      talking: false,
-      amplitude: 0,
+      talking: true,
+      amplitude: 0.4,
       angle: 0,
+      mouth: 2,
     })[0]!.src;
-    assert.match(src, /talk_official/);
-    assert.doesNotMatch(src, /\/idle\.png(?:\?|$)/);
+    assert.match(src, /idle_mouth_02_small\.png/);
+    assert.doesNotMatch(src, /talk_official/);
 
     const music = {
       namedPose: null,
@@ -505,18 +505,18 @@ describe("pose commands + tint still apply on a voice turn", () => {
       spoken: true,
       seed: "Yeah, I heard that~",
     });
-    assert.notEqual(pose, "idle");
-    assert.equal(pose, "talk");
+    assert.equal(pose, "idle");
     const src = layersFor({
       pose,
       emotion: "bratty",
-      talking: false,
-      amplitude: 0,
+      talking: true,
+      amplitude: 0.4,
       angle: 0,
+      mouth: 3,
     })[0]!.src;
-    assert.match(src, /talk_official/);
-    assert.doesNotMatch(src, /\/idle\.png(?:\?|$)/);
-    // Mid-line: still speaking, stay off idle.
+    assert.match(src, /idle_mouth_03_open\.png/);
+    assert.doesNotMatch(src, /talk_official/);
+    // Mid-line: still speaking, do not start the rest timer.
     assert.equal(
       poseResetDelayMs({
         pose,
@@ -527,7 +527,7 @@ describe("pose commands + tint still apply on a voice turn", () => {
       }),
       null,
     );
-    // Line over: a few seconds, then 01 open (byte copy of idle.png). Blink is on.
+    // Line over on idle: not a dedicated sheet, so the short rest floor.
     const restDelay = poseResetDelayMs({
       pose,
       emotion: "bratty",
@@ -535,7 +535,17 @@ describe("pose commands + tint still apply on a voice turn", () => {
       actLandedAt: 1_000,
       now: 61_000,
     });
-    assert.equal(restDelay, POSE_HOLD_AFTER_TALK_MS);
+    assert.equal(restDelay, 800);
+    assert.equal(
+      poseResetDelayMs({
+        pose: "talk",
+        emotion: "bratty",
+        talking: false,
+        actLandedAt: 1_000,
+        now: 61_000,
+      }),
+      POSE_HOLD_AFTER_TALK_MS,
+    );
     assert.ok((restDelay ?? Infinity) < 10_000);
     assert.match(
       layersFor({
