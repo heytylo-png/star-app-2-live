@@ -5,7 +5,7 @@ import {
   PoseCrossfadePool,
   type CrossfadeLayer,
 } from "./pose-crossfade.ts";
-import type { SpriteLayer } from "./rai.ts";
+import { IDLE_REST_LAYER_ID, type SpriteLayer } from "./rai.ts";
 
 /** Minimal fake clock: timers fire in due order when time advances. */
 function fakeTimers() {
@@ -174,5 +174,47 @@ describe("pose crossfade pool", () => {
       }
       assert.equal(h.blank().length, 0, `gap ${gap}`);
     }
+  });
+});
+
+describe("pose change mid-chew", () => {
+  const REST_ID = IDLE_REST_LAYER_ID;
+  const rest = (file: string): SpriteLayer => ({ id: REST_ID, src: `/rai/${file}.png?v=rgba2`, opacity: 1, role: "body" });
+  const CLOSED = rest("idle_blink_01_open");
+  const SMUG = sheet("smug_official");
+  const closeRest = (layer: CrossfadeLayer): CrossfadeLayer =>
+    layer.id === REST_ID && layer.src !== CLOSED.src ? { ...layer, src: CLOSED.src } : layer;
+
+  for (const mouth of ["idle_mouth_02_small", "idle_mouth_03_open", "idle_mouth_04_oo", "idle_mouth_05_wide", "idle_mouth_06_smirk"]) {
+    it(`fades out the closed 01 frame, not ${mouth}`, () => {
+      const h = harness();
+      h.pool.update([CLOSED], { ...opts(), outgoing: closeRest });
+      h.pool.update([rest(mouth)], { ...opts(), outgoing: closeRest });
+      assert.equal(h.pool.layers()[0]!.src, rest(mouth).src);
+      const before = h.frames.length;
+      h.pool.update([SMUG], { ...opts(), outgoing: closeRest });
+      h.clock.advance(2000);
+      const after = h.frames.slice(before);
+      // From the pose change on, the rest layer is only ever the closed frame.
+      for (const layers of after) {
+        for (const l of layers) if (l.id === REST_ID) assert.equal(l.src, CLOSED.src, mouth);
+      }
+      assert.deepEqual(h.pool.layers().map((l) => l.id), [SMUG.id]);
+      assert.equal(h.blank().length, 0);
+    });
+  }
+
+  it("also closes the mouth on a cut (snap) swap, and without the hook keeps the old src", () => {
+    const h = harness();
+    h.pool.update([rest("idle_mouth_03_open")], { ...opts(), outgoing: closeRest });
+    h.pool.update([SMUG], { ...opts(true), outgoing: closeRest });
+    const out = h.pool.layers().find((l) => l.id === REST_ID)!;
+    assert.equal(out.src, CLOSED.src);
+    assert.equal(out.opacity, 0);
+
+    const plain = harness();
+    plain.pool.update([rest("idle_mouth_03_open")], opts());
+    plain.pool.update([SMUG], opts());
+    assert.equal(plain.pool.layers().find((l) => l.id === REST_ID)!.src, rest("idle_mouth_03_open").src);
   });
 });

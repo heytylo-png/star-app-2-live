@@ -21,6 +21,12 @@ export type CrossfadeUpdateOpts = {
   isInstant: (layer: SpriteLayer) => boolean;
   /** Fade length for an outgoing layer. */
   fadeMs: (layer: SpriteLayer) => number;
+  /**
+   * Snapshot a sheet takes as it leaves the stage. The puppet maps the rest
+   * layer to the closed 01 frame, so a pose change mid-chew (or mid-blink)
+   * fades out a closed mouth, not whatever open frame was up.
+   */
+  outgoing?: (layer: CrossfadeLayer) => CrossfadeLayer;
 };
 
 /**
@@ -66,6 +72,7 @@ export class PoseCrossfadePool {
 
   update(plates: readonly SpriteLayer[], opts: CrossfadeUpdateOpts) {
     const { snap, isInstant, fadeMs } = opts;
+    const outgoingSnapshot = opts.outgoing ?? ((layer: CrossfadeLayer) => layer);
     if (this.fadeHandle) {
       this.timers.clear(this.fadeHandle);
       this.fadeHandle = 0;
@@ -134,8 +141,11 @@ export class PoseCrossfadePool {
       }
       if (!next.has(id) && layer.opacity > 0) {
         this.fadingIn.delete(id);
-        if (deferOut) queueOut(id);
-        else merged.set(id, { ...layer, opacity: 0 });
+        const leaving = outgoingSnapshot(layer);
+        if (deferOut) {
+          queueOut(id);
+          if (leaving !== layer) merged.set(id, leaving);
+        } else merged.set(id, { ...leaving, opacity: 0 });
         const existingTimer = this.fadeTimers.get(id);
         if (existingTimer) this.timers.clear(existingTimer);
         this.removeLater(id, fadeMs(layer) + 40 + (deferOut ? incomingDelay : 0), true);

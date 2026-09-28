@@ -657,6 +657,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
     return () => window.clearTimeout(timer);
   }, [blinkMode]);
 
+  const openRestReady = sheets[idleRestSrc()] != null;
   // Crossfade pool: incoming fades from 0, outgoing fades to 0, overlap both.
   // Rest blink keeps IDLE_REST_LAYER_ID, so a frame step updates that one layer.
   // An interrupted fade-in is re-armed or dropped (see PoseCrossfadePool), so a
@@ -671,12 +672,20 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
         setDisplay,
       );
     }
+    const openRest = idleRestSrc();
     crossfade.current.update(plates, {
       snap: blinkModeLive === "snap",
       isInstant: (layer) => isInstantLayer(layer, talking),
       fadeMs: (layer) => fadeMsFor(layer, talking, blinkModeLive),
+      // A pose change mid-chew (or mid-blink) fades out the closed 01 rest frame,
+      // never the open mouth / shut lid that happened to be up. 01 is decoded at
+      // startup; before that the rest layer is already 01.
+      outgoing: (layer) =>
+        layer.id === IDLE_REST_LAYER_ID && layer.src !== openRest && openRestReady
+          ? { ...layer, src: openRest }
+          : layer,
     });
-  }, [plates, talking, blinkModeLive]);
+  }, [plates, talking, blinkModeLive, openRestReady]);
 
   useEffect(() => {
     return () => crossfade.current?.dispose();

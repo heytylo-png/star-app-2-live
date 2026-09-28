@@ -72,10 +72,11 @@ Named poses, talk, and emotion sheets still do not blink. `prefers-reduced-motio
 **On** (`IDLE_MOUTH_ENABLED`, TyLo "Wire it", 2026-09-27). While she is speaking (`talking`: Call/ElevenLabs line in flight) **and** the pose is still `idle` with no mood sheet pinned, the same rest `<img>` hard-cuts through full mouth sheets. Because automatic `talk` now routes to idle (see Talk / mouth), this is the body for ordinary replies. Any other pose (including a user-named `talk` → `talk_official.png`) and every mood sheet are untouched. `talk_official.png` is never a viseme.
 
 - `idle_mouth_01_closed` = the rest sheet itself (`idle_blink_01_open.png`, byte copy of `idle.png`), so it is not duplicated.
-- `public/rai/idle_mouth_02_small.png`, `03_open`, `04_oo`, `05_wide`, `06_smirk` — byte copies of `artifacts/star-rai-blink-frames/baked/` (RGBA, pre-cut, `?v=rgba1`, skipped by punch-white).
+- `public/rai/idle_mouth_02_small.png`, `03_open`, `04_oo`, `05_wide`, `06_smirk` — byte copies of `artifacts/star-rai-blink-frames/baked/` (RGBA, pre-cut, `?v=` `PRE_CUT_ALPHA_VERSION`, skipped by punch-white).
 - Loop 01 → 02 → 03 → 02 → 01, 90–120 ms a cut (jittered). ~12% of peaks are 04 oo, ~7% of syllables are a 06 smirk beat (held two cuts). 05 wide only on hype lines (two or more `!`, or one `!` with a shouted word), ~40% of their peaks.
 - Once real TTS amplitude arrives, silence holds 01 and quiet audio only opens to 02.
 - Blink is paused for the whole line; at the end the sheet returns to 01 and the blink timer starts again.
+- A pose change mid-chew (a named or late pose while a mouth frame is up) fades out the **closed 01** frame: the crossfade's outgoing snapshot of the rest layer is `idle_blink_01_open.png`, never the open mouth that happened to be showing (`outgoing` in `PoseCrossfadePool`). The mouth sheets themselves are unchanged full frames.
 - Mouth sheets load after the blink frames and are `decode()`d before first use. Reduced motion holds 01.
 
 ## Track 2 — Spine / cutout (foothold)

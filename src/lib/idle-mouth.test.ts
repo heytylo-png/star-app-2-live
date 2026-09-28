@@ -81,7 +81,7 @@ describe("idle mouth sheets", () => {
     assert.equal(SPRITES.idleMouth.closed, SPRITES.idleBlinkOpen);
   });
 
-  it("skips the runtime white punch and carries ?v=rgba1 like idle/blink", () => {
+  it("skips the runtime white punch and carries the pre-cut ?v= like idle/blink", () => {
     const urls = idleMouthFrameUrls();
     assert.equal(urls.length, 5);
     for (const file of Object.keys(MOUTH_SHA256)) {
@@ -96,7 +96,7 @@ describe("idle mouth sheets", () => {
 
   it("bumps the service-worker cache for the new sheets", () => {
     const sw = readFileSync(join(root, "public/sw.js"), "utf8");
-    assert.match(sw, /const CACHE = "star-rai-shell-v3";/);
+    assert.match(sw, /const CACHE = "star-rai-shell-v4";/);
   });
 });
 
@@ -321,13 +321,14 @@ describe("idle mouth on the one rest image", () => {
   });
 
   it("hard-cuts full sheets on the rest layer id, one image, never talk_official", () => {
+    const v = PRE_CUT_ALPHA_VERSION;
     const expected: Record<number, RegExp> = {
-      1: /idle_blink_01_open\.png\?v=rgba1$/,
-      2: /idle_mouth_02_small\.png\?v=rgba1$/,
-      3: /idle_mouth_03_open\.png\?v=rgba1$/,
-      4: /idle_mouth_04_oo\.png\?v=rgba1$/,
-      5: /idle_mouth_05_wide\.png\?v=rgba1$/,
-      6: /idle_mouth_06_smirk\.png\?v=rgba1$/,
+      1: new RegExp(`idle_blink_01_open\\.png\\?v=${v}$`),
+      2: new RegExp(`idle_mouth_02_small\\.png\\?v=${v}$`),
+      3: new RegExp(`idle_mouth_03_open\\.png\\?v=${v}$`),
+      4: new RegExp(`idle_mouth_04_oo\\.png\\?v=${v}$`),
+      5: new RegExp(`idle_mouth_05_wide\\.png\\?v=${v}$`),
+      6: new RegExp(`idle_mouth_06_smirk\\.png\\?v=${v}$`),
     };
     for (const mouth of [1, 2, 3, 4, 5, 6] as const) {
       const layers = layersFor({ ...talkingIdle, mouth, blink: 4 });

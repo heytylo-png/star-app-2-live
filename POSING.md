@@ -21,7 +21,7 @@ public/
     hold_official.png       # NOT front_hold.png
     embarrassed_official.png
     scold_official.png      # live scold key — scold-front.png stays on disk unused
-    shy_official.png
+    shy_official.png        # pre-cut 720×1280 RGBA (PRE_CUT_ALPHA_FILES, no runtime punch)
     sad_official.png
     surprise_official.png
     content_official.png
