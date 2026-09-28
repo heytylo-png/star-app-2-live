@@ -28,18 +28,20 @@ Body sheets swap by stable layer id (`body:<src>`). Incoming starts at opacity 0
 
 ### Talk / mouth
 
-Idle is rest-only (pose tint). The live `talk` key and other mood sheets hold their PNG through the spoken bubble — frown `idle.png` is not the body under that line. Idle.png is the next rest, after the caption is no longer that reply.
+Idle is rest **and** the talking body (TyLo, 2026-09-27: "route talking to the idle mouth instead of `talk_official`"). `SPOKEN_TALK_TO_IDLE` in `src/lib/rai.ts` is on: `routeSpokenTalk()` turns every *automatic* `talk` into `idle` for a spoken line — bratty (`EMOTION_TO_POSE.bratty` is now `idle`), a model `"pose":"talk"` key, Music Set / Chart / life / clock `talk` tints, the plain-chat fallback, and the Call turn-start placeholder (`spokenTurnStartPose()`). So an ordinary talky/bratty line stays on `idle.png` and the idle talking mouth plays (below).
 
-While speaking on rest idle (no dedicated/mood sheet yet):
+Unchanged:
 
-- **Body** = `talk_official.png` (not frown idle underneath)
+- **Named poses** (the user says wave / shy / scold / … ) still win and hold their own PNG through speech — no mouth overlay on those sheets. A user who literally asks for `talk` still gets `talk_official.png`.
+- **Mood sheets** (smug, content, pout, tired, …) still hold their PNG through the spoken bubble; frown `idle.png` is not snapped in under a mood line. Idle.png rest comes after the caption is no longer that reply.
+- `talk_official.png` and the `talk` pose key stay in the pack (`POSE_ASSETS`, POSING.md); speech is just no longer routed to it.
 
-Amplitude still drives a small talk bob on the rig. Dedicated poses (`talk`, `wave`, `scold`, `wink`, …) **hold their own PNG** through speech — no mouth overlay on those sheets.
+Amplitude still drives a small talk bob on the rig.
 
 **Not used on the live body**
 
 - Expo `mouth_*.png` / `face_eyes_*.png` — portrait busts. Overlaying them on the long-shot pack would fight the figure. Idle blink does **not** use them.
-- Helix `star-rai/idle-talk.png` — different crop / line. Official talk sheet replaces it.
+- Helix `star-rai/idle-talk.png` — different crop / line. Speech uses the idle mouth sheets instead.
 - Expo `_alt_idle_smile` / `_alt_grin_open` — not aligned with official idle.
 
 ### Idle blink
@@ -59,11 +61,11 @@ Live cycle: **02 → 03 → 04 → 03 → 02** in **~300ms** total (60ms a cut),
 
 Art gate: `artifacts/star-rai-blink-frames/baked/proof_standing_full.gif` and `proof_standing_strip.png`. The gif composites exactly one full frame at a time (hard replace, no crossfade). One body throughout; only the lids change. Runtime hard-swaps a single `<img>` / texture (no stack, no dual PNG). TyLo approved this on 2026-09-26 (807-referenced painted lids, pass 4b).
 
-Named poses, talk, and emotion sheets still do not blink. `prefers-reduced-motion: reduce` stays on 01 open (a byte copy of `idle.png`). Spoken `talk` / mood is a single body sheet.
+Named poses, talk, and emotion sheets still do not blink. `prefers-reduced-motion: reduce` stays on 01 open (a byte copy of `idle.png`). A spoken mood line is a single body sheet; a plain spoken line stays on idle (mouth frames, blink paused).
 
 ### Idle talking mouth
 
-**On** (`IDLE_MOUTH_ENABLED`, TyLo "Wire it", 2026-09-27). While she is speaking (`talking`: Call/ElevenLabs line in flight) **and** the pose is still `idle` with no mood sheet pinned, the same rest `<img>` hard-cuts through full mouth sheets. Any other pose (including the `talk` key → `talk_official.png`) and every mood sheet are untouched. `talk_official.png` is never a viseme.
+**On** (`IDLE_MOUTH_ENABLED`, TyLo "Wire it", 2026-09-27). While she is speaking (`talking`: Call/ElevenLabs line in flight) **and** the pose is still `idle` with no mood sheet pinned, the same rest `<img>` hard-cuts through full mouth sheets. Because automatic `talk` now routes to idle (see Talk / mouth), this is the body for ordinary replies. Any other pose (including a user-named `talk` → `talk_official.png`) and every mood sheet are untouched. `talk_official.png` is never a viseme.
 
 - `idle_mouth_01_closed` = the rest sheet itself (`idle_blink_01_open.png`, byte copy of `idle.png`), so it is not duplicated.
 - `public/rai/idle_mouth_02_small.png`, `03_open`, `04_oo`, `05_wide`, `06_smirk` — byte copies of `artifacts/star-rai-blink-frames/baked/` (RGBA, pre-cut, `?v=rgba1`, skipped by punch-white).

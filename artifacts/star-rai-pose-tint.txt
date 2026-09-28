@@ -3,17 +3,18 @@ Live GitHub Pages only. Not Expo-only.
 No new sheets. Kiss stays unmapped.
 
 IDLE RULE
-Idle sheet (462 frown / current idle.png) is REST only.
-Do not leave angry idle under a playful or music line.
-After a spoken reply, do not snap to idle on that same bubble.
+Idle sheet (current idle.png) is rest AND the talking body.
+While she speaks on idle, the idle mouth frames play (idle_mouth_01–06).
+Speech is never routed to the talk key / talk_official.png (TyLo, 2026-09-27).
+A user-named "talk" command still shows talk_official.png.
 
 PRIORITY
 1. User-named pose command still wins (sheet swaps first).
-2. If the model returns a live pose key, use it.
+2. If the model returns a live pose key, use it (a model "talk" key lands on idle).
 3. If pose is omitted / unknown / kiss — infer:
 
 EMOTION → POSE (when omitted / unknown / kiss)
-bratty talking → talk
+bratty talking → idle (idle mouth)
 smug → smug
 tired → tired
 shy → shy
@@ -21,12 +22,12 @@ soft → content
 hype → peace or wave
 
 CONTEXT OVERRIDES (when omitted / unknown / kiss)
-now_playing just set → talk or content or smug
-Chart beat → content | think | smug | tired | talk
+now_playing just set → idle or content or smug (a "talk" tint lands on idle)
+Chart beat → content | think | smug | tired | idle (a "talk" tint lands on idle)
 
 TIMING
-After a spoken reply, show talk (or the inferred sheet) on THAT bubble.
-May settle to idle on the next rest, not on the line she just said.
+After a spoken reply, show the inferred sheet on THAT bubble (idle + mouth when bratty).
+Mood / named sheets may settle to idle on the next rest, not on the line she just said.
 
 OUTPUT
 Still {"line","emotion","pose"}.

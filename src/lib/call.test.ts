@@ -460,17 +460,18 @@ describe("pose commands + tint still apply on a voice turn", () => {
     const chat = resolveSpokenPose(opts);
     const call = poseForCallReply(opts);
     assert.equal(call, chat);
-    assert.equal(call, "talk");
-    assert.notEqual(call, "idle");
+    // Speech talks on idle (idle mouth); never routed to talk_official.
+    assert.equal(call, "idle");
     const src = layersFor({
       pose: call,
       emotion: "bratty",
-      talking: false,
-      amplitude: 0,
+      talking: true,
+      amplitude: 0.5,
       angle: 0,
+      mouth: 3,
     })[0]!.src;
-    assert.match(src, /talk_official/);
-    assert.doesNotMatch(src, /\/idle\.png(?:\?|$)/);
+    assert.match(src, /idle_mouth_03_open/);
+    assert.doesNotMatch(src, /talk_official/);
 
     const music = {
       namedPose: null,
@@ -499,24 +500,26 @@ describe("pose commands + tint still apply on a voice turn", () => {
     assert.equal(normalizePose("kiss"), null);
   });
 
-  it("pose tint applies to a spoken teasing line instead of idle-frown", () => {
+  it("a spoken teasing line stays on idle and talks with the idle mouth", () => {
     const pose = resolveSpokenPose({
       emotion: "bratty",
       spoken: true,
       seed: "Yeah, I heard that~",
     });
-    assert.notEqual(pose, "idle");
-    assert.equal(pose, "talk");
-    const src = layersFor({
-      pose,
-      emotion: "bratty",
-      talking: false,
-      amplitude: 0,
-      angle: 0,
-    })[0]!.src;
-    assert.match(src, /talk_official/);
-    assert.doesNotMatch(src, /\/idle\.png(?:\?|$)/);
-    // Mid-line: still speaking, stay off idle.
+    assert.equal(pose, "idle");
+    for (const mouth of [1, 2, 3] as const) {
+      const src = layersFor({
+        pose,
+        emotion: "bratty",
+        talking: true,
+        amplitude: 0.5,
+        angle: 0,
+        mouth,
+      })[0]!.src;
+      assert.doesNotMatch(src, /talk_official/);
+      assert.match(src, /idle_(?:blink_01_open|mouth_0[23]_[a-z]+)\.png/);
+    }
+    // Mid-line: still speaking, no reset.
     assert.equal(
       poseResetDelayMs({
         pose,
@@ -535,7 +538,8 @@ describe("pose commands + tint still apply on a voice turn", () => {
       actLandedAt: 1_000,
       now: 61_000,
     });
-    assert.equal(restDelay, POSE_HOLD_AFTER_TALK_MS);
+    // Already on idle: only the short emotion reset remains.
+    assert.ok(restDelay != null && restDelay < POSE_HOLD_AFTER_TALK_MS);
     assert.ok((restDelay ?? Infinity) < 10_000);
     assert.match(
       layersFor({
