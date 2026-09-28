@@ -61,6 +61,17 @@ Art gate: `artifacts/star-rai-blink-frames/baked/proof_standing_full.gif` and `p
 
 Named poses, talk, and emotion sheets still do not blink. `prefers-reduced-motion: reduce` stays on 01 open (a byte copy of `idle.png`). Spoken `talk` / mood is a single body sheet.
 
+### Idle talking mouth
+
+**On** (`IDLE_MOUTH_ENABLED`, TyLo "Wire it", 2026-09-27). While she is speaking (`talking`: Call/ElevenLabs line in flight) **and** the pose is still `idle` with no mood sheet pinned, the same rest `<img>` hard-cuts through full mouth sheets. Any other pose (including the `talk` key → `talk_official.png`) and every mood sheet are untouched. `talk_official.png` is never a viseme.
+
+- `idle_mouth_01_closed` = the rest sheet itself (`idle_blink_01_open.png`, byte copy of `idle.png`), so it is not duplicated.
+- `public/rai/idle_mouth_02_small.png`, `03_open`, `04_oo`, `05_wide`, `06_smirk` — byte copies of `artifacts/star-rai-blink-frames/baked/` (RGBA, pre-cut, `?v=rgba1`, skipped by punch-white).
+- Loop 01 → 02 → 03 → 02 → 01, 90–120 ms a cut (jittered). ~12% of peaks are 04 oo, ~7% of syllables are a 06 smirk beat (held two cuts). 05 wide only on hype lines (two or more `!`, or one `!` with a shouted word), ~40% of their peaks.
+- Once real TTS amplitude arrives, silence holds 01 and quiet audio only opens to 02.
+- Blink is paused for the whole line; at the end the sheet returns to 01 and the blink timer starts again.
+- Mouth sheets load after the blink frames and are `decode()`d before first use. Reduced motion holds 01.
+
 ## Track 2 — Spine / cutout (foothold)
 
 **Primary engine: Spine** (Essential license when we export a real rig). DragonBones is a free/stale fallback — not the authoring home. Full decision, licenses, layer cuts, and bone map: **[SPINE.md](./SPINE.md)**.

@@ -7,10 +7,12 @@ import { fileURLToPath } from "node:url";
 import {
   CHART_BEAT_TINT_POSES,
   IDLE_BLINK_ENABLED,
+  IDLE_MOUTH_ENABLED,
   IDLE_FRAME_SIZE,
   IDLE_REST_LAYER_ID,
   allSpriteUrls,
   canIdleBlink,
+  canIdleMouth,
   idleBlinkFrameSrc,
   idleBlinkFrameUrls,
   idleRestSrc,
@@ -391,11 +393,13 @@ describe("layersFor talking vs pose hold", () => {
     assert.ok(!layers.some((l) => l.role === "talk"));
   });
 
-  it("holds talk_official while the talk key is speaking — no frown idle mid-line", () => {
+  it("talks on the idle sheet (mouth frames) on idle, and holds talk_official on the talk key", () => {
+    assert.equal(IDLE_MOUTH_ENABLED, true);
     const idle = layersFor({ ...base, pose: "idle", emotion: "bratty", talking: true });
     assert.equal(idle.length, 1);
-    assert.match(idle[0]!.src, /talk_official/);
-    assert.doesNotMatch(idle[0]!.src, /rai\/idle\.png/);
+    assert.equal(idle[0]!.id, IDLE_REST_LAYER_ID);
+    assert.equal(idle[0]!.src, idleRestSrc());
+    assert.doesNotMatch(idle[0]!.src, /talk_official/);
     assert.ok(!idle.some((l) => l.role === "talk"));
 
     const talk = layersFor({ ...base, pose: "talk", emotion: "bratty", talking: true });
@@ -412,16 +416,18 @@ describe("layersFor talking vs pose hold", () => {
     assert.ok(!layers.some((l) => l.role === "talk"));
   });
 
-  it("uses a static talk sheet when reduced-motion is on", () => {
+  it("holds 01 closed (no mouth steps) when reduced-motion is on", () => {
     const layers = layersFor({
       ...base,
       pose: "idle",
       emotion: "bratty",
       talking: true,
+      mouth: 3,
       reducedMotion: true,
     });
     assert.equal(layers.length, 1);
-    assert.match(layers[0]!.src, /talk_official/);
+    assert.equal(layers[0]!.src, idleRestSrc());
+    assert.equal(canIdleMouth({ pose: "idle", emotion: "bratty", talking: true, reducedMotion: true }), false);
   });
 
   it("does not overlay Expo mouth or eye busts on the official pack", () => {
@@ -502,7 +508,8 @@ describe("layersFor talking vs pose hold", () => {
     }
 
     assert.equal(layersFor({ ...rest, talking: true }).length, 1);
-    assert.match(layersFor({ ...rest, talking: true })[0]!.src, /talk_official/);
+    assert.equal(layersFor({ ...rest, talking: true })[0]!.src, idleRestSrc());
+    assert.equal(layersFor({ ...rest, talking: true })[0]!.id, IDLE_REST_LAYER_ID);
     assert.match(layersFor({ ...rest, pose: "wave" })[0]!.src, /wave_official/);
     assert.match(layersFor({ ...rest, pose: "scold" })[0]!.src, /scold_official/);
     assert.match(layersFor({ ...rest, pose: "talk" })[0]!.src, /talk_official/);
@@ -721,7 +728,10 @@ describe("layersFor talking vs pose hold", () => {
   it("does not invent kiss on the talk path", () => {
     const layers = layersFor({ ...base, pose: "idle", emotion: "bratty", talking: true });
     assert.ok(!layers.some((l) => /kiss/i.test(l.src)));
-    assert.match(layers[0]!.src, /talk_official/);
+    assert.doesNotMatch(layers[0]!.src, /talk_official/);
+    const talk = layersFor({ ...base, pose: "talk", emotion: "bratty", talking: true });
+    assert.ok(!talk.some((l) => /kiss/i.test(l.src)));
+    assert.match(talk[0]!.src, /talk_official/);
   });
 });
 
