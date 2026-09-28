@@ -68,8 +68,9 @@ export function isDedicatedPose(pose: PoseId): boolean {
 
 /**
  * Idle rest + the live `talk` key share the same official full-body frame.
- * Spoken `talk` still holds `talk_official` through the line — frown idle is
- * rest-only (pose tint). Wave/scold/shy/… hold their own sheet.
+ * A user-named `talk` command still holds `talk_official`. Automatic spoken
+ * lines stay on idle (SPOKEN_TALK_TO_IDLE) so the idle mouth can chew.
+ * Wave/scold/shy/… hold their own sheet.
  */
 export function isTalkPathPose(pose: PoseId): boolean {
   return pose === "idle" || pose === "talk";
@@ -128,22 +129,107 @@ export function canIdleBlink(state: {
 export const IDLE_MOUTH_ENABLED = true;
 
 /**
- * Mouth window: speaking, idle pose, no mood sheet pinned. Blink is paused
- * for this whole window (canIdleBlink is false while talking).
+ * Mouth window: a spoken line on the idle pose, no mood sheet pinned.
+ * `talking` is real TTS. `lineLive` is a text line still streaming or inside
+ * its chew window, so a reply with no audio still chews. Blink is paused
+ * for this whole window.
  */
 export function canIdleMouth(state: {
   pose: PoseId;
   emotion: EmotionId;
   talking: boolean;
+  /** Caption is streaming, or the text-only chew window is still open. */
+  lineLive?: boolean;
   reducedMotion?: boolean;
 }): boolean {
   if (!IDLE_MOUTH_ENABLED) return false;
   if (USE_EXPO_TALK_BUST) return false;
-  if (!state.talking) return false;
+  if (!state.talking && !state.lineLive) return false;
   if (state.reducedMotion) return false;
   if (isDedicatedPose(state.pose)) return false;
   if (isExpressiveEmotion(state.emotion)) return false;
   return true;
+}
+
+/** Text-only chew: long enough for 01 → 02 → 03 → 02 → 01, not a stuck mouth. */
+export const TEXT_CHEW_MS_PER_CHAR = 55;
+export const TEXT_CHEW_MIN_MS = 600;
+export const TEXT_CHEW_MAX_MS = 3000;
+
+/** Minimum time the idle mouth stays up for a line that has no TTS audio. */
+export function textChewMs(line: string): number {
+  const chars = line.trim().length;
+  if (chars <= 0) return 0;
+  const raw = chars * TEXT_CHEW_MS_PER_CHAR;
+  return Math.min(TEXT_CHEW_MAX_MS, Math.max(TEXT_CHEW_MIN_MS, raw));
+}
+
+/** Absolute deadline for that minimum, from the moment the line first appeared. */
+export function textChewDeadline(startedAt: number, line: string): number {
+  const ms = textChewMs(line);
+  if (!ms || !startedAt) return 0;
+  return startedAt + ms;
+}
+
+export type TextChewArm = {
+  /** When the caption first appeared. 0 means this line has not armed yet. */
+  start: number;
+  /** Absolute deadline. 0 means the window is closed. */
+  until: number;
+};
+
+/**
+ * Arm or extend a text chew from the original start.
+ * A chunk that arrives after the window has closed must not pick a new start.
+ */
+export function armTextChewState(prev: TextChewArm, line: string, now: number): TextChewArm {
+  if (!textChewMs(line)) return prev;
+  const start = prev.start || now;
+  return { start, until: textChewDeadline(start, line) };
+}
+
+/** Deadline reached. Drop `until` and keep `start` so the next chunk cannot re-arm. */
+export function expireTextChew(prev: TextChewArm, now: number): TextChewArm {
+  if (prev.until && now >= prev.until) return { start: prev.start, until: 0 };
+  return prev;
+}
+
+/**
+ * The chew deadline holds the idle-return timer only while this pose can
+ * actually run the idle mouth. Named poses and mood sheets use main's timing.
+ */
+export function chewHoldsIdleReturn(opts: {
+  pose: PoseId;
+  emotion: EmotionId;
+  chewUntil: number;
+  now: number;
+  reducedMotion?: boolean;
+}): boolean {
+  if (!(opts.chewUntil > opts.now)) return false;
+  return canIdleMouth({
+    pose: opts.pose,
+    emotion: opts.emotion,
+    talking: false,
+    lineLive: true,
+    reducedMotion: opts.reducedMotion,
+  });
+}
+
+/**
+ * True while a reply should drive the idle mouth.
+ * Streaming or TTS keeps it open. After the text lands with no audio, the
+ * chew deadline (55 ms/char, 0.6–3 s) keeps a short line through one cycle.
+ */
+export function idleMouthLineLive(opts: {
+  caption: string;
+  sending: boolean;
+  talking: boolean;
+  now: number;
+  chewUntil: number;
+}): boolean {
+  if (!opts.caption.trim()) return false;
+  if (opts.sending || opts.talking) return true;
+  return opts.chewUntil > opts.now;
 }
 
 /**
