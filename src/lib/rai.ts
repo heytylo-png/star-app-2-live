@@ -171,6 +171,50 @@ export function textChewDeadline(startedAt: number, line: string): number {
   return startedAt + ms;
 }
 
+export type TextChewArm = {
+  /** When the caption first appeared. 0 means this line has not armed yet. */
+  start: number;
+  /** Absolute deadline. 0 means the window is closed. */
+  until: number;
+};
+
+/**
+ * Arm or extend a text chew from the original start.
+ * A chunk that arrives after the window has closed must not pick a new start.
+ */
+export function armTextChewState(prev: TextChewArm, line: string, now: number): TextChewArm {
+  if (!textChewMs(line)) return prev;
+  const start = prev.start || now;
+  return { start, until: textChewDeadline(start, line) };
+}
+
+/** Deadline reached. Drop `until` and keep `start` so the next chunk cannot re-arm. */
+export function expireTextChew(prev: TextChewArm, now: number): TextChewArm {
+  if (prev.until && now >= prev.until) return { start: prev.start, until: 0 };
+  return prev;
+}
+
+/**
+ * The chew deadline holds the idle-return timer only while this pose can
+ * actually run the idle mouth. Named poses and mood sheets use main's timing.
+ */
+export function chewHoldsIdleReturn(opts: {
+  pose: PoseId;
+  emotion: EmotionId;
+  chewUntil: number;
+  now: number;
+  reducedMotion?: boolean;
+}): boolean {
+  if (!(opts.chewUntil > opts.now)) return false;
+  return canIdleMouth({
+    pose: opts.pose,
+    emotion: opts.emotion,
+    talking: false,
+    lineLive: true,
+    reducedMotion: opts.reducedMotion,
+  });
+}
+
 /**
  * True while a reply should drive the idle mouth.
  * Streaming or TTS keeps it open. After the text lands with no audio, the

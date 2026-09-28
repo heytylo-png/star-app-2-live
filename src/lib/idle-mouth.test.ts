@@ -5,8 +5,11 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
+  armTextChewState,
   canIdleBlink,
   canIdleMouth,
+  chewHoldsIdleReturn,
+  expireTextChew,
   idleMouthLineLive,
   IDLE_MOUTH_ENABLED,
   IDLE_REST_LAYER_ID,
@@ -16,6 +19,7 @@ import {
   layersFor,
   PRE_CUT_ALPHA_FILES,
   resolveSpokenPose,
+  spokenBubbleResetDelay,
   textChewDeadline,
   textChewMs,
   TEXT_CHEW_MAX_MS,
@@ -26,6 +30,7 @@ import {
   spriteNeedsWhitePunch,
   type EmotionId,
   type PoseId,
+  type TextChewArm,
 } from "./rai.ts";
 import {
   IDLE_MOUTH_STEP_MAX_MS,
@@ -208,6 +213,111 @@ describe("idle mouth on the one rest image", () => {
       currentPose: "wave",
     });
     assert.equal(kiss, "wave");
+  });
+
+  it("stops a 6s stream within 100ms of the stream end once the deadline has passed", () => {
+    const started = 10_000;
+    const streamMs = 6_000;
+    let state: TextChewArm = { start: 0, until: 0 };
+    let line = "";
+    for (let t = 0; t <= streamMs; t += 200) {
+      const now = started + t;
+      state = expireTextChew(state, now);
+      line = `${line} word`.trim();
+      state = armTextChewState(state, line, now);
+    }
+    const end = started + streamMs;
+    state = expireTextChew(state, end);
+    assert.equal(state.start, started);
+    assert.equal(state.until, 0);
+    const mouthOff = (extra: number) =>
+      idleMouthLineLive({
+        caption: line,
+        sending: false,
+        talking: false,
+        now: end + extra,
+        chewUntil: state.until,
+      });
+    assert.equal(mouthOff(0), false);
+    assert.equal(mouthOff(100), false);
+
+    const atDeadline = expireTextChew(
+      { start: started, until: started + TEXT_CHEW_MAX_MS },
+      started + TEXT_CHEW_MAX_MS,
+    );
+    assert.equal(atDeadline.start, started);
+    assert.equal(atDeadline.until, 0);
+    const rearmed = armTextChewState(atDeadline, "a".repeat(80), started + TEXT_CHEW_MAX_MS + 50);
+    assert.equal(rearmed.start, started);
+    assert.equal(rearmed.until, started + TEXT_CHEW_MAX_MS);
+    assert.ok(rearmed.until < end);
+
+    const app = readFileSync(join(root, "src/components/rai-app.tsx"), "utf8");
+    const armFn = app.slice(app.indexOf("function armTextChew"), app.indexOf("async function complete"));
+    assert.match(armFn, /setChewUntil\(0\)/);
+    assert.doesNotMatch(armFn, /chewStartRef\.current\s*=\s*0/);
+  });
+
+  it("keeps a named hype pose on the same idle-return delay as main", () => {
+    const line = "a".repeat(54);
+    const now = 20_000;
+    const actLandedAt = now - 40;
+    const chewUntil = textChewDeadline(now - 1_000, line);
+    assert.ok(chewUntil > now);
+    const pose = resolveSpokenPose({
+      namedPose: null,
+      modelPose: null,
+      emotion: "hype",
+      spoken: true,
+      currentPose: "idle",
+      seed: line,
+    });
+    assert.ok(pose === "peace" || pose === "wave", pose);
+    assert.equal(
+      chewHoldsIdleReturn({ pose, emotion: "hype", chewUntil, now }),
+      false,
+    );
+    const mainDelay = spokenBubbleResetDelay({
+      pose,
+      emotion: "hype",
+      talking: false,
+      actLandedAt,
+      now,
+      captionLive: false,
+    });
+    assert.ok(mainDelay != null && mainDelay > 0);
+    const scheduled = chewHoldsIdleReturn({ pose, emotion: "hype", chewUntil, now })
+      ? null
+      : mainDelay;
+    assert.equal(scheduled, mainDelay);
+
+    assert.equal(
+      chewHoldsIdleReturn({ pose: "wave", emotion: "bratty", chewUntil, now }),
+      false,
+    );
+    const waveMain = spokenBubbleResetDelay({
+      pose: "wave",
+      emotion: "bratty",
+      talking: false,
+      actLandedAt,
+      now,
+      captionLive: false,
+    });
+    const waveScheduled = chewHoldsIdleReturn({ pose: "wave", emotion: "bratty", chewUntil, now })
+      ? null
+      : waveMain;
+    assert.equal(waveScheduled, waveMain);
+
+    assert.equal(
+      chewHoldsIdleReturn({ pose: "idle", emotion: "bratty", chewUntil, now }),
+      true,
+    );
+
+    const app = readFileSync(join(root, "src/components/rai-app.tsx"), "utf8");
+    assert.match(app, /chewHoldsIdleReturn\(\{/);
+    assert.match(app, /chewBlocksReturn\]/);
+    assert.doesNotMatch(app, /bubbleLifeKind, chewUntil\]/);
+    assert.doesNotMatch(app, /chewUntil > Date\.now\(\)/);
   });
 
   it("hard-cuts full sheets on the rest layer id, one image, never talk_official", () => {

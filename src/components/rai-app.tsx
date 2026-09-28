@@ -26,14 +26,14 @@ import {
 import { poseForLandedReply, shouldHoldLocalKiss } from "@/lib/brain";
 import { useChatStore } from "@/lib/chat-store";
 import {
+  armTextChewState,
+  chewHoldsIdleReturn,
   DEFAULT_EMOTION,
   idleMouthLineLive,
   namedPoseFromText,
   parseAct,
   settledRestPose,
   spokenTurnStartPose,
-  textChewDeadline,
-  textChewMs,
   spokenBubbleResetDelay,
   streamLine,
   streamSpokenAct,
@@ -540,8 +540,16 @@ function RaiReady() {
     };
   }, [chatHydrated, presenceHydrated]);
 
+  const chewBlocksReturn = chewHoldsIdleReturn({
+    pose,
+    emotion,
+    chewUntil,
+    now: Date.now(),
+    reducedMotion,
+  });
+
   useEffect(() => {
-    if (sending || talking || callListening || chewUntil > Date.now()) return;
+    if (sending || talking || callListening || chewBlocksReturn) return;
     if (holding) {
       setEmotion("glance");
       return;
@@ -570,7 +578,7 @@ function RaiReady() {
       setEmotion(DEFAULT_EMOTION);
     }, delay);
     return () => window.clearTimeout(id);
-  }, [draft, sending, talking, holding, callListening, pose, emotion, bubbleLifeKind, chewUntil]);
+  }, [draft, sending, talking, holding, callListening, pose, emotion, bubbleLifeKind, chewBlocksReturn]);
 
   function clearCallListenTimers() {
     if (listenRestartTimerRef.current) {
@@ -811,16 +819,16 @@ function RaiReady() {
   }
 
   function armTextChew(line: string) {
-    if (!textChewMs(line)) return;
-    if (!chewStartRef.current) chewStartRef.current = Date.now();
-    const until = textChewDeadline(chewStartRef.current, line);
-    setChewUntil(until);
+    const now = Date.now();
+    const next = armTextChewState({ start: chewStartRef.current, until: 0 }, line, now);
+    if (!next.until) return;
+    chewStartRef.current = next.start;
+    setChewUntil(next.until);
     if (chewTimerRef.current) window.clearTimeout(chewTimerRef.current);
     chewTimerRef.current = window.setTimeout(() => {
       chewTimerRef.current = 0;
-      chewStartRef.current = 0;
       setChewUntil(0);
-    }, Math.max(0, until - Date.now()));
+    }, Math.max(0, next.until - now));
   }
 
   async function complete(threadId: string) {
