@@ -313,6 +313,42 @@ export function settledRestPose(): PoseId {
 }
 
 /**
+ * Sheet after the line ends (stream, TTS, or the text chew window).
+ * A greeting must not leave wink or talk_official up. A user-named pose, or
+ * an explicit reply tag that is not a greeting wink/talk, keeps its sheet.
+ * Mouth frame 01 is the closed rest sheet (`idleMouthFrameSrc(1)`).
+ */
+export function restAfterSpokenLine(opts: {
+  pose: PoseId;
+  line: string;
+  namedPose?: PoseId | false | null;
+  replyPose?: PoseId | null;
+}): PoseId {
+  if (opts.namedPose) return opts.pose;
+  const reply = opts.replyPose;
+  const greetingWinkOrTalk =
+    isGreetingSpokenLine(opts.line) && (reply === "wink" || reply === "talk");
+  if (reply && reply !== "idle" && reply !== "talk" && !greetingWinkOrTalk) return opts.pose;
+  return settledRestPose();
+}
+
+/**
+ * A finished line (stream, TTS, or the text chew window) must not leave
+ * wink_official or talk_official up when that sheet was only a greeting
+ * inference. Named poses and an explicit non-greeting wink tag keep holding.
+ * The closed mouth is frame 01 (`idleMouthFrameSrc(1)`), the idle rest sheet.
+ */
+export function snapGreetingSheet(opts: {
+  pose: PoseId;
+  line: string;
+  namedPose?: PoseId | false | null;
+  replyPose?: PoseId | null;
+}): boolean {
+  if (opts.pose !== "wink" && opts.pose !== "talk") return false;
+  return restAfterSpokenLine(opts) === "idle";
+}
+
+/**
  * Sheets that ship as true RGBA (cut offline by scripts/cut-alpha.py: enclosed
  * white pockets removed, soft decontaminated edge). The runtime studio-white
  * punch must not run on these; it would only re-fringe them.
@@ -1050,6 +1086,21 @@ export function routeSpokenTalk(pose: PoseId): PoseId {
   return SPOKEN_TALK_TO_IDLE && pose === "talk" ? "idle" : pose;
 }
 
+/**
+ * A bare greeting is not a pose. "hi" / "hello" / "hi back" / "hey" must not
+ * select wink or talk_official. A longer line that also says "wink" is not bare.
+ */
+export function isGreetingSpokenLine(text: string): boolean {
+  const t = text
+    .trim()
+    .toLowerCase()
+    .replace(/:3/g, "")
+    .replace(/[!~.?,]+/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return /^(?:hi|hey|hello|yo|sup)(?: back)?$/.test(t);
+}
+
 /** Pose placed on the stage when a new reply turn starts (before its act lands). */
 export function spokenTurnStartPose(): PoseId {
   return routeSpokenTalk("talk");
@@ -1095,6 +1146,12 @@ export function resolveSpokenPose(opts: ResolveSpokenPoseOpts): PoseId {
   if (opts.namedPose) return opts.namedPose;
 
   const seed = opts.seed?.trim() || opts.emotion;
+  // A greeting line does not infer wink or talk. An explicit wink tag on any
+  // other line still passes through below; a user-named wink already returned.
+  const modelPose =
+    isGreetingSpokenLine(seed) && (opts.modelPose === "wink" || opts.modelPose === "talk")
+      ? null
+      : opts.modelPose;
 
   // Music Set: omitted / idle / kiss, or the tint already on the act.
   // A different live key (wink, wave, …) is priority 2 and falls through.
@@ -1103,8 +1160,8 @@ export function resolveSpokenPose(opts: ResolveSpokenPoseOpts): PoseId {
       opts.lifeTintPose && (NOW_PLAYING_TINT_POSES as readonly string[]).includes(opts.lifeTintPose)
         ? opts.lifeTintPose
         : null;
-    if (tint && (needsPoseTint(opts.modelPose) || opts.modelPose === tint)) return routeSpokenTalk(tint);
-    if (!tint && needsPoseTint(opts.modelPose)) {
+    if (tint && (needsPoseTint(modelPose) || modelPose === tint)) return routeSpokenTalk(tint);
+    if (!tint && needsPoseTint(modelPose)) {
       return routeSpokenTalk(pickTint(NOW_PLAYING_TINT_POSES, seed));
     }
   }
@@ -1112,7 +1169,7 @@ export function resolveSpokenPose(opts: ResolveSpokenPoseOpts): PoseId {
   // Tired is a rest face. Model/context keys like talk/peace/wave land as grins.
   if (opts.emotion === "tired") return EMOTION_TO_POSE.tired;
 
-  if (opts.modelPose && isDedicatedPose(opts.modelPose)) return routeSpokenTalk(opts.modelPose);
+  if (modelPose && isDedicatedPose(modelPose)) return routeSpokenTalk(modelPose);
 
   if (opts.chartBeat) {
     if (opts.chartTintPose && (CHART_BEAT_TINT_POSES as readonly string[]).includes(opts.chartTintPose)) {
@@ -1291,6 +1348,7 @@ type NamedPoseHit = { index: number; pose: PoseId | false };
  */
 export function namedPoseFromText(text: string): PoseId | false | null {
   if (!text.trim()) return null;
+  if (isGreetingSpokenLine(text)) return null;
   const hits: NamedPoseHit[] = [];
 
   const add = (re: RegExp, pose: PoseId | false) => {
