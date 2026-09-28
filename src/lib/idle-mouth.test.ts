@@ -246,6 +246,8 @@ describe("puppet wiring", () => {
     assert.match(puppet, /mouthReady/);
     assert.match(puppet, /new Set\(\[\.\.\.idleBlinkFrameUrls\(\), \.\.\.idleMouthFrameUrls\(\)\]\)/);
     assert.match(puppet, /mouthRef\.current > 0/);
+    // Decoded frames stay referenced so the first cut never waits on a refetch.
+    assert.match(puppet, /decodedFrames\.current\.push\(img\)/);
     assert.doesNotMatch(puppet, /talk_official/);
     assert.doesNotMatch(puppet, /will-change|willChange|translateZ/);
   });
