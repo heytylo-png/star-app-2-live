@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import {
   canIdleBlink,
   canIdleMouth,
+  idleMouthLineLive,
   IDLE_MOUTH_ENABLED,
   IDLE_REST_LAYER_ID,
   idleMouthFrameSrc,
@@ -14,6 +15,12 @@ import {
   idleRestSrc,
   layersFor,
   PRE_CUT_ALPHA_FILES,
+  resolveSpokenPose,
+  textChewDeadline,
+  textChewMs,
+  TEXT_CHEW_MAX_MS,
+  TEXT_CHEW_MIN_MS,
+  TEXT_CHEW_MS_PER_CHAR,
   PRE_CUT_ALPHA_VERSION,
   SPRITES,
   spriteNeedsWhitePunch,
@@ -94,6 +101,7 @@ describe("idle mouth on the one rest image", () => {
     assert.equal(canIdleMouth({ pose: "idle", emotion: "bratty", talking: true }), true);
     assert.equal(canIdleMouth({ pose: "idle", emotion: "glance", talking: true }), true);
     assert.equal(canIdleMouth({ pose: "idle", emotion: "bratty", talking: false }), false);
+    assert.equal(canIdleMouth({ pose: "idle", emotion: "bratty", talking: false, lineLive: true }), true);
     assert.equal(canIdleMouth({ pose: "talk", emotion: "bratty", talking: true }), false);
     assert.equal(canIdleMouth({ pose: "wave", emotion: "bratty", talking: true }), false);
     assert.equal(canIdleMouth({ pose: "idle", emotion: "smug", talking: true }), false);
@@ -104,6 +112,102 @@ describe("idle mouth on the one rest image", () => {
     );
     // Blink never runs in the mouth window.
     assert.equal(canIdleBlink({ pose: "idle", emotion: "bratty", talking: true }), false);
+  });
+
+  it("keeps a generic spoken line on idle and chews a text-only reply", () => {
+    const generic = resolveSpokenPose({
+      namedPose: null,
+      modelPose: null,
+      emotion: "bratty",
+      spoken: true,
+      currentPose: "idle",
+      seed: "hey there",
+    });
+    const omitted = resolveSpokenPose({
+      namedPose: null,
+      modelPose: "idle",
+      emotion: "bratty",
+      spoken: true,
+      seed: "hey there",
+    });
+    assert.equal(generic, "idle");
+    assert.equal(omitted, "idle");
+    assert.equal(canIdleMouth({ pose: generic, emotion: "bratty", talking: false, lineLive: true }), true);
+    assert.match(
+      layersFor({
+        pose: generic,
+        emotion: "bratty",
+        talking: true,
+        amplitude: 0,
+        angle: 0,
+        mouth: 3,
+      })[0]!.src,
+      /idle_mouth_03_open/,
+    );
+
+    assert.equal(TEXT_CHEW_MS_PER_CHAR, 55);
+    assert.equal(textChewMs(""), 0);
+    assert.equal(textChewMs("Hi"), TEXT_CHEW_MIN_MS);
+    assert.equal(textChewMs("a".repeat(20)), 20 * 55);
+    assert.equal(textChewMs("a".repeat(80)), TEXT_CHEW_MAX_MS);
+    const started = 1_000;
+    assert.equal(textChewDeadline(started, "hey there"), started + textChewMs("hey there"));
+    assert.equal(
+      idleMouthLineLive({
+        caption: "hey there",
+        sending: false,
+        talking: false,
+        now: started + 100,
+        chewUntil: textChewDeadline(started, "hey there"),
+      }),
+      true,
+    );
+    assert.equal(
+      idleMouthLineLive({
+        caption: "hey there",
+        sending: true,
+        talking: false,
+        now: started,
+        chewUntil: 0,
+      }),
+      true,
+    );
+    assert.equal(
+      idleMouthLineLive({
+        caption: "hey there",
+        sending: false,
+        talking: false,
+        now: textChewDeadline(started, "hey there"),
+        chewUntil: textChewDeadline(started, "hey there"),
+      }),
+      false,
+    );
+
+    const wave = resolveSpokenPose({
+      namedPose: "wave",
+      modelPose: null,
+      emotion: "bratty",
+      spoken: true,
+      currentPose: "idle",
+    });
+    assert.equal(wave, "wave");
+    assert.equal(canIdleMouth({ pose: wave, emotion: "bratty", talking: true, lineLive: true }), false);
+    const namedTalk = resolveSpokenPose({
+      namedPose: "talk",
+      modelPose: null,
+      emotion: "bratty",
+      spoken: true,
+    });
+    assert.equal(namedTalk, "talk");
+    assert.equal(canIdleMouth({ pose: namedTalk, emotion: "bratty", talking: true, lineLive: true }), false);
+    const kiss = resolveSpokenPose({
+      namedPose: false,
+      modelPose: null,
+      emotion: "bratty",
+      spoken: true,
+      currentPose: "wave",
+    });
+    assert.equal(kiss, "wave");
   });
 
   it("hard-cuts full sheets on the rest layer id, one image, never talk_official", () => {

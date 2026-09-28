@@ -27,10 +27,13 @@ import { poseForLandedReply, shouldHoldLocalKiss } from "@/lib/brain";
 import { useChatStore } from "@/lib/chat-store";
 import {
   DEFAULT_EMOTION,
+  idleMouthLineLive,
   namedPoseFromText,
   parseAct,
   settledRestPose,
   spokenTurnStartPose,
+  textChewDeadline,
+  textChewMs,
   spokenBubbleResetDelay,
   streamLine,
   streamSpokenAct,
@@ -220,6 +223,8 @@ function RaiReady() {
    */
   const [bubbleLifeKind, setBubbleLifeKind] = useState<string>("none");
   const [talking, setTalking] = useState(false);
+  /** Text-only lines keep the idle mouth up after the stream, until this time. */
+  const [chewUntil, setChewUntil] = useState(0);
   const [holding, setHolding] = useState(false);
   const [pttSupported, setPttSupported] = useState(true);
   const [callActive, setCallActive] = useState(false);
@@ -236,6 +241,8 @@ function RaiReady() {
   const callActiveRef = useRef(false);
   const sendingRef = useRef(false);
   const talkingRef = useRef(false);
+  const chewStartRef = useRef(0);
+  const chewTimerRef = useRef(0);
   const listenAfterSpeakRef = useRef(false);
   const hangUpRef = useRef<() => void>(() => {});
   const micStreamRef = useRef<MediaStream | null>(null);
@@ -534,7 +541,7 @@ function RaiReady() {
   }, [chatHydrated, presenceHydrated]);
 
   useEffect(() => {
-    if (sending || talking || callListening) return;
+    if (sending || talking || callListening || chewUntil > Date.now()) return;
     if (holding) {
       setEmotion("glance");
       return;
@@ -563,7 +570,7 @@ function RaiReady() {
       setEmotion(DEFAULT_EMOTION);
     }, delay);
     return () => window.clearTimeout(id);
-  }, [draft, sending, talking, holding, callListening, pose, emotion, bubbleLifeKind]);
+  }, [draft, sending, talking, holding, callListening, pose, emotion, bubbleLifeKind, chewUntil]);
 
   function clearCallListenTimers() {
     if (listenRestartTimerRef.current) {
@@ -796,6 +803,26 @@ function RaiReady() {
   }, [scheduleCallListenRestart]);
   startCallListenRef.current = startCallListen;
 
+  function clearTextChew() {
+    if (chewTimerRef.current) window.clearTimeout(chewTimerRef.current);
+    chewTimerRef.current = 0;
+    chewStartRef.current = 0;
+    setChewUntil(0);
+  }
+
+  function armTextChew(line: string) {
+    if (!textChewMs(line)) return;
+    if (!chewStartRef.current) chewStartRef.current = Date.now();
+    const until = textChewDeadline(chewStartRef.current, line);
+    setChewUntil(until);
+    if (chewTimerRef.current) window.clearTimeout(chewTimerRef.current);
+    chewTimerRef.current = window.setTimeout(() => {
+      chewTimerRef.current = 0;
+      chewStartRef.current = 0;
+      setChewUntil(0);
+    }, Math.max(0, until - Date.now()));
+  }
+
   async function complete(threadId: string) {
     const store = useChatStore.getState();
     const current = store.threads.find((t) => t.id === threadId);
@@ -809,6 +836,7 @@ function RaiReady() {
     };
     sendingRef.current = true;
     talkingRef.current = false;
+    clearTextChew();
     poseAtTurnRef.current = poseRef.current;
     const lastUserForTint =
       [...current.messages].reverse().find((m) => m.role === "user")?.content ?? "";
@@ -942,6 +970,7 @@ function RaiReady() {
 
     let raw = "";
     let speakFinishedClean = false;
+    let voiced = false;
     try {
       raw = await streamChat(
         {
@@ -985,6 +1014,7 @@ function RaiReady() {
           }
           if (live) {
             setCaption(live);
+            armTextChew(live);
             store.patchMessage(threadId, assistant.id, { content: live });
           }
         },
@@ -997,6 +1027,7 @@ function RaiReady() {
       const line = shapeSpoken(parsedLine) || "…";
       store.patchMessage(threadId, assistant.id, { content: line });
       setCaption(line);
+      if (line !== "…") armTextChew(line);
       const lifeTitle = parseTrackTitle(lastUser);
       const named = lifeTitle ? null : namedPoseFromText(lastUser);
       const landed = poseForLandedReply({
@@ -1027,6 +1058,7 @@ function RaiReady() {
           listenPausedForTtsRef.current = !CALL_LISTEN_DURING_TTS;
           talkingRef.current = true;
           setTalking(true);
+          voiced = true;
           callListenGenRef.current += 1;
           stopRec();
           let lastAmp = 0;
@@ -1069,6 +1101,8 @@ function RaiReady() {
       setSending(false);
       setTalking(false);
       setAmp(0);
+      // Audio owned the mouth. A text-only line keeps chewing until its deadline.
+      if (voiced) clearTextChew();
 
       if (callActiveRef.current && speakFinishedClean && listenAfterSpeakRef.current) {
         listenBackoffAttemptRef.current = 0;
@@ -1129,6 +1163,7 @@ function RaiReady() {
     setTalking(false);
     setSending(false);
     setHolding(false);
+    clearTextChew();
     setCallListening(false);
     setAmp(0);
   }
@@ -1165,6 +1200,7 @@ function RaiReady() {
     setTalking(false);
     setAmp(0);
     setSending(false);
+    clearTextChew();
     stopRec();
     listenBackoffAttemptRef.current = 0;
     scheduleCallListenRestart(CALL_POST_TTS_COOLDOWN_MS);
@@ -1365,7 +1401,13 @@ function RaiReady() {
       <PresenceStage
         pose={pose}
         emotion={emotion}
-        talking={talking}
+        talking={idleMouthLineLive({
+          caption,
+          sending,
+          talking,
+          now: Date.now(),
+          chewUntil,
+        })}
         amplitude={amp}
         spokenLine={caption}
         className="absolute inset-0"
