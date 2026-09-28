@@ -2,10 +2,13 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   blinkPassInFlight,
   canIdleBlink,
+  canIdleMouth,
   deferredSpriteUrls,
   IDLE_BLINK_ENABLED,
+  IDLE_MOUTH_ENABLED,
   IDLE_REST_LAYER_ID,
   idleBlinkFrameUrls,
+  idleMouthFrameUrls,
   idleRestSrc,
   isRetiredBlinkSrc,
   layersFor,
@@ -25,9 +28,14 @@ import {
   IDLE_BLINK_GAP_MIN_MS,
   idleBlinkSchedule,
   idleBlinkStepName,
+  idleMouthStepName,
+  idleMouthSyllable,
+  isHypeLine,
   puppetIdleMotion,
   puppetRigTransform,
   type IdleBlinkFrame,
+  type IdleMouthFrame,
+  type IdleMouthStep,
 } from "@/lib/rai-motion";
 import { punchedSpriteUrl } from "@/lib/punch-white";
 import { sheetBox } from "@/lib/rai-sheet-box";
@@ -38,6 +46,8 @@ type PuppetProps = {
   emotion: EmotionId;
   talking: boolean;
   amplitude: number;
+  /** Line she is saying. Only read for the hype (05 wide) mouth gate. */
+  spokenLine?: string;
   className?: string;
 };
 
@@ -89,8 +99,10 @@ function fadeMsFor(layer: SpriteLayer, talking: boolean, blinkMode: BlinkFadeMod
  * Approved by TyLo on 2026-09-26 (807-referenced painted lids, pass 4b).
  * No eye strip, no hole overlay, no second <img> for lids. Expo bust
  * mouth/eye crops stay off. Dedicated poses do not blink.
+ * Talking on the idle pose (IDLE_MOUTH_ENABLED) hard-cuts the same rest
+ * <img> through the baked idle_mouth sheets; blink waits until she is done.
  */
-export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetProps) {
+export function Puppet({ pose, emotion, talking, amplitude, spokenLine, className }: PuppetProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const pointerTarget = useRef(0);
   const lookSmooth = useRef(0);
@@ -103,6 +115,16 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
 
   ampTarget.current = amplitude;
   talkingRef.current = talking;
+  const hypeRef = useRef(false);
+  /** Real TTS amplitude has arrived on this line (audio is playing). */
+  const ampSeenRef = useRef(false);
+  useEffect(() => {
+    hypeRef.current = isHypeLine(spokenLine);
+  }, [spokenLine]);
+  useEffect(() => {
+    if (!talking) ampSeenRef.current = false;
+    else if (amplitude > 0.03) ampSeenRef.current = true;
+  }, [talking, amplitude]);
 
   const [ampLive, setAmpLive] = useState(0);
   const [blink, setBlink] = useState<IdleBlinkFrame>(0);
@@ -117,6 +139,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const pendingOutIds = useRef<string[]>([]);
   const [blinkMode, setBlinkMode] = useState<BlinkFadeMode>("off");
   const blinkRef = useRef<IdleBlinkFrame>(0);
+  const [mouth, setMouth] = useState<IdleMouthFrame>(0);
+  const mouthRef = useRef<IdleMouthFrame>(0);
   const punchOneRef = useRef<(src: string) => Promise<void>>(async () => {});
 
   // Punch studio-white cards to alpha, then decode so pose swaps never flash a plate.
@@ -127,7 +151,9 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     let cancelled = false;
     let idleHandle = 0;
     let timeoutHandle = 0;
-    const blinkSet = new Set(idleBlinkFrameUrls());
+    // Blink and mouth sheets are decoded before they enter `sheets`, so a
+    // hard cut never lands on an undecoded (blank) frame.
+    const blinkSet = new Set([...idleBlinkFrameUrls(), ...idleMouthFrameUrls()]);
     const restSrc = idleRestSrc();
     const jobs = new Map<string, Promise<void>>();
 
@@ -219,8 +245,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       let index = 0;
       const step = () => {
         if (cancelled || index >= deferred.length) return;
-        // A lid cut is 60ms. A deferred punch on that slice stretches the blink.
-        if (blinkPassInFlight(blinkRef.current)) {
+        // A lid cut is 60ms, a mouth cut ~100ms. A deferred punch on that slice stretches it.
+        if (blinkPassInFlight(blinkRef.current) || mouthRef.current > 1) {
           timeoutHandle = window.setTimeout(() => {
             timeoutHandle = 0;
             step();
@@ -334,6 +360,11 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     // A 50ms half on this long shot is over before the eye band can be read.
     const runCycle = () => {
       if (cancelled || reducedRef.current || talkingRef.current) return;
+      // Mouth owns the one rest <img> while she speaks. Wait for it to hand back 01.
+      if (mouthRef.current > 0) {
+        timer = window.setTimeout(runCycle, IDLE_BLINK_FIRST_MS);
+        return;
+      }
       const steps = idleBlinkSchedule();
       const show = (index: number) => {
         if (cancelled || reducedRef.current || talkingRef.current) return;
@@ -363,6 +394,46 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       if (midBlink) setBlinkMode("snap");
     };
   }, [restingBlink, framesReady]);
+
+  // Idle talking mouth. Speaking on the idle pose only, after the five mouth
+  // sheets have decoded. Hard cuts on the same rest <img>: 01 → 02 → 03 → 02
+  // → 01, ~90–120ms a cut, with 04/06 spice and 05 on hype lines. Blink is
+  // paused for the line (canIdleBlink is false while talking); on exit this
+  // drops back to 01 and the blink timer starts again from open lids.
+  const talkingIdle = canIdleMouth({ pose, emotion, talking, reducedMotion });
+  const mouthReady = idleMouthFrameUrls().every((src) => sheets[src] != null);
+  useEffect(() => {
+    if (!IDLE_MOUTH_ENABLED) return;
+    if (!talkingIdle || !mouthReady) return;
+
+    let cancelled = false;
+    let timer = 0;
+    let queue: IdleMouthStep[] = [];
+
+    const show = () => {
+      timer = 0;
+      if (cancelled || reducedRef.current || !talkingRef.current) return;
+      if (!queue.length) {
+        queue = idleMouthSyllable({
+          hype: hypeRef.current,
+          amplitude: ampTarget.current,
+          ampLive: ampSeenRef.current,
+        });
+      }
+      const step = queue.shift()!;
+      mouthRef.current = step.mouth;
+      setMouth(step.mouth);
+      timer = window.setTimeout(show, step.ms);
+    };
+
+    show();
+    return () => {
+      cancelled = true;
+      if (timer) window.clearTimeout(timer);
+      mouthRef.current = 0;
+      setMouth(0);
+    };
+  }, [talkingIdle, mouthReady]);
 
   // Pointer → look target (normalized -1..1), deadzone kills micro-jitter.
   useEffect(() => {
@@ -514,6 +585,8 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
     blinkModeLive = "snap";
   }
 
+  const mouthShown: IdleMouthFrame = talkingIdle && mouthReady ? mouth : 0;
+
   const desired = useMemo(
     () =>
       layersFor({
@@ -524,10 +597,11 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
         angle: 0,
         talkPhase: 0,
         blink: blinkShown,
+        mouth: mouthShown,
         idleBeat: "none",
         reducedMotion,
       }),
-    [pose, emotion, talking, ampLive, blinkShown, reducedMotion],
+    [pose, emotion, talking, ampLive, blinkShown, mouthShown, reducedMotion],
   );
   const shownPlates = useRef<SpriteLayer[]>([]);
   const plates = useMemo(() => {
@@ -712,6 +786,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
   const stageReady = Boolean(restPunched);
   const talkOverlay = display.find((layer) => layer.role === "talk");
   const blinkFrame = restingBlink ? idleBlinkStepName(blinkShown) : "off";
+  const mouthFrame = talkingIdle ? idleMouthStepName(mouthShown) : "off";
   // Rest blink is one full frame. Pose crossfade may still overlap a sheet on
   // the way in or out; once that handoff is done, paint only this sprite.
   const restPlate = plates.length === 1 && plates[0]?.id === IDLE_REST_LAYER_ID ? plates[0] : null;
@@ -733,6 +808,7 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
       data-rai-talking={talking ? "1" : "0"}
       data-rai-blink={blinkShown > 0 && restingBlink ? "1" : "0"}
       data-rai-blink-frame={blinkFrame}
+      data-rai-mouth-frame={mouthFrame}
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
     >
       <div data-rai-rig className="rai-rig">
@@ -761,7 +837,9 @@ export function Puppet({ pose, emotion, talking, amplitude, className }: PuppetP
               decoding={layer.id === IDLE_REST_LAYER_ID ? "sync" : "async"}
               className="rai-layer"
               data-rai-role={layer.role}
-              data-rai-sheet={layer.id === IDLE_REST_LAYER_ID ? blinkFrame : undefined}
+              data-rai-sheet={
+                layer.id === IDLE_REST_LAYER_ID ? (talkingIdle ? `mouth-${mouthFrame}` : blinkFrame) : undefined
+              }
               style={style}
             />
           );

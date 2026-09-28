@@ -1364,6 +1364,7 @@ function RaiReady() {
         emotion={emotion}
         talking={talking}
         amplitude={amp}
+        spokenLine={caption}
         className="absolute inset-0"
         desk={desk}
         onDeskFail={onDeskFail}

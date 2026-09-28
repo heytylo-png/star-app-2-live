@@ -8,6 +8,7 @@ import {
   blinkPassInFlight,
   IDLE_REST_LAYER_ID,
   idleBlinkFrameUrls,
+  idleMouthFrameUrls,
   idleRestSrc,
   layersFor,
   LIVE_POSE_FILES,
@@ -27,15 +28,21 @@ function pathOf(url: string): string {
 }
 
 describe("startup sprite lists", () => {
-  it("loads idle.png then blink 01 through 04, in that order", () => {
+  it("loads idle.png, then blink 01 through 04, then mouth 02 through 06, in that order", () => {
     assert.deepEqual(startupSpriteUrls().map(pathOf), [
       "rai/idle.png",
       "rai/idle_blink_01_open.png",
       "rai/idle_blink_02_closing.png",
       "rai/idle_blink_03_half.png",
       "rai/idle_blink_04_closed.png",
+      "rai/idle_mouth_02_small.png",
+      "rai/idle_mouth_03_open.png",
+      "rai/idle_mouth_04_oo.png",
+      "rai/idle_mouth_05_wide.png",
+      "rai/idle_mouth_06_smirk.png",
     ]);
-    assert.deepEqual(startupSpriteUrls().slice(1), idleBlinkFrameUrls());
+    assert.deepEqual(startupSpriteUrls().slice(1, 5), idleBlinkFrameUrls());
+    assert.deepEqual(startupSpriteUrls().slice(5), idleMouthFrameUrls());
     assert.equal(startupSpriteUrls()[0], SPRITES.poses.idle);
   });
 
@@ -109,6 +116,7 @@ describe("startup sprite lists", () => {
     assert.doesNotMatch(precache, /rai\/idle/);
     assert.doesNotMatch(precache, /talk_official/);
     assert.doesNotMatch(precache, /idle_blink/);
+    assert.doesNotMatch(precache, /idle_mouth/);
   });
 
   it("punches startup then deferred from the puppet, not the full catalog", () => {

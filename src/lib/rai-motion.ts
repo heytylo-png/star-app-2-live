@@ -69,6 +69,106 @@ export function idleBlinkSchedule(): IdleBlinkStep[] {
   });
 }
 
+/**
+ * Idle talking mouth. Same rule as the blink: one full 1008×1792 sheet on the
+ * one rest <img>, hard cuts only. Runs only while she is speaking on the idle
+ * pose (IDLE_MOUTH_ENABLED in rai.ts). At rest she sits on 01.
+ *
+ * Default syllable is 01 → 02 → 03 → 02 → 01. 04 (oo) and 06 (smirk) are
+ * occasional spice. 05 (wide) only on hype lines (exclamation-heavy text).
+ * talk_official.png is never a viseme.
+ */
+export const IDLE_MOUTH_STEP_MIN_MS = 90;
+export const IDLE_MOUTH_STEP_MAX_MS = 120;
+/** Share of syllables whose peak is 04 oo instead of 03 open. */
+export const IDLE_MOUTH_OO_CHANCE = 0.12;
+/** Share of syllables that are a short 06 smirk beat instead of a flap. */
+export const IDLE_MOUTH_SMIRK_CHANCE = 0.07;
+/** On a hype line, share of peaks that open to 05 wide. Never on other lines. */
+export const IDLE_MOUTH_WIDE_HYPE_CHANCE = 0.4;
+/** Real TTS amplitude below this (once audio has been heard) holds 01 closed. */
+export const IDLE_MOUTH_SILENT_AMP = 0.04;
+/** Real TTS amplitude below this only opens to 02 small. */
+export const IDLE_MOUTH_QUIET_AMP = 0.12;
+
+/**
+ * 0 rests on 01 (the rest sheet, byte copy of idle.png).
+ * 1 closed, 2 small, 3 open, 4 oo, 5 wide, 6 smirk.
+ */
+export type IdleMouthFrame = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+export type IdleMouthStep = { mouth: IdleMouthFrame; ms: number };
+
+export function idleMouthStepName(
+  mouth: number,
+): "01-closed" | "02-small" | "03-open" | "04-oo" | "05-wide" | "06-smirk" | "rest" {
+  if (mouth === 1) return "01-closed";
+  if (mouth === 2) return "02-small";
+  if (mouth === 3) return "03-open";
+  if (mouth === 4) return "04-oo";
+  if (mouth === 5) return "05-wide";
+  if (mouth === 6) return "06-smirk";
+  return "rest";
+}
+
+/** One mouth cut, jittered inside 90–120ms. */
+export function idleMouthStepMs(rand: () => number = Math.random): number {
+  const t = Math.min(1, Math.max(0, rand()));
+  return Math.round(IDLE_MOUTH_STEP_MIN_MS + t * (IDLE_MOUTH_STEP_MAX_MS - IDLE_MOUTH_STEP_MIN_MS));
+}
+
+/** Hype / excited line: two or more "!", or one "!" with a shouted word. */
+export function isHypeLine(text: string | null | undefined): boolean {
+  if (!text) return false;
+  const bangs = (text.match(/!/g) ?? []).length;
+  if (bangs >= 2) return true;
+  return bangs === 1 && /\b[A-Z]{3,}\b/.test(text);
+}
+
+/**
+ * The next syllable, starting from 01 closed and ending back on 01.
+ * Default [02, 03, 02, 01]. `amplitude` is used only once real TTS audio has
+ * been heard on this line (`ampLive`): silence holds 01, quiet opens to 02.
+ */
+export function idleMouthSyllable(
+  opts: {
+    hype?: boolean;
+    amplitude?: number;
+    ampLive?: boolean;
+    rand?: () => number;
+  } = {},
+): IdleMouthStep[] {
+  const rand = opts.rand ?? Math.random;
+  const step = () => idleMouthStepMs(rand);
+  if (opts.ampLive) {
+    const a = opts.amplitude ?? 0;
+    if (a < IDLE_MOUTH_SILENT_AMP) return [{ mouth: 1, ms: step() }];
+    if (a < IDLE_MOUTH_QUIET_AMP) {
+      return [
+        { mouth: 2, ms: step() },
+        { mouth: 1, ms: step() },
+      ];
+    }
+  }
+  const roll = rand();
+  if (roll < IDLE_MOUTH_SMIRK_CHANCE) {
+    // A beat of smirk, held two cuts, then closed.
+    return [
+      { mouth: 6, ms: step() + step() },
+      { mouth: 1, ms: step() },
+    ];
+  }
+  let peak: IdleMouthFrame = 3;
+  if (opts.hype && rand() < IDLE_MOUTH_WIDE_HYPE_CHANCE) peak = 5;
+  else if (roll < IDLE_MOUTH_SMIRK_CHANCE + IDLE_MOUTH_OO_CHANCE) peak = 4;
+  return [
+    { mouth: 2, ms: step() },
+    { mouth: peak, ms: step() },
+    { mouth: 2, ms: step() },
+    { mouth: 1, ms: step() },
+  ];
+}
+
 /** Idle vertical travel stays under this so the sheet does not float. */
 export const IDLE_MAX_TRANSLATE_Y_PX = 1.2;
 /** Weight-shift rock, excluding look-at lean. */

@@ -1,6 +1,6 @@
-import { POSE_CROSSFADE_MS, type IdleBlinkFrame } from "./rai-motion.ts";
+import { POSE_CROSSFADE_MS, type IdleBlinkFrame, type IdleMouthFrame } from "./rai-motion.ts";
 
-export { POSE_CROSSFADE_MS, type IdleBlinkFrame };
+export { POSE_CROSSFADE_MS, type IdleBlinkFrame, type IdleMouthFrame };
 
 export const POSES = [
   "idle",
@@ -117,6 +117,36 @@ export function canIdleBlink(state: {
 }
 
 /**
+ * Idle talking mouth is on.
+ *
+ * TyLo: "Wire it" (2026-09-27). While she speaks on the idle pose, the rest
+ * <img> hard-cuts through the baked mouth sheets (idle_mouth_02–06; 01 closed
+ * is the rest sheet itself). Same rule as the blink: one image, full sheets,
+ * no crossfade, no stack, no mouth sticker, no face_* bust. Other poses and
+ * mood sheets are untouched. talk_official.png is never a viseme.
+ */
+export const IDLE_MOUTH_ENABLED = true;
+
+/**
+ * Mouth window: speaking, idle pose, no mood sheet pinned. Blink is paused
+ * for this whole window (canIdleBlink is false while talking).
+ */
+export function canIdleMouth(state: {
+  pose: PoseId;
+  emotion: EmotionId;
+  talking: boolean;
+  reducedMotion?: boolean;
+}): boolean {
+  if (!IDLE_MOUTH_ENABLED) return false;
+  if (USE_EXPO_TALK_BUST) return false;
+  if (!state.talking) return false;
+  if (state.reducedMotion) return false;
+  if (isDedicatedPose(state.pose)) return false;
+  if (isExpressiveEmotion(state.emotion)) return false;
+  return true;
+}
+
+/**
  * Delay before easing back to idle after an act. `null` = do not reset
  * (still speaking).
  *
@@ -207,6 +237,11 @@ export const PRE_CUT_ALPHA_FILES = [
   "rai/idle_blink_02_closing.png",
   "rai/idle_blink_03_half.png",
   "rai/idle_blink_04_closed.png",
+  "rai/idle_mouth_02_small.png",
+  "rai/idle_mouth_03_open.png",
+  "rai/idle_mouth_04_oo.png",
+  "rai/idle_mouth_05_wide.png",
+  "rai/idle_mouth_06_smirk.png",
 ] as const;
 
 /**
@@ -316,6 +351,21 @@ export const SPRITES = {
   idleBlinkClosing: ASSET("rai/idle_blink_02_closing.png"),
   idleBlinkHalf: ASSET("rai/idle_blink_03_half.png"),
   idleBlinkClosed: ASSET("rai/idle_blink_04_closed.png"),
+  /**
+   * Baked idle talking mouth. Byte copies of
+   * artifacts/star-rai-blink-frames/baked/idle_mouth_*.png, 1008×1792 RGBA on
+   * the idle.png canvas (mouth only). 01 closed is the rest sheet (byte copy
+   * of idle.png), so it reuses the blink 01 URL. Hard cuts on the one rest
+   * <img> while IDLE_MOUTH_ENABLED.
+   */
+  idleMouth: {
+    closed: ASSET("rai/idle_blink_01_open.png"),
+    small: ASSET("rai/idle_mouth_02_small.png"),
+    open: ASSET("rai/idle_mouth_03_open.png"),
+    oo: ASSET("rai/idle_mouth_04_oo.png"),
+    wide: ASSET("rai/idle_mouth_05_wide.png"),
+    smirk: ASSET("rai/idle_mouth_06_smirk.png"),
+  },
   angles: {
     front: ASSET("star-rai/angles/front.png"),
     threeQuarter: ASSET("star-rai/angles/three-quarter.png"),
@@ -403,6 +453,24 @@ export function idleBlinkFrameSrc(blink: number): string {
   return SPRITES.idleBlinkOpen;
 }
 
+/**
+ * Full frame for one idle-mouth step. 0 and 1 are 01 closed (the rest sheet).
+ * 2 small, 3 open, 4 oo, 5 wide, 6 smirk. Hard cut only.
+ */
+export function idleMouthFrameSrc(mouth: number): string {
+  if (mouth === 2) return SPRITES.idleMouth.small;
+  if (mouth === 3) return SPRITES.idleMouth.open;
+  if (mouth === 4) return SPRITES.idleMouth.oo;
+  if (mouth === 5) return SPRITES.idleMouth.wide;
+  if (mouth === 6) return SPRITES.idleMouth.smirk;
+  return idleRestSrc();
+}
+
+/** The five mouth sheets that are not the rest sheet (02 → 06). */
+export function idleMouthFrameUrls(): string[] {
+  return [2, 3, 4, 5, 6].map((frame) => idleMouthFrameSrc(frame));
+}
+
 /** Rest body. 01 open (byte copy of idle.png) while blink is on. */
 export function idleRestSrc(): string {
   return IDLE_BLINK_ENABLED ? SPRITES.idleBlinkOpen : SPRITES.poses.idle;
@@ -414,12 +482,17 @@ export function idleBlinkFrameUrls(): string[] {
 }
 
 /**
- * Critical path. idle.png, then blink 01 → 04 in the baked order.
+ * Critical path. idle.png, then blink 01 → 04 in the baked order, then the
+ * idle mouth 02 → 06 (decoded before the first line can use them).
  * 01 stays after idle.png even though it is a byte copy: the rest layer
  * mounts that URL, and the blink timer waits on all four.
  */
 export function startupSpriteUrls(): string[] {
-  return [SPRITES.poses.idle, ...idleBlinkFrameUrls()];
+  return [
+    SPRITES.poses.idle,
+    ...idleBlinkFrameUrls(),
+    ...(IDLE_MOUTH_ENABLED ? idleMouthFrameUrls() : []),
+  ];
 }
 
 /** Lid pass 02–04. Open hold is 0 or 1. Deferred punches wait this out. */
@@ -503,6 +576,7 @@ export function unusedPngSpriteUrls(): string[] {
 export function allSpriteUrls(): string[] {
   return [
     ...idleBlinkFrameUrls(),
+    ...idleMouthFrameUrls(),
     ...Object.values(SPRITES.poses),
     ...Object.values(SPRITES.angles),
     SPRITES.talk,
@@ -543,6 +617,12 @@ export type PuppetState = {
    * Expo talk bust (flag on) still uses 1/2 with face_eyes_* while speaking.
    */
   blink?: IdleBlinkFrame;
+  /**
+   * Idle talking mouth frame (IDLE_MOUTH_ENABLED). Used only while talking on
+   * the idle pose. 0/1 = 01 closed, 2 small, 3 open, 4 oo, 5 wide, 6 smirk.
+   * Same stable layer id as rest; only the full-frame src swaps.
+   */
+  mouth?: IdleMouthFrame;
   /** Brief idle variety beat from puppet timer (smile/grin). Official pack ignores Expo alts. */
   idleBeat?: IdleBeat;
   /** Skip mouth flap; show a static talk sheet. */
@@ -641,6 +721,7 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
     talking,
     amplitude,
     blink = 0,
+    mouth = 0,
     reducedMotion = false,
   } = state;
 
@@ -674,6 +755,11 @@ export function layersFor(state: PuppetState): SpriteLayer[] {
         return [expoTalkBody(SPRITES.talkBust.eyesHalf)];
       }
       return [expoTalkBody(talkBustSrc(talkViseme(amplitude, emotion, pose)))];
+    }
+    if (IDLE_MOUTH_ENABLED) {
+      // Speaking on the idle pose: the rest <img> hard-cuts through the baked
+      // mouth sheets. Blink is paused (0) for the line. Never talk_official.
+      return [body(idleMouthFrameSrc(reducedMotion ? 1 : mouth), 1, IDLE_REST_LAYER_ID)];
     }
     // Spoken / talking never sits on frown idle. Hold the talk sheet.
     return [body(SPRITES.poses.talk)];
