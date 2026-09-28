@@ -46,6 +46,7 @@ import {
   resolveSpokenPose,
   settledRestPose,
   spokenBubbleResetDelay,
+  streamLineClosed,
   streamSpokenAct,
   talkFlapOpacity,
   USE_EXPO_TALK_BUST,
@@ -1646,5 +1647,55 @@ describe("greeting lines stay on idle and chew", () => {
       })[0]!.src,
       /talk_official/,
     );
+  });
+
+  it("holds a tag-first wink or talk until the greeting line is closed", () => {
+    const open = [
+      '{"pose":"wink","emotion":"bratty","line":"h',
+      '{"pose":"wink","emotion":"bratty","line":"hi b',
+      '{"pose":"wink","emotion":"bratty","line":"hi ba',
+      '{"pose":"talk","emotion":"bratty","line":"h',
+      '{"pose":"talk","emotion":"bratty","line":"hi back',
+    ];
+    for (const partial of open) {
+      assert.equal(streamLineClosed(partial), false, partial);
+      const streamed = streamSpokenAct(partial, { namedPose: null, currentPose: "idle" });
+      assert.equal(streamed?.pose, "idle", partial);
+      assert.doesNotMatch(
+        layersFor({
+          pose: streamed!.pose,
+          emotion: "bratty",
+          talking: true,
+          amplitude: 0,
+          angle: 0,
+          mouth: 3,
+        })[0]!.src,
+        /wink_official|talk_official/,
+      );
+    }
+
+    const closed = '{"pose":"wink","emotion":"bratty","line":"hi back :3"}';
+    assert.equal(streamLineClosed(closed), true);
+    const greeting = streamSpokenAct(closed, { namedPose: null, currentPose: "idle" });
+    assert.equal(greeting?.pose, "idle");
+
+    const quoted = '{"pose":"wink","emotion":"bratty","line":"hi back :3"';
+    assert.equal(streamLineClosed(quoted), true);
+    assert.equal(
+      streamSpokenAct(quoted, { namedPose: null, currentPose: "idle" })?.pose,
+      "idle",
+    );
+
+    const winkOpen = '{"pose":"wink","emotion":"bratty","line":"Cat';
+    assert.equal(streamSpokenAct(winkOpen, { namedPose: null, currentPose: "idle" })?.pose, "idle");
+    const wink = '{"pose":"wink","emotion":"bratty","line":"Catch it~"}';
+    assert.equal(streamLineClosed(wink), true);
+    assert.equal(streamSpokenAct(wink, { namedPose: null, currentPose: "idle" })?.pose, "wink");
+
+    const named = streamSpokenAct('{"pose":"wink","emotion":"bratty","line":"h', {
+      namedPose: "wink",
+      currentPose: "idle",
+    });
+    assert.equal(named?.pose, "wink");
   });
 });

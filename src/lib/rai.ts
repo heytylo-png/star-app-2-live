@@ -1260,6 +1260,27 @@ export function streamLine(partial: string): string {
   return text;
 }
 
+/**
+ * True once the JSON `"line"` value's closing quote is in the buffer.
+ * A partial such as `"line":"hi ba` is still open, so a tag-first wink/talk
+ * must not resolve yet. The quote is the whole wait — no extra hold after it.
+ */
+export function streamLineClosed(partial: string): boolean {
+  const { text } = parseMemories(partial);
+  const open = text.match(/"line"\s*:\s*"/);
+  if (!open || open.index == null) return false;
+  let i = open.index + open[0].length;
+  while (i < text.length) {
+    if (text[i] === "\\") {
+      i += 2;
+      continue;
+    }
+    if (text[i] === '"') return true;
+    i += 1;
+  }
+  return false;
+}
+
 /** True when Grok (or any brain) returned a JSON act with a non-empty line. */
 export function isValidActJson(raw: string): boolean {
   const slice = extractJsonObject(raw);
@@ -1294,6 +1315,11 @@ export function streamActHints(partial: string): { emotion?: EmotionId; pose?: P
  * Voice-card JSON is `{"line","emotion","pose"}` — the spoken bubble can go
  * live before pose/emotion keys. Tint as soon as the line (or a hint) is
  * visible so frown idle never sits mid-line on that bubble.
+ *
+ * A model wink/talk tag is held until the line's closing quote arrives.
+ * Partials ("h", "hi b") are not greetings, so applying that tag early flashes
+ * wink_official. The full line then decides: a greeting stays idle and chews,
+ * any other line tagged wink swaps on that same quote. Named poses are not held.
  */
 export function streamSpokenAct(
   partial: string,
@@ -1303,12 +1329,16 @@ export function streamSpokenAct(
   const hints = streamActHints(partial);
   if (!live && !hints.emotion && !hints.pose) return null;
   const emotion = hints.emotion ?? DEFAULT_EMOTION;
+  const holdWinkOrTalk =
+    !opts.namedPose &&
+    !streamLineClosed(partial) &&
+    (hints.pose === "wink" || hints.pose === "talk");
   return {
     emotion,
     pose: resolveSpokenPose({
       ...opts,
       namedPose: opts.namedPose,
-      modelPose: hints.pose ?? null,
+      modelPose: holdWinkOrTalk ? null : (hints.pose ?? null),
       emotion,
       spoken: true,
       seed: opts.seed?.trim() || live,
