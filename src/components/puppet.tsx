@@ -142,6 +142,13 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   const [mouth, setMouth] = useState<IdleMouthFrame>(0);
   const mouthRef = useRef<IdleMouthFrame>(0);
   const punchOneRef = useRef<(src: string) => Promise<void>>(async () => {});
+  /**
+   * Decoded blink/mouth <img> objects, held for the life of the stage. If they
+   * are dropped after decode(), the browser can evict the file from its
+   * in-memory image list, and the first hard cut to that sheet waits on a
+   * refetch (naturalWidth 0 for a few frames) instead of swapping in place.
+   */
+  const decodedFrames = useRef<HTMLImageElement[]>([]);
 
   // Punch studio-white cards to alpha, then decode so pose swaps never flash a plate.
   // Startup is idle.png then blink 01–04, one file at a time. Every other live
@@ -202,6 +209,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
           } catch {
             // Store the URL anyway. The blink timer stays off until every frame lands.
           }
+          decodedFrames.current.push(img);
         }
         store(src, url, aliasRest);
       })();
