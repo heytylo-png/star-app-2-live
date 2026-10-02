@@ -1679,6 +1679,7 @@ function RaiReady() {
               <ChartMenu
                 open={chartMenuOpen}
                 userSun={slots.user_sun}
+                birthDate={slots.user_birth_date}
                 onAsk={askHerFromChart}
                 onClose={closeChartMenu}
               />

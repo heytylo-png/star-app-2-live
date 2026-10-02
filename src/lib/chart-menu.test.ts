@@ -81,6 +81,22 @@ describe("Chart menu contents", () => {
     assert.equal(chartDiaryDateLabel("2026-09-26"), "Sep 26");
   });
 
+  it("asks today's chart when a diary exists and the sun comes only from the birth date", () => {
+    const page = "You sounded tired. That's the whole page.";
+    const sun = chartMenuSun({ userSun: "", birthDate: "1994-04-12" });
+    assert.equal(sun, "Aries");
+    assert.equal(chartAskDraft({ text: page, userSun: sun }), "What's in my chart today?");
+    assert.equal(
+      chartAskDraft({ text: page, userSun: chartMenuSun({ birthDate: "1994-04-12" }) }),
+      "What's in my chart today?",
+    );
+    assert.equal(chartAskDraft({ text: page, userSun: chartMenuSun({}) }), "What did you write?");
+    const panel = readFileSync(join(root, "src/components/chart-panel.tsx"), "utf8");
+    assert.match(panel, /chartMenuSun\(\{ userSun, birthDate \}\)/);
+    assert.match(panel, /chartMenuTodaySunLine/);
+    assert.doesNotMatch(panel, /chartMenuTodaySunLine\(chartMenuSun/);
+  });
+
   it("orders the dropdown as today's sun, daily astronomy reading, last diary, then ask in Chat", () => {
     assert.equal(chartMenuTodaySunLine("Libra"), "Sun · Libra");
     assert.equal(chartMenuTodaySunLine("  "), "Sun · —");
@@ -256,5 +272,23 @@ describe("Chart menu does not cover the puppet", () => {
     assert.match(css, /\.life-menu,\s*\.chart-menu\s*\{/);
     assert.doesNotMatch(css, /\.chart-menu\s*\{[^}]*68dvh/);
     assert.doesNotMatch(css, /\.chart-menu\s*\{[^}]*left:\s*50%/);
+    const shared = css.match(/\.life-menu,\s*\.chart-menu\s*\{([^}]*)\}/);
+    assert.ok(shared);
+    assert.match(shared[1]!, /max-width:\s*min\(17\.5rem,\s*calc\(100vw - 1\.25rem\)\)/);
+    const chartBlocks = [...css.matchAll(/\.chart-menu\s*\{([^}]*)\}/g)];
+    const chartOnly = chartBlocks.find((block) => /\(2\s*\/\s*3\)/.test(block[1] ?? ""));
+    assert.ok(chartOnly);
+    assert.match(
+      chartOnly[1]!,
+      /max-width:\s*min\(17\.5rem,\s*calc\(\(2\s*\/\s*3\)\s*\*\s*100vw\s*-\s*0\.5rem\)\)/,
+    );
+    assert.doesNotMatch(css, /\.life-menu\s*\{[^}]*\(2\s*\/\s*3\)/);
+    const rem = 16;
+    const viewport = 412;
+    const cap = Math.min(17.5 * rem, (2 / 3) * viewport - 0.5 * rem);
+    const anchorRight = (2 / 3) * viewport - 0.25 * rem;
+    const left = anchorRight - cap;
+    assert.ok(left >= 0, `Chart menu left edge ${left}px at 412`);
+    assert.ok(cap <= anchorRight);
   });
 });

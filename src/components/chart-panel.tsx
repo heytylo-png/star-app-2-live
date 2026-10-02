@@ -3,6 +3,7 @@ import { localDateKey } from "@/lib/chart";
 import {
   chartAskDraft,
   chartMenuDiaryLine,
+  chartMenuSun,
   chartMenuTodaySunLine,
   composeChartAstronomyReading,
 } from "@/lib/chart-menu";
@@ -13,6 +14,7 @@ import { lastDiaryEntry } from "@/lib/shell";
 type ChartMenuProps = {
   open: boolean;
   userSun?: string;
+  birthDate?: string;
   onAsk: (draft: string) => void;
   onClose: () => void;
   anchorRef?: RefObject<HTMLElement | null>;
@@ -22,7 +24,7 @@ type ChartMenuProps = {
  * Compact Chart menu anchored to the Chart tab.
  * Sun, today's sky note, and the last diary page. Not a sheet and not a spoken reading.
  */
-export function ChartMenu({ open, userSun, onAsk, onClose, anchorRef }: ChartMenuProps) {
+export function ChartMenu({ open, userSun, birthDate, onAsk, onClose, anchorRef }: ChartMenuProps) {
   const diaryByDay = useChartStore((s) => s.diaryByDay);
   const dateKey = localDateKey();
   const cachedNote = useChartStore((s) => s.skyNoteByDay[dateKey]);
@@ -100,7 +102,9 @@ export function ChartMenu({ open, userSun, onAsk, onClose, anchorRef }: ChartMen
       <button
         type="button"
         className="mt-2 w-full rounded-sm px-1.5 py-1 text-left text-sm text-fg hover:bg-bg"
-        onClick={() => onAsk(chartAskDraft({ text: last?.text, userSun }))}
+        onClick={() =>
+          onAsk(chartAskDraft({ text: last?.text, userSun: chartMenuSun({ userSun, birthDate }) }))
+        }
       >
         Ask her in Chat
       </button>
