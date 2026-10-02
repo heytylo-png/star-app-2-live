@@ -122,8 +122,11 @@ describe("tab chrome", () => {
     const panel = readFileSync(join(root, "src/components/chart-panel.tsx"), "utf8");
     assert.doesNotMatch(panel, /requestHerDayCopy|ZodiacWheel|<svg|backdrop-blur|localHerDay/);
     assert.match(panel, /id="star-chart-menu"/);
-    assert.match(panel, /Edit date · time · place/);
+    assert.match(panel, /Edit birth/);
+    assert.match(panel, /Last diary/);
+    assert.match(panel, /No diary yet/);
     assert.match(panel, /Ask her in Chat/);
+    assert.doesNotMatch(panel, /speechSynthesis|\bspeak\(|streamGrok|streamChat|requestHerDay/);
     assert.doesNotMatch(panel, /dash\.view\.labels|her\.heading/);
   });
 

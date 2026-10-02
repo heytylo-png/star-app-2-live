@@ -501,18 +501,6 @@
   animation: life-menu-in 150ms var(--ease-smooth-out);
 }
 
-.chart-menu {
-  left: 50%;
-  right: auto;
-  translate: -50% 0;
-  min-width: 13.5rem;
-}
-
-.chart-menu[data-editing="true"] {
-  min-width: 16rem;
-  max-height: min(22rem, 68dvh);
-}
-
 @keyframes life-menu-in {
   from {
     opacity: 0;

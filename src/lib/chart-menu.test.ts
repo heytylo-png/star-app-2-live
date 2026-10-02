@@ -8,7 +8,9 @@ import {
   chartAskHandoff,
   chartDiaryDateLabel,
   chartDiaryExcerpt,
+  chartMenuDiaryLine,
   chartMenuSun,
+  chartMenuTodaySunLine,
   reduceChartMenu,
   type ChartMenuState,
 } from "./chart-menu.ts";
@@ -75,6 +77,33 @@ describe("Chart menu contents", () => {
     assert.equal(chartAskDraft(null), "What's in my chart today?");
     assert.equal(chartDiaryDateLabel("2026-09-26"), "Sep 26");
   });
+
+  it("orders the dropdown as today's sun, edit birth, last diary, then ask in Chat", () => {
+    assert.equal(chartMenuTodaySunLine("Libra"), "Sun · Libra");
+    assert.equal(chartMenuTodaySunLine("  "), "Sun · —");
+    assert.equal(chartMenuTodaySunLine(null), "Sun · —");
+    const panel = readFileSync(join(root, "src/components/chart-panel.tsx"), "utf8");
+    const sunAt = panel.indexOf('aria-label="Today\'s sun"');
+    const editAt = panel.indexOf("Edit birth");
+    const diaryAt = panel.indexOf("Last diary");
+    const askAt = panel.indexOf("Ask her in Chat");
+    assert.ok(sunAt >= 0 && editAt > sunAt && diaryAt > editAt && askAt > diaryAt);
+    assert.match(panel, /chartMenuTodaySunLine/);
+    assert.match(panel, /chartMenuDiaryLine/);
+  });
+
+  it("shows a quiet empty diary line when no page is saved", () => {
+    assert.equal(chartMenuDiaryLine(null), "No diary yet");
+    assert.equal(chartMenuDiaryLine({ text: "  " }), "No diary yet");
+    assert.equal(chartMenuDiaryLine({ text: "Kept it short." }), "Kept it short.");
+    assert.equal(
+      chartMenuDiaryLine({ dateKey: "2026-09-26", text: "You sounded tired. That's the whole page." }),
+      "Sep 26 · You sounded tired. That's the whole page.",
+    );
+    const panel = readFileSync(join(root, "src/components/chart-panel.tsx"), "utf8");
+    assert.match(panel, /No diary yet/);
+    assert.match(panel, /Last diary/);
+  });
 });
 
 describe("Chart menu keeps the puppet", () => {
@@ -122,10 +151,12 @@ describe("Chart menu does not cover the puppet", () => {
     const app = readFileSync(join(root, "src/components/rai-app.tsx"), "utf8");
     const tabs = readFileSync(join(root, "src/components/app-tabs.tsx"), "utf8");
     assert.doesNotMatch(panel, /diary-loop|DeskLoop|requestHerDayCopy|streamGrok|localHerDay|lockHerDailyMood|void send\(|ZodiacWheel|<svg|backdrop-blur/);
+    assert.doesNotMatch(panel, /speechSynthesis|\bspeak\(|streamChat|setPose/);
     assert.doesNotMatch(life, /\bdiary\b/i);
-    assert.match(panel, /Diary/);
+    assert.match(panel, /Last diary/);
     assert.match(panel, /Ask her in Chat/);
-    assert.match(panel, /Edit date · time · place/);
+    assert.match(panel, /Edit birth/);
+    assert.doesNotMatch(panel, /Edit date · time · place/);
     assert.match(panel, /id="star-chart-menu"/);
     assert.match(panel, /role="region"/);
     assert.match(panel, /aria-labelledby="star-tab-chart"/);
@@ -148,5 +179,18 @@ describe("Chart menu does not cover the puppet", () => {
     assert.doesNotMatch(ask, /setDraft/);
     const chartPane = app.slice(app.indexOf('tab === "chart"'), app.indexOf('tab === "chart"') + 280);
     assert.doesNotMatch(chartPane, /ChartPanel|backdrop-blur|diary-loop/);
+
+    const selectAt = app.indexOf("const selectTab");
+    const select = app.slice(selectAt, app.indexOf("const toggleLifeMenu", selectAt));
+    assert.doesNotMatch(select, /send\(|speak\(|speechSynthesis|streamGrok|streamChat|requestHerDay/);
+    const menuAt = app.indexOf("<ChartMenu");
+    const menu = app.slice(menuAt, app.indexOf("/>", menuAt) + 2);
+    assert.match(menu, /onAsk=\{askHerFromChart\}/);
+    assert.doesNotMatch(menu, /send\(|speak\(|speechSynthesis/);
+
+    const css = readFileSync(join(root, "src/styles.css"), "utf8");
+    assert.match(css, /\.life-menu,\s*\.chart-menu\s*\{/);
+    assert.doesNotMatch(css, /\.chart-menu\s*\{[^}]*68dvh/);
+    assert.doesNotMatch(css, /\.chart-menu\s*\{[^}]*left:\s*50%/);
   });
 });

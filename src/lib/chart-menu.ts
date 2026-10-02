@@ -56,6 +56,22 @@ export function chartMenuSun(opts: { userSun?: string | null; birthDate?: string
   return sunFromBirthDate(opts.birthDate) ?? null;
 }
 
+/** One short row for the sun in the sky today. Not her natal sign, not a reading. */
+export function chartMenuTodaySunLine(sign?: string | null): string {
+  const sun = sign?.replace(/\s+/g, " ").trim();
+  return sun ? `Sun · ${sun}` : "Sun · —";
+}
+
+/** Last diary row. Empty pages stay a quiet line — opening Chart does not write one. */
+export function chartMenuDiaryLine(entry?: { dateKey?: string | null; text?: string | null } | null): string {
+  const text = entry?.text?.replace(/\s+/g, " ").trim() ?? "";
+  if (!text) return "No diary yet";
+  const excerpt = chartDiaryExcerpt(text);
+  if (!excerpt) return "No diary yet";
+  const date = entry?.dateKey ? chartDiaryDateLabel(entry.dateKey) : "";
+  return date ? `${date} · ${excerpt}` : excerpt;
+}
+
 export function chartDiaryExcerpt(text: string, max = 84): string {
   const clean = text.replace(/\s+/g, " ").trim();
   if (!clean) return "";

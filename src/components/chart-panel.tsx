@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { Button } from "@/components/ui/button";
 import { natalFromSetup } from "@/lib/chart";
-import { chartAskDraft, chartDiaryDateLabel, chartDiaryExcerpt, chartMenuSun } from "@/lib/chart-menu";
+import { chartAskDraft, chartMenuDiaryLine, chartMenuTodaySunLine } from "@/lib/chart-menu";
 import { useChartStore } from "@/lib/chart-store";
 import { useMemoryStore } from "@/lib/memory-store";
+import { computeSkyFacts } from "@/lib/sky";
 import { birthDateInputValue, lastDiaryEntry } from "@/lib/shell";
 
 type ChartMenuProps = {
@@ -33,7 +34,8 @@ export function ChartMenu({
 }: ChartMenuProps) {
   const diaryByDay = useChartStore((s) => s.diaryByDay);
   const last = lastDiaryEntry(diaryByDay);
-  const sun = chartMenuSun({ userSun, birthDate });
+  const sunLine = chartMenuTodaySunLine(computeSkyFacts()?.sunSignToday);
+  const diaryLine = chartMenuDiaryLine(last);
   const [birthOpen, setBirthOpen] = useState(false);
   const [date, setDate] = useState(() => birthDateInputValue(birthDate));
   const [time, setTime] = useState(birthTime ?? "");
@@ -72,7 +74,7 @@ export function ChartMenu({
 
   if (!open) return null;
 
-  const excerpt = last ? chartDiaryExcerpt(last.text) : "";
+  const diaryEmpty = diaryLine === "No diary yet";
 
   return (
     <div
@@ -82,11 +84,9 @@ export function ChartMenu({
       data-editing={birthOpen ? "true" : "false"}
       className="chart-menu"
     >
-      {sun ? (
-        <p className="px-0.5 text-xs text-muted" aria-label="Your sun sign">
-          Sun · <span className="font-medium text-fg">{sun}</span>
-        </p>
-      ) : null}
+      <p className="px-0.5 text-xs text-muted" aria-label="Today's sun">
+        {sunLine}
+      </p>
 
       <button
         type="button"
@@ -95,7 +95,7 @@ export function ChartMenu({
         onClick={() => setBirthOpen((value) => !value)}
         className="mt-1 flex w-full items-center rounded-sm px-1.5 py-1 text-left text-sm text-fg hover:bg-bg"
       >
-        Edit date · time · place
+        Edit birth
       </button>
 
       {birthOpen ? (
@@ -163,20 +163,17 @@ export function ChartMenu({
         </form>
       ) : null}
 
-      {last && excerpt ? (
-        <div className="mt-2 border-t border-border pt-1.5">
-          <p className="px-0.5 text-[0.65rem] tracking-wide text-subtle uppercase">Diary</p>
-          <p className="mt-1 px-0.5 text-sm leading-snug text-muted">
-            <span className="text-subtle">{chartDiaryDateLabel(last.dateKey)} · </span>
-            {excerpt}
-          </p>
-        </div>
-      ) : null}
+      <div className="mt-2 border-t border-border pt-1.5">
+        <p className="px-0.5 text-[0.65rem] tracking-wide text-subtle uppercase">Last diary</p>
+        <p className={`mt-1 px-0.5 text-sm leading-snug ${diaryEmpty ? "text-subtle" : "text-muted"}`}>
+          {diaryLine}
+        </p>
+      </div>
 
       <button
         type="button"
         className="mt-2 w-full rounded-sm px-1.5 py-1 text-left text-sm text-fg hover:bg-bg"
-        onClick={() => onAsk(chartAskDraft({ text: last?.text, userSun: sun }))}
+        onClick={() => onAsk(chartAskDraft({ text: last?.text, userSun }))}
       >
         Ask her in Chat
       </button>
