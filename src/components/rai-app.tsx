@@ -33,8 +33,10 @@ import {
   namedPoseFromText,
   parseAct,
   settledRestPose,
+  snapGreetingSheet,
   spokenTurnStartPose,
   spokenBubbleResetDelay,
+  streamActHints,
   streamLine,
   streamSpokenAct,
   type EmotionId,
@@ -263,6 +265,12 @@ function RaiReady() {
   const poseRef = useRef<PoseId>("idle");
   /** Pose at the start of this turn. Inferred tint must not stick as "current body". */
   const poseAtTurnRef = useRef<PoseId>("idle");
+  /** User-named pose for this turn. `false` is unmapped kiss. */
+  const namedTurnRef = useRef<PoseId | false | null>(null);
+  /** Raw reply pose tag, before greeting wink/talk is dropped. */
+  const replyPoseRef = useRef<PoseId | null>(null);
+  const captionRef = useRef("");
+  captionRef.current = caption;
   const tabRef = useRef<ShellTab>(DEFAULT_SHELL_TAB);
   /** When the last act pose/emotion landed — drives the hold timer. */
   const actLandedAt = useRef(0);
@@ -558,6 +566,23 @@ function RaiReady() {
       setEmotion("glance");
       return;
     }
+    // Greeting wink/talk was inferred from the line. Drop it the moment the
+    // line ends. Named poses and an explicit wink tag still use the hold below.
+    if (
+      snapGreetingSheet({
+        pose,
+        line: captionRef.current,
+        namedPose: namedTurnRef.current,
+        replyPose: replyPoseRef.current,
+      })
+    ) {
+      const rest = settledRestPose();
+      setPose(rest);
+      poseRef.current = rest;
+      setBubbleLifeKind("none");
+      setEmotion(DEFAULT_EMOTION);
+      return;
+    }
     // She has finished the line (not sending, not talking). A transcript
     // caption that stays on screen is not a live bubble — do not freeze
     // think / pout / tired as the standing face. Next rest is official idle.
@@ -851,6 +876,8 @@ function RaiReady() {
     const namedThisTurn = parseTrackTitle(lastUserForTint)
       ? null
       : namedPoseFromText(lastUserForTint);
+    namedTurnRef.current = namedThisTurn;
+    replyPoseRef.current = null;
     // A new spoken line re-resolves — leftover think / pout / tired must not
     // sit under this bubble. Speech talks on idle (SPOKEN_TALK_TO_IDLE), so the
     // turn starts on idle, not talk_official. Named poses already swapped.
@@ -1001,6 +1028,8 @@ function RaiReady() {
           const live = shapeSpoken(streamedLine);
           const lifeTitle = parseTrackTitle(lastUser);
           const named = lifeTitle ? null : namedPoseFromText(lastUser);
+          const hintedPose = streamActHints(raw).pose ?? null;
+          if (hintedPose) replyPoseRef.current = hintedPose;
           // Local kiss keeps the body already on stage. A Grok reply is not held.
           if (!shouldHoldLocalKiss(raw, named)) {
             const streamed = streamSpokenAct(raw, {
@@ -1038,6 +1067,7 @@ function RaiReady() {
       if (line !== "…") armTextChew(line);
       const lifeTitle = parseTrackTitle(lastUser);
       const named = lifeTitle ? null : namedPoseFromText(lastUser);
+      replyPoseRef.current = act.pose;
       const landed = poseForLandedReply({
         raw,
         namedPose: named,
@@ -1135,6 +1165,7 @@ function RaiReady() {
     if (!active) active = store.createThread({ prompt: content, model: defaultModel });
     const lifeTitle = parseTrackTitle(content);
     const named = lifeTitle ? null : namedPoseFromText(content);
+    namedTurnRef.current = named;
     if (named) {
       setPose(named);
       poseRef.current = named;

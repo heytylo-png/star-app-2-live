@@ -313,6 +313,42 @@ export function settledRestPose(): PoseId {
 }
 
 /**
+ * Sheet after the line ends (stream, TTS, or the text chew window).
+ * A greeting must not leave wink or talk_official up. A user-named pose, or
+ * an explicit reply tag that is not a greeting wink/talk, keeps its sheet.
+ * Mouth frame 01 is the closed rest sheet (`idleMouthFrameSrc(1)`).
+ */
+export function restAfterSpokenLine(opts: {
+  pose: PoseId;
+  line: string;
+  namedPose?: PoseId | false | null;
+  replyPose?: PoseId | null;
+}): PoseId {
+  if (opts.namedPose) return opts.pose;
+  const reply = opts.replyPose;
+  const greetingWinkOrTalk =
+    isGreetingSpokenLine(opts.line) && (reply === "wink" || reply === "talk");
+  if (reply && reply !== "idle" && reply !== "talk" && !greetingWinkOrTalk) return opts.pose;
+  return settledRestPose();
+}
+
+/**
+ * A finished line (stream, TTS, or the text chew window) must not leave
+ * wink_official or talk_official up when that sheet was only a greeting
+ * inference. Named poses and an explicit non-greeting wink tag keep holding.
+ * The closed mouth is frame 01 (`idleMouthFrameSrc(1)`), the idle rest sheet.
+ */
+export function snapGreetingSheet(opts: {
+  pose: PoseId;
+  line: string;
+  namedPose?: PoseId | false | null;
+  replyPose?: PoseId | null;
+}): boolean {
+  if (opts.pose !== "wink" && opts.pose !== "talk") return false;
+  return restAfterSpokenLine(opts) === "idle";
+}
+
+/**
  * Sheets that ship as true RGBA (cut offline by scripts/cut-alpha.py: enclosed
  * white pockets removed, soft decontaminated edge). The runtime studio-white
  * punch must not run on these; it would only re-fringe them.
@@ -1050,6 +1086,40 @@ export function routeSpokenTalk(pose: PoseId): PoseId {
   return SPOKEN_TALK_TO_IDLE && pose === "talk" ? "idle" : pose;
 }
 
+/** Short greeting openers only. A longer reply is a normal line. */
+const GREETING_MAX_WORDS = 6;
+const GREETING_MAX_CHARS = 40;
+/** Must be the start of the line. Longer phrases before the single words. */
+const GREETING_OPEN = /^(?:what'?s up|whats up|hi|hey|hello|yo|sup)\b/;
+/**
+ * A named-pose word keeps the normal pose path. "hi wink" is not a greeting.
+ * Same bare words `namedPoseFromText` matches, plus the command names.
+ */
+const GREETING_POSE_WORD =
+  /\b(?:wink|pout|scold|laugh|smug|tired|shy|wave|profile|peace|kiss(?:es)?|hearts?|embarrassed|surprise[d]?|point|middle[\s_-]*finger|finger[\s-](?:front|point)|hold|talk|idle|sad|content|think|turn[\s_-]+away)\b/;
+
+/**
+ * A short greeting opener is not a pose. The line must start with
+ * hi / hey / hello / yo / sup / what's up, stay within about 6 words and
+ * 40 characters, and not name a pose. "hi there" and "hey~ :3" count.
+ * "hey, watch this, I can do a whole trick…" does not.
+ */
+export function isGreetingSpokenLine(text: string): boolean {
+  const t = text
+    .trim()
+    .toLowerCase()
+    .replace(/[’‘]/g, "'")
+    .replace(/:3/g, "")
+    .replace(/[!~.?,]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!t || t.length > GREETING_MAX_CHARS) return false;
+  if (t.split(" ").length > GREETING_MAX_WORDS) return false;
+  if (!GREETING_OPEN.test(t)) return false;
+  if (GREETING_POSE_WORD.test(t)) return false;
+  return true;
+}
+
 /** Pose placed on the stage when a new reply turn starts (before its act lands). */
 export function spokenTurnStartPose(): PoseId {
   return routeSpokenTalk("talk");
@@ -1095,6 +1165,12 @@ export function resolveSpokenPose(opts: ResolveSpokenPoseOpts): PoseId {
   if (opts.namedPose) return opts.namedPose;
 
   const seed = opts.seed?.trim() || opts.emotion;
+  // A greeting line does not infer wink or talk. An explicit wink tag on any
+  // other line still passes through below; a user-named wink already returned.
+  const modelPose =
+    isGreetingSpokenLine(seed) && (opts.modelPose === "wink" || opts.modelPose === "talk")
+      ? null
+      : opts.modelPose;
 
   // Music Set: omitted / idle / kiss, or the tint already on the act.
   // A different live key (wink, wave, …) is priority 2 and falls through.
@@ -1103,8 +1179,8 @@ export function resolveSpokenPose(opts: ResolveSpokenPoseOpts): PoseId {
       opts.lifeTintPose && (NOW_PLAYING_TINT_POSES as readonly string[]).includes(opts.lifeTintPose)
         ? opts.lifeTintPose
         : null;
-    if (tint && (needsPoseTint(opts.modelPose) || opts.modelPose === tint)) return routeSpokenTalk(tint);
-    if (!tint && needsPoseTint(opts.modelPose)) {
+    if (tint && (needsPoseTint(modelPose) || modelPose === tint)) return routeSpokenTalk(tint);
+    if (!tint && needsPoseTint(modelPose)) {
       return routeSpokenTalk(pickTint(NOW_PLAYING_TINT_POSES, seed));
     }
   }
@@ -1112,7 +1188,7 @@ export function resolveSpokenPose(opts: ResolveSpokenPoseOpts): PoseId {
   // Tired is a rest face. Model/context keys like talk/peace/wave land as grins.
   if (opts.emotion === "tired") return EMOTION_TO_POSE.tired;
 
-  if (opts.modelPose && isDedicatedPose(opts.modelPose)) return routeSpokenTalk(opts.modelPose);
+  if (modelPose && isDedicatedPose(modelPose)) return routeSpokenTalk(modelPose);
 
   if (opts.chartBeat) {
     if (opts.chartTintPose && (CHART_BEAT_TINT_POSES as readonly string[]).includes(opts.chartTintPose)) {
@@ -1203,6 +1279,27 @@ export function streamLine(partial: string): string {
   return text;
 }
 
+/**
+ * True once the JSON `"line"` value's closing quote is in the buffer.
+ * A partial such as `"line":"hi ba` is still open, so a tag-first wink/talk
+ * must not resolve yet. The quote is the whole wait — no extra hold after it.
+ */
+export function streamLineClosed(partial: string): boolean {
+  const { text } = parseMemories(partial);
+  const open = text.match(/"line"\s*:\s*"/);
+  if (!open || open.index == null) return false;
+  let i = open.index + open[0].length;
+  while (i < text.length) {
+    if (text[i] === "\\") {
+      i += 2;
+      continue;
+    }
+    if (text[i] === '"') return true;
+    i += 1;
+  }
+  return false;
+}
+
 /** True when Grok (or any brain) returned a JSON act with a non-empty line. */
 export function isValidActJson(raw: string): boolean {
   const slice = extractJsonObject(raw);
@@ -1237,6 +1334,11 @@ export function streamActHints(partial: string): { emotion?: EmotionId; pose?: P
  * Voice-card JSON is `{"line","emotion","pose"}` — the spoken bubble can go
  * live before pose/emotion keys. Tint as soon as the line (or a hint) is
  * visible so frown idle never sits mid-line on that bubble.
+ *
+ * A model wink/talk tag is held until the line's closing quote arrives.
+ * Partials ("h", "hi b") are not greetings, so applying that tag early flashes
+ * wink_official. The full line then decides: a greeting stays idle and chews,
+ * any other line tagged wink swaps on that same quote. Named poses are not held.
  */
 export function streamSpokenAct(
   partial: string,
@@ -1246,12 +1348,16 @@ export function streamSpokenAct(
   const hints = streamActHints(partial);
   if (!live && !hints.emotion && !hints.pose) return null;
   const emotion = hints.emotion ?? DEFAULT_EMOTION;
+  const holdWinkOrTalk =
+    !opts.namedPose &&
+    !streamLineClosed(partial) &&
+    (hints.pose === "wink" || hints.pose === "talk");
   return {
     emotion,
     pose: resolveSpokenPose({
       ...opts,
       namedPose: opts.namedPose,
-      modelPose: hints.pose ?? null,
+      modelPose: holdWinkOrTalk ? null : (hints.pose ?? null),
       emotion,
       spoken: true,
       seed: opts.seed?.trim() || live,
@@ -1291,6 +1397,7 @@ type NamedPoseHit = { index: number; pose: PoseId | false };
  */
 export function namedPoseFromText(text: string): PoseId | false | null {
   if (!text.trim()) return null;
+  if (isGreetingSpokenLine(text)) return null;
   const hits: NamedPoseHit[] = [];
 
   const add = (re: RegExp, pose: PoseId | false) => {
