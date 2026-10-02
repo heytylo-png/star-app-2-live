@@ -1086,19 +1086,38 @@ export function routeSpokenTalk(pose: PoseId): PoseId {
   return SPOKEN_TALK_TO_IDLE && pose === "talk" ? "idle" : pose;
 }
 
+/** Short greeting openers only. A longer reply is a normal line. */
+const GREETING_MAX_WORDS = 6;
+const GREETING_MAX_CHARS = 40;
+/** Must be the start of the line. Longer phrases before the single words. */
+const GREETING_OPEN = /^(?:what'?s up|whats up|hi|hey|hello|yo|sup)\b/;
 /**
- * A bare greeting is not a pose. "hi" / "hello" / "hi back" / "hey" must not
- * select wink or talk_official. A longer line that also says "wink" is not bare.
+ * A named-pose word keeps the normal pose path. "hi wink" is not a greeting.
+ * Same bare words `namedPoseFromText` matches, plus the command names.
+ */
+const GREETING_POSE_WORD =
+  /\b(?:wink|pout|scold|laugh|smug|tired|shy|wave|profile|peace|kiss(?:es)?|hearts?|embarrassed|surprise[d]?|point|middle[\s_-]*finger|finger[\s-](?:front|point)|hold|talk|idle|sad|content|think|turn[\s_-]+away)\b/;
+
+/**
+ * A short greeting opener is not a pose. The line must start with
+ * hi / hey / hello / yo / sup / what's up, stay within about 6 words and
+ * 40 characters, and not name a pose. "hi there" and "hey~ :3" count.
+ * "hey, watch this, I can do a whole trick…" does not.
  */
 export function isGreetingSpokenLine(text: string): boolean {
   const t = text
     .trim()
     .toLowerCase()
+    .replace(/[’‘]/g, "'")
     .replace(/:3/g, "")
-    .replace(/[!~.?,]+/g, "")
+    .replace(/[!~.?,]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  return /^(?:hi|hey|hello|yo|sup)(?: back)?$/.test(t);
+  if (!t || t.length > GREETING_MAX_CHARS) return false;
+  if (t.split(" ").length > GREETING_MAX_WORDS) return false;
+  if (!GREETING_OPEN.test(t)) return false;
+  if (GREETING_POSE_WORD.test(t)) return false;
+  return true;
 }
 
 /** Pose placed on the stage when a new reply turn starts (before its act lands). */

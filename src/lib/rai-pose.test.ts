@@ -1697,5 +1697,135 @@ describe("greeting lines stay on idle and chew", () => {
       currentPose: "idle",
     });
     assert.equal(named?.pose, "wink");
+
+    const hiThereOpen = [
+      '{"pose":"wink","emotion":"bratty","line":"h',
+      '{"pose":"wink","emotion":"bratty","line":"hi t',
+      '{"pose":"wink","emotion":"bratty","line":"hi the',
+      '{"pose":"talk","emotion":"bratty","line":"hi there',
+    ];
+    for (const partial of hiThereOpen) {
+      assert.equal(streamLineClosed(partial), false, partial);
+      const streamed = streamSpokenAct(partial, { namedPose: null, currentPose: "idle" });
+      assert.equal(streamed?.pose, "idle", partial);
+      assert.doesNotMatch(
+        layersFor({
+          pose: streamed!.pose,
+          emotion: "bratty",
+          talking: true,
+          amplitude: 0,
+          angle: 0,
+          mouth: 3,
+        })[0]!.src,
+        /wink_official|talk_official/,
+      );
+    }
+    const hiThere = '{"pose":"wink","emotion":"bratty","line":"hi there :3"}';
+    assert.equal(streamLineClosed(hiThere), true);
+    assert.equal(streamSpokenAct(hiThere, { namedPose: null, currentPose: "idle" })?.pose, "idle");
+  });
+
+  it("chews short greeting openers on idle, then rests on mouth 01", () => {
+    const lines = [
+      "hi there",
+      "hey there",
+      "hello there",
+      "hey how are you",
+      "hi how are you",
+      "yo what's up",
+      "sup",
+      "what's up",
+      "hey you",
+      "hi again",
+      "hello again",
+      "hey~ :3",
+    ];
+    for (const line of lines) {
+      assert.equal(isGreetingSpokenLine(line), true, line);
+      assert.equal(namedPoseFromText(line), null, line);
+      for (const modelPose of ["wink", "talk"] as const) {
+        const pose = resolveSpokenPose({
+          namedPose: null,
+          modelPose,
+          emotion: "bratty",
+          spoken: true,
+          seed: line,
+          currentPose: "idle",
+        });
+        assert.equal(pose, "idle", `${line} model=${modelPose}`);
+        const chewing = layersFor({
+          pose,
+          emotion: "bratty",
+          talking: true,
+          amplitude: 0,
+          angle: 0,
+          mouth: 3,
+        })[0]!.src;
+        assert.match(chewing, /idle_mouth_03_open/);
+        assert.doesNotMatch(chewing, /wink_official|talk_official/);
+        assert.equal(
+          canIdleMouth({ pose, emotion: "bratty", talking: false, lineLive: true }),
+          true,
+        );
+        assert.equal(
+          restAfterSpokenLine({
+            pose: modelPose,
+            line,
+            namedPose: null,
+            replyPose: modelPose,
+          }),
+          "idle",
+        );
+      }
+      const restSrc = layersFor({
+        pose: "idle",
+        emotion: DEFAULT_EMOTION,
+        talking: false,
+        amplitude: 0,
+        angle: 0,
+        blink: 0,
+        mouth: 1,
+      })[0]!.src;
+      assert.equal(restSrc, idleMouthFrameSrc(1));
+      assert.equal(restSrc, idleRestSrc());
+      assert.match(restSrc, /idle_blink_01_open/);
+      assert.equal(canIdleBlink({ pose: "idle", emotion: DEFAULT_EMOTION, talking: false }), true);
+      assert.equal(
+        canIdleMouth({ pose: "idle", emotion: DEFAULT_EMOTION, talking: false, lineLive: false }),
+        false,
+      );
+    }
+  });
+
+  it("still winks when a tagged line is not a short greeting", () => {
+    const lines = [
+      "Catch it~",
+      "hey, watch this, I can do a whole trick for you if you ask nicely",
+      "hi wink",
+    ];
+    for (const line of lines) {
+      assert.equal(isGreetingSpokenLine(line), false, line);
+      const pose = resolveSpokenPose({
+        namedPose: null,
+        modelPose: "wink",
+        emotion: "bratty",
+        spoken: true,
+        seed: line,
+        currentPose: "idle",
+      });
+      assert.equal(pose, "wink", line);
+      assert.match(
+        layersFor({
+          pose,
+          emotion: "bratty",
+          talking: true,
+          amplitude: 0,
+          angle: 0,
+          mouth: 3,
+        })[0]!.src,
+        /wink_official/,
+      );
+      assert.equal(canIdleMouth({ pose, emotion: "bratty", talking: true, lineLive: true }), false);
+    }
   });
 });
