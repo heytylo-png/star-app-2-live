@@ -11,9 +11,12 @@ import {
   chartMenuDiaryLine,
   chartMenuSun,
   chartMenuTodaySunLine,
+  composeChartAstronomyReading,
+  lockChartReading,
   reduceChartMenu,
   type ChartMenuState,
 } from "./chart-menu.ts";
+import { notableAspectLine } from "./sky.ts";
 import { stagePlace, stageSourceFor } from "./stage-source.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -78,18 +81,72 @@ describe("Chart menu contents", () => {
     assert.equal(chartDiaryDateLabel("2026-09-26"), "Sep 26");
   });
 
-  it("orders the dropdown as today's sun, edit birth, last diary, then ask in Chat", () => {
+  it("orders the dropdown as today's sun, daily astronomy reading, last diary, then ask in Chat", () => {
     assert.equal(chartMenuTodaySunLine("Libra"), "Sun · Libra");
     assert.equal(chartMenuTodaySunLine("  "), "Sun · —");
     assert.equal(chartMenuTodaySunLine(null), "Sun · —");
     const panel = readFileSync(join(root, "src/components/chart-panel.tsx"), "utf8");
     const sunAt = panel.indexOf('aria-label="Today\'s sun"');
-    const editAt = panel.indexOf("Edit birth");
+    const readingAt = panel.indexOf("Daily astronomy reading");
     const diaryAt = panel.indexOf("Last diary");
     const askAt = panel.indexOf("Ask her in Chat");
-    assert.ok(sunAt >= 0 && editAt > sunAt && diaryAt > editAt && askAt > diaryAt);
+    assert.ok(sunAt >= 0 && readingAt > sunAt && diaryAt > readingAt && askAt > diaryAt);
     assert.match(panel, /chartMenuTodaySunLine/);
+    assert.match(panel, /composeChartAstronomyReading/);
     assert.match(panel, /chartMenuDiaryLine/);
+    assert.doesNotMatch(panel, /Edit birth|Edit date · time · place|Birth date/);
+  });
+
+  it("keeps the daily astronomy reading stable for a day and rotates by date", () => {
+    const sky = {
+      sunSignToday: "Libra" as const,
+      moonSignToday: "Cancer" as const,
+      moonPhase: "Full" as const,
+    };
+    const first = composeChartAstronomyReading({ dateKey: "2026-10-02", sky });
+    assert.equal(first, composeChartAstronomyReading({ dateKey: "2026-10-02", sky }));
+    assert.ok(first.split("\n").length >= 2 && first.split("\n").length <= 3);
+    assert.match(first, /Libra/);
+    assert.match(first, /Cancer/);
+    assert.match(first, /Full/);
+    let changed = false;
+    for (let day = 1; day <= 28; day++) {
+      const dateKey = `2026-10-${String(day).padStart(2, "0")}`;
+      if (composeChartAstronomyReading({ dateKey, sky }) !== first) changed = true;
+    }
+    assert.equal(changed, true);
+
+    const withAspect = composeChartAstronomyReading({
+      dateKey: "2026-10-02",
+      sky: { ...sky, notableAspect: "Sun and moon are across the room." },
+    });
+    assert.match(withAspect, /across the room/);
+    assert.ok(withAspect.split("\n").length <= 3);
+
+    const locked = lockChartReading({}, "2026-10-02", first);
+    const again = lockChartReading(locked, "2026-10-02", "A different line.\nNope.");
+    assert.equal(again, locked);
+    assert.equal(again["2026-10-02"], first);
+    const nextDay = lockChartReading(locked, "2026-10-03", "Aries sun.\nNew.");
+    assert.equal(nextDay["2026-10-02"], first);
+    assert.equal(nextDay["2026-10-03"], "Aries sun.\nNew.");
+  });
+
+  it("uses a deterministic sun and moon phase when sky facts are offline", () => {
+    const offline = composeChartAstronomyReading({ dateKey: "2026-10-02", sky: null });
+    assert.equal(offline, composeChartAstronomyReading({ dateKey: "2026-10-02", sky: null }));
+    assert.match(offline, /Libra/);
+    assert.match(offline, /New|Crescent|Quarter|Gibbous|Full/);
+    assert.match(offline, /Offline|Local|quiet|didn't land/i);
+    assert.ok(offline.split("\n").length >= 2 && offline.split("\n").length <= 3);
+    const april = composeChartAstronomyReading({ dateKey: "2026-04-12", sky: null });
+    assert.match(april, /Aries/);
+    assert.notEqual(april, offline);
+    assert.equal(notableAspectLine(0), "Sun's sitting on the moon.");
+    assert.equal(notableAspectLine(180), "Sun and moon are across the room.");
+    assert.equal(notableAspectLine(45), undefined);
+    const menu = readFileSync(join(root, "src/lib/chart-menu.ts"), "utf8");
+    assert.doesNotMatch(menu, /streamGrok|speechSynthesis|\bfetch\(|requestHerDay|grok-4/);
   });
 
   it("shows a quiet empty diary line when no page is saved", () => {
@@ -155,8 +212,15 @@ describe("Chart menu does not cover the puppet", () => {
     assert.doesNotMatch(life, /\bdiary\b/i);
     assert.match(panel, /Last diary/);
     assert.match(panel, /Ask her in Chat/);
-    assert.match(panel, /Edit birth/);
-    assert.doesNotMatch(panel, /Edit date · time · place/);
+    assert.match(panel, /Daily astronomy reading/);
+    assert.doesNotMatch(panel, /Edit birth|Edit date · time · place/);
+    const editor = readFileSync(join(root, "src/components/birth-details.tsx"), "utf8");
+    assert.match(app, /Birth details/);
+    assert.match(app, /<BirthDetailsEditor/);
+    assert.match(editor, /Birth date/);
+    assert.match(editor, /type="date"/);
+    assert.match(editor, /type="time"/);
+    assert.doesNotMatch(panel, /Birth date|type="date"/);
     assert.match(panel, /id="star-chart-menu"/);
     assert.match(panel, /role="region"/);
     assert.match(panel, /aria-labelledby="star-tab-chart"/);

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { lockChartReading } from "./chart-menu.ts";
 import type { HerDayCopy, HerDaySource } from "./sky.ts";
 
 export type ChartSetupStatus = "pending" | "skipped" | "done";
@@ -18,6 +19,8 @@ type ChartState = {
   askedBirthday: boolean;
   diaryByDay: Record<string, string>;
   herDayByDay: Record<string, StoredHerDay>;
+  /** Once-per-local-day Chart menu sky note. Not a Grok reading. */
+  skyNoteByDay: Record<string, string>;
   setHydrated: (value: boolean) => void;
   markSetupSkipped: () => void;
   markSetupDone: () => void;
@@ -27,6 +30,7 @@ type ChartState = {
   diaryFor: (dateKey: string) => string | undefined;
   saveHerDay: (dateKey: string, copy: HerDayCopy) => void;
   herDayFor: (dateKey: string) => StoredHerDay | undefined;
+  lockSkyNote: (dateKey: string, text: string) => void;
 };
 
 function parseStoredHerDay(value: unknown): StoredHerDay | undefined {
@@ -44,6 +48,22 @@ function parseStoredHerDay(value: unknown): StoredHerDay | undefined {
   const stored: StoredHerDay = { natal: row.natal.trim(), beats, source };
   if (typeof row.skyLine === "string" && row.skyLine.trim()) stored.skyLine = row.skyLine.trim();
   return stored;
+}
+
+function parseSkyNoteByDay(value: unknown): Record<string, string> {
+  if (!value || typeof value !== "object") return {};
+  const out: Record<string, string> = {};
+  for (const [key, row] of Object.entries(value as Record<string, unknown>)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || typeof row !== "string") continue;
+    const text = row
+      .split(/\n+/)
+      .map((line) => line.replace(/[ \t]+/g, " ").trim())
+      .filter(Boolean)
+      .slice(0, 3)
+      .join("\n");
+    if (text) out[key] = text;
+  }
+  return out;
 }
 
 function parseHerDayByDay(value: unknown): Record<string, StoredHerDay> {
@@ -68,6 +88,7 @@ export const useChartStore = create<ChartState>()(
       askedBirthday: false,
       diaryByDay: {},
       herDayByDay: {},
+      skyNoteByDay: {},
       setHydrated: (value) => set({ hydrated: value }),
       markSetupSkipped: () => set({ setup: "skipped" }),
       markSetupDone: () => set({ setup: "done" }),
@@ -90,6 +111,13 @@ export const useChartStore = create<ChartState>()(
         set((state) => ({ herDayByDay: { ...state.herDayByDay, [dateKey]: stored } }));
       },
       herDayFor: (dateKey) => get().herDayByDay[dateKey],
+      lockSkyNote: (dateKey, text) => {
+        set((state) => {
+          const next = lockChartReading(state.skyNoteByDay, dateKey, text);
+          if (next === state.skyNoteByDay) return state;
+          return { skyNoteByDay: next };
+        });
+      },
     }),
     {
       name: CHART_STORE_KEY,
@@ -101,12 +129,13 @@ export const useChartStore = create<ChartState>()(
         askedBirthday: state.askedBirthday,
         diaryByDay: state.diaryByDay,
         herDayByDay: state.herDayByDay,
+        skyNoteByDay: state.skyNoteByDay,
       }),
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<
           Pick<
             ChartState,
-            "setup" | "lastFiredDate" | "askedBirthday" | "diaryByDay" | "herDayByDay"
+            "setup" | "lastFiredDate" | "askedBirthday" | "diaryByDay" | "herDayByDay" | "skyNoteByDay"
           >
         >;
         const setup =
@@ -119,6 +148,7 @@ export const useChartStore = create<ChartState>()(
           diaryByDay:
             p.diaryByDay && typeof p.diaryByDay === "object" ? p.diaryByDay : current.diaryByDay,
           herDayByDay: parseHerDayByDay(p.herDayByDay),
+          skyNoteByDay: parseSkyNoteByDay(p.skyNoteByDay),
           hydrated: false,
         };
       },
