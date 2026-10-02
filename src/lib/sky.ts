@@ -43,6 +43,8 @@ export type SkyFacts = {
   sunSignToday?: TropicalSign;
   moonSignToday?: TropicalSign;
   moonPhase?: MoonPhaseLabel;
+  /** One sun–moon aspect, only when the elongation is inside a tight orb. */
+  notableAspect?: string;
 };
 
 export type SkyLabel = {
@@ -96,6 +98,27 @@ export function tropicalSignFromLongitude(lon: number): TropicalSign | undefined
   return TROPICAL_SIGN_ORDER[i];
 }
 
+const SUN_MOON_ASPECTS = [
+  { deg: 0, orb: 8, line: "Sun's sitting on the moon." },
+  { deg: 60, orb: 6, line: "Sun and moon are being nice." },
+  { deg: 90, orb: 7, line: "Sun and moon are picking a fight." },
+  { deg: 120, orb: 7, line: "Sun and moon are getting along." },
+  { deg: 180, orb: 8, line: "Sun and moon are across the room." },
+] as const;
+
+/** One short sun–moon line, or nothing when the angle is not a notable aspect. */
+export function notableAspectLine(elongationDeg: number): string | undefined {
+  const wrapped = wrapDeg(elongationDeg);
+  if (!Number.isFinite(wrapped)) return undefined;
+  let best: { dist: number; line: string } | undefined;
+  for (const aspect of SUN_MOON_ASPECTS) {
+    const delta = Math.abs(wrapped - aspect.deg);
+    const dist = Math.min(delta, 360 - delta);
+    if (dist <= aspect.orb && (!best || dist < best.dist)) best = { dist, line: aspect.line };
+  }
+  return best?.line;
+}
+
 /** Eight-bin moon phase from astronomy-engine elongation (0 = new). */
 export function moonPhaseLabel(deg: number): MoonPhaseLabel | undefined {
   const wrapped = wrapDeg(deg);
@@ -133,6 +156,8 @@ export function computeSkyFacts(now: Date = new Date()): SkyFacts | null {
       const phase = MoonPhase(now);
       const label = moonPhaseLabel(phase);
       if (label) facts.moonPhase = label;
+      const aspect = notableAspectLine(phase);
+      if (aspect) facts.notableAspect = aspect;
     } catch {
       /* omit phase */
     }

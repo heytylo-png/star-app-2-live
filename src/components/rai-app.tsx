@@ -9,6 +9,7 @@ import {
 import { AppTabs } from "@/components/app-tabs";
 import { ChatThread } from "@/components/chat-thread";
 import { InstallHint } from "@/components/install-hint";
+import { BirthDetailsEditor } from "@/components/birth-details";
 import { ChartMenu } from "@/components/chart-panel";
 import { ChartSetupCard } from "@/components/chart-setup-card";
 import { LifeMenu } from "@/components/life-panel";
@@ -208,6 +209,7 @@ function RaiReady() {
   const [sending, setSending] = useState(false);
   const [memoryOpen, setMemoryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [birthDetailsOpen, setBirthDetailsOpen] = useState(false);
   const [xaiKeyDraft, setXaiKeyDraft] = useState("");
   const [xaiSaved, setXaiSaved] = useState(() => hasXaiKey());
   const [xaiMask, setXaiMask] = useState(() => maskXaiKey(getStoredXaiKey()));
@@ -1709,8 +1711,6 @@ function RaiReady() {
                 open={chartMenuOpen}
                 userSun={slots.user_sun}
                 birthDate={slots.user_birth_date}
-                birthTime={slots.user_birth_time}
-                birthPlace={slots.user_birth_place}
                 onAsk={askHerFromChart}
                 onClose={closeChartMenu}
               />
@@ -1821,7 +1821,13 @@ function RaiReady() {
         </SheetContent>
       </Sheet>
 
-      <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
+      <Sheet
+        open={settingsOpen}
+        onOpenChange={(next) => {
+          setSettingsOpen(next);
+          if (!next) setBirthDetailsOpen(false);
+        }}
+      >
         <SheetContent side="right" className="w-[min(100%,22rem)] bg-bg p-0" aria-describedby={undefined}>
           <div className="flex h-14 items-center justify-between border-b border-border px-4">
             <SheetTitle className="font-display text-xl">Settings</SheetTitle>
@@ -1989,6 +1995,27 @@ function RaiReady() {
                   Clear
                 </Button>
               </div>
+            </div>
+
+            <div className="border-t border-border pt-4">
+              <button
+                type="button"
+                aria-expanded={birthDetailsOpen}
+                aria-controls="star-birth-details"
+                onClick={() => setBirthDetailsOpen((value) => !value)}
+                className="flex w-full items-center text-left text-sm font-medium"
+              >
+                Birth details
+              </button>
+              {birthDetailsOpen ? (
+                <div className="mt-3">
+                  <BirthDetailsEditor
+                    birthDate={slots.user_birth_date}
+                    birthTime={slots.user_birth_time}
+                    birthPlace={slots.user_birth_place}
+                  />
+                </div>
+              ) : null}
             </div>
 
             <div className="border-t border-border pt-4">

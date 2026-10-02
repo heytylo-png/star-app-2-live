@@ -501,16 +501,9 @@
   animation: life-menu-in 150ms var(--ease-smooth-out);
 }
 
+/* Middle tab, right edge. A 17.5rem menu is wider than the space to its left at 412px. */
 .chart-menu {
-  left: 50%;
-  right: auto;
-  translate: -50% 0;
-  min-width: 13.5rem;
-}
-
-.chart-menu[data-editing="true"] {
-  min-width: 16rem;
-  max-height: min(22rem, 68dvh);
+  max-width: min(17.5rem, calc((2 / 3) * 100vw - 0.5rem));
 }
 
 @keyframes life-menu-in {
