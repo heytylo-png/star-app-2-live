@@ -3,17 +3,22 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
+import { localDateKey } from "./chart.ts";
 import {
   chartAskDraft,
   chartAskHandoff,
   chartDiaryDateLabel,
   chartDiaryExcerpt,
   chartMenuDiaryLine,
+  chartMenuReadingOnDateChange,
   chartMenuSun,
   chartMenuTodaySunLine,
+  chartReadingSunSign,
   composeChartAstronomyReading,
   lockChartReading,
+  msUntilNextLocalDate,
   reduceChartMenu,
+  shownChartReading,
   type ChartMenuState,
 } from "./chart-menu.ts";
 import { notableAspectLine } from "./sky.ts";
@@ -146,6 +151,130 @@ describe("Chart menu contents", () => {
     const nextDay = lockChartReading(locked, "2026-10-03", "Aries sun.\nNew.");
     assert.equal(nextDay["2026-10-02"], first);
     assert.equal(nextDay["2026-10-03"], "Aries sun.\nNew.");
+  });
+
+  it("replaces a cached reading when the sun changes sign that same day", () => {
+    const dateKey = "2026-09-22";
+    const cached = "Virgo sun, Cancer moon.\nWaxing Crescent. Keep it short.";
+    const sky = {
+      sunSignToday: "Libra" as const,
+      moonSignToday: "Cancer" as const,
+      moonPhase: "Waxing Crescent" as const,
+    };
+    const fresh = composeChartAstronomyReading({ dateKey, sky });
+    assert.equal(chartReadingSunSign(cached), "Virgo");
+    assert.equal(chartReadingSunSign("Cancer moon under Virgo."), "Virgo");
+    assert.equal(chartReadingSunSign("Sun's sitting on the moon."), null);
+    assert.equal(chartMenuTodaySunLine(sky.sunSignToday), "Sun · Libra");
+    const shown = shownChartReading(cached, fresh, sky.sunSignToday);
+    assert.match(shown, /Libra/);
+    assert.doesNotMatch(shown, /Virgo/);
+    assert.equal(chartReadingSunSign(shown), "Libra");
+    const stored = lockChartReading({ [dateKey]: cached }, dateKey, fresh, { liveSun: "Libra" });
+    assert.match(stored[dateKey] ?? "", /Libra/);
+    assert.doesNotMatch(stored[dateKey] ?? "", /Virgo/);
+    assert.equal(chartReadingSunSign(stored[dateKey]), "Libra");
+    assert.equal(shownChartReading(stored[dateKey], fresh, "Libra"), stored[dateKey]);
+  });
+
+  it("keeps the same day's reading when the sun sign still matches", () => {
+    const dateKey = "2026-09-22";
+    const line = "Libra sun, Cancer moon.\nWaxing Crescent. Keep it short.";
+    const locked = lockChartReading({}, dateKey, line, { liveSun: "Libra" });
+    const again = lockChartReading(locked, dateKey, "Libra sun. Leo moon.\nA different line.", {
+      liveSun: "Libra",
+    });
+    assert.equal(again, locked);
+    assert.equal(again[dateKey], line);
+    assert.equal(shownChartReading(line, "Libra sun. Leo moon.\nA different line.", "libra"), line);
+    assert.equal(chartReadingSunSign(again[dateKey]), chartMenuTodaySunLine("Libra").replace("Sun · ", ""));
+  });
+
+  it("keeps the last 14 days of notes and drops older ones", () => {
+    const seeded: Record<string, string> = { "not-a-day": "drop me", "2026-09-25": "future" };
+    for (let day = 1; day <= 19; day++) {
+      seeded[`2026-09-${String(day).padStart(2, "0")}`] = `Note ${day}`;
+    }
+    const pruned = lockChartReading(seeded, "2026-09-20", "Libra sun. Today.", { liveSun: "Libra" });
+    for (let day = 1; day <= 6; day++) {
+      assert.equal(pruned[`2026-09-${String(day).padStart(2, "0")}`], undefined);
+    }
+    for (let day = 7; day <= 19; day++) {
+      assert.equal(pruned[`2026-09-${String(day).padStart(2, "0")}`], `Note ${day}`);
+    }
+    assert.match(pruned["2026-09-20"] ?? "", /Libra sun/);
+    assert.equal(pruned["2026-09-25"], "future");
+    assert.equal(pruned["not-a-day"], undefined);
+    assert.equal(Object.keys(pruned).length, 15);
+    const same = lockChartReading(pruned, "2026-09-20", "Libra sun. Another line.", { liveSun: "Libra" });
+    assert.equal(same, pruned);
+    assert.equal(same["2026-09-20"], pruned["2026-09-20"]);
+  });
+
+  it("refreshes the open menu when the local date rolls over", () => {
+    assert.equal(localDateKey(new Date("2026-09-23T01:00:00Z"), "America/Chicago"), "2026-09-22");
+    const evening = new Date("2026-09-22T20:00:00-05:00");
+    const wait = msUntilNextLocalDate(evening, "America/Chicago");
+    assert.ok(wait > 0 && wait < 26 * 60 * 60 * 1000);
+    assert.ok(Math.abs(wait - 4 * 60 * 60 * 1000) < 2000);
+    assert.equal(localDateKey(new Date(evening.getTime() + wait), "America/Chicago"), "2026-09-23");
+    assert.equal(localDateKey(new Date(evening.getTime() + wait - 2000), "America/Chicago"), "2026-09-22");
+
+    const previous = "Virgo sun, Cancer moon.\nWaxing Crescent. Keep it short.";
+    const cache = { "2026-09-22": previous };
+    const fresh = composeChartAstronomyReading({
+      dateKey: "2026-09-23",
+      sky: { sunSignToday: "Libra", moonSignToday: "Cancer", moonPhase: "Last Quarter" },
+    });
+    const rolled = chartMenuReadingOnDateChange({
+      open: true,
+      previousDate: "2026-09-22",
+      previousText: previous,
+      nextDate: "2026-09-23",
+      fresh,
+      liveSun: "Libra",
+      cache,
+    });
+    assert.match(rolled.text, /Libra/);
+    assert.doesNotMatch(rolled.text, /Virgo/);
+    assert.equal(chartReadingSunSign(rolled.cache["2026-09-23"]), "Libra");
+    assert.equal(rolled.cache["2026-09-22"], previous);
+
+    const sameDay = chartMenuReadingOnDateChange({
+      open: true,
+      previousDate: "2026-09-22",
+      previousText: previous,
+      nextDate: "2026-09-22",
+      fresh: "Libra sun. Should stay cached.",
+      liveSun: "Libra",
+      cache,
+    });
+    assert.equal(sameDay.text, previous);
+    assert.equal(sameDay.cache, cache);
+
+    const closed = chartMenuReadingOnDateChange({
+      open: false,
+      previousDate: "2026-09-22",
+      previousText: previous,
+      nextDate: "2026-09-23",
+      fresh,
+      liveSun: "Libra",
+      cache,
+    });
+    assert.equal(closed.text, previous);
+    assert.equal(closed.cache, cache);
+  });
+
+  it("keeps the daily reading silent", () => {
+    const panel = readFileSync(join(root, "src/components/chart-panel.tsx"), "utf8");
+    const menu = readFileSync(join(root, "src/lib/chart-menu.ts"), "utf8");
+    assert.match(panel, /shownChartReading/);
+    assert.match(panel, /msUntilNextLocalDate/);
+    assert.match(panel, /visibilitychange/);
+    assert.match(panel, /lockSkyNote\(dateKey, freshNote, liveSun\)/);
+    assert.doesNotMatch(panel, /setInterval/);
+    assert.doesNotMatch(panel, /speechSynthesis|streamGrok|\bfetch\(|requestHerDay|grok-4/);
+    assert.doesNotMatch(menu, /streamGrok|speechSynthesis|\bfetch\(|requestHerDay|grok-4|setInterval/);
   });
 
   it("uses a deterministic sun and moon phase when sky facts are offline", () => {

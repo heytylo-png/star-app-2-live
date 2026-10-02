@@ -4,9 +4,9 @@
  * Opening the menu does not ask Chat or the brain for a reading.
  */
 
-import { sunFromBirthDate, sunFromMonthDay } from "./chart.ts";
+import { chartTimeZone, localDateKey, sunFromBirthDate, sunFromMonthDay } from "./chart.ts";
 import type { ShellTab } from "./shell.ts";
-import { MOON_PHASE_LABELS, type MoonPhaseLabel, type SkyFacts } from "./sky.ts";
+import { MOON_PHASE_LABELS, TROPICAL_SIGN_ORDER, type MoonPhaseLabel, type SkyFacts } from "./sky.ts";
 
 export type ChartMenuState = {
   tab: ShellTab;
@@ -187,26 +187,170 @@ export function composeChartAstronomyReading(opts: {
   return readingLines(lines);
 }
 
+const SIGN_NAMES = TROPICAL_SIGN_ORDER.join("|");
+const SUN_SIGN_RE = new RegExp(`\\b(${SIGN_NAMES})\\s+sun\\b`, "i");
+const UNDER_SIGN_RE = new RegExp(`\\bunder\\s+(${SIGN_NAMES})\\b`, "i");
+
+/** Notes kept with the day being written: that day and the 13 before it. */
+export const CHART_NOTE_KEEP_DAYS = 14;
+
+function canonicalSign(raw: string | null | undefined): string | null {
+  const cleaned = raw?.replace(/\s+/g, " ").trim() ?? "";
+  if (!cleaned) return null;
+  return TROPICAL_SIGN_ORDER.find((sign) => sign.toLowerCase() === cleaned.toLowerCase()) ?? null;
+}
+
 /**
- * Once per local day. A saved line for that date wins, even if the sky later differs.
+ * Sun sign named in a saved reading. "Libra sun" and "moon under Libra" both count.
+ * "Sun's sitting…" is an aspect line, not a sign.
  */
-export function lockChartReading(
+export function chartReadingSunSign(text: string | null | undefined): string | null {
+  const note = text ?? "";
+  const named = note.match(SUN_SIGN_RE);
+  if (named?.[1]) return canonicalSign(named[1]);
+  const under = note.match(UNDER_SIGN_RE);
+  if (under?.[1]) return canonicalSign(under[1]);
+  return null;
+}
+
+/** A blank live sun, or a note that never names one, still matches. */
+export function chartReadingMatchesSun(note: string | null | undefined, liveSun?: string | null): boolean {
+  const live = canonicalSign(liveSun);
+  if (!live) return true;
+  const cached = chartReadingSunSign(note);
+  if (!cached) return true;
+  return cached === live;
+}
+
+/** Show the saved line only while its sun sign still agrees with the live row. */
+export function shownChartReading(
+  cached: string | null | undefined,
+  fresh: string,
+  liveSun?: string | null,
+): string {
+  const note = cached?.trim() ?? "";
+  if (note && chartReadingMatchesSun(note, liveSun)) return note;
+  return fresh;
+}
+
+function readingDateUtc(key: string): number | null {
+  const match = key.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const utc = Date.UTC(year, month - 1, day);
+  if (!Number.isFinite(utc)) return null;
+  const check = new Date(utc);
+  if (check.getUTCFullYear() !== year || check.getUTCMonth() !== month - 1 || check.getUTCDate() !== day) {
+    return null;
+  }
+  return utc;
+}
+
+/**
+ * Drop notes older than 14 days relative to todayKey, and drop keys that are not dates.
+ * A future date stays. The same object comes back when nothing was removed.
+ */
+export function pruneChartReadings(
   cache: Record<string, string> | null | undefined,
-  dateKey: string,
-  text: string,
+  todayKey: string,
+  keepDays = CHART_NOTE_KEEP_DAYS,
 ): Record<string, string> {
-  const key = dateKey.trim();
   const current = cache ?? {};
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return current;
-  if (current[key]?.trim()) return current;
-  const line = text
+  const today = readingDateUtc(todayKey.trim());
+  if (today == null) return current;
+  let changed = false;
+  const next: Record<string, string> = {};
+  for (const [key, value] of Object.entries(current)) {
+    const utc = readingDateUtc(key);
+    if (utc == null) {
+      changed = true;
+      continue;
+    }
+    const ageDays = Math.round((today - utc) / 86400000);
+    if (ageDays >= keepDays) {
+      changed = true;
+      continue;
+    }
+    next[key] = value;
+  }
+  return changed ? next : current;
+}
+
+function storedReading(text: string): string {
+  return text
     .split(/\n+/)
     .map((row) => row.replace(/[ \t]+/g, " ").trim())
     .filter(Boolean)
     .slice(0, 3)
     .join("\n");
-  if (!line) return current;
-  return { ...current, [key]: line };
+}
+
+/**
+ * Once per local calendar day. The saved line wins while its sun sign still matches.
+ * A sign change on that same date replaces the note. Writing also drops notes older than 14 days.
+ */
+export function lockChartReading(
+  cache: Record<string, string> | null | undefined,
+  dateKey: string,
+  text: string,
+  opts?: { liveSun?: string | null },
+): Record<string, string> {
+  const key = dateKey.trim();
+  const current = cache ?? {};
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return current;
+  const existing = current[key]?.trim() ?? "";
+  let next = current;
+  if (!(existing && chartReadingMatchesSun(existing, opts?.liveSun))) {
+    const line = storedReading(text);
+    if (line && current[key] !== line) next = { ...current, [key]: line };
+  }
+  return pruneChartReadings(next, key);
+}
+
+const MAX_LOCAL_DATE_WAIT_MS = 26 * 60 * 60 * 1000;
+
+/**
+ * One wait until the next local calendar date. Not a poll.
+ * The result is at least one second, and lands on or just after the date change.
+ */
+export function msUntilNextLocalDate(now: Date = new Date(), timeZone?: string): number {
+  const tz = timeZone?.trim() || chartTimeZone();
+  const startKey = localDateKey(now, tz);
+  const start = now.getTime();
+  let lo = start;
+  let hi = start + MAX_LOCAL_DATE_WAIT_MS;
+  if (localDateKey(new Date(hi), tz) === startKey) return MAX_LOCAL_DATE_WAIT_MS;
+  while (hi - lo > 1000) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (localDateKey(new Date(mid), tz) === startKey) lo = mid;
+    else hi = mid;
+  }
+  return Math.max(1000, hi - start);
+}
+
+/**
+ * While the menu is open, a new local date shows that date's note.
+ * The same date, or a closed menu, keeps the line already on screen.
+ */
+export function chartMenuReadingOnDateChange(opts: {
+  open: boolean;
+  previousDate: string;
+  previousText: string;
+  nextDate: string;
+  fresh: string;
+  liveSun?: string | null;
+  cache: Record<string, string>;
+}): { text: string; cache: Record<string, string> } {
+  if (!opts.open || opts.previousDate === opts.nextDate) {
+    return { text: opts.previousText, cache: opts.cache };
+  }
+  const cache = lockChartReading(opts.cache, opts.nextDate, opts.fresh, { liveSun: opts.liveSun });
+  return {
+    text: shownChartReading(cache[opts.nextDate], opts.fresh, opts.liveSun),
+    cache,
+  };
 }
 
 /** Last diary row. Empty pages stay a quiet line — opening Chart does not write one. */
