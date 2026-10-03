@@ -93,7 +93,7 @@ Tone: the old `*_official` sheets and `middle_finger` carried `gAMA 0.50994`, wh
 
 ## Pose bridge (idle ↔ smug)
 
-The only bridged pair so far. Files `rai/bridge_idle_smug_01.png` … `_06.png` are in-betweens (pre-cut RGBA, `rgba3`), played hard-cut ~100ms a frame between the live `idle.png` and the cut `smug_official.png`; they are not poses and have no live key. Spoken lines, reduced motion, and every other pose pair keep the normal change. See [ANIMATION.md](./ANIMATION.md) "Pose bridge" for the order, timing, interrupts, and how to add a pair.
+The only bridged pair so far. Files `rai/bridge_idle_smug_01.png` … `_06.png` are in-betweens (pre-cut RGBA, `rgba3`), played hard-cut ~100ms a frame between the live `idle.png` and the cut `smug_official.png`; they are not poses and have no live key. Reduced motion and every other pose pair keep the normal change. It plays on spoken smug replies too (voice on or off); a normal talk line on idle never changes pose so never bridges. See [ANIMATION.md](./ANIMATION.md) "Pose bridge" for the order, timing, interrupts, and how to add a pair.
 
 ## Talking
 
