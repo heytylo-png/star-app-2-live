@@ -34,6 +34,8 @@ import {
   namedPoseFromText,
   parseAct,
   settledRestPose,
+  holdsSmugBeat,
+  smugBeatResetDelayMs,
   snapGreetingSheet,
   spokenTurnStartPose,
   spokenBubbleResetDelay,
@@ -281,6 +283,8 @@ function RaiReady() {
   const tabRef = useRef<ShellTab>(DEFAULT_SHELL_TAB);
   /** When the last act pose/emotion landed — drives the hold timer. */
   const actLandedAt = useRef(0);
+  /** When the voiced line stopped being spoken (0 = not voiced). Smug holds until the beat ends. */
+  const speechEndedAt = useRef(0);
   /** Life slots before this turn's ingest — used to detect track changes. */
   const lifeBeforeRef = useRef<LifeSlots | undefined>(undefined);
   const sendRef = useRef<(text: string) => Promise<void>>(async () => {});
@@ -595,7 +599,7 @@ function RaiReady() {
     // think / pout / tired as the standing face. Next rest is official idle.
     // Music Set (track_change → talk|content|smug) still holds.
     // Blink is on (approved by TyLo on 2026-09-26, 807-referenced painted lids, pass 4b).
-    const delay = spokenBubbleResetDelay({
+    let delay = spokenBubbleResetDelay({
       pose,
       emotion,
       talking: false,
@@ -604,6 +608,15 @@ function RaiReady() {
       captionLive: false,
     });
     if (delay == null) return;
+    // Smug lasts until its beat (speech and reading time, plus a tail) is over.
+    if (holdsSmugBeat(pose, emotion)) {
+      delay = smugBeatResetDelayMs({
+        baseDelay: delay,
+        line: captionRef.current,
+        actLandedAt: actLandedAt.current,
+        speechEndedAt: speechEndedAt.current,
+      });
+    }
     const id = window.setTimeout(() => {
       setPose(settledRestPose());
       setBubbleLifeKind("none");
@@ -885,6 +898,7 @@ function RaiReady() {
       : namedPoseFromText(lastUserForTint);
     namedTurnRef.current = namedThisTurn;
     replyPoseRef.current = null;
+    speechEndedAt.current = 0;
     // A new spoken line re-resolves — leftover think / pout / tired must not
     // sit under this bubble. Speech talks on idle (SPOKEN_TALK_TO_IDLE), so the
     // turn starts on idle, not talk_official. Named poses already swapped.
@@ -1143,6 +1157,7 @@ function RaiReady() {
       sendingRef.current = false;
       talkingRef.current = false;
       listenPausedForTtsRef.current = false;
+      if (voiced) speechEndedAt.current = Date.now();
       setSending(false);
       setTalking(false);
       setAmp(0);
