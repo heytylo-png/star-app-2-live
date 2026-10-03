@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { localDateKey } from "@/lib/chart";
 import {
   chartAskDraft,
@@ -6,6 +6,8 @@ import {
   chartMenuSun,
   chartMenuTodaySunLine,
   composeChartAstronomyReading,
+  msUntilNextLocalDate,
+  shownChartReading,
 } from "@/lib/chart-menu";
 import { useChartStore } from "@/lib/chart-store";
 import { computeSkyFacts } from "@/lib/sky";
@@ -26,9 +28,10 @@ type ChartMenuProps = {
  */
 export function ChartMenu({ open, userSun, birthDate, onAsk, onClose, anchorRef }: ChartMenuProps) {
   const diaryByDay = useChartStore((s) => s.diaryByDay);
-  const dateKey = localDateKey();
+  const [clock, setClock] = useState(() => new Date());
+  const dateKey = localDateKey(clock);
   const cachedNote = useChartStore((s) => s.skyNoteByDay[dateKey]);
-  const sky = computeSkyFacts();
+  const sky = computeSkyFacts(clock);
   const freshNote = useMemo(
     () =>
       composeChartAstronomyReading({
@@ -37,9 +40,10 @@ export function ChartMenu({ open, userSun, birthDate, onAsk, onClose, anchorRef 
       }),
     [dateKey, sky?.sunSignToday, sky?.moonSignToday, sky?.moonPhase, sky?.notableAspect],
   );
-  const reading = cachedNote?.trim() || freshNote;
+  const liveSun = sky?.sunSignToday;
+  const reading = shownChartReading(cachedNote, freshNote, liveSun);
   const last = lastDiaryEntry(diaryByDay);
-  const sunLine = chartMenuTodaySunLine(sky?.sunSignToday);
+  const sunLine = chartMenuTodaySunLine(liveSun);
   const diaryLine = chartMenuDiaryLine(last);
   const onCloseRef = useRef(onClose);
   useEffect(() => {
@@ -47,8 +51,31 @@ export function ChartMenu({ open, userSun, birthDate, onAsk, onClose, anchorRef 
   }, [onClose]);
 
   useEffect(() => {
-    useChartStore.getState().lockSkyNote(dateKey, freshNote);
-  }, [dateKey, freshNote]);
+    useChartStore.getState().lockSkyNote(dateKey, freshNote, liveSun);
+  }, [dateKey, freshNote, liveSun]);
+
+  useEffect(() => {
+    if (open) setClock(new Date());
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const now = new Date();
+    if (localDateKey(now) !== localDateKey(clock)) {
+      setClock(now);
+      return;
+    }
+    const delay = msUntilNextLocalDate(clock);
+    const timer = window.setTimeout(() => setClock(new Date()), delay);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") setClock(new Date());
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [open, clock]);
 
   useEffect(() => {
     if (!open) return;

@@ -30,7 +30,7 @@ type ChartState = {
   diaryFor: (dateKey: string) => string | undefined;
   saveHerDay: (dateKey: string, copy: HerDayCopy) => void;
   herDayFor: (dateKey: string) => StoredHerDay | undefined;
-  lockSkyNote: (dateKey: string, text: string) => void;
+  lockSkyNote: (dateKey: string, text: string, liveSun?: string | null) => void;
 };
 
 function parseStoredHerDay(value: unknown): StoredHerDay | undefined {
@@ -111,9 +111,9 @@ export const useChartStore = create<ChartState>()(
         set((state) => ({ herDayByDay: { ...state.herDayByDay, [dateKey]: stored } }));
       },
       herDayFor: (dateKey) => get().herDayByDay[dateKey],
-      lockSkyNote: (dateKey, text) => {
+      lockSkyNote: (dateKey, text, liveSun) => {
         set((state) => {
-          const next = lockChartReading(state.skyNoteByDay, dateKey, text);
+          const next = lockChartReading(state.skyNoteByDay, dateKey, text, { liveSun });
           if (next === state.skyNoteByDay) return state;
           return { skyNoteByDay: next };
         });
