@@ -24,7 +24,7 @@ Code: `src/lib/rai-motion.ts` + `src/components/puppet.tsx`. Stage switch: `src/
 
 ### Pose crossfade
 
-Body sheets swap by stable layer id (`body:<src>`). Incoming starts at opacity 0, outgoing eases to 0, overlap ~**380ms** (`POSE_CROSSFADE_MS`, `--ease-smooth-out`). Studio-white is punched to alpha first so the beige stage never flashes a card.
+Body sheets swap by stable layer id (`body:<src>`). Incoming starts at opacity 0, outgoing eases to 0, overlap ~**380ms** (`POSE_CROSSFADE_MS`, `--ease-smooth-out`). Studio-white is punched to alpha first so the beige stage never flashes a card, except on the pre-cut RGBA pose sheets (most of them; see POSING.md "Transparent cuts"), which skip the punch and are only decoded.
 
 **Decode before swap** (TyLo, 2026-09-27). No sheet can be shown until it has been punched **and** `decode()`d (`decodeSheet`, `src/lib/sheet-decode.ts`). Until then the current frame (idle, or the pose already up) stays on stage. The decoded `Image` objects are held for the life of the stage (`decodedFrames`, same as blink/mouth), so a later switch back is a plain cut. After startup (idle → blink → mouth) every live pose sheet (wave, shy, talk, moods, …) is punched and decoded on idle callbacks, so the first switch is instant; a pose asked for sooner jumps that queue and simply shows once it is ready. If `decode()` takes more than **400ms** (`SHEET_DECODE_TIMEOUT_MS`) or rejects on a file that did load, the sheet is used anyway: every stage `<img>` is `decoding="sync"`, so that paint decodes it (a slow frame at worst, never an empty one). A file that does not load is never mounted.
 

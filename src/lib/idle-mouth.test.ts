@@ -91,12 +91,12 @@ describe("idle mouth sheets", () => {
       assert.ok(src.endsWith(`.png?v=${PRE_CUT_ALPHA_VERSION}`), src);
       assert.equal(spriteNeedsWhitePunch(src), false, src);
     }
-    assert.equal(spriteNeedsWhitePunch(SPRITES.poses.talk), true);
+    assert.equal(spriteNeedsWhitePunch(SPRITES.poses.three_quarter), true);
   });
 
   it("bumps the service-worker cache for the new sheets", () => {
     const sw = readFileSync(join(root, "public/sw.js"), "utf8");
-    assert.match(sw, /const CACHE = "star-rai-shell-v4";/);
+    assert.match(sw, /const CACHE = "star-rai-shell-v5";/);
   });
 });
 

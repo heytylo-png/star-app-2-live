@@ -179,7 +179,7 @@ describe("pose crossfade pool", () => {
 
 describe("pose change mid-chew", () => {
   const REST_ID = IDLE_REST_LAYER_ID;
-  const rest = (file: string): SpriteLayer => ({ id: REST_ID, src: `/rai/${file}.png?v=rgba2`, opacity: 1, role: "body" });
+  const rest = (file: string): SpriteLayer => ({ id: REST_ID, src: `/rai/${file}.png?v=rgba3`, opacity: 1, role: "body" });
   const CLOSED = rest("idle_blink_01_open");
   const SMUG = sheet("smug_official");
   const closeRest = (layer: CrossfadeLayer): CrossfadeLayer =>

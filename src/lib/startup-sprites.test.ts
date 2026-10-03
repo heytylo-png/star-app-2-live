@@ -57,7 +57,8 @@ describe("startup sprite lists", () => {
       deferred.map(pathOf),
       Object.values(LIVE_POSE_FILES).filter((file) => file !== "rai/idle.png"),
     );
-    assert.ok(deferred.some((src) => src.endsWith("rai/talk_official.png")));
+    // Pre-cut sheets carry ?v=, so compare the path.
+    assert.ok(deferred.map(pathOf).some((file) => file.endsWith("rai/talk_official.png")));
     assert.ok(deferred.some((src) => src.endsWith("rai/three_quarter.png")));
     assert.ok(deferred.some((src) => src.endsWith("star-rai/poses/turn-away.png")));
     assert.ok(deferred.some((src) => src.endsWith("star-rai/point-front.png")));
