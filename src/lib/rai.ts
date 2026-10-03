@@ -349,6 +349,34 @@ export function settledRestPose(): PoseId {
 }
 
 /**
+ * Standing face once a smug or wink line is over.
+ * Official idle (blink 01, the frown rest) so the blink can run and a text
+ * line can chew. The idle↔smug bridge is only the transition the puppet
+ * plays when this commit leaves the smug sheet — bridge frames are not a rest.
+ *
+ * Idle plus the smug emotion still paints smug_official (see layersFor), so
+ * that sheet counts too. Every other pose keeps its normal hold.
+ * Call this only after she has stopped speaking.
+ */
+export function lineEndedRestPose(opts: {
+  pose: PoseId;
+  emotion: EmotionId;
+}): { pose: PoseId; emotion: EmotionId } | null {
+  const onSmug = opts.pose === "smug" || (opts.pose === "idle" && opts.emotion === "smug");
+  const onWink = opts.pose === "wink";
+  if (!onSmug && !onWink) return null;
+  return { pose: settledRestPose(), emotion: DEFAULT_EMOTION };
+}
+
+/**
+ * Composer Stop square. True only while she is speaking.
+ * Thinking, idle, and a bubble that is merely still on screen do not show it.
+ */
+export function composerShowsStop(talking: boolean): boolean {
+  return talking;
+}
+
+/**
  * Sheet after the line ends (stream, TTS, or the text chew window).
  * A greeting must not leave wink or talk_official up. A user-named pose, or
  * an explicit reply tag that is not a greeting wink/talk, keeps its sheet.

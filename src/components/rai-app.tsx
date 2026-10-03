@@ -34,8 +34,8 @@ import {
   namedPoseFromText,
   parseAct,
   settledRestPose,
-  holdsSmugBeat,
-  smugBeatResetDelayMs,
+  lineEndedRestPose,
+  composerShowsStop,
   snapGreetingSheet,
   spokenTurnStartPose,
   spokenBubbleResetDelay,
@@ -283,10 +283,6 @@ function RaiReady() {
   const tabRef = useRef<ShellTab>(DEFAULT_SHELL_TAB);
   /** When the last act pose/emotion landed — drives the hold timer. */
   const actLandedAt = useRef(0);
-  /** When the voiced line stopped being spoken (0 = not voiced). Smug holds until the beat ends. */
-  const speechEndedAt = useRef(0);
-  /** When the current reply's line became the bubble (0 until it lands). The smug beat counts from here, never from the pose. */
-  const lineLandedAt = useRef(0);
   /** Life slots before this turn's ingest — used to detect track changes. */
   const lifeBeforeRef = useRef<LifeSlots | undefined>(undefined);
   const sendRef = useRef<(text: string) => Promise<void>>(async () => {});
@@ -490,7 +486,6 @@ function RaiReady() {
       source: "return",
     });
     setCaption(offer.line);
-    lineLandedAt.current = Date.now();
     const nextPose = poseForCallReply({
       namedPose: null,
       modelPose: null,
@@ -571,7 +566,20 @@ function RaiReady() {
   });
 
   useEffect(() => {
-    if (sending || talking || callListening || chewBlocksReturn) return;
+    // Still saying the line. Smug and wink stay up for that, not as the rest.
+    if (sending || talking) return;
+    // A smug or wink line has ended. Commit official idle now so the
+    // idle↔smug bridge is only the way off the smug sheet, then blink
+    // (and a text chew) run on idle.png. Do not keep the sheet for a beat.
+    const ended = lineEndedRestPose({ pose, emotion });
+    if (ended && (pose !== ended.pose || emotion !== ended.emotion)) {
+      setPose(ended.pose);
+      poseRef.current = ended.pose;
+      setBubbleLifeKind("none");
+      setEmotion(ended.emotion);
+      return;
+    }
+    if (callListening || chewBlocksReturn) return;
     if (holding) {
       setEmotion("glance");
       return;
@@ -580,8 +588,9 @@ function RaiReady() {
       setEmotion("glance");
       return;
     }
-    // Greeting wink/talk was inferred from the line. Drop it the moment the
-    // line ends. Named poses and an explicit wink tag still use the hold below.
+    // A greeting talk sheet was inferred from the line. Drop it the moment the
+    // line ends. Smug and wink already committed idle above. Other named poses
+    // still use the hold below.
     if (
       snapGreetingSheet({
         pose,
@@ -591,7 +600,7 @@ function RaiReady() {
       })
     ) {
       const rest = settledRestPose();
-      setPose(rest);
+      setPose(settledRestPose());
       poseRef.current = rest;
       setBubbleLifeKind("none");
       setEmotion(DEFAULT_EMOTION);
@@ -602,7 +611,7 @@ function RaiReady() {
     // think / pout / tired as the standing face. Next rest is official idle.
     // Music Set (track_change → talk|content|smug) still holds.
     // Blink is on (approved by TyLo on 2026-09-26, 807-referenced painted lids, pass 4b).
-    let delay = spokenBubbleResetDelay({
+    const delay = spokenBubbleResetDelay({
       pose,
       emotion,
       talking: false,
@@ -611,16 +620,10 @@ function RaiReady() {
       captionLive: false,
     });
     if (delay == null) return;
-    // Smug lasts until its beat (speech and reading time, plus a tail) is over.
-    if (holdsSmugBeat(pose, emotion)) {
-      delay = smugBeatResetDelayMs({
-        line: captionRef.current,
-        lineLandedAt: lineLandedAt.current,
-        speechEndedAt: speechEndedAt.current,
-      });
-    }
     const id = window.setTimeout(() => {
+      const rest = settledRestPose();
       setPose(settledRestPose());
+      poseRef.current = rest;
       setBubbleLifeKind("none");
       setEmotion(DEFAULT_EMOTION);
     }, delay);
@@ -900,8 +903,6 @@ function RaiReady() {
       : namedPoseFromText(lastUserForTint);
     namedTurnRef.current = namedThisTurn;
     replyPoseRef.current = null;
-    speechEndedAt.current = 0;
-    lineLandedAt.current = 0;
     // A new spoken line re-resolves — leftover think / pout / tired must not
     // sit under this bubble. Speech talks on idle (SPOKEN_TALK_TO_IDLE), so the
     // turn starts on idle, not talk_official. Named poses already swapped.
@@ -1088,7 +1089,6 @@ function RaiReady() {
       const line = shapeSpoken(parsedLine) || "…";
       store.patchMessage(threadId, assistant.id, { content: line });
       setCaption(line);
-      lineLandedAt.current = Date.now();
       if (line !== "…") armTextChew(line);
       const lifeTitle = parseTrackTitle(lastUser);
       const named = lifeTitle ? null : namedPoseFromText(lastUser);
@@ -1161,7 +1161,6 @@ function RaiReady() {
       sendingRef.current = false;
       talkingRef.current = false;
       listenPausedForTtsRef.current = false;
-      if (voiced) speechEndedAt.current = Date.now();
       setSending(false);
       setTalking(false);
       setAmp(0);
@@ -1659,8 +1658,8 @@ function RaiReady() {
             className="mx-auto flex w-full max-w-lg items-end gap-2"
             onSubmit={(e) => {
               e.preventDefault();
-              if (sending) stop();
-              else void send(draft);
+              if (composerShowsStop(talking)) stop();
+              else if (!sending) void send(draft);
             }}
           >
             <Textarea
@@ -1714,10 +1713,10 @@ function RaiReady() {
             <Button
               type="submit"
               size="icon"
-              aria-label={sending ? "Stop" : "Send"}
-              disabled={!sending && !draft.trim()}
+              aria-label={composerShowsStop(talking) ? "Stop" : "Send"}
+              disabled={!composerShowsStop(talking) && !draft.trim()}
             >
-              {sending ? <Square className="size-4" /> : <Send className="size-4" />}
+              {composerShowsStop(talking) ? <Square className="size-4" /> : <Send className="size-4" />}
             </Button>
           </form>
         </div>
