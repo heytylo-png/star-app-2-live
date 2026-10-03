@@ -91,6 +91,50 @@ describe("Life menu does not cover the desk", () => {
     assert.doesNotMatch(app, /max-h-\[min\(36rem,74%\)\]/);
     assert.doesNotMatch(app, /<LifePanel/);
   });
+
+  it("uses the Chart low anchor and stays at least 4px from the left edge, below her face", () => {
+    const css = readFileSync(join(root, "src/styles.css"), "utf8");
+    const tabs = readFileSync(join(root, "src/components/app-tabs.tsx"), "utf8");
+    const shared = css.match(/\.life-menu,\s*\.chart-menu\s*\{([^}]*)\}/);
+    assert.ok(shared);
+    const block = shared[1]!;
+    assert.match(block, /position:\s*absolute/);
+    assert.match(block, /right:\s*0/);
+    assert.match(block, /bottom:\s*calc\(100%\s*\+\s*0\.4rem\)/);
+    assert.match(block, /max-width:\s*min\(17\.5rem,\s*calc\(100vw - 1\.25rem\)\)/);
+    assert.match(block, /max-height:\s*min\(15\.5rem,\s*42dvh\)/);
+    assert.doesNotMatch(css, /\.life-menu\s*\{[^}]*68dvh/);
+    assert.doesNotMatch(css, /\.life-menu\s*\{[^}]*left:\s*50%/);
+    assert.doesNotMatch(css, /\.life-menu\s*\{[^}]*\(2\s*\/\s*3\)/);
+    assert.match(tabs, /ref=\{anchorRef\} className="relative"/);
+
+    const rem = 16;
+    const width = 412;
+    // Right tab. The grid cell's right edge is the nav's 0.5rem padding inside the viewport.
+    const anchorRight = width - 0.5 * rem;
+    const cap = Math.min(17.5 * rem, width - 1.25 * rem);
+    const left = anchorRight - cap;
+    assert.ok(left >= 4, `Life menu left edge ${left}px at 412`);
+
+    // diary-loop-v2 is 784x1168. object-fit cover and 30% 50% on a 412-wide phone
+    // fill the height and crop the sides, so a source y maps straight onto the viewport.
+    // The chin sits above source y 480.
+    const frameW = 784;
+    const frameH = 1168;
+    const chinSrc = 480;
+    const row = 2.75 * rem;
+    const padBottom = 0.4 * rem;
+    const menuGap = 0.4 * rem;
+    for (const height of [893, 915]) {
+      assert.ok(width / height < frameW / frameH, `${height} should height-fill the desk loop`);
+      const chin = (chinSrc / frameH) * height;
+      const menuMax = Math.min(15.5 * rem, 0.42 * height);
+      const menuTop = height - padBottom - row - menuGap - menuMax;
+      assert.ok(menuTop > chin, `Life menu top ${menuTop}px overlaps chin ${chin}px at ${height}`);
+      assert.ok(menuTop - chin >= 160, `Life menu clears the face by ${menuTop - chin}px at ${height}`);
+      assert.equal(left, anchorRight - cap);
+    }
+  });
 });
 
 describe("Connect music row", () => {
