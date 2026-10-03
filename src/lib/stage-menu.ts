@@ -3,7 +3,7 @@
  * Only these three entries — wired to existing sheets / Call / mute.
  */
 export const STAGE_MENU_ITEMS = [
-  { id: "settings", label: "Settings and API key" },
+  { id: "settings", label: "Settings" },
   { id: "memory", label: "Memory and saved facts" },
   { id: "voice", label: "Call mute and voice" },
 ] as const;

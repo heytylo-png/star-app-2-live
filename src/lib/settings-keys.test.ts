@@ -14,6 +14,7 @@ import {
   maskSecret,
   migrateStoredKeys,
   redactSecrets,
+  secretInputValue,
   setStoredElevenKey,
   setStoredGrokKey,
   setStoredVoiceId,
@@ -86,7 +87,12 @@ describe("settings keys", () => {
   it("masks secrets and never leaves them in error text", () => {
     const secret = "sk_live_secret_value";
     assert.equal(maskSecret(secret), "••••alue");
+    assert.equal(maskSecret("sk-test-1234"), "••••1234");
+    assert.equal(maskSecret("sk-test-abcd"), "••••abcd");
     assert.doesNotMatch(maskSecret(secret), /sk_live/);
+    assert.equal(secretInputValue("sk-test-1234", false), "");
+    assert.equal(secretInputValue("sk-test-abcd", true), "sk-test-abcd");
+    assert.doesNotMatch(maskSecret("sk-test-1234"), /sk-test/);
     const logged = redactSecrets(`xAI 401: ${secret} rejected`, [secret, "brain-key"]);
     assert.equal(logged.includes(secret), false);
     assert.match(logged, /••••/);
@@ -105,6 +111,8 @@ describe("settings keys", () => {
     assert.equal(plan.headers["xi-api-key"], "speech-only-value");
     assert.notEqual(plan.headers["xi-api-key"], "brain-only-value");
     assert.match(plan.url, /\/v1\/text-to-speech\/voice-demo$/);
+    assert.equal(plan.url.includes("speech-only-value"), false);
+    assert.equal(elevenTtsPlan("Catch this", "sk-test-5678", "sk-test-5678"), null);
     assert.doesNotMatch(plan.url, /voices\/add|voice-generation|voice-design|\/edit/);
     assert.equal(JSON.parse(plan.body).text, "Catch this");
 
@@ -128,6 +136,18 @@ describe("settings keys", () => {
     assert.equal(elevenTtsPlan("Hi", null, "voice-demo"), null);
   });
 
+  it("shows last-4 masks and never puts a key in the speech URL", () => {
+    assert.equal(maskSecret("sk-test-abcd"), "••••abcd");
+    assert.equal(secretInputValue("sk-test-1234", false), "");
+    assert.equal(secretInputValue("new-key", true), "new-key");
+    assert.equal(elevenTtsPlan("Hi", "sk-test-5678", "sk-test-5678"), null);
+    const plan = elevenTtsPlan("Hi", "sk-test-5678", "voice-test-abcd");
+    assert.ok(plan);
+    assert.equal(plan.headers["xi-api-key"], "sk-test-5678");
+    assert.equal(plan.url.includes("sk-test-5678"), false);
+    assert.equal(plan.url.endsWith("/voice-test-abcd"), true);
+  });
+
   it("does not call the browser speech engine or ship a default voice id", () => {
     const voice = readFileSync(join(root, "src/lib/voice.ts"), "utf8");
     const settings = readFileSync(join(root, "src/lib/settings-keys.ts"), "utf8");
@@ -140,7 +160,18 @@ describe("settings keys", () => {
     assert.match(app, /Grok \/ xAI key/);
     assert.match(app, /ElevenLabs key/);
     assert.match(app, /Voice ID/);
+    assert.match(app, /secretInputValue\(xaiKeyDraft, grokEditing\)/);
+    assert.match(app, /secretInputValue\(elevenKeyDraft, elevenEditing\)/);
+    assert.match(app, /<span className="normal-case">\{xaiMask\}<\/span>/);
+    assert.match(app, /<span className="normal-case">\{elevenMask\}<\/span>/);
+    assert.doesNotMatch(app, /value=\{getStored(Xai|Grok|Eleven)Key/);
+    assert.doesNotMatch(app, /setXaiKeyDraft\(getStored/);
+    assert.doesNotMatch(app, /setElevenKeyDraft\(getStored/);
     assert.doesNotMatch(app, /astrology api|natal api key|horoscope api key/i);
+    assert.doesNotMatch(app, /speechSynthesis/);
+    for (const file of ["src/components/rai-app.tsx", "src/lib/voice.ts", "src/lib/stream-chat.ts", "src/lib/local-brain.ts"]) {
+      assert.doesNotMatch(readFileSync(join(root, file), "utf8"), /speechSynthesis/);
+    }
     for (const file of ["src/lib/voice.ts", "src/lib/settings-keys.ts", "src/lib/grok.ts"]) {
       assert.doesNotMatch(readFileSync(join(root, file), "utf8"), /console\.(log|debug|info|warn|error)/);
     }

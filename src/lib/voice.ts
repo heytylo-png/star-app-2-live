@@ -215,8 +215,12 @@ export function elevenTtsPlan(
   const id = voiceId?.trim() ?? "";
   const line = speechTextForTts(text);
   if (!trimmedKey || !id || !line) return null;
+  // A key pasted into the voice id would land in the URL. Refuse the request.
+  if (id.includes(trimmedKey)) return null;
+  const url = ELEVEN_TTS_URL + encodeURIComponent(id);
+  if (url.includes(trimmedKey) || url.includes(encodeURIComponent(trimmedKey))) return null;
   return {
-    url: ELEVEN_TTS_URL + encodeURIComponent(id),
+    url,
     headers: {
       "xi-api-key": trimmedKey,
       "Content-Type": "application/json",

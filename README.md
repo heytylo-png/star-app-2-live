@@ -129,7 +129,7 @@ Sky keys are facts, not a topic. Do not invent Fukuoka local sky.
 5. Back on **Chat**, send a normal line (or “horoscope today” if you skipped a birthday). With a key, Grok tints **one** line using the CHART/SKY facts. Without a key, local brain still tints. She must not list planets or invent Fukuoka sky.
 6. This path is **client-side** (`src/lib/sky.ts` + `astronomy-engine`). **No `wrangler deploy`.** The Worker under `worker/` remains the optional xAI CORS proxy only.
 
-If there is no key, CORS failure, timeout (~12s), bad JSON, or API error → pose-keyed local brain (`artifacts/star-rai-local-brain.txt`). She never breaks character about APIs. There is **no** Settings field for the voice card — only the xAI key (localStorage).
+If there is no key, CORS failure, timeout (~12s), bad JSON, or API error → pose-keyed local brain (`artifacts/star-rai-local-brain.txt`). She never breaks character about APIs. Settings keeps three fields: the Grok key, the ElevenLabs key, and the Voice ID. There is no single shared API key and no natal-chart API field.
 
 ### CORS / optional proxy
 
@@ -147,7 +147,7 @@ The Worker forwards `POST /v1/chat/completions`, reads the key from `X-User-Key`
 | --- | --- |
 | Puppet / poses | Fully client-side PNG puppet (idle life + talk/mood sheets on the spoken bubble). Optional `?spine=1` cutout demo is not the shipping face |
 | Chat brain | Local pose-keyed `artifacts/star-rai-local-brain.txt`; optional Grok (`grok-4-latest`) when key present |
-| Voice | Browser `SpeechSynthesis` (prefers female English when available) |
+| Voice | ElevenLabs only, using the saved ElevenLabs key and Voice ID. Empty key or empty Voice ID shows the bubble and speaks nothing. No browser speech engine and no default voice. |
 | Hold-to-talk | Browser `SpeechRecognition` when present; otherwise type |
 | Call mode | Continuous listen (AEC/NS/AGC gUM; pause SR during TTS; finals + backoff) → same Chat brain → speak `line` only; hangup + page-hide abort mic/TTS; mute honored; no recordings |
 | Affection | `localStorage` (`star-rai-affection`) — tier chip + tone |
@@ -211,7 +211,9 @@ Future env: `VITE_API_BASE` — leave unset for pure Pages. `VITE_GROK_PROXY_URL
 
 - `star-rai-memory` — memory facts + compact slots (schema v2)
 - `star-rai-chat` — threads + `voiceOn`
-- `star-rai-xai-key` — optional xAI API key (never commit)
+- `star-rai-xai-key` — optional Grok / xAI key (never commit)
+- `star-rai-elevenlabs-key` — optional ElevenLabs key (never commit; the UI shows the last 4 only)
+- `star-rai-voice-id` — optional ElevenLabs voice id (not a secret)
 - `star-rai-affection` — affection score, last talk day, streak (schema v1)
 - `star-rai-chart` — Chart v1 setup skip/done, last fire day, diary pages, her-day pane copy
 - `star-rai-spotify` — Spotify PKCE tokens (access / refresh / expiry). Never a client secret.
