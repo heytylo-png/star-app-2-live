@@ -8,13 +8,21 @@ import {
   DEFAULT_EMOTION,
   canIdleBlink,
   canIdleMouth,
+  composerActionLabel,
+  composerCancelsTurn,
   composerShowsStop,
   isGreetingSpokenLine,
   layersFor,
   lineEndedRestPose,
   namedPoseFromText,
+  POSE_HOLD_MIN_MS,
   resolveSpokenPose,
   settledRestPose,
+  SMUG_BEAT_TAIL_MS,
+  smugBeatResetDelayMs,
+  smugWinkTextRestDelayMs,
+  TEXT_CHEW_MAX_MS,
+  textChewMs,
 } from "./rai.ts";
 
 const app = readFileSync(
@@ -78,7 +86,111 @@ describe("smug and wink lines rest on official idle", () => {
     assert.match(tint.src, /idle_blink_01_open/);
     assert.doesNotMatch(tint.src, /smug_official|bridge_idle_smug/);
     assert.match(app, /lineEndedRestPose\(\{/);
+    assert.match(app, /smugWinkTextRestDelayMs\(\{/);
     assert.doesNotMatch(app, /smugBeatResetDelayMs/);
+    assert.doesNotMatch(app, /chewUntil > Date\.now\(\)/);
+  });
+
+  it("a text-only wink at me keeps the sheet through the chew, then idle", () => {
+    assert.equal(namedPoseFromText("wink at me"), "wink");
+    const reply = "Wink. Catch it~";
+    const chew = textChewMs(reply);
+    assert.ok(chew >= 600 && chew < 1200, `chew ${chew}`);
+    const during = layersFor({
+      pose: "wink",
+      emotion: "bratty",
+      talking: false,
+      amplitude: 0,
+      angle: 0,
+    })[0]!.src;
+    assert.match(during, /wink_official/);
+    const delay = smugWinkTextRestDelayMs({
+      voiced: false,
+      chewUntil: chew,
+      now: 0,
+      pose: "wink",
+      emotion: "bratty",
+      actLandedAt: 0,
+    });
+    assert.equal(delay, POSE_HOLD_MIN_MS);
+    assert.ok(delay != null && delay > chew);
+    const beat = smugBeatResetDelayMs({
+      line: reply,
+      lineLandedAt: 0,
+      speechEndedAt: 0,
+      now: 0,
+    });
+    assert.ok(delay != null && delay < beat);
+    assert.equal(
+      smugWinkTextRestDelayMs({
+        voiced: true,
+        chewUntil: 99_000,
+        now: 0,
+        pose: "wink",
+        emotion: "bratty",
+        actLandedAt: 0,
+      }),
+      0,
+    );
+    const { rest, src } = restSrc("wink");
+    assert.equal(rest.pose, "idle");
+    assert.match(src, /idle_blink_01_open/);
+    assert.equal(canIdleBlink({ pose: "idle", emotion: rest.emotion, talking: false }), true);
+  });
+
+  it("a text-only Music Set smug paints the sheet, then rests on idle", () => {
+    const line = "Super Shy. That one stays.";
+    const chew = textChewMs(line);
+    const now = 5_000;
+    const delay = smugWinkTextRestDelayMs({
+      voiced: false,
+      chewUntil: now + chew,
+      now,
+      pose: "smug",
+      emotion: "smug",
+      actLandedAt: now,
+    });
+    assert.equal(delay, POSE_HOLD_MIN_MS);
+    assert.ok(delay != null && delay > 550);
+    const sheet = layersFor({
+      pose: "smug",
+      emotion: "smug",
+      talking: false,
+      amplitude: 0,
+      angle: 0,
+    })[0]!.src;
+    assert.match(sheet, /smug_official/);
+    assert.doesNotMatch(sheet, /bridge_idle_smug/);
+    const longBeat = smugBeatResetDelayMs({
+      line: "x".repeat(400),
+      lineLandedAt: now,
+      speechEndedAt: 0,
+      now,
+    });
+    const longHold = smugWinkTextRestDelayMs({
+      voiced: false,
+      chewUntil: now + TEXT_CHEW_MAX_MS,
+      now,
+      pose: "smug",
+      emotion: "smug",
+      actLandedAt: now,
+    });
+    assert.ok(longHold != null && longHold < longBeat);
+    assert.ok(longBeat > POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
+    assert.equal(
+      smugWinkTextRestDelayMs({
+        voiced: true,
+        chewUntil: now + chew,
+        now,
+        pose: "smug",
+        emotion: "smug",
+        actLandedAt: now,
+      }),
+      0,
+    );
+    const { src } = restSrc("smug", "smug");
+    assert.match(src, /idle_blink_01_open/);
+    assert.equal(canIdleBlink({ pose: "idle", emotion: "bratty", talking: false }), true);
   });
 
   it("a wink line ends on official idle with blink, not wink", () => {
@@ -151,13 +263,30 @@ describe("smug and wink lines rest on official idle", () => {
 });
 
 describe("composer Stop square", () => {
-  it("shows only while she is speaking", () => {
+  it("shows the Stop icon only while speaking, and Cancel still aborts a hung send", () => {
     assert.equal(composerShowsStop(true), true);
     assert.equal(composerShowsStop(false), false);
-    assert.match(app, /composerShowsStop\(talking\)/);
-    assert.match(app, /aria-label=\{composerShowsStop\(talking\) \? "Stop" : "Send"\}/);
-    assert.doesNotMatch(app, /sending \? "Stop"/);
-    assert.doesNotMatch(app, /sending \? <Square/);
+    assert.equal(composerActionLabel({ talking: false, sending: false }), "Send");
+    assert.equal(composerActionLabel({ talking: false, sending: true }), "Cancel");
+    assert.equal(composerActionLabel({ talking: true, sending: true }), "Stop");
+    assert.equal(composerCancelsTurn({ talking: false, sending: true }), true);
+    assert.equal(composerCancelsTurn({ talking: true, sending: false }), true);
+    assert.equal(composerCancelsTurn({ talking: false, sending: false }), false);
+
+    const form = app.slice(app.indexOf("<form"), app.indexOf("</form>"));
+    assert.match(form, /aria-label=\{composerActionLabel\(\{ talking, sending \}\)\}/);
+    assert.match(form, /composerShowsStop\(talking\) \? <Square/);
+    assert.doesNotMatch(form, /sending \? "Stop"/);
+    assert.doesNotMatch(form, /sending \? <Square/);
+    const cancels = form.match(/composerCancelsTurn\(\{ talking, sending \}\)\) stop\(\)/g);
+    assert.equal(cancels?.length, 2);
+    const submit = form.slice(form.indexOf("onSubmit"), form.indexOf("<Textarea"));
+    const enter = form.slice(form.indexOf("onKeyDown"), form.indexOf("placeholder"));
+    assert.doesNotMatch(submit, /setDraft/);
+    assert.doesNotMatch(enter, /setDraft/);
+    const stopFn = app.slice(app.indexOf("function stop()"), app.indexOf("function hangUp"));
+    assert.match(stopFn, /abortRef\.current\?\.abort\(\)/);
+    assert.doesNotMatch(stopFn, /setDraft/);
     assert.match(menu, /\{status\}/);
     assert.doesNotMatch(menu, /Square|aria-label="Stop"/);
   });

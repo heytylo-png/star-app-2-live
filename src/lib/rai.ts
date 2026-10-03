@@ -369,11 +369,55 @@ export function lineEndedRestPose(opts: {
 }
 
 /**
+ * Milliseconds a finished smug or wink line waits before official idle.
+ * Voiced lines snap when speech ends (0). Text-only lines wait out the chew
+ * window and the normal pose hold, so the sheet can paint. Never the long
+ * smug beat. Null when this pose is not a smug/wink rest.
+ */
+export function smugWinkTextRestDelayMs(opts: {
+  voiced: boolean;
+  chewUntil: number;
+  pose: PoseId;
+  emotion: EmotionId;
+  actLandedAt: number;
+  now?: number;
+}): number | null {
+  if (!lineEndedRestPose({ pose: opts.pose, emotion: opts.emotion })) return null;
+  if (opts.voiced) return 0;
+  const now = opts.now ?? Date.now();
+  const chewLeft = Math.max(0, opts.chewUntil - now);
+  const poseHold =
+    poseResetDelayMs({
+      pose: opts.pose,
+      emotion: opts.emotion,
+      talking: false,
+      actLandedAt: opts.actLandedAt,
+      now,
+    }) ?? 0;
+  return Math.max(chewLeft, poseHold);
+}
+
+/**
  * Composer Stop square. True only while she is speaking.
  * Thinking, idle, and a bubble that is merely still on screen do not show it.
  */
 export function composerShowsStop(talking: boolean): boolean {
   return talking;
+}
+
+/** Send while idle, Cancel while a reply is in flight, Stop while she is speaking. */
+export function composerActionLabel(opts: {
+  talking: boolean;
+  sending: boolean;
+}): "Send" | "Cancel" | "Stop" {
+  if (composerShowsStop(opts.talking)) return "Stop";
+  if (opts.sending) return "Cancel";
+  return "Send";
+}
+
+/** Submit, Enter, and the button abort the in-flight turn. The draft stays. */
+export function composerCancelsTurn(opts: { talking: boolean; sending: boolean }): boolean {
+  return opts.talking || opts.sending;
 }
 
 /**

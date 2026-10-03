@@ -35,7 +35,10 @@ import {
   parseAct,
   settledRestPose,
   lineEndedRestPose,
+  smugWinkTextRestDelayMs,
   composerShowsStop,
+  composerActionLabel,
+  composerCancelsTurn,
   snapGreetingSheet,
   spokenTurnStartPose,
   spokenBubbleResetDelay,
@@ -283,6 +286,10 @@ function RaiReady() {
   const tabRef = useRef<ShellTab>(DEFAULT_SHELL_TAB);
   /** When the last act pose/emotion landed — drives the hold timer. */
   const actLandedAt = useRef(0);
+  /** This reply actually spoke. Text-only stays false so smug/wink keep the chew. */
+  const lineVoicedRef = useRef(false);
+  const chewUntilRef = useRef(0);
+  chewUntilRef.current = chewUntil;
   /** Life slots before this turn's ingest — used to detect track changes. */
   const lifeBeforeRef = useRef<LifeSlots | undefined>(undefined);
   const sendRef = useRef<(text: string) => Promise<void>>(async () => {});
@@ -568,11 +575,34 @@ function RaiReady() {
   useEffect(() => {
     // Still saying the line. Smug and wink stay up for that, not as the rest.
     if (sending || talking) return;
-    // A smug or wink line has ended. Commit official idle now so the
-    // idle↔smug bridge is only the way off the smug sheet, then blink
-    // (and a text chew) run on idle.png. Do not keep the sheet for a beat.
+    // A smug or wink line has ended. Voiced lines commit official idle now.
+    // Text-only lines wait out the chew window and the normal pose hold so
+    // the sheet can paint, then the same idle commit. Not the long smug beat.
+    // A greeting snap below still drops an inferred wink immediately.
     const ended = lineEndedRestPose({ pose, emotion });
-    if (ended && (pose !== ended.pose || emotion !== ended.emotion)) {
+    const greetingSnap = snapGreetingSheet({
+      pose,
+      line: captionRef.current,
+      namedPose: namedTurnRef.current,
+      replyPose: replyPoseRef.current,
+    });
+    if (!greetingSnap && ended && (pose !== ended.pose || emotion !== ended.emotion)) {
+      const delay = smugWinkTextRestDelayMs({
+        voiced: lineVoicedRef.current,
+        chewUntil: chewUntilRef.current,
+        pose,
+        emotion,
+        actLandedAt: actLandedAt.current,
+      });
+      if (delay != null && delay > 0) {
+        const id = window.setTimeout(() => {
+          setPose(ended.pose);
+          poseRef.current = ended.pose;
+          setBubbleLifeKind("none");
+          setEmotion(ended.emotion);
+        }, delay);
+        return () => window.clearTimeout(id);
+      }
       setPose(ended.pose);
       poseRef.current = ended.pose;
       setBubbleLifeKind("none");
@@ -903,6 +933,7 @@ function RaiReady() {
       : namedPoseFromText(lastUserForTint);
     namedTurnRef.current = namedThisTurn;
     replyPoseRef.current = null;
+    lineVoicedRef.current = false;
     // A new spoken line re-resolves — leftover think / pout / tired must not
     // sit under this bubble. Speech talks on idle (SPOKEN_TALK_TO_IDLE), so the
     // turn starts on idle, not talk_official. Named poses already swapped.
@@ -1122,6 +1153,7 @@ function RaiReady() {
           talkingRef.current = true;
           setTalking(true);
           voiced = true;
+          lineVoicedRef.current = true;
           callListenGenRef.current += 1;
           stopRec();
           let lastAmp = 0;
@@ -1658,8 +1690,8 @@ function RaiReady() {
             className="mx-auto flex w-full max-w-lg items-end gap-2"
             onSubmit={(e) => {
               e.preventDefault();
-              if (composerShowsStop(talking)) stop();
-              else if (!sending) void send(draft);
+              if (composerCancelsTurn({ talking, sending })) stop();
+              else void send(draft);
             }}
           >
             <Textarea
@@ -1669,7 +1701,8 @@ function RaiReady() {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  if (!sending) void send(draft);
+                  if (composerCancelsTurn({ talking, sending })) stop();
+                  else void send(draft);
                 }
               }}
               placeholder={
@@ -1713,8 +1746,8 @@ function RaiReady() {
             <Button
               type="submit"
               size="icon"
-              aria-label={composerShowsStop(talking) ? "Stop" : "Send"}
-              disabled={!composerShowsStop(talking) && !draft.trim()}
+              aria-label={composerActionLabel({ talking, sending })}
+              disabled={!composerCancelsTurn({ talking, sending }) && !draft.trim()}
             >
               {composerShowsStop(talking) ? <Square className="size-4" /> : <Send className="size-4" />}
             </Button>
