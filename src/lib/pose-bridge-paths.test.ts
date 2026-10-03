@@ -1,14 +1,27 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { actToJson, composeAct } from "./brain.ts";
-import { BridgeDriver, PoseBridge, bridgeFiles, bridgeKeyOfPlates } from "./pose-bridge.ts";
+import {
+  BRIDGE_WAIT_MAX_MS,
+  BridgeDriver,
+  PoseBridge,
+  bridgeFiles,
+  bridgeGate,
+  bridgeKeyOfPlates,
+} from "./pose-bridge.ts";
 import {
   EMOTION_TO_POSE,
+  POSE_HOLD_MIN_MS,
+  SMUG_BEAT_TAIL_MS,
+  SMUG_READ_MS_PER_CHAR,
   SPRITES,
   bridgeFrameSrc,
+  holdsSmugBeat,
   layersFor,
   namedPoseFromText,
+  poseResetDelayMs,
   settledRestPose,
+  smugBeatResetDelayMs,
   spokenTurnStartPose,
   streamSpokenAct,
   type EmotionId,
@@ -68,7 +81,8 @@ function nameOf(src: string): string {
 }
 
 function stage(opts: { decoded?: boolean; reduced?: boolean } = {}) {
-  const decoded = opts.decoded ?? true;
+  let framesReady = opts.decoded ?? true;
+  let waitExpired = false;
   const clock = fakeClock();
   let bridgeSrc: string | null = null;
   const bridge = new PoseBridge(clock.timers, () => 0.5, (s) => {
@@ -77,6 +91,7 @@ function stage(opts: { decoded?: boolean; reduced?: boolean } = {}) {
   const driver = new BridgeDriver(bridge);
   const ready = new Set(bridgeFiles().map(bridgeFrameSrc));
   let plates: { src: string }[] = [];
+  let lastState: Commit | null = null;
   const log: string[] = [];
   const see = () => {
     const shown = bridgeSrc ?? plates[0]?.src ?? "";
@@ -84,19 +99,41 @@ function stage(opts: { decoded?: boolean; reduced?: boolean } = {}) {
     if (log[log.length - 1] !== n) log.push(n);
   };
   const base = { amplitude: 0.3, angle: 0, blink: 0, mouth: 0, talking: false } as const;
-  return {
+  const api = {
     clock,
     log,
     bridge,
-    /** One React commit: state -> plates -> the puppet's bridge hand-off. */
+    /** One React commit: state -> plates (the memo's gate) -> the puppet's bridge hand-off. */
     commit(state: Commit) {
-      plates = layersFor({ ...base, ...state } as PuppetState);
-      driver.commit(plates, {
+      lastState = state;
+      const next = layersFor({ ...base, ...state } as PuppetState);
+      const gate = bridgeGate({
+        wantedKey: bridgeKeyOfPlates(next),
+        framesReady,
         reducedMotion: opts.reduced ?? false,
-        srcFor: bridgeFrameSrc,
-        isReady: (src) => decoded && ready.has(src),
+        waitExpired,
       });
+      if (gate === "go") {
+        plates = next;
+        driver.commit(plates, {
+          reducedMotion: opts.reduced ?? false,
+          srcFor: bridgeFrameSrc,
+          isReady: (src) => framesReady && ready.has(src),
+        });
+      }
       see();
+    },
+    /** Re-render with the last wanted state (frames landed, or the bounded wait ran out). */
+    rerender() {
+      if (lastState) api.commit(lastState);
+    },
+    framesDecoded() {
+      framesReady = true;
+      api.rerender();
+    },
+    waitRanOut() {
+      waitExpired = true;
+      api.rerender();
     },
     wait(ms: number) {
       for (let t = 0; t < ms; t += 10) {
@@ -106,6 +143,7 @@ function stage(opts: { decoded?: boolean; reduced?: boolean } = {}) {
     },
     visibleCount: () => (bridgeSrc ? 1 : plates.length),
   };
+  return api;
 }
 
 const IDLE: Commit = { pose: "idle", emotion: "glance" };
@@ -402,16 +440,204 @@ describe("guard: a bridge-eligible pair never hard-cuts when its frames are deco
     assert.ok(pairs > 200);
   });
 
-  it("with an undecoded frame it hard-cuts (the only allowed cut) and never shows a partial run", () => {
+  it("with an undecoded frame it waits, not cuts: idle stays up until the frames land", () => {
+    const s = stage({ decoded: false });
+    s.commit(IDLE);
+    s.commit({ pose: "smug", emotion: "smug", talking: true });
+    s.wait(900); // slow decode: nothing of smug is shown yet
+    assert.deepEqual(s.log, ["idle"]);
+    s.framesDecoded();
+    s.wait(900);
+    assert.deepEqual(s.log, IN, "then the whole bridge, never a smug frame ahead of 01");
+  });
+
+  it("the wait is bounded: past BRIDGE_WAIT_MAX_MS it cuts (the loud fallback), never before", () => {
     const s = stage({ decoded: false });
     s.commit(IDLE);
     s.commit({ pose: "smug", emotion: "smug" });
-    s.wait(600);
+    s.wait(BRIDGE_WAIT_MAX_MS - 100);
+    assert.deepEqual(s.log, ["idle"]);
+    s.waitRanOut();
+    s.wait(300);
     assert.deepEqual(s.log, ["idle", "smug"]);
+  });
+
+  it("the gate waits only for the smug end of the pair, and never under reduced motion", () => {
+    const wait = { framesReady: false, reducedMotion: false, waitExpired: false };
+    assert.equal(bridgeGate({ wantedKey: "smug", ...wait }), "wait");
+    assert.equal(bridgeGate({ wantedKey: "smug", ...wait, framesReady: true }), "go");
+    assert.equal(bridgeGate({ wantedKey: "smug", ...wait, waitExpired: true }), "go");
+    assert.equal(bridgeGate({ wantedKey: "smug", ...wait, reducedMotion: true }), "go");
+    for (const wanted of ["idle", null]) assert.equal(bridgeGate({ wantedKey: wanted, ...wait }), "go");
+  });
+
+  it("slow decode on the real send path: wait, then the full bridge in and out", () => {
+    const act = { emotion: "smug" as EmotionId, pose: "smug" as PoseId };
+    const s = stage({ decoded: false });
+    s.commit(IDLE);
+    s.commit({ pose: spokenTurnStartPose(), emotion: "glance" });
+    s.commit({ pose: act.pose, emotion: act.emotion });
+    s.commit({ pose: act.pose, emotion: act.emotion, talking: true });
+    s.wait(1200);
+    s.framesDecoded();
+    s.wait(900);
+    s.commit({ pose: "smug", emotion: "smug", talking: false });
+    s.wait(300);
+    s.commit({ pose: settledRestPose(), emotion: "glance" });
+    s.wait(1000);
+    expectInThenOut(s.log);
+    assert.equal(s.log.filter((n) => n === "smug").length, 1);
   });
 
   it("the smug sheet key is the live one, so a bridge never replaces idle.png or smug", () => {
     assert.match(SPRITES.poses.smug, /smug_official\.png/);
     assert.match(SPRITES.poses.idle, /\/idle\.png/);
+  });
+});
+
+/** The reset timer the app arms once a line is over: the normal pose hold, stretched for smug. */
+function resetDelay(opts: { line: string; landed: number; speechEnded: number; now: number; pose?: PoseId; emotion?: EmotionId }) {
+  const pose = opts.pose ?? "smug";
+  const emotion = opts.emotion ?? "smug";
+  let delay = poseResetDelayMs({
+    pose,
+    emotion,
+    talking: false,
+    actLandedAt: opts.landed,
+    now: opts.now,
+  })!;
+  if (holdsSmugBeat(pose, emotion)) {
+    delay = smugBeatResetDelayMs({
+      baseDelay: delay,
+      line: opts.line,
+      actLandedAt: opts.landed,
+      speechEndedAt: opts.speechEnded,
+      now: opts.now,
+    });
+  }
+  return delay;
+}
+
+const LONG_LINE = "Obviously I was right again, and honestly I'm not even surprised anymore. ".repeat(5).trim();
+
+describe("smug holds until its beat ends (early drop)", () => {
+  it("a long silent line (typed reply, no voice) holds for its reading time plus the tail", () => {
+    const chars = LONG_LINE.length;
+    assert.ok(chars > 300);
+    const d = resetDelay({ line: LONG_LINE, landed: 0, speechEnded: 0, now: 0 });
+    assert.equal(d, chars * SMUG_READ_MS_PER_CHAR + SMUG_BEAT_TAIL_MS);
+    // the old rule dropped a long line after ~3.4 s from landing
+    assert.ok(d > 3400 * 3);
+  });
+
+  it("a voiced line holds until the speech ended plus the tail (never the reading time alone)", () => {
+    const speechEnd = 40_000; // a slow voice, much longer than the reading time
+    const landed = 0;
+    const d = resetDelay({ line: LONG_LINE, landed, speechEnded: speechEnd, now: speechEnd });
+    assert.ok(d >= SMUG_BEAT_TAIL_MS, "at least the tail after speech ends");
+    assert.ok(speechEnd + d >= speechEnd + SMUG_BEAT_TAIL_MS);
+  });
+
+  it("is never shorter than the normal pose hold, and a short line keeps it", () => {
+    const base = poseResetDelayMs({ pose: "smug", emotion: "smug", talking: false, actLandedAt: 0, now: 0 })!;
+    const d = resetDelay({ line: "Hm.", landed: 0, speechEnded: 0, now: 0 });
+    assert.ok(d >= base);
+    assert.ok(d >= POSE_HOLD_MIN_MS);
+  });
+
+  it("other poses keep their own timing: only the smug sheet holds a beat", () => {
+    for (const pose of ["wave", "pout", "talk", "wink", "peace", "shy", "tired"] as const) {
+      assert.equal(holdsSmugBeat(pose, "bratty"), false, pose);
+    }
+    assert.equal(holdsSmugBeat("idle", "bratty"), false);
+    assert.equal(holdsSmugBeat("smug", "smug"), true);
+    assert.equal(holdsSmugBeat("idle", "smug"), true, "the emotion path shows the smug sheet");
+    const wave = resetDelay({ line: LONG_LINE, landed: 0, speechEnded: 0, now: 0, pose: "wave", emotion: "bratty" });
+    assert.equal(wave, poseResetDelayMs({ pose: "wave", emotion: "bratty", talking: false, actLandedAt: 0, now: 0 }));
+  });
+
+  it("long line on the real turn: smug is on stage the whole beat, then bridge 06..01 to idle", () => {
+    const s = stage();
+    s.commit(IDLE);
+    s.commit({ pose: spokenTurnStartPose(), emotion: "glance" });
+    s.commit({ pose: "smug", emotion: "smug" });
+    s.commit({ pose: "smug", emotion: "smug", talking: false });
+    const landedAt = s.clock.now();
+    const delay = resetDelay({ line: LONG_LINE, landed: landedAt, speechEnded: 0, now: landedAt });
+    s.wait(delay - 10);
+    assert.ok(!s.log.slice(-1).includes("idle"), "still on smug just before the beat ends");
+    assert.equal(s.log.at(-1), "smug");
+    s.commit({ pose: settledRestPose(), emotion: "glance" }); // the timer fires
+    s.wait(1000);
+    expectInThenOut(s.log);
+    assert.equal(s.log.indexOf("idle", 1) > s.log.indexOf("smug"), true, "no idle frame between 06 and the hold");
+  });
+
+  it("a new send during the hold is handled as before: smug -> idle bridge at once", () => {
+    const s = stage();
+    s.commit(IDLE);
+    s.commit({ pose: "smug", emotion: "smug" });
+    s.wait(1500);
+    s.commit({ pose: spokenTurnStartPose(), emotion: "glance" }); // complete() resets the pose
+    s.wait(900);
+    assert.deepEqual(s.log.slice(s.log.lastIndexOf("smug")), OUT);
+  });
+});
+
+describe("backgrounded page", () => {
+  it("a bridge that starts while hidden holds its first frame, then plays at normal pace on return", () => {
+    const s = stage();
+    s.commit({ pose: "smug", emotion: "smug" });
+    s.wait(900);
+    s.log.length = 0;
+    s.bridge.setPaused(true);
+    s.commit(IDLE); // the timer fired in the background
+    s.wait(5000);
+    assert.deepEqual(s.log, ["b06"], "no frame moves while hidden, no cut to idle");
+    s.bridge.setPaused(false);
+    s.wait(900);
+    assert.deepEqual(s.log, ["b06", "b05", "b04", "b03", "b02", "b01", "idle"]);
+  });
+
+  it("hiding mid-bridge freezes the frame; returning continues with the next one", () => {
+    const s = stage();
+    s.commit(IDLE);
+    s.commit({ pose: "smug", emotion: "smug" });
+    s.wait(250);
+    assert.equal(s.log.at(-1), "b03");
+    s.bridge.setPaused(true);
+    s.wait(10_000);
+    assert.equal(s.log.at(-1), "b03");
+    s.bridge.setPaused(false);
+    s.wait(700);
+    assert.deepEqual(s.log, IN);
+  });
+
+  it("pause and resume are idempotent and never double-schedule", () => {
+    const s = stage();
+    s.commit(IDLE);
+    s.commit({ pose: "smug", emotion: "smug" });
+    s.bridge.setPaused(false);
+    s.bridge.setPaused(true);
+    s.bridge.setPaused(true);
+    s.bridge.setPaused(false);
+    s.bridge.setPaused(false);
+    s.wait(900);
+    assert.deepEqual(s.log, IN);
+  });
+});
+
+describe("reduced motion", () => {
+  it("only a requested reduced motion hard-cuts; without it the bridge always runs", () => {
+    const on = stage({ reduced: true });
+    on.commit(IDLE);
+    on.commit({ pose: "smug", emotion: "smug" });
+    on.wait(300);
+    assert.deepEqual(on.log, ["idle", "smug"]);
+    const off = stage({ reduced: false });
+    off.commit(IDLE);
+    off.commit({ pose: "smug", emotion: "smug" });
+    off.wait(900);
+    assert.deepEqual(off.log, IN);
   });
 });

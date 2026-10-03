@@ -107,6 +107,8 @@ export class PoseBridge {
   private index = 0;
   private handle = 0;
   private running = false;
+  /** Page hidden: frames hold where they are (background timers are throttled to 1 s or frozen). */
+  private paused = false;
 
   private readonly timers: BridgeTimers;
   private readonly rand: () => number;
@@ -153,6 +155,8 @@ export class PoseBridge {
       return false;
     }
     const srcs = files.map((file) => req.srcFor(file));
+    // Not reachable from the stage while it waits for the frames (see bridgeGate);
+    // only a bounded wait that ran out, or a failed load, ends up here.
     if (!srcs.every((src) => req.isReady(src))) {
       if (wasRunning) this.onFrame(null);
       return false;
@@ -164,8 +168,28 @@ export class PoseBridge {
     this.index = resume >= 0 ? resume : 0;
     this.running = true;
     this.onFrame(srcs[this.index]!);
-    this.handle = this.timers.set(this.advance, bridgeFrameMs(this.rand));
+    if (!this.paused) this.handle = this.timers.set(this.advance, bridgeFrameMs(this.rand));
     return true;
+  }
+
+  /**
+   * The page went to the background (true) or came back (false). A hidden page
+   * gets throttled or frozen timers, which would stretch a 100 ms frame into
+   * seconds and let a cut slip in on return. The bridge holds the frame that is
+   * up while hidden and carries on with normal pacing on return, so the way back
+   * is always seen as arm frames.
+   */
+  setPaused(paused: boolean) {
+    if (this.paused === paused) return;
+    this.paused = paused;
+    if (paused) {
+      if (this.handle) this.timers.clear(this.handle);
+      this.handle = 0;
+      return;
+    }
+    if (this.running && !this.handle) {
+      this.handle = this.timers.set(this.advance, bridgeFrameMs(this.rand));
+    }
   }
 
   private advance = () => {
@@ -178,7 +202,7 @@ export class PoseBridge {
       return;
     }
     this.onFrame(this.frames[this.index]!);
-    this.handle = this.timers.set(this.advance, bridgeFrameMs(this.rand));
+    if (!this.paused) this.handle = this.timers.set(this.advance, bridgeFrameMs(this.rand));
   };
 
   /** Drop the remaining frames and show the live sheet. */
@@ -228,4 +252,37 @@ export class BridgeDriver {
     if (from === to) return this.bridge.active();
     return this.bridge.request({ from, to, ...env });
   }
+}
+
+/** Longest the stage holds a bridge-eligible sheet change back for its frames to decode. */
+export const BRIDGE_WAIT_MAX_MS = 2500;
+/** How often a wait re-asks for frames whose load failed. */
+export const BRIDGE_WAIT_RETRY_MS = 400;
+
+/**
+ * The sheet that is the far end of a bridged pair (smug). Showing it needs the
+ * bridge frames, because every way onto it from idle plays them, and every way
+ * back to idle plays them again. Idle is startup-decoded and never waits.
+ */
+export function bridgeWantsFrames(wantedKey: string | null): boolean {
+  return wantedKey === "smug";
+}
+
+/**
+ * Should the stage hold the wanted sheet back? Smug never shows (and so a paired
+ * change never hard-cuts) just because its frames have not decoded yet: the
+ * old sheet stays up until every frame is ready, up to BRIDGE_WAIT_MAX_MS, and
+ * only then does it cut, loudly (the puppet logs it and sets
+ * `data-rai-bridge-fallback`). Reduced motion is the one user request that skips
+ * the bridge, and it never waits.
+ */
+export function bridgeGate(opts: {
+  wantedKey: string | null;
+  framesReady: boolean;
+  reducedMotion: boolean;
+  waitExpired: boolean;
+}): "go" | "wait" {
+  if (!bridgeWantsFrames(opts.wantedKey)) return "go";
+  if (opts.reducedMotion || opts.framesReady || opts.waitExpired) return "go";
+  return "wait";
 }

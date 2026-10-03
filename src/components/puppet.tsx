@@ -38,7 +38,16 @@ import {
   type IdleMouthFrame,
   type IdleMouthStep,
 } from "@/lib/rai-motion";
-import { BridgeDriver, PoseBridge } from "@/lib/pose-bridge";
+import {
+  BRIDGE_WAIT_MAX_MS,
+  BRIDGE_WAIT_RETRY_MS,
+  BridgeDriver,
+  PoseBridge,
+  bridgeFiles,
+  bridgeGate,
+  bridgeKeyOfPlates,
+  bridgeWantsFrames,
+} from "@/lib/pose-bridge";
 import { PoseCrossfadePool, type CrossfadeLayer } from "@/lib/pose-crossfade";
 import { punchedSpriteUrl } from "@/lib/punch-white";
 import { decodeSheet } from "@/lib/sheet-decode";
@@ -140,6 +149,9 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   const [bridgeSrc, setBridgeSrc] = useState<string | null>(null);
   const bridge = useRef<PoseBridge | null>(null);
   const bridgeDriver = useRef<BridgeDriver | null>(null);
+  /** Waiting for bridge frames to decode before an idle <-> smug change (bounded). */
+  /** The bounded wait ran out: the change cut, loudly. */
+  const [bridgeWaitExpiredRaw, setBridgeWaitExpired] = useState(false);
   const sheetsRef = useRef<Record<string, string>>({});
   const [blinkMode, setBlinkMode] = useState<BlinkFadeMode>("off");
   const blinkRef = useRef<IdleBlinkFrame>(0);
@@ -625,10 +637,20 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
       }),
     [pose, emotion, talking, ampLive, blinkShown, mouthShown, reducedMotion],
   );
+  const bridgeFramesReady = bridgeFiles().every((file) => sheets[bridgeFrameSrc(file)] != null);
+  // Once the frames are in, an old expiry no longer applies.
+  const bridgeWaitExpired = bridgeWaitExpiredRaw && !bridgeFramesReady;
   const shownPlates = useRef<SpriteLayer[]>([]);
   const plates = useMemo(() => {
     const next = desired.filter((layer) => layer.role !== "eyes" && !isRetiredBlinkSrc(layer.src));
-    const ready = next.length > 0 && next.every((layer) => sheets[layer.src] != null);
+    // A paired idle <-> smug change waits for its frames (bounded) instead of cutting.
+    const gate = bridgeGate({
+      wantedKey: bridgeKeyOfPlates(next),
+      framesReady: bridgeFramesReady,
+      reducedMotion,
+      waitExpired: bridgeWaitExpired,
+    });
+    const ready = next.length > 0 && next.every((layer) => sheets[layer.src] != null) && gate === "go";
     // Unready pose: keep the last punched plates (idle, or the frame already up).
     const chosen = ready ? next : openRestFallback(shownPlates.current, idleRestSrc());
     const prev = shownPlates.current;
@@ -644,7 +666,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
     if (same) return prev;
     shownPlates.current = chosen;
     return chosen;
-  }, [desired, sheets]);
+  }, [desired, sheets, reducedMotion, bridgeWaitExpired, bridgeFramesReady]);
 
   // Pose bridge (idle <-> smug, see pose-bridge.ts). The request is made in the
   // crossfade effect below, keyed on the shown plates, so a sheet that has not
@@ -667,6 +689,41 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
     if (!src || isRetiredBlinkSrc(src)) return;
     void punchOneRef.current(src);
   }, [desired, sheets]);
+
+  // Frames still decoding when idle <-> smug is wanted: ask for them now (they jump the
+  // idle queue), keep asking for any whose load failed, and hold the old sheet for at most
+  // BRIDGE_WAIT_MAX_MS. Past that the change cuts, and says so (console + stage attribute),
+  // so a missing frame is never a silent hard-cut.
+  useEffect(() => {
+    if (bridgeFramesReady || reducedMotion || bridgeWaitExpired) return;
+    if (!bridgeWantsFrames(bridgeKeyOfPlates(desired))) return;
+    const ask = () => {
+      for (const file of bridgeFiles()) void punchOneRef.current(bridgeFrameSrc(file));
+    };
+    ask();
+    const retry = window.setInterval(ask, BRIDGE_WAIT_RETRY_MS);
+    // The bounded wait starts once the wanted sheet itself has decoded: that is the moment
+    // a cut would otherwise happen. While smug is still loading nothing is shown anyway.
+    if (!desired.every((layer) => sheets[layer.src] != null)) {
+      return () => window.clearInterval(retry);
+    }
+    const giveUp = window.setTimeout(() => {
+      console.warn("[rai] pose bridge frames did not decode in time; idle <-> smug cuts");
+      setBridgeWaitExpired(true);
+    }, BRIDGE_WAIT_MAX_MS);
+    return () => {
+      window.clearInterval(retry);
+      window.clearTimeout(giveUp);
+    };
+  }, [desired, sheets, bridgeFramesReady, reducedMotion, bridgeWaitExpired]);
+
+  // Background tab: timers are throttled or frozen, so the bridge holds its frame and
+  // carries on at normal pace when the page is visible again (see PoseBridge.setPaused).
+  useEffect(() => {
+    const sync = () => bridge.current?.setPaused(document.visibilityState === "hidden");
+    document.addEventListener("visibilitychange", sync);
+    return () => document.removeEventListener("visibilitychange", sync);
+  }, []);
 
   // Drop snap timing once the cancelled blink has cut to the new sheet.
   useEffect(() => {
@@ -706,6 +763,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
         Math.random,
         setBridgeSrc,
       );
+      bridge.current.setPaused(document.visibilityState === "hidden");
     }
     if (!bridgeDriver.current) bridgeDriver.current = new BridgeDriver(bridge.current);
     bridgeDriver.current.commit(plates, {
@@ -762,6 +820,8 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
       data-rai-blink-frame={blinkFrame}
       data-rai-mouth-frame={mouthFrame}
       data-rai-bridge-frame={bridgeFrame}
+      data-rai-bridge-fallback={bridgeWaitExpired ? "1" : "0"}
+      data-rai-reduced={reducedMotion ? "1" : "0"}
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
     >
       <div data-rai-rig className="rai-rig">

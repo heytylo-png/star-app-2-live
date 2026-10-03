@@ -268,6 +268,38 @@ export function poseResetDelayMs(opts: {
   return Math.max(EMOTION_HOLD_MS - elapsed, 800);
 }
 
+/** Reading pace for a line on screen: about 22 characters a second, a fast reader. */
+export const SMUG_READ_MS_PER_CHAR = 45;
+/** Quiet tail after the beat (speech and reading) is over, before smug lets go. */
+export const SMUG_BEAT_TAIL_MS = 1500;
+
+/** The smug sheet is up: the pose, or idle carrying the smug emotion. */
+export function holdsSmugBeat(pose: PoseId, emotion: EmotionId): boolean {
+  return pose === "smug" || (pose === "idle" && emotion === "smug");
+}
+
+/**
+ * Smug lasts until the beat ends. The base delay is the normal pose hold; this
+ * stretches it so smug never lets go while its line is still being said or read:
+ * the beat ends at the later of speech end (voiced lines) and the line's reading
+ * time from landing (never under the normal minimum), plus a short tail. Other
+ * poses keep their normal timing (callers only use this for holdsSmugBeat).
+ */
+export function smugBeatResetDelayMs(opts: {
+  baseDelay: number;
+  line: string;
+  actLandedAt: number;
+  /** When speech ended; 0 when the line was not voiced. */
+  speechEndedAt: number;
+  now?: number;
+}): number {
+  const now = opts.now ?? Date.now();
+  const landed = opts.actLandedAt || now;
+  const readEnd = landed + Math.max(POSE_HOLD_MIN_MS, opts.line.trim().length * SMUG_READ_MS_PER_CHAR);
+  const beatEnd = Math.max(readEnd, opts.speechEndedAt || 0) + SMUG_BEAT_TAIL_MS;
+  return Math.max(opts.baseDelay, beatEnd - now);
+}
+
 /**
  * Settle delay for the pose just put on a spoken bubble.
  *
