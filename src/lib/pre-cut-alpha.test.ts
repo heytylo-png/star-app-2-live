@@ -40,6 +40,57 @@ function pngInfo(file: string) {
   return { width, height, colorType, firstPixel: [...raw.subarray(1, 5)], bytes: buf };
 }
 
+/**
+ * Official pose sheets that ship as offline white-matte cuts. Each keeps its own canvas;
+ * everything else in PRE_CUT_ALPHA_FILES is the 1008×1792 idle canvas.
+ */
+const POSE_SHEET_SIZE: Record<string, [number, number]> = {
+  "rai/shy_official.png": [720, 1280],
+  "rai/wink_official.png": [720, 1280],
+  "rai/laugh_official.png": [720, 1280],
+  "rai/surprise_official.png": [720, 1280],
+  "rai/smug_official.png": [720, 1280],
+  "rai/content_official.png": [720, 1280],
+  "rai/sad_official.png": [720, 1280],
+  "rai/heart_official.png": [720, 1280],
+  "rai/hold_official.png": [720, 1280],
+  "rai/talk_official.png": [720, 1280],
+  "rai/think_official.png": [720, 1264],
+  "rai/embarrassed_official.png": [720, 1280],
+  "rai/pout_official.png": [720, 1280],
+  "rai/middle_finger.png": [720, 1280],
+  "rai/scold_official.png": [720, 1280],
+  "rai/tired_official.png": [720, 1280],
+  "rai/peace.png": [843, 1500],
+  "rai/side_profile.png": [768, 1168],
+  "rai/three_quarter_left.png": [768, 1168],
+  "rai/three_quarter_right.png": [768, 1168],
+};
+
+/** sha256 of every shipped pose-sheet cut. Re-pin when a sheet is re-cut (and bump the version). */
+const POSE_SHEET_SHA256: Record<string, string> = {
+  "rai/shy_official.png": "d5f8a39493c255f8614cffac93fa76ebcc92b1a3c7d5ddbb4ccbae110e1b4f7d",
+  "rai/wink_official.png": "75288a29d8a269f05827ce123ac7ce237b9d495fd039f2767037e1c073b37c8c",
+  "rai/laugh_official.png": "42eba8cc817f7066346ffcdad4a7cf1def00e0ce841a49e141851f7f58a728dd",
+  "rai/surprise_official.png": "0426bfe5c8ace4c174bee10500803e3a7a56846a5f4602f2e251aa98b7c004cc",
+  "rai/smug_official.png": "59a5f3fdafffac20516783d380cadf62bbba5d4601cd726ec4ee271fd9648766",
+  "rai/content_official.png": "283ae8522f127a20ee95315cf397fe4855257c9ff0985c4d48d2456cb755024e",
+  "rai/sad_official.png": "4e6d8fbdfa117566c47f22383663ec51ecc39049ee917776cef39f638329d520",
+  "rai/heart_official.png": "f5978119682124a1e4c2d481dc28cd2582be92affbe87c4c9f7331c13f6e6839",
+  "rai/hold_official.png": "150c049302bd77e941f07495ed1ed23999661e97c2efc7616ffc2fd5001d80ed",
+  "rai/talk_official.png": "ed19c949ae9803372cc15bb042e9299342cdba52d747c750841ecd0017bfa170",
+  "rai/think_official.png": "b285e705b3c2098b91f58c50d8ed6d8168fb772cc7c2e13204e1e55a9434d157",
+  "rai/embarrassed_official.png": "1b2dd5112aa23e47d79b4f58be8690701850d2e167f5a105e136cdd83f8c5f86",
+  "rai/pout_official.png": "3a73db5c509a769c28e0d79b0d7811c7138e80468ffbba6c853b9218a6acd377",
+  "rai/middle_finger.png": "e0e2a458643817734899a144af4ed8880fc252b54f5b2525acfb5145913ea75f",
+  "rai/scold_official.png": "642bd3492f733378b28077bde431bfe2db57e8047f8ca0291ccce6ee82b5d436",
+  "rai/tired_official.png": "ba32302195f10389464ef3b7919cfddc5edf79e861264b24d198af7eac312d82",
+  "rai/peace.png": "5aa748d647e44fe2316297d16e94ffbcd438ac21592ae010f15d7a6e87772c0e",
+  "rai/side_profile.png": "9d33442f05f7334548f2cadde6fd2af63091f8ef7b3c289ab0f2a6550eeb3b81",
+  "rai/three_quarter_left.png": "7058fe31566b151075680faf30c756c5878327ea16f4a5c80c767248c2f3ea85",
+  "rai/three_quarter_right.png": "528a5439e93271a7e8abc3e7324bcbc3ffdae2ff6a86bd680a0c22bbe6bf244e",
+};
+
 describe("pre-cut RGBA idle + blink sheets", () => {
   it("skips the runtime white punch for the pre-cut idle and all four blink frames", () => {
     const precut = [SPRITES.poses.idle, ...idleBlinkFrameUrls()];
@@ -48,8 +99,8 @@ describe("pre-cut RGBA idle + blink sheets", () => {
       assert.equal(spriteNeedsWhitePunch(src), false, src);
       assert.equal(spriteNeedsWhitePunch(`${src}?v=abc`), false, `${src} with query`);
     }
-    // Everything else is still RGB on white and keeps the punch.
-    for (const src of [SPRITES.poses.talk, SPRITES.poses.peace, SPRITES.poses.wave]) {
+    // Sheets that are still RGB on white (held back from the cut sweep) keep the punch.
+    for (const src of [SPRITES.poses.three_quarter, SPRITES.poses.point, SPRITES.poses.turn, SPRITES.poses.wave]) {
       assert.equal(spriteNeedsWhitePunch(src), true, src);
     }
     assert.equal(spriteNeedsWhitePunch("/star-app-2-live/rai/not_idle.png"), true);
@@ -61,7 +112,7 @@ describe("pre-cut RGBA idle + blink sheets", () => {
       assert.ok(src.endsWith(`.png?v=${PRE_CUT_ALPHA_VERSION}`), src);
       assert.equal(spriteNeedsWhitePunch(src), false, src);
     }
-    for (const src of [SPRITES.poses.talk, SPRITES.poses.peace, SPRITES.poses.wave]) {
+    for (const src of [SPRITES.poses.three_quarter, SPRITES.poses.point, SPRITES.poses.turn, SPRITES.poses.wave]) {
       assert.equal(src.includes("?"), false, src);
     }
     const sw = readFileSync(join(root, "public/sw.js"), "utf8");
@@ -72,17 +123,16 @@ describe("pre-cut RGBA idle + blink sheets", () => {
     assert.ok((PRE_CUT_ALPHA_FILES as readonly string[]).includes("rai/shy_official.png"));
     assert.equal(spriteNeedsWhitePunch(SPRITES.poses.shy), false);
     assert.ok(SPRITES.poses.shy.endsWith(`rai/shy_official.png?v=${PRE_CUT_ALPHA_VERSION}`), SPRITES.poses.shy);
-    assert.equal(PRE_CUT_ALPHA_VERSION, "rgba2");
+    assert.equal(PRE_CUT_ALPHA_VERSION, "rgba3");
     const sha = createHash("sha256").update(pngInfo("rai/shy_official.png").bytes).digest("hex");
     assert.equal(sha, "d5f8a39493c255f8614cffac93fa76ebcc92b1a3c7d5ddbb4ccbae110e1b4f7d");
     const sw = readFileSync(join(root, "public/sw.js"), "utf8");
-    assert.match(sw, /const CACHE = "star-rai-shell-v4";/);
+    assert.match(sw, /const CACHE = "star-rai-shell-v5";/);
   });
 
   it("ships those files as true RGBA with a transparent background", () => {
-    // Idle/blink/mouth share the 1008×1792 idle canvas; official pose sheets are 720×1280.
-    const expectedSize = (file: string): [number, number] =>
-      file === "rai/shy_official.png" ? [720, 1280] : [1008, 1792];
+    // Idle/blink/mouth share the 1008×1792 idle canvas; each pose sheet keeps its own (see POSE_SHEET_SIZE).
+    const expectedSize = (file: string): [number, number] => POSE_SHEET_SIZE[file] ?? [1008, 1792];
     for (const file of PRE_CUT_ALPHA_FILES) {
       const info = pngInfo(file);
       assert.equal(info.colorType, 6, `${file} must be RGBA (PNG colour type 6)`);
@@ -90,6 +140,29 @@ describe("pre-cut RGBA idle + blink sheets", () => {
       assert.equal(info.width, w, `${file} width`);
       assert.equal(info.height, h, `${file} height`);
       assert.equal(info.firstPixel[3], 0, `${file} top-left must be transparent`);
+    }
+  });
+
+  it("ships every cut pose sheet with its pinned bytes and a versioned URL", () => {
+    const sha = (f: string) => createHash("sha256").update(pngInfo(f).bytes).digest("hex");
+    for (const [file, pinned] of Object.entries(POSE_SHEET_SHA256)) {
+      assert.ok((PRE_CUT_ALPHA_FILES as readonly string[]).includes(file), `${file} in PRE_CUT_ALPHA_FILES`);
+      assert.equal(sha(file), pinned, file);
+    }
+    // Every non-idle-canvas entry of the list is a pinned pose sheet, so a file cannot be added unpinned.
+    for (const file of PRE_CUT_ALPHA_FILES) {
+      if (/idle(_blink|_mouth)?/.test(file) && !(file in POSE_SHEET_SHA256)) continue;
+      assert.ok(file in POSE_SHEET_SHA256, `${file} must be pinned`);
+    }
+    for (const key of ["talk", "peace", "smug", "profile", "three_quarter_left", "three_quarter_right"] as const) {
+      assert.match(SPRITES.poses[key], new RegExp(`\\.png\\?v=${PRE_CUT_ALPHA_VERSION}$`), key);
+      assert.equal(spriteNeedsWhitePunch(SPRITES.poses[key]), false, key);
+    }
+  });
+
+  it("holds back the sheets whose edges are not chosen yet", () => {
+    for (const file of ["rai/three_quarter.png", "rai/wave_official.png", "star-rai/poses/turn-away.png", "star-rai/point-front.png"]) {
+      assert.equal((PRE_CUT_ALPHA_FILES as readonly string[]).includes(file), false, file);
     }
   });
 
@@ -170,7 +243,7 @@ describe("punchedSpriteUrl skips the punch for pre-cut sheets", () => {
   it("still punches the RGB-on-white sheets", async () => {
     const { calls, restore } = stubBrowser(0);
     try {
-      assert.equal(await punchedSpriteUrl(SPRITES.poses.talk), "blob:punched");
+      assert.equal(await punchedSpriteUrl(SPRITES.poses.three_quarter), "blob:punched");
       assert.equal(await punchedSpriteUrl(SPRITES.poses.wave), "blob:punched");
       assert.equal(calls.punched, 2);
     } finally {

@@ -21,7 +21,7 @@ public/
     hold_official.png       # NOT front_hold.png
     embarrassed_official.png
     scold_official.png      # live scold key — scold-front.png stays on disk unused
-    shy_official.png        # pre-cut 720×1280 RGBA (PRE_CUT_ALPHA_FILES, no runtime punch)
+    shy_official.png        # pre-cut RGBA (PRE_CUT_ALPHA_FILES, no runtime punch)
     sad_official.png
     surprise_official.png
     content_official.png
@@ -80,6 +80,16 @@ Live chat keys use the **morning official pack** under `public/rai/`. Do not poi
 - `heart` → `hearts`
 
 **Unmapped:** `kiss` — no sheet, no command. Keep the current body if requested.
+
+## Transparent cuts (pre-cut RGBA pose sheets)
+
+Most pose sheets are offline white-matte cuts (true RGBA, studio card removed, enclosed gaps in the hair and between the legs transparent, no gAMA/cHRM/iCCP). They sit in `PRE_CUT_ALPHA_FILES` (`src/lib/rai.ts`), so the runtime punch-white does not run on them, and their URLs carry `?v=${PRE_CUT_ALPHA_VERSION}` (now `rgba3`) so a service worker holding the old RGB copy is bypassed (sw CACHE `star-rai-shell-v5`).
+
+Cut (each keeps its own canvas): `shy`, `wink`, `laugh`, `surprise`, `smug`, `content`, `sad`, `hearts`, `hold`, `talk`, `think` (720×1264), `embarrassed`, `pout`, `middle_finger`, `scold`, `tired` (all 720×1280), `peace` (843×1500), `profile`, `three_quarter_left`, `three_quarter_right` (768×1168). `pre-cut-alpha.test.ts` pins every sha256 and size.
+
+Still RGB-on-white with the runtime punch (edges not chosen yet): `three_quarter` (grey fringe), `wave` (RGBA with holes), `turn` (`star-rai/poses/turn-away.png`), and `point` (room scene, nothing to cut).
+
+Tone: the old sheets carried `gAMA 0.50994`, which Chrome applies, so they rendered about 6% darker than their raw pixels. The cuts drop the tag and render raw, so each cut sheet reads about 6% lighter than before (same as shy, closer to idle/wave). Re-cutting a sheet means a new sha pin and a version bump.
 
 ## Talking
 

@@ -364,8 +364,28 @@ export const PRE_CUT_ALPHA_FILES = [
   "rai/idle_mouth_04_oo.png",
   "rai/idle_mouth_05_wide.png",
   "rai/idle_mouth_06_smirk.png",
-  // 720×1280 like the rest of the official pack (not the 1008×1792 idle canvas).
+  // Official pose sheets (own canvases, not the 1008×1792 idle canvas). Offline
+  // white-matte cuts: no gAMA/cHRM/iCCP, so they render their raw pixels.
   "rai/shy_official.png",
+  "rai/wink_official.png",
+  "rai/laugh_official.png",
+  "rai/surprise_official.png",
+  "rai/smug_official.png",
+  "rai/content_official.png",
+  "rai/sad_official.png",
+  "rai/heart_official.png",
+  "rai/hold_official.png",
+  "rai/talk_official.png",
+  "rai/think_official.png",
+  "rai/embarrassed_official.png",
+  "rai/pout_official.png",
+  "rai/middle_finger.png",
+  "rai/scold_official.png",
+  "rai/tired_official.png",
+  "rai/peace.png",
+  "rai/side_profile.png",
+  "rai/three_quarter_left.png",
+  "rai/three_quarter_right.png",
 ] as const;
 
 /**
@@ -373,7 +393,7 @@ export const PRE_CUT_ALPHA_FILES = [
  * returning phone would get the old RGB-on-white file under the bare URL for one visit. Bump this
  * whenever scripts/cut-alpha.py output changes.
  */
-export const PRE_CUT_ALPHA_VERSION = "rgba2";
+export const PRE_CUT_ALPHA_VERSION = "rgba3";
 
 /** False for pre-cut RGBA sheets; true for the RGB-on-white sheets that still need punch-white. */
 export function spriteNeedsWhitePunch(src: string): boolean {
