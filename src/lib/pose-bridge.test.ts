@@ -65,7 +65,6 @@ function rig(rand: () => number = () => 0.5) {
   const ready = new Set<string>(bridgeFiles().map(bridgeFrameSrc));
   const req = (over: Partial<BridgeRequest> & Pick<BridgeRequest, "from" | "to">): boolean =>
     bridge.request({
-      talking: false,
       reducedMotion: false,
       srcFor: bridgeFrameSrc,
       isReady: (src) => ready.has(src),
@@ -205,16 +204,16 @@ describe("pose bridge sequencing", () => {
     for (const g of gaps) assert.ok(g >= 80 && g <= 120);
   });
 
-  it("an interrupt drops the remaining frames and starts the new pair", () => {
+  it("an interrupt by the opposite pair carries on from the frame that is up", () => {
     const { clock, req, names, bridge } = rig();
     req({ from: "idle", to: "smug" });
     clock.advance(250); // 01 02 03 up
     assert.deepEqual(names(), ["01", "02", "03"]);
-    // smug -> idle mid-bridge: the new pair starts from its first frame (06)
+    // smug -> idle mid-bridge: carries on from the frame that is up (03), never jumps to 06
     assert.equal(req({ from: "smug", to: "idle" }), true);
-    assert.deepEqual(names(), ["01", "02", "03", "06"]);
+    assert.deepEqual(names(), ["01", "02", "03", "03"]);
     clock.advance(1000);
-    assert.deepEqual(names(), ["01", "02", "03", "06", "05", "04", "03", "02", "01", "live"]);
+    assert.deepEqual(names(), ["01", "02", "03", "03", "02", "01", "live"]);
     assert.equal(bridge.active(), false);
   });
 
@@ -249,12 +248,13 @@ describe("pose bridge sequencing", () => {
     assert.equal(shown.length, 0);
   });
 
-  it("a spoken line never triggers the bridge (idle<->smug while talking)", () => {
-    const { clock, req, shown } = rig();
-    assert.equal(req({ from: "idle", to: "smug", talking: true }), false);
-    assert.equal(req({ from: "smug", to: "idle", talking: true }), false);
-    clock.advance(2000);
-    assert.equal(shown.length, 0);
+  it("a spoken line does not gate the pair: the request has no talking input at all", () => {
+    const { clock, req, names } = rig();
+    assert.equal(req({ from: "idle", to: "smug" }), true);
+    clock.advance(1000);
+    assert.equal(req({ from: "smug", to: "idle" }), true);
+    clock.advance(1000);
+    assert.deepEqual(names().filter((n) => n !== "live").length, 12);
   });
 
   it("speech starting mid-bridge drops the rest (cancel)", () => {
@@ -301,23 +301,23 @@ describe("pose bridge sequencing", () => {
 });
 
 describe("pose bridge files", () => {
-  it("are pre-cut (no runtime punch), versioned, and preloaded after every pose sheet", () => {
+  it("are pre-cut (no runtime punch), versioned, and preloaded ahead of every pose sheet", () => {
     for (const f of BRIDGE_IDLE_SMUG_FILES) {
       assert.ok((PRE_CUT_ALPHA_FILES as readonly string[]).includes(f), f);
       assert.equal(spriteNeedsWhitePunch(bridgeFrameSrc(f)), false, f);
       assert.match(bridgeFrameSrc(f), /\.png\?v=rgba3$/);
     }
     const deferred = deferredSpriteUrls();
-    const firstBridge = deferred.findIndex((src) => /bridge_idle_smug_01/.test(src));
-    assert.ok(firstBridge > 0);
-    for (const src of Object.values(SPRITES.poses)) {
-      const at = deferred.indexOf(src);
-      if (at >= 0) assert.ok(at < firstBridge, `${src} before the bridge frames`);
-    }
     assert.deepEqual(
-      deferred.slice(firstBridge),
+      deferred.slice(0, BRIDGE_IDLE_SMUG_FILES.length),
       BRIDGE_IDLE_SMUG_FILES.map(bridgeFrameSrc),
-      "bridge frames are last, in order, once",
+      "bridge frames lead the deferred queue, in order, once",
+    );
+    const smugAt = deferred.indexOf(SPRITES.poses.smug);
+    assert.ok(smugAt >= BRIDGE_IDLE_SMUG_FILES.length, "smug decodes after the bridge frames");
+    assert.equal(
+      deferred.filter((src) => /bridge_idle_smug_/.test(src)).length,
+      BRIDGE_IDLE_SMUG_FILES.length,
     );
   });
 });

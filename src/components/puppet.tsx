@@ -38,7 +38,7 @@ import {
   type IdleMouthFrame,
   type IdleMouthStep,
 } from "@/lib/rai-motion";
-import { PoseBridge, bridgeKeyOfPlates } from "@/lib/pose-bridge";
+import { BridgeDriver, PoseBridge } from "@/lib/pose-bridge";
 import { PoseCrossfadePool, type CrossfadeLayer } from "@/lib/pose-crossfade";
 import { punchedSpriteUrl } from "@/lib/punch-white";
 import { decodeSheet } from "@/lib/sheet-decode";
@@ -139,7 +139,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   /** Pose bridge (idle <-> smug): the frame src on stage, or null. See pose-bridge.ts. */
   const [bridgeSrc, setBridgeSrc] = useState<string | null>(null);
   const bridge = useRef<PoseBridge | null>(null);
-  const bridgeKeyRef = useRef<string | null>(null);
+  const bridgeDriver = useRef<BridgeDriver | null>(null);
   const sheetsRef = useRef<Record<string, string>>({});
   const [blinkMode, setBlinkMode] = useState<BlinkFadeMode>("off");
   const blinkRef = useRef<IdleBlinkFrame>(0);
@@ -650,15 +650,11 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   // crossfade effect below, keyed on the shown plates, so a sheet that has not
   // decoded yet starts nothing and blink / mouth frames never look like a pose
   // change. The normal pose change runs underneath, hidden, while the in-betweens
-  // play as hard cuts on one <img>. A line being spoken, reduced motion, or frames
-  // that have not decoded all hard-cut.
+  // play as hard cuts on one <img>. A spoken line does not gate it (the pose lands
+  // as the line starts); only reduced motion or frames that have not decoded hard-cut.
   useLayoutEffect(() => {
     sheetsRef.current = sheets;
   }, [sheets]);
-  // Speech starting mid-bridge: the line owns the stage (idle + mouth), drop the rest.
-  useEffect(() => {
-    if (talking) bridge.current?.cancel();
-  }, [talking]);
   useEffect(() => {
     return () => bridge.current?.dispose();
   }, []);
@@ -697,8 +693,10 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
       );
     }
     // Pose bridge: the shown sheet changed idle <-> smug (blink / mouth frames are all
-    // "idle"), so start the in-betweens. Deduped on the key, so re-runs for talking or
-    // blink-mode changes do nothing.
+    // "idle"). Runs in this same effect as crossfade.update, so the bridge frame and the
+    // new display land in one batched render and the live layers are hidden from the
+    // first frame the new sheet could show. Deduped on the key, so re-runs for talking
+    // or blink-mode changes do nothing.
     if (!bridge.current) {
       bridge.current = new PoseBridge(
         {
@@ -709,19 +707,12 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
         setBridgeSrc,
       );
     }
-    const bridgeFrom = bridgeKeyRef.current;
-    const bridgeTo = bridgeKeyOfPlates(plates);
-    bridgeKeyRef.current = bridgeTo;
-    if (bridgeFrom !== bridgeTo) {
-      bridge.current.request({
-        from: bridgeFrom,
-        to: bridgeTo,
-        talking: talkingRef.current,
-        reducedMotion: reducedRef.current,
-        srcFor: bridgeFrameSrc,
-        isReady: (src) => sheetsRef.current[src] != null,
-      });
-    }
+    if (!bridgeDriver.current) bridgeDriver.current = new BridgeDriver(bridge.current);
+    bridgeDriver.current.commit(plates, {
+      reducedMotion: reducedRef.current,
+      srcFor: bridgeFrameSrc,
+      isReady: (src) => sheetsRef.current[src] != null,
+    });
     const openRest = idleRestSrc();
     crossfade.current.update(plates, {
       snap: blinkModeLive === "snap",

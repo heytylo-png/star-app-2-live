@@ -698,14 +698,16 @@ export function deferredSpriteUrls(): string[] {
   const skip = new Set(startupSpriteUrls());
   const seen = new Set<string>();
   const urls: string[] = [];
-  for (const src of Object.values(SPRITES.poses)) {
+  // Pose-bridge frames lead: six small pre-cut frames, decoded before any other
+  // pose sheet, so smug can never be reachable with a frame still missing (a pair
+  // with an undecoded frame can only hard-cut).
+  for (const file of bridgeFiles()) {
+    const src = bridgeFrameSrc(file);
     if (skip.has(src) || seen.has(src)) continue;
     seen.add(src);
     urls.push(src);
   }
-  // Pose-bridge frames come last: after every live pose sheet has been queued.
-  for (const file of bridgeFiles()) {
-    const src = bridgeFrameSrc(file);
+  for (const src of Object.values(SPRITES.poses)) {
     if (skip.has(src) || seen.has(src)) continue;
     seen.add(src);
     urls.push(src);

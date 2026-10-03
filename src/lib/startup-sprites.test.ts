@@ -54,12 +54,12 @@ describe("startup sprite lists", () => {
     const startupSet = new Set(startup);
     for (const src of deferred) assert.equal(startupSet.has(src), false, src);
 
-    // Every live pose first, then the pose-bridge frames last (see pose-bridge.test.ts).
+    // The pose-bridge frames lead, then every live pose (see pose-bridge.test.ts).
     assert.deepEqual(
       deferred.map(pathOf),
       [
-        ...Object.values(LIVE_POSE_FILES).filter((file) => file !== "rai/idle.png"),
         ...bridgeFiles(),
+        ...Object.values(LIVE_POSE_FILES).filter((file) => file !== "rai/idle.png"),
       ],
     );
     // Pre-cut sheets carry ?v=, so compare the path.

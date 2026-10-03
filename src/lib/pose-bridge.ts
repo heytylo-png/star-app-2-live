@@ -89,8 +89,6 @@ export type BridgeRequest = {
   /** Bridge key of the sheet that was on stage, and the one that is now. */
   from: string | null;
   to: string | null;
-  /** A spoken line is up: speech stays on idle with the mouth, never a bridge. */
-  talking: boolean;
   /** prefers-reduced-motion: hard-cut. */
   reducedMotion: boolean;
   /** Maps a bridge file to the src the stage paints. */
@@ -144,9 +142,13 @@ export class PoseBridge {
    */
   request(req: BridgeRequest): boolean {
     const wasRunning = this.running;
+    const onStage = this.current();
     this.stop();
     const files = bridgeFilesFor(req.from, req.to);
-    if (!files || req.talking || req.reducedMotion) {
+    // A spoken line does not gate this: the pair is a pose change, and speech
+    // (voice on or off) lands the pose within a few ms of the line starting. A
+    // normal talk line never changes the pose, so it never gets here.
+    if (!files || req.reducedMotion) {
       if (wasRunning) this.onFrame(null);
       return false;
     }
@@ -156,9 +158,12 @@ export class PoseBridge {
       return false;
     }
     this.frames = srcs;
-    this.index = 0;
+    // Interrupted by the opposite direction (smug -> idle -> smug inside one reply
+    // turn): carry on from the frame that is up, so the arm never jumps back.
+    const resume = onStage ? srcs.indexOf(onStage) : -1;
+    this.index = resume >= 0 ? resume : 0;
     this.running = true;
-    this.onFrame(srcs[0]!);
+    this.onFrame(srcs[this.index]!);
     this.handle = this.timers.set(this.advance, bridgeFrameMs(this.rand));
     return true;
   }
@@ -176,7 +181,7 @@ export class PoseBridge {
     this.handle = this.timers.set(this.advance, bridgeFrameMs(this.rand));
   };
 
-  /** Drop the remaining frames (talk started, unmount). Shows the live sheet. */
+  /** Drop the remaining frames and show the live sheet. */
   cancel() {
     if (!this.running) return;
     this.stop();
@@ -185,5 +190,42 @@ export class PoseBridge {
 
   dispose() {
     this.stop();
+  }
+}
+
+/**
+ * What the puppet does with each committed set of stage plates. The shown
+ * sheet's bridge key is compared with the last committed one; a change between
+ * the paired poses starts the bridge. Blink and mouth frames are all "idle", so
+ * they never look like a change, and a plate set that is not one body sheet
+ * (mid-crossfade, wave, pout...) is key null, so it is a hard cut.
+ *
+ * The decision uses only the plates, never the pose that asked for them, so
+ * every route that ends on smug (named, model pose tag, emotion tint, local
+ * brain, a pose set twice in one render) is the same change here.
+ */
+export class BridgeDriver {
+  private last: string | null = null;
+  private readonly bridge: PoseBridge;
+
+  constructor(bridge: PoseBridge) {
+    this.bridge = bridge;
+  }
+
+  /** Bridge key of the last committed plates. */
+  key(): string | null {
+    return this.last;
+  }
+
+  /** Returns whether a bridge is now playing. Same key as last time: nothing happens. */
+  commit(
+    plates: readonly { src: string }[],
+    env: Pick<BridgeRequest, "reducedMotion" | "srcFor" | "isReady">,
+  ): boolean {
+    const from = this.last;
+    const to = bridgeKeyOfPlates(plates);
+    this.last = to;
+    if (from === to) return this.bridge.active();
+    return this.bridge.request({ from, to, ...env });
   }
 }
