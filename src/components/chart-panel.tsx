@@ -55,6 +55,10 @@ export function ChartMenu({ open, userSun, birthDate, onAsk, onClose, anchorRef 
   }, [dateKey, freshNote, liveSun]);
 
   useEffect(() => {
+    if (open) setClock(new Date());
+  }, [open]);
+
+  useEffect(() => {
     if (!open) return;
     const now = new Date();
     if (localDateKey(now) !== localDateKey(clock)) {

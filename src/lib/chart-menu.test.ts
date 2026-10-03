@@ -272,6 +272,7 @@ describe("Chart menu contents", () => {
     assert.match(panel, /msUntilNextLocalDate/);
     assert.match(panel, /visibilitychange/);
     assert.match(panel, /lockSkyNote\(dateKey, freshNote, liveSun\)/);
+    assert.match(panel, /if \(open\) setClock\(new Date\(\)\)/);
     assert.doesNotMatch(panel, /setInterval/);
     assert.doesNotMatch(panel, /speechSynthesis|streamGrok|\bfetch\(|requestHerDay|grok-4/);
     assert.doesNotMatch(menu, /streamGrok|speechSynthesis|\bfetch\(|requestHerDay|grok-4|setInterval/);
