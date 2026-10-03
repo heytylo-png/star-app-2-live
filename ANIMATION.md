@@ -30,6 +30,18 @@ Body sheets swap by stable layer id (`body:<src>`). Incoming starts at opacity 0
 
 **Interrupted fades** (`PoseCrossfadePool`, `src/lib/pose-crossfade.ts`). The incoming sheet sits at 0 for one ~48ms paint before it fades up. If the pool updates again inside that window, a fade-in still wanted is re-armed, and one no longer wanted is dropped. Before, A → B → A within ~48ms left B stranded at opacity 0, and the next switch to B faded A out over nothing (an empty stage until something else re-rendered).
 
+### Pose bridge (idle ↔ smug, first pair only)
+
+**On** (TyLo, 2026-10-02). When the sheet on stage changes idle → smug, six Helix in-betweens play as hard cuts, then the live smug holds. smug → idle plays the same six reversed, then lands on the live idle. Nothing else bridges: every other pair keeps its normal pose change (the ~380ms crossfade above).
+
+- Frames: `public/rai/bridge_idle_smug_01.png` … `_06.png` (720×1280 RGBA, offline cuts of the Helix frames with the same engine as the pose-sheet sweep, so they match the cut smug; sha256 pinned in `pre-cut-alpha.test.ts`). 01 is the idle pose, 06 is hand-on-hip. They are the in-betweens only: `idle.png` stays the rest and `smug_official.png` the hold (the Helix 07 is byte-identical to the old smug, and 01 lines up with the live idle with no shift), and no live key was renamed.
+- Order and timing: 01 → 06 then smug (smug → idle: 06 → 01 then idle), ~**100ms** a frame with small jitter (80–120ms, `bridgeFrameMs`), no loop. One `<img>`: the bridge frame is the only visible image while it plays (the pose layers stay mounted but `visibility: hidden` while it plays, and show again in the commit it lands). Whole-pixel rig translates are unchanged; no scale, no will-change, no translateZ.
+- Pair table: `POSE_BRIDGE_PAIRS` in `src/lib/pose-bridge.ts` (`"idle>smug"`, `"smug>idle"`). Add a row (and its frames) to bridge another pair. The key of a sheet is `bridgeKeyOfSrc`: idle rest, blink and mouth frames are all `idle`, so a blink or a chew never looks like a pose change.
+- Triggered by the shown sheet changing (the plates), not the requested pose: a sheet that has not decoded yet starts nothing. Interrupt: a new change drops the remaining frames and starts the new pair if it has one (from its first frame), otherwise the stage shows the live sheet (hard cut).
+- Never on speech: a line being spoken hard-cuts (idle stays on idle with the mouth; `talk_official` is never a viseme), and speech starting mid-bridge drops the rest. Reduced motion hard-cuts. Wave, pout and talk are not wired.
+- Preload: the six frames are queued after every pose sheet (`deferredSpriteUrls`), punched through the pre-cut path, `decode()`d, and held in `decodedFrames` like the other sheets. A frame is never shown before it has decoded; if any of the six is missing the pair hard-cuts. After landing on idle the blink timer and the mouth resume as usual (blink first fires ~900ms after rest; the mouth only chews if a line is speaking).
+- `data-rai-bridge-frame` on the stage is `01`…`06` while a frame is up, else `off`.
+
 ### Talk / mouth
 
 Idle is rest **and** the talking body (TyLo, 2026-09-27: "route talking to the idle mouth instead of `talk_official`"). `SPOKEN_TALK_TO_IDLE` in `src/lib/rai.ts` is on: `routeSpokenTalk()` turns every *automatic* `talk` into `idle` for a spoken line — bratty (`EMOTION_TO_POSE.bratty` is now `idle`), a model `"pose":"talk"` key, Music Set / Chart / life / clock `talk` tints, the plain-chat fallback, and the Call turn-start placeholder (`spokenTurnStartPose()`). So an ordinary talky/bratty line stays on `idle.png` and the idle talking mouth plays (below).

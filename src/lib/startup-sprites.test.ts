@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
+import { bridgeFiles } from "./pose-bridge.ts";
 import { fileURLToPath } from "node:url";
 import {
   deferredSpriteUrls,
@@ -53,9 +54,13 @@ describe("startup sprite lists", () => {
     const startupSet = new Set(startup);
     for (const src of deferred) assert.equal(startupSet.has(src), false, src);
 
+    // Every live pose first, then the pose-bridge frames last (see pose-bridge.test.ts).
     assert.deepEqual(
       deferred.map(pathOf),
-      Object.values(LIVE_POSE_FILES).filter((file) => file !== "rai/idle.png"),
+      [
+        ...Object.values(LIVE_POSE_FILES).filter((file) => file !== "rai/idle.png"),
+        ...bridgeFiles(),
+      ],
     );
     // Pre-cut sheets carry ?v=, so compare the path.
     assert.ok(deferred.map(pathOf).some((file) => file.endsWith("rai/talk_official.png")));
