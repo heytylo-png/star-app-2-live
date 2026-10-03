@@ -80,14 +80,32 @@ function nameOf(src: string): string {
   return src.split("/").pop()!.replace(/\.png.*$/, "");
 }
 
-function stage(opts: { decoded?: boolean; reduced?: boolean } = {}) {
+function stage(opts: { decoded?: boolean; reduced?: boolean; paced?: boolean } = {}) {
   let framesReady = opts.decoded ?? true;
   let waitExpired = false;
   const clock = fakeClock();
   let bridgeSrc: string | null = null;
-  const bridge = new PoseBridge(clock.timers, () => 0.5, (s) => {
-    bridgeSrc = s;
-  });
+  // Paced: a frame's dwell starts when the screen paints it (the puppet's rAF), so the
+  // test owns the paints; `stall` lets timers run with no paint at all (a busy main thread).
+  const paintQ: Array<() => void> = [];
+  const afterPaint = opts.paced
+    ? (fn: () => void) => {
+        paintQ.push(fn);
+        return () => {
+          const i = paintQ.indexOf(fn);
+          if (i >= 0) paintQ.splice(i, 1);
+        };
+      }
+    : undefined;
+  const painted: string[] = [];
+  const bridge = new PoseBridge(
+    clock.timers,
+    () => 0.5,
+    (s) => {
+      bridgeSrc = s;
+    },
+    afterPaint,
+  );
   const driver = new BridgeDriver(bridge);
   const ready = new Set(bridgeFiles().map(bridgeFrameSrc));
   let plates: { src: string }[] = [];
@@ -139,8 +157,21 @@ function stage(opts: { decoded?: boolean; reduced?: boolean } = {}) {
       for (let t = 0; t < ms; t += 10) {
         clock.advance(10);
         see();
+        if (opts.paced) api.paint();
       }
     },
+    /** A paint: records what the screen shows, then runs what was waiting for it. */
+    paint() {
+      const n = nameOf(bridgeSrc ?? plates[0]?.src ?? "");
+      if (painted[painted.length - 1] !== n) painted.push(n);
+      for (const fn of paintQ.splice(0)) fn();
+    },
+    /** The main thread is busy: time passes, timers come due, nothing is painted. */
+    stall(ms: number) {
+      clock.advance(ms);
+      see();
+    },
+    painted,
     visibleCount: () => (bridgeSrc ? 1 : plates.length),
   };
   return api;
@@ -451,7 +482,8 @@ describe("guard: a bridge-eligible pair never hard-cuts when its frames are deco
     assert.deepEqual(s.log, IN, "then the whole bridge, never a smug frame ahead of 01");
   });
 
-  it("the wait is bounded: past BRIDGE_WAIT_MAX_MS it cuts (the loud fallback), never before", () => {
+  it("the entry wait is effectively unbounded (30 s safety valve for a frame that can never load); only past it does it cut, loudly", () => {
+    assert.ok(BRIDGE_WAIT_MAX_MS >= 20_000);
     const s = stage({ decoded: false });
     s.commit(IDLE);
     s.commit({ pose: "smug", emotion: "smug" });
@@ -495,27 +527,22 @@ describe("guard: a bridge-eligible pair never hard-cuts when its frames are deco
   });
 });
 
-/** The reset timer the app arms once a line is over: the normal pose hold, stretched for smug. */
+/**
+ * The reset timer the app arms once a line is over. smug: the beat counts from the line's
+ * landing (`landed`; 0 = not landed, counts from now) and its speech end, never the pose.
+ */
 function resetDelay(opts: { line: string; landed: number; speechEnded: number; now: number; pose?: PoseId; emotion?: EmotionId }) {
   const pose = opts.pose ?? "smug";
   const emotion = opts.emotion ?? "smug";
-  let delay = poseResetDelayMs({
-    pose,
-    emotion,
-    talking: false,
-    actLandedAt: opts.landed,
-    now: opts.now,
-  })!;
   if (holdsSmugBeat(pose, emotion)) {
-    delay = smugBeatResetDelayMs({
-      baseDelay: delay,
+    return smugBeatResetDelayMs({
       line: opts.line,
-      actLandedAt: opts.landed,
+      lineLandedAt: opts.landed,
       speechEndedAt: opts.speechEnded,
       now: opts.now,
     });
   }
-  return delay;
+  return poseResetDelayMs({ pose, emotion, talking: false, actLandedAt: opts.landed, now: opts.now })!;
 }
 
 const LONG_LINE = "Obviously I was right again, and honestly I'm not even surprised anymore. ".repeat(5).trim();
@@ -538,11 +565,15 @@ describe("smug holds until its beat ends (early drop)", () => {
     assert.ok(speechEnd + d >= speechEnd + SMUG_BEAT_TAIL_MS);
   });
 
-  it("is never shorter than the normal pose hold, and a short line keeps it", () => {
-    const base = poseResetDelayMs({ pose: "smug", emotion: "smug", talking: false, actLandedAt: 0, now: 0 })!;
+  it("a short line keeps the 3.4 s minimum from its landing, plus the 1.5 s tail exactly", () => {
     const d = resetDelay({ line: "Hm.", landed: 0, speechEnded: 0, now: 0 });
-    assert.ok(d >= base);
-    assert.ok(d >= POSE_HOLD_MIN_MS);
+    assert.equal(d, POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
+  });
+
+  it("the tail after speech is 1.5 s, not the old 2.8 s post-talk hold", () => {
+    const speechEnd = 20_400;
+    const d = resetDelay({ line: "Smug pose locked in, all for you", landed: 6000, speechEnded: speechEnd, now: speechEnd });
+    assert.equal(d, SMUG_BEAT_TAIL_MS);
   });
 
   it("other poses keep their own timing: only the smug sheet holds a beat", () => {
@@ -639,5 +670,165 @@ describe("reduced motion", () => {
     off.commit({ pose: "smug", emotion: "smug" });
     off.wait(900);
     assert.deepEqual(off.log, IN);
+  });
+});
+
+describe("entry: every arm frame is seen, in order, before smug (paint-paced)", () => {
+  const BLINK = { pose: "idle" as PoseId, emotion: "glance" as EmotionId };
+
+  it("no smug on the pose-change frame: the commit that resolves the pose shows 01, not smug", () => {
+    for (const from of [IDLE, { ...IDLE, blink: 1 }, { ...IDLE, blink: 2 }, { ...IDLE, talking: true, mouth: 3 }, { ...IDLE, mouth: 5 }] as Commit[]) {
+      for (const to of [
+        { pose: "smug", emotion: "smug" },
+        { pose: "idle", emotion: "smug" },
+        { pose: "smug", emotion: "bratty" },
+      ] as Commit[]) {
+        const s = stage({ paced: true });
+        s.commit(from);
+        s.wait(200);
+        s.commit(to);
+        assert.equal(s.log.at(-1), "b01", `first frame after the change: ${JSON.stringify([from, to])}`);
+        assert.ok(!s.log.slice(-2).includes("smug"));
+        s.wait(900);
+        assert.deepEqual(s.painted.slice(-IN.length + 1), IN.slice(1));
+      }
+    }
+  });
+
+  it("a busy main thread cannot skip a frame: with no paint a frame stays up, then each is painted in turn", () => {
+    const s = stage({ paced: true });
+    s.commit(BLINK);
+    s.paint();
+    s.commit({ pose: "smug", emotion: "smug" });
+    s.stall(1500); // sheets punching / a stream of renders: no paint for 1.5 s
+    assert.equal(s.log.at(-1), "b01", "still on 01, the timer has not run out under it");
+    s.wait(1000);
+    assert.deepEqual(s.painted, IN, `painted: ${s.painted.join(">")}`);
+  });
+
+  it("repeated stalls through the bridge: 01..06 each painted once, in order, then smug", () => {
+    const s = stage({ paced: true });
+    s.commit(BLINK);
+    s.paint();
+    s.commit({ pose: "smug", emotion: "smug" });
+    for (let i = 0; i < 12; i += 1) {
+      s.stall(300);
+      s.paint();
+      s.wait(30);
+    }
+    s.wait(300);
+    assert.deepEqual(s.painted, IN, `painted: ${s.painted.join(">")}`);
+  });
+
+  it("each frame is on screen 80-120 ms once painted (paint-to-paint, at 10 ms resolution)", () => {
+    const s = stage({ paced: true });
+    s.commit(BLINK);
+    s.paint();
+    const stamps: number[] = [];
+    let last = "";
+    s.commit({ pose: "smug", emotion: "smug" });
+    const t0 = s.clock.now();
+    for (let i = 0; i < 100; i += 1) {
+      s.wait(10);
+      const name = s.log.at(-1)!;
+      if (name !== last) {
+        stamps.push(s.clock.now() - t0);
+        last = name;
+      }
+    }
+    // stamps[k] = when 01..06 (then smug) appeared
+    for (let k = 1; k < 7; k += 1) {
+      const dwell = stamps[k]! - stamps[k - 1]!;
+      assert.ok(dwell >= 80 && dwell <= 130, `frame ${k} dwell ${dwell}`);
+    }
+  });
+
+  it("the old unpaced bridge skips frames under the same stall (why the pacing exists)", () => {
+    const s = stage({ paced: false });
+    s.commit(BLINK);
+    s.commit({ pose: "smug", emotion: "smug" });
+    s.stall(1500);
+    // every timer ran out while nothing painted: the next paint is smug
+    assert.equal(s.log.at(-1), "smug");
+  });
+
+  it("exit is unchanged: it never waits for a paint, same frames at the same pace", () => {
+    const s = stage({ paced: true });
+    s.commit(IDLE);
+    s.wait(900);
+    s.commit({ pose: "smug", emotion: "smug" });
+    s.wait(900);
+    s.log.length = 0;
+    s.commit(IDLE);
+    for (let t = 0; t < 1000; t += 10) s.stall(10); // no paint at all: the exit still runs on its timers
+    assert.deepEqual(s.log, ["b06", "b05", "b04", "b03", "b02", "b01", "idle"]);
+  });
+});
+
+describe("hold: the beat belongs to the line, not the pose", () => {
+  const LINE = "Smug pose locked in, all for you";
+
+  /** The app: pose resolves at poseAt (sending stays true), the line lands at landAt, timer armed then. */
+  function turn(o: { poseAt: number; landAt: number; speechEnd?: number }) {
+    const s = stage({ paced: true });
+    s.commit(IDLE);
+    s.wait(o.poseAt);
+    s.commit({ pose: "smug", emotion: "smug" }); // tag resolves; no timer is armed while sending
+    const poseResolved = s.clock.now();
+    s.wait(o.landAt - o.poseAt);
+    const landed = s.clock.now();
+    const speechEnded = o.speechEnd ?? 0;
+    if (o.speechEnd) {
+      s.commit({ pose: "smug", emotion: "smug", talking: true });
+      s.wait(o.speechEnd - landed);
+      s.commit({ pose: "smug", emotion: "smug", talking: false });
+    }
+    const now = s.clock.now();
+    const delay = resetDelay({ line: LINE, landed, speechEnded, now });
+    return { s, poseResolved, landed, now, delay };
+  }
+
+  it("pose at 1.5 s, line lands at 6 s, silent: the hip holds until landing + 3.4 s + 1.5 s", () => {
+    const { s, landed, now, delay } = turn({ poseAt: 1500, landAt: 6000 });
+    assert.equal(now + delay, landed + POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
+    // counted from the pose resolving, the old clock ran out at 1.5 s + 3.4 s = 4.9 s, before the line
+    assert.ok(now + delay > 1500 + POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
+    s.wait(delay - 20);
+    assert.equal(s.log.at(-1), "smug", "still on the hip just before the beat ends");
+    assert.ok(!s.log.slice(IN.length).some((n) => n === "idle" || /^b0/.test(n)), "no bridge or idle in the hold");
+    s.commit(IDLE); // the timer fires
+    s.wait(900);
+    assert.deepEqual(s.log.slice(s.log.lastIndexOf("smug")), OUT, "then the exit as before");
+  });
+
+  it("voiced: the hip holds through speech, until speech end + 1.5 s", () => {
+    const { s, now, delay } = turn({ poseAt: 1500, landAt: 6000, speechEnd: 20_400 });
+    assert.equal(delay, SMUG_BEAT_TAIL_MS);
+    assert.equal(now + delay, 20_400 + SMUG_BEAT_TAIL_MS);
+    s.wait(delay - 20);
+    assert.equal(s.log.at(-1), "smug");
+  });
+
+  it("no landing yet counts from now (a timer is never armed against a line not on screen)", () => {
+    const d = resetDelay({ line: LINE, landed: 0, speechEnded: 0, now: 4000 });
+    assert.equal(d, POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
+  });
+
+  it("re-arming later (typing then clearing the draft) keeps the same absolute end", () => {
+    const end = (now: number) => now + resetDelay({ line: LINE, landed: 6000, speechEnded: 0, now });
+    assert.equal(end(6000), end(7300));
+    assert.equal(end(6000), 6000 + POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
+  });
+
+  it("pose resolving at any time before the line gives the same end: landing + beat", () => {
+    for (const poseAt of [0, 300, 1500, 3000, 5900]) {
+      const { now, delay, landed } = turn({ poseAt, landAt: 6000 });
+      assert.equal(now + delay, landed + POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS, `poseAt ${poseAt}`);
+    }
+  });
+
+  it("a long line reads at 45 ms a character from its landing", () => {
+    const long = "x".repeat(200);
+    assert.equal(resetDelay({ line: long, landed: 6000, speechEnded: 0, now: 6000 }), 200 * SMUG_READ_MS_PER_CHAR + SMUG_BEAT_TAIL_MS);
   });
 });

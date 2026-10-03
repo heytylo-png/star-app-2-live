@@ -115,6 +115,33 @@ function fadeMsFor(layer: SpriteLayer, talking: boolean, blinkMode: BlinkFadeMod
  * Talking on the idle pose (IDLE_MOUTH_ENABLED) hard-cuts the same rest
  * <img> through the baked idle_mouth sheets; blink waits until she is done.
  */
+/**
+ * Calls `fn` at the start of the next animation frame, i.e. once the commit that
+ * set the bridge frame has reached a paint (the frame it is drawn in), with a
+ * 500 ms timer backstop for a page whose frames are throttled.
+ */
+function afterPaintFrame(fn: () => void): () => void {
+  let done = false;
+  let raf = 0;
+  let backstop = 0;
+  const cancel = () => {
+    done = true;
+    if (raf) cancelAnimationFrame(raf);
+    if (backstop) window.clearTimeout(backstop);
+  };
+  const run = () => {
+    if (done) return;
+    cancel();
+    fn();
+  };
+  raf = requestAnimationFrame(() => {
+    raf = 0;
+    run();
+  });
+  backstop = window.setTimeout(run, 500);
+  return cancel;
+}
+
 export function Puppet({ pose, emotion, talking, amplitude, spokenLine, className }: PuppetProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const pointerTarget = useRef(0);
@@ -691,9 +718,10 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   }, [desired, sheets]);
 
   // Frames still decoding when idle <-> smug is wanted: ask for them now (they jump the
-  // idle queue), keep asking for any whose load failed, and hold the old sheet for at most
-  // BRIDGE_WAIT_MAX_MS. Past that the change cuts, and says so (console + stage attribute),
-  // so a missing frame is never a silent hard-cut.
+  // idle queue), keep asking for any whose load failed, and hold the old sheet until they
+  // are all in. BRIDGE_WAIT_MAX_MS is a 30 s safety valve for a frame that can never load
+  // (offline, 404): it is never reached on a working device, and when it is, the change
+  // cuts and says so (console + stage attribute), so a missing frame is never silent.
   useEffect(() => {
     if (bridgeFramesReady || reducedMotion || bridgeWaitExpired) return;
     if (!bridgeWantsFrames(bridgeKeyOfPlates(desired))) return;
@@ -702,7 +730,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
     };
     ask();
     const retry = window.setInterval(ask, BRIDGE_WAIT_RETRY_MS);
-    // The bounded wait starts once the wanted sheet itself has decoded: that is the moment
+    // The valve starts once the wanted sheet itself has decoded: that is the moment
     // a cut would otherwise happen. While smug is still loading nothing is shown anyway.
     if (!desired.every((layer) => sheets[layer.src] != null)) {
       return () => window.clearInterval(retry);
@@ -762,6 +790,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
         },
         Math.random,
         setBridgeSrc,
+        afterPaintFrame,
       );
       bridge.current.setPaused(document.visibilityState === "hidden");
     }

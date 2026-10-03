@@ -85,6 +85,14 @@ export type BridgeTimers = {
   clear: (handle: number) => void;
 };
 
+/**
+ * Runs `fn` once the frame just handed to `onFrame` has been painted, and
+ * returns a cancel function. The stage uses two animation frames (with a
+ * timer backstop); tests use their own clock. Without one a frame's dwell
+ * starts the moment it is set.
+ */
+export type AfterPaint = (fn: () => void) => () => void;
+
 export type BridgeRequest = {
   /** Bridge key of the sheet that was on stage, and the one that is now. */
   from: string | null;
@@ -109,15 +117,45 @@ export class PoseBridge {
   private running = false;
   /** Page hidden: frames hold where they are (background timers are throttled to 1 s or frozen). */
   private paused = false;
+  /**
+   * Entry (idle -> smug): each frame's 80-120 ms starts once it has been
+   * painted, not when it was set. A main-thread stall (sheets punching, a
+   * stream of renders) can no longer let a frame's timer run out before the
+   * screen ever showed it, which is how an arm-rise frame got skipped.
+   */
+  private paintPaced = false;
+  private cancelPaint: (() => void) | null = null;
 
   private readonly timers: BridgeTimers;
   private readonly rand: () => number;
   private readonly onFrame: (src: string | null) => void;
+  private readonly afterPaint: AfterPaint | null;
 
-  constructor(timers: BridgeTimers, rand: () => number, onFrame: (src: string | null) => void) {
+  constructor(
+    timers: BridgeTimers,
+    rand: () => number,
+    onFrame: (src: string | null) => void,
+    afterPaint?: AfterPaint,
+  ) {
     this.timers = timers;
     this.rand = rand;
     this.onFrame = onFrame;
+    this.afterPaint = afterPaint ?? null;
+  }
+
+  /** Arms the dwell of the frame that is up: from its paint on entry, from now otherwise. */
+  private armDwell() {
+    if (this.paused || this.handle || this.cancelPaint) return;
+    if (this.paintPaced && this.afterPaint) {
+      const index = this.index;
+      this.cancelPaint = this.afterPaint(() => {
+        this.cancelPaint = null;
+        if (!this.running || this.paused || this.index !== index || this.handle) return;
+        this.handle = this.timers.set(this.advance, bridgeFrameMs(this.rand));
+      });
+      return;
+    }
+    this.handle = this.timers.set(this.advance, bridgeFrameMs(this.rand));
   }
 
   active(): boolean {
@@ -132,6 +170,8 @@ export class PoseBridge {
   private stop() {
     if (this.handle) this.timers.clear(this.handle);
     this.handle = 0;
+    if (this.cancelPaint) this.cancelPaint();
+    this.cancelPaint = null;
     this.running = false;
     this.frames = [];
     this.index = 0;
@@ -167,8 +207,9 @@ export class PoseBridge {
     const resume = onStage ? srcs.indexOf(onStage) : -1;
     this.index = resume >= 0 ? resume : 0;
     this.running = true;
+    this.paintPaced = req.to === "smug";
     this.onFrame(srcs[this.index]!);
-    if (!this.paused) this.handle = this.timers.set(this.advance, bridgeFrameMs(this.rand));
+    this.armDwell();
     return true;
   }
 
@@ -185,11 +226,11 @@ export class PoseBridge {
     if (paused) {
       if (this.handle) this.timers.clear(this.handle);
       this.handle = 0;
+      if (this.cancelPaint) this.cancelPaint();
+      this.cancelPaint = null;
       return;
     }
-    if (this.running && !this.handle) {
-      this.handle = this.timers.set(this.advance, bridgeFrameMs(this.rand));
-    }
+    if (this.running) this.armDwell();
   }
 
   private advance = () => {
@@ -202,7 +243,7 @@ export class PoseBridge {
       return;
     }
     this.onFrame(this.frames[this.index]!);
-    if (!this.paused) this.handle = this.timers.set(this.advance, bridgeFrameMs(this.rand));
+    this.armDwell();
   };
 
   /** Drop the remaining frames and show the live sheet. */
@@ -255,7 +296,7 @@ export class BridgeDriver {
 }
 
 /** Longest the stage holds a bridge-eligible sheet change back for its frames to decode. */
-export const BRIDGE_WAIT_MAX_MS = 2500;
+export const BRIDGE_WAIT_MAX_MS = 30_000;
 /** How often a wait re-asks for frames whose load failed. */
 export const BRIDGE_WAIT_RETRY_MS = 400;
 
