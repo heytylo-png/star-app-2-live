@@ -9,6 +9,7 @@ import {
   IDLE_REST_LAYER_ID,
   idleBlinkFrameUrls,
   idleMouthFrameUrls,
+  bridgeFrameSrc,
   idleRestSrc,
   isRetiredBlinkSrc,
   layersFor,
@@ -37,6 +38,7 @@ import {
   type IdleMouthFrame,
   type IdleMouthStep,
 } from "@/lib/rai-motion";
+import { PoseBridge, bridgeKeyOfPlates } from "@/lib/pose-bridge";
 import { PoseCrossfadePool, type CrossfadeLayer } from "@/lib/pose-crossfade";
 import { punchedSpriteUrl } from "@/lib/punch-white";
 import { decodeSheet } from "@/lib/sheet-decode";
@@ -134,6 +136,11 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   const [display, setDisplay] = useState<DisplayLayer[]>([]);
   const [sheets, setSheets] = useState<Record<string, string>>({});
   const crossfade = useRef<PoseCrossfadePool | null>(null);
+  /** Pose bridge (idle <-> smug): the frame src on stage, or null. See pose-bridge.ts. */
+  const [bridgeSrc, setBridgeSrc] = useState<string | null>(null);
+  const bridge = useRef<PoseBridge | null>(null);
+  const bridgeKeyRef = useRef<string | null>(null);
+  const sheetsRef = useRef<Record<string, string>>({});
   const [blinkMode, setBlinkMode] = useState<BlinkFadeMode>("off");
   const blinkRef = useRef<IdleBlinkFrame>(0);
   const [mouth, setMouth] = useState<IdleMouthFrame>(0);
@@ -639,6 +646,23 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
     return chosen;
   }, [desired, sheets]);
 
+  // Pose bridge (idle <-> smug, see pose-bridge.ts). The request is made in the
+  // crossfade effect below, keyed on the shown plates, so a sheet that has not
+  // decoded yet starts nothing and blink / mouth frames never look like a pose
+  // change. The normal pose change runs underneath, hidden, while the in-betweens
+  // play as hard cuts on one <img>. A line being spoken, reduced motion, or frames
+  // that have not decoded all hard-cut.
+  useLayoutEffect(() => {
+    sheetsRef.current = sheets;
+  }, [sheets]);
+  // Speech starting mid-bridge: the line owns the stage (idle + mouth), drop the rest.
+  useEffect(() => {
+    if (talking) bridge.current?.cancel();
+  }, [talking]);
+  useEffect(() => {
+    return () => bridge.current?.dispose();
+  }, []);
+
   // A pose asked for before its sheet is punched jumps the idle queue.
   // The punch cache makes a later queue pass a no-op. Plates show it only
   // while it is still the requested src.
@@ -671,6 +695,32 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
         },
         setDisplay,
       );
+    }
+    // Pose bridge: the shown sheet changed idle <-> smug (blink / mouth frames are all
+    // "idle"), so start the in-betweens. Deduped on the key, so re-runs for talking or
+    // blink-mode changes do nothing.
+    if (!bridge.current) {
+      bridge.current = new PoseBridge(
+        {
+          set: (fn, ms) => window.setTimeout(fn, ms),
+          clear: (handle) => window.clearTimeout(handle),
+        },
+        Math.random,
+        setBridgeSrc,
+      );
+    }
+    const bridgeFrom = bridgeKeyRef.current;
+    const bridgeTo = bridgeKeyOfPlates(plates);
+    bridgeKeyRef.current = bridgeTo;
+    if (bridgeFrom !== bridgeTo) {
+      bridge.current.request({
+        from: bridgeFrom,
+        to: bridgeTo,
+        talking: talkingRef.current,
+        reducedMotion: reducedRef.current,
+        srcFor: bridgeFrameSrc,
+        isReady: (src) => sheetsRef.current[src] != null,
+      });
     }
     const openRest = idleRestSrc();
     crossfade.current.update(plates, {
@@ -705,7 +755,9 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   // so the stage does not drop the decoded idle frame and decode it again.
   const layers: DisplayLayer[] =
     restOnly && restPlate ? [{ ...restPlate, opacity: 1, z: 1 }] : display;
-
+  // While a bridge frame is up, it is the only visible image.
+  const bridgeSheet = bridgeSrc ? sheets[bridgeSrc] : undefined;
+  const bridgeFrame = bridgeSheet && bridgeSrc ? (/_(\d\d)\.png/.exec(bridgeSrc)?.[1] ?? "on") : "off";
   return (
     <div
       ref={stageRef}
@@ -718,6 +770,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
       data-rai-blink={blinkShown > 0 && restingBlink ? "1" : "0"}
       data-rai-blink-frame={blinkFrame}
       data-rai-mouth-frame={mouthFrame}
+      data-rai-bridge-frame={bridgeFrame}
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
     >
       <div data-rai-rig className="rai-rig">
@@ -729,7 +782,8 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
           // A visible rest frame never opacity-blends. Src swaps are a cut.
           // Fading this sheet out for a pose still uses the pose crossfade.
           const restHardCut = layer.id === IDLE_REST_LAYER_ID && layer.opacity > 0;
-          const hardCut = restHardCut || isInstantLayer(layer, talking) || fadeMs === 0;
+          const hardCut =
+            restHardCut || isInstantLayer(layer, talking) || fadeMs === 0;
           const style = hardCut
             ? { opacity: layer.opacity, zIndex: layer.z, transition: "none" }
             : {
@@ -737,6 +791,9 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
                 zIndex: layer.z,
                 transition: `opacity ${fadeMs}ms var(--ease-smooth-out)`,
               };
+          // While a bridge frame is up the live layers are hidden, not unmounted, so they
+          // stay decoded and come back (mid-fade or not) in the commit the bridge lands.
+          const hidden = bridgeSheet ? ({ visibility: "hidden" } as const) : null;
           return (
             <img
               key={layer.id}
@@ -752,10 +809,23 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
               data-rai-sheet={
                 layer.id === IDLE_REST_LAYER_ID ? (talkingIdle ? `mouth-${mouthFrame}` : blinkFrame) : undefined
               }
-              style={style}
+              style={hidden ? { ...style, ...hidden } : style}
             />
           );
         })}
+        {bridgeSheet ? (
+          <img
+            key="pose-bridge"
+            src={bridgeSheet}
+            alt=""
+            draggable={false}
+            decoding="sync"
+            className="rai-layer"
+            data-rai-role="bridge"
+            data-rai-sheet={`bridge-${bridgeFrame}`}
+            style={{ opacity: 1, zIndex: 60, transition: "none" }}
+          />
+        ) : null}
         {/* Ahoge / hair tip proxy — rotates over the crown */}
         <span data-rai-ahoge className="rai-ahoge" />
       </div>

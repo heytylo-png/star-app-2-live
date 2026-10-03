@@ -65,6 +65,13 @@ const POSE_SHEET_SIZE: Record<string, [number, number]> = {
   "rai/side_profile.png": [768, 1168],
   "rai/three_quarter_left.png": [768, 1168],
   "rai/three_quarter_right.png": [768, 1168],
+  // Pose-bridge in-betweens (idle <-> smug).
+  "rai/bridge_idle_smug_01.png": [720, 1280],
+  "rai/bridge_idle_smug_02.png": [720, 1280],
+  "rai/bridge_idle_smug_03.png": [720, 1280],
+  "rai/bridge_idle_smug_04.png": [720, 1280],
+  "rai/bridge_idle_smug_05.png": [720, 1280],
+  "rai/bridge_idle_smug_06.png": [720, 1280],
 };
 
 /** sha256 of every shipped pose-sheet cut. Re-pin when a sheet is re-cut (and bump the version). */
@@ -89,6 +96,13 @@ const POSE_SHEET_SHA256: Record<string, string> = {
   "rai/side_profile.png": "9d33442f05f7334548f2cadde6fd2af63091f8ef7b3c289ab0f2a6550eeb3b81",
   "rai/three_quarter_left.png": "7058fe31566b151075680faf30c756c5878327ea16f4a5c80c767248c2f3ea85",
   "rai/three_quarter_right.png": "528a5439e93271a7e8abc3e7324bcbc3ffdae2ff6a86bd680a0c22bbe6bf244e",
+  // Pose-bridge in-betweens (idle <-> smug).
+  "rai/bridge_idle_smug_01.png": "50ea663a558b520c38224d8e7db764899565336f387310eb9faa63e56889f780",
+  "rai/bridge_idle_smug_02.png": "77980bf759cb13548fc9d47941d992a2dc47b5c2024c13c39f15530cf0f72405",
+  "rai/bridge_idle_smug_03.png": "3b990b025e7be65f4bf420656200bb64b7366b69bd83a0c2bf4df48a0162b243",
+  "rai/bridge_idle_smug_04.png": "f7ddf8f617e754505463e396941649a91d844e25ddef1004d075d4c3021213d5",
+  "rai/bridge_idle_smug_05.png": "fe10fff62919859830e747ac9ed8b1abb1fa0202ad9b10a3b5c0ac051f6c4f84",
+  "rai/bridge_idle_smug_06.png": "ad9bbad76f7f0a7e36c722a523e55de1bcde2d06b562999fd9847efa0d999ea4",
 };
 
 describe("pre-cut RGBA idle + blink sheets", () => {
@@ -127,7 +141,7 @@ describe("pre-cut RGBA idle + blink sheets", () => {
     const sha = createHash("sha256").update(pngInfo("rai/shy_official.png").bytes).digest("hex");
     assert.equal(sha, "d5f8a39493c255f8614cffac93fa76ebcc92b1a3c7d5ddbb4ccbae110e1b4f7d");
     const sw = readFileSync(join(root, "public/sw.js"), "utf8");
-    assert.match(sw, /const CACHE = "star-rai-shell-v5";/);
+    assert.match(sw, /const CACHE = "star-rai-shell-v6";/);
   });
 
   it("ships those files as true RGBA with a transparent background", () => {

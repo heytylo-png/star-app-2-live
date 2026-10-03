@@ -83,13 +83,17 @@ Live chat keys use the **morning official pack** under `public/rai/`. Do not poi
 
 ## Transparent cuts (pre-cut RGBA pose sheets)
 
-Most pose sheets are offline white-matte cuts (true RGBA, studio card removed, enclosed gaps in the hair and between the legs transparent, no gAMA/cHRM/iCCP). They sit in `PRE_CUT_ALPHA_FILES` (`src/lib/rai.ts`), so the runtime punch-white does not run on them, and their URLs carry `?v=${PRE_CUT_ALPHA_VERSION}` (now `rgba3`) so a service worker holding the old RGB copy is bypassed (sw CACHE `star-rai-shell-v5`).
+Most pose sheets are offline white-matte cuts (true RGBA, studio card removed, enclosed gaps in the hair and between the legs transparent, no gAMA/cHRM/iCCP). They sit in `PRE_CUT_ALPHA_FILES` (`src/lib/rai.ts`), so the runtime punch-white does not run on them, and their URLs carry `?v=${PRE_CUT_ALPHA_VERSION}` (now `rgba3`) so a service worker holding the old RGB copy is bypassed (sw CACHE `star-rai-shell-v6`).
 
 Cut (each keeps its own canvas): `shy`, `wink`, `laugh`, `surprise`, `smug`, `content`, `sad`, `hearts`, `hold`, `talk`, `think` (720×1264), `embarrassed`, `pout`, `middle_finger`, `scold`, `tired` (all 720×1280), `peace` (843×1500), `profile`, `three_quarter_left`, `three_quarter_right` (768×1168). `pre-cut-alpha.test.ts` pins every sha256 and size.
 
 Still RGB-on-white with the runtime punch (edges not chosen yet): `three_quarter` (grey fringe), `wave` (RGBA with holes), `turn` (`star-rai/poses/turn-away.png`), and `point` (room scene, nothing to cut).
 
-Tone: the old sheets carried `gAMA 0.50994`, which Chrome applies, so they rendered about 6% darker than their raw pixels. The cuts drop the tag and render raw, so each cut sheet reads about 6% lighter than before (same as shy, closer to idle/wave). Re-cutting a sheet means a new sha pin and a version bump.
+Tone: the old `*_official` sheets and `middle_finger` carried `gAMA 0.50994`, which Chrome applies, so they rendered darker than their raw pixels. The cuts drop the tag and render raw, so those 15 sheets read lighter than before (same as shy, closer to idle/wave): about +8 luma levels on the figure, 7–10% (skin about 6%). `peace` (sRGB ICC), `side_profile`, `three_quarter_left` and `three_quarter_right` had no gamma tag, so their colours are unchanged. Re-cutting a sheet means a new sha pin and a version bump.
+
+## Pose bridge (idle ↔ smug)
+
+The only bridged pair so far. Files `rai/bridge_idle_smug_01.png` … `_06.png` are in-betweens (pre-cut RGBA, `rgba3`), played hard-cut ~100ms a frame between the live `idle.png` and the cut `smug_official.png`; they are not poses and have no live key. Spoken lines, reduced motion, and every other pose pair keep the normal change. See [ANIMATION.md](./ANIMATION.md) "Pose bridge" for the order, timing, interrupts, and how to add a pair.
 
 ## Talking
 

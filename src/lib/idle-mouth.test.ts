@@ -96,7 +96,7 @@ describe("idle mouth sheets", () => {
 
   it("bumps the service-worker cache for the new sheets", () => {
     const sw = readFileSync(join(root, "public/sw.js"), "utf8");
-    assert.match(sw, /const CACHE = "star-rai-shell-v5";/);
+    assert.match(sw, /const CACHE = "star-rai-shell-v6";/);
   });
 });
 

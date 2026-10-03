@@ -1,4 +1,5 @@
 import { POSE_CROSSFADE_MS, type IdleBlinkFrame, type IdleMouthFrame } from "./rai-motion.ts";
+import { bridgeFiles } from "./pose-bridge.ts";
 
 export { POSE_CROSSFADE_MS, type IdleBlinkFrame, type IdleMouthFrame };
 
@@ -386,6 +387,13 @@ export const PRE_CUT_ALPHA_FILES = [
   "rai/side_profile.png",
   "rai/three_quarter_left.png",
   "rai/three_quarter_right.png",
+  // Pose-bridge in-betweens (idle <-> smug). Offline cuts, same method as the sheets above.
+  "rai/bridge_idle_smug_01.png",
+  "rai/bridge_idle_smug_02.png",
+  "rai/bridge_idle_smug_03.png",
+  "rai/bridge_idle_smug_04.png",
+  "rai/bridge_idle_smug_05.png",
+  "rai/bridge_idle_smug_06.png",
 ] as const;
 
 /**
@@ -423,6 +431,11 @@ const ASSET = (path: string) => {
   const preCut = (PRE_CUT_ALPHA_FILES as readonly string[]).includes(file);
   return preCut ? `${prefix}${file}?v=${PRE_CUT_ALPHA_VERSION}` : `${prefix}${file}`;
 };
+
+/** Stage src for a pose-bridge frame file (pre-cut, so it carries the cache key). */
+export function bridgeFrameSrc(file: string): string {
+  return ASSET(file);
+}
 
 /** Live key → file under the static tree the puppet already serves. */
 export const LIVE_POSE_FILES = {
@@ -686,6 +699,13 @@ export function deferredSpriteUrls(): string[] {
   const seen = new Set<string>();
   const urls: string[] = [];
   for (const src of Object.values(SPRITES.poses)) {
+    if (skip.has(src) || seen.has(src)) continue;
+    seen.add(src);
+    urls.push(src);
+  }
+  // Pose-bridge frames come last: after every live pose sheet has been queued.
+  for (const file of bridgeFiles()) {
+    const src = bridgeFrameSrc(file);
     if (skip.has(src) || seen.has(src)) continue;
     seen.add(src);
     urls.push(src);
