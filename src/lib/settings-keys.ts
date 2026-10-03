@@ -129,6 +129,14 @@ export function maskSecret(key: string | null | undefined): string {
   return `••••${trimmed.slice(-4)}`;
 }
 
+/**
+ * A key field shows a replacement only while the user is typing one.
+ * Closed, saved, or reopened fields stay empty so the stored secret is not echoed.
+ */
+export function secretInputValue(draft: string, editing: boolean): string {
+  return editing ? draft : "";
+}
+
 /** Strip saved secrets out of any error string before it is shown or thrown. */
 export function redactSecrets(text: string, secrets: Array<string | null | undefined>): string {
   let out = text;

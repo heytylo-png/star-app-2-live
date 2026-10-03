@@ -10,7 +10,7 @@ describe("stage menu IA", () => {
     );
     assert.deepEqual(
       STAGE_MENU_ITEMS.map((item) => item.label),
-      ["Settings and API key", "Memory and saved facts", "Call mute and voice"],
+      ["Settings", "Memory and saved facts", "Call mute and voice"],
     );
   });
 

@@ -87,6 +87,7 @@ import {
   getStoredVoiceId,
   hasCallVoice,
   maskSecret,
+  secretInputValue,
   setStoredElevenKey,
   setStoredVoiceId,
 } from "@/lib/settings-keys";
@@ -213,9 +214,13 @@ function RaiReady() {
   const [xaiKeyDraft, setXaiKeyDraft] = useState("");
   const [xaiSaved, setXaiSaved] = useState(() => hasXaiKey());
   const [xaiMask, setXaiMask] = useState(() => maskXaiKey(getStoredXaiKey()));
+  const [grokEditing, setGrokEditing] = useState(false);
+  const [grokFieldNonce, setGrokFieldNonce] = useState(0);
   const [elevenKeyDraft, setElevenKeyDraft] = useState("");
   const [elevenSaved, setElevenSaved] = useState(() => Boolean(getStoredElevenKey()));
   const [elevenMask, setElevenMask] = useState(() => maskSecret(getStoredElevenKey()));
+  const [elevenEditing, setElevenEditing] = useState(false);
+  const [elevenFieldNonce, setElevenFieldNonce] = useState(0);
   const [voiceIdDraft, setVoiceIdDraft] = useState(() => getStoredVoiceId() ?? "");
   const [keyJustSaved, setKeyJustSaved] = useState(false);
   const [caption, setCaption] = useState("");
@@ -1500,7 +1505,11 @@ function RaiReady() {
           memoryCount={memories.length}
           onOpenSettings={() => {
             setXaiKeyDraft("");
+            setGrokEditing(false);
+            setGrokFieldNonce((n) => n + 1);
             setElevenKeyDraft("");
+            setElevenEditing(false);
+            setElevenFieldNonce((n) => n + 1);
             setVoiceIdDraft(getStoredVoiceId() ?? "");
             setKeyJustSaved(false);
             setXaiSaved(hasXaiKey());
@@ -1844,17 +1853,32 @@ function RaiReady() {
                 Chat and Call brain only. Stays on this device.
               </p>
               <p className="mt-2 text-xs tracking-wide text-subtle uppercase">
-                {xaiSaved ? `Saved · ${xaiMask}` : "Not saved · Local brain"}
+                {xaiSaved ? (
+                  <>
+                    Saved · <span className="normal-case">{xaiMask}</span>
+                  </>
+                ) : (
+                  "Not saved · Local brain"
+                )}
                 {grokProxyConfigured() ? " · proxy" : ""}
               </p>
               <input
+                key={grokFieldNonce}
                 id="grok-key"
+                name={`grok-key-${grokFieldNonce}`}
                 type="password"
                 autoComplete="off"
                 spellCheck={false}
+                readOnly={!grokEditing}
                 placeholder="Paste key"
-                value={xaiKeyDraft}
+                value={secretInputValue(xaiKeyDraft, grokEditing)}
+                onFocus={() => {
+                  if (grokEditing) return;
+                  setXaiKeyDraft("");
+                  setGrokEditing(true);
+                }}
                 onChange={(e) => {
+                  setGrokEditing(true);
                   setXaiKeyDraft(e.target.value);
                   setKeyJustSaved(false);
                 }}
@@ -1872,6 +1896,8 @@ function RaiReady() {
                     setXaiSaved(true);
                     setXaiMask(maskXaiKey(next));
                     setXaiKeyDraft("");
+                    setGrokEditing(false);
+                    setGrokFieldNonce((n) => n + 1);
                     setKeyJustSaved(true);
                   }}
                 >
@@ -1887,6 +1913,8 @@ function RaiReady() {
                     setXaiSaved(false);
                     setXaiMask("");
                     setXaiKeyDraft("");
+                    setGrokEditing(false);
+                    setGrokFieldNonce((n) => n + 1);
                     setKeyJustSaved(false);
                   }}
                 >
@@ -1903,19 +1931,36 @@ function RaiReady() {
                 ElevenLabs key
               </label>
               <p className="mt-1 text-xs leading-relaxed text-muted">
-                Call speech only. Stays on this device.
+                Speech for Chat, Call, and the local brain. Not the Grok key. Stays on this device.
               </p>
               <p className="mt-2 text-xs tracking-wide text-subtle uppercase">
-                {elevenSaved ? `Saved · ${elevenMask}` : "Not saved · no Call speech"}
+                {elevenSaved ? (
+                  <>
+                    Saved · <span className="normal-case">{elevenMask}</span>
+                  </>
+                ) : (
+                  "Not saved · no speech"
+                )}
               </p>
               <input
+                key={elevenFieldNonce}
                 id="eleven-key"
+                name={`eleven-key-${elevenFieldNonce}`}
                 type="password"
                 autoComplete="off"
                 spellCheck={false}
+                readOnly={!elevenEditing}
                 placeholder="Paste key"
-                value={elevenKeyDraft}
-                onChange={(e) => setElevenKeyDraft(e.target.value)}
+                value={secretInputValue(elevenKeyDraft, elevenEditing)}
+                onFocus={() => {
+                  if (elevenEditing) return;
+                  setElevenKeyDraft("");
+                  setElevenEditing(true);
+                }}
+                onChange={(e) => {
+                  setElevenEditing(true);
+                  setElevenKeyDraft(e.target.value);
+                }}
                 className="mt-3 h-10 w-full rounded-md bg-elevated px-3 text-sm shadow-[var(--shadow-border)] outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
               <div className="mt-3 flex flex-wrap gap-2">
@@ -1930,6 +1975,8 @@ function RaiReady() {
                     setElevenSaved(true);
                     setElevenMask(maskSecret(next));
                     setElevenKeyDraft("");
+                    setElevenEditing(false);
+                    setElevenFieldNonce((n) => n + 1);
                   }}
                 >
                   Save key
@@ -1944,6 +1991,8 @@ function RaiReady() {
                     setElevenSaved(false);
                     setElevenMask("");
                     setElevenKeyDraft("");
+                    setElevenEditing(false);
+                    setElevenFieldNonce((n) => n + 1);
                   }}
                 >
                   Clear
@@ -1956,7 +2005,7 @@ function RaiReady() {
                 Voice ID
               </label>
               <p className="mt-1 text-xs leading-relaxed text-muted">
-                The ElevenLabs voice Call speaks with. Not a secret.
+                The ElevenLabs voice Chat and Call speak with. Not a secret. Shown in full.
               </p>
               <input
                 id="voice-id"
@@ -2031,8 +2080,8 @@ function RaiReady() {
             <div className="rounded-md bg-elevated px-3 py-2.5 text-xs leading-relaxed text-muted shadow-[var(--shadow-border)]">
               With a Grok key, Star Rai calls xAI (<span className="text-fg">grok-4-latest</span>).
               CORS or key issues fall back to the local brain — no breaking character.
-              Call speaks only when both the ElevenLabs key and Voice ID are saved.
-              Without them the reply still shows, with no speech.
+              Chat and Call speak only with the ElevenLabs key and Voice ID, including when the local brain writes the line.
+              If either is empty, the reply still shows and nothing is spoken.
               Phone icon starts Call mode. Chrome on Android asks for the
               microphone on that tap (getUserMedia). If the prompt never
               appears, unblock it: site settings → Microphone → Allow for
