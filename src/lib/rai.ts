@@ -349,6 +349,78 @@ export function settledRestPose(): PoseId {
 }
 
 /**
+ * Standing face once a smug or wink line is over.
+ * Official idle (blink 01, the frown rest) so the blink can run and a text
+ * line can chew. The idle↔smug bridge is only the transition the puppet
+ * plays when this commit leaves the smug sheet — bridge frames are not a rest.
+ *
+ * Idle plus the smug emotion still paints smug_official (see layersFor), so
+ * that sheet counts too. Every other pose keeps its normal hold.
+ * Call this only after she has stopped speaking.
+ */
+export function lineEndedRestPose(opts: {
+  pose: PoseId;
+  emotion: EmotionId;
+}): { pose: PoseId; emotion: EmotionId } | null {
+  const onSmug = opts.pose === "smug" || (opts.pose === "idle" && opts.emotion === "smug");
+  const onWink = opts.pose === "wink";
+  if (!onSmug && !onWink) return null;
+  return { pose: settledRestPose(), emotion: DEFAULT_EMOTION };
+}
+
+/**
+ * Milliseconds a finished smug or wink line waits before official idle.
+ * Voiced lines snap when speech ends (0). Text-only lines wait out the chew
+ * window and the normal pose hold, so the sheet can paint. Never the long
+ * smug beat. Null when this pose is not a smug/wink rest.
+ */
+export function smugWinkTextRestDelayMs(opts: {
+  voiced: boolean;
+  chewUntil: number;
+  pose: PoseId;
+  emotion: EmotionId;
+  actLandedAt: number;
+  now?: number;
+}): number | null {
+  if (!lineEndedRestPose({ pose: opts.pose, emotion: opts.emotion })) return null;
+  if (opts.voiced) return 0;
+  const now = opts.now ?? Date.now();
+  const chewLeft = Math.max(0, opts.chewUntil - now);
+  const poseHold =
+    poseResetDelayMs({
+      pose: opts.pose,
+      emotion: opts.emotion,
+      talking: false,
+      actLandedAt: opts.actLandedAt,
+      now,
+    }) ?? 0;
+  return Math.max(chewLeft, poseHold);
+}
+
+/**
+ * Composer Stop square. True only while she is speaking.
+ * Thinking, idle, and a bubble that is merely still on screen do not show it.
+ */
+export function composerShowsStop(talking: boolean): boolean {
+  return talking;
+}
+
+/** Send while idle, Cancel while a reply is in flight, Stop while she is speaking. */
+export function composerActionLabel(opts: {
+  talking: boolean;
+  sending: boolean;
+}): "Send" | "Cancel" | "Stop" {
+  if (composerShowsStop(opts.talking)) return "Stop";
+  if (opts.sending) return "Cancel";
+  return "Send";
+}
+
+/** Submit, Enter, and the button abort the in-flight turn. The draft stays. */
+export function composerCancelsTurn(opts: { talking: boolean; sending: boolean }): boolean {
+  return opts.talking || opts.sending;
+}
+
+/**
  * Sheet after the line ends (stream, TTS, or the text chew window).
  * A greeting must not leave wink or talk_official up. A user-named pose, or
  * an explicit reply tag that is not a greeting wink/talk, keeps its sheet.
