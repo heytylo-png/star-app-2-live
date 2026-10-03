@@ -279,25 +279,28 @@ export function holdsSmugBeat(pose: PoseId, emotion: EmotionId): boolean {
 }
 
 /**
- * Smug lasts until the beat ends. The base delay is the normal pose hold; this
- * stretches it so smug never lets go while its line is still being said or read:
- * the beat ends at the later of speech end (voiced lines) and the line's reading
- * time from landing (never under the normal minimum), plus a short tail. Other
- * poses keep their normal timing (callers only use this for holdsSmugBeat).
+ * Smug lasts until its beat is over, and the beat belongs to the LINE, not to
+ * the pose: it runs from the moment the line lands (is the current bubble) for
+ * its reading time (45 ms a character, never under the 3.4 s minimum) or until
+ * speech ends, whichever is later, plus a 1.5 s tail. The pose resolving
+ * earlier (a tag at ~1.5 s, the line at ~6 s) starts nothing: the clock is the
+ * line's landing. No landing yet (`lineLandedAt` 0) counts from now, so a timer
+ * can never be armed against a line that is not on screen. Returns ms from now.
+ * Other poses keep their normal timing (callers only use this for holdsSmugBeat).
  */
 export function smugBeatResetDelayMs(opts: {
-  baseDelay: number;
   line: string;
-  actLandedAt: number;
+  /** When the line became the current bubble; 0 when it has not landed. */
+  lineLandedAt: number;
   /** When speech ended; 0 when the line was not voiced. */
   speechEndedAt: number;
   now?: number;
 }): number {
   const now = opts.now ?? Date.now();
-  const landed = opts.actLandedAt || now;
+  const landed = opts.lineLandedAt || now;
   const readEnd = landed + Math.max(POSE_HOLD_MIN_MS, opts.line.trim().length * SMUG_READ_MS_PER_CHAR);
   const beatEnd = Math.max(readEnd, opts.speechEndedAt || 0) + SMUG_BEAT_TAIL_MS;
-  return Math.max(opts.baseDelay, beatEnd - now);
+  return Math.max(0, beatEnd - now);
 }
 
 /**

@@ -285,6 +285,8 @@ function RaiReady() {
   const actLandedAt = useRef(0);
   /** When the voiced line stopped being spoken (0 = not voiced). Smug holds until the beat ends. */
   const speechEndedAt = useRef(0);
+  /** When the current reply's line became the bubble (0 until it lands). The smug beat counts from here, never from the pose. */
+  const lineLandedAt = useRef(0);
   /** Life slots before this turn's ingest — used to detect track changes. */
   const lifeBeforeRef = useRef<LifeSlots | undefined>(undefined);
   const sendRef = useRef<(text: string) => Promise<void>>(async () => {});
@@ -488,6 +490,7 @@ function RaiReady() {
       source: "return",
     });
     setCaption(offer.line);
+    lineLandedAt.current = Date.now();
     const nextPose = poseForCallReply({
       namedPose: null,
       modelPose: null,
@@ -611,9 +614,8 @@ function RaiReady() {
     // Smug lasts until its beat (speech and reading time, plus a tail) is over.
     if (holdsSmugBeat(pose, emotion)) {
       delay = smugBeatResetDelayMs({
-        baseDelay: delay,
         line: captionRef.current,
-        actLandedAt: actLandedAt.current,
+        lineLandedAt: lineLandedAt.current,
         speechEndedAt: speechEndedAt.current,
       });
     }
@@ -899,6 +901,7 @@ function RaiReady() {
     namedTurnRef.current = namedThisTurn;
     replyPoseRef.current = null;
     speechEndedAt.current = 0;
+    lineLandedAt.current = 0;
     // A new spoken line re-resolves — leftover think / pout / tired must not
     // sit under this bubble. Speech talks on idle (SPOKEN_TALK_TO_IDLE), so the
     // turn starts on idle, not talk_official. Named poses already swapped.
@@ -1085,6 +1088,7 @@ function RaiReady() {
       const line = shapeSpoken(parsedLine) || "…";
       store.patchMessage(threadId, assistant.id, { content: line });
       setCaption(line);
+      lineLandedAt.current = Date.now();
       if (line !== "…") armTextChew(line);
       const lifeTitle = parseTrackTitle(lastUser);
       const named = lifeTitle ? null : namedPoseFromText(lastUser);
