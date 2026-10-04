@@ -21,7 +21,6 @@ import {
   SMUG_BEAT_TAIL_MS,
   smugBeatResetDelayMs,
   smugWinkTextRestDelayMs,
-  TEXT_CHEW_MAX_MS,
   textChewMs,
 } from "./rai.ts";
 
@@ -87,7 +86,11 @@ describe("smug and wink lines rest on official idle", () => {
     assert.doesNotMatch(tint.src, /smug_official|bridge_idle_smug/);
     assert.match(app, /lineEndedRestPose\(\{/);
     assert.match(app, /smugWinkTextRestDelayMs\(\{/);
-    assert.doesNotMatch(app, /smugBeatResetDelayMs/);
+    assert.match(app, /smugBeatResetDelayMs\(\{/);
+    assert.match(app, /lineLandedAt\.current = Date\.now\(\)/);
+    // nothing arms the release while the reply is in flight or she is talking, and a new turn clears the landing
+    assert.match(app, /if \(sending \|\| talking\) return;/);
+    assert.match(app, /lineLandedAt\.current = 0;/);
     assert.doesNotMatch(app, /chewUntil > Date\.now\(\)/);
   });
 
@@ -138,20 +141,13 @@ describe("smug and wink lines rest on official idle", () => {
     assert.equal(canIdleBlink({ pose: "idle", emotion: rest.emotion, talking: false }), true);
   });
 
-  it("a text-only Music Set smug paints the sheet, then rests on idle", () => {
+  it("a text-only Music Set smug paints the sheet, holds its beat from the landing, then rests on idle", () => {
     const line = "Super Shy. That one stays.";
-    const chew = textChewMs(line);
     const now = 5_000;
-    const delay = smugWinkTextRestDelayMs({
-      voiced: false,
-      chewUntil: now + chew,
-      now,
-      pose: "smug",
-      emotion: "smug",
-      actLandedAt: now,
-    });
-    assert.equal(delay, POSE_HOLD_MIN_MS);
-    assert.ok(delay != null && delay > 550);
+    // The beat belongs to the line: landing + max(3.4 s, 45 ms a char), + 1.5 s. Not the chew, not the pose hold.
+    const delay = smugBeatResetDelayMs({ line, lineLandedAt: now, speechEndedAt: 0, now });
+    assert.equal(delay, POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
+    assert.ok(delay > textChewMs(line));
     const sheet = layersFor({
       pose: "smug",
       emotion: "smug",
@@ -161,33 +157,11 @@ describe("smug and wink lines rest on official idle", () => {
     })[0]!.src;
     assert.match(sheet, /smug_official/);
     assert.doesNotMatch(sheet, /bridge_idle_smug/);
-    const longBeat = smugBeatResetDelayMs({
-      line: "x".repeat(400),
-      lineLandedAt: now,
-      speechEndedAt: 0,
-      now,
-    });
-    const longHold = smugWinkTextRestDelayMs({
-      voiced: false,
-      chewUntil: now + TEXT_CHEW_MAX_MS,
-      now,
-      pose: "smug",
-      emotion: "smug",
-      actLandedAt: now,
-    });
-    assert.ok(longHold != null && longHold < longBeat);
+    const longBeat = smugBeatResetDelayMs({ line: "x".repeat(400), lineLandedAt: now, speechEndedAt: 0, now });
     assert.ok(longBeat > POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
-    assert.equal(
-      smugWinkTextRestDelayMs({
-        voiced: true,
-        chewUntil: now + chew,
-        now,
-        pose: "smug",
-        emotion: "smug",
-        actLandedAt: now,
-      }),
-      0,
-    );
+    // voiced: speech end + 1.5 s, not the instant speech ends
+    const voiced = smugBeatResetDelayMs({ line, lineLandedAt: now, speechEndedAt: now + 9_000, now: now + 9_000 });
+    assert.equal(voiced, SMUG_BEAT_TAIL_MS);
     const { src } = restSrc("smug", "smug");
     assert.match(src, /idle_blink_01_open/);
     assert.equal(canIdleBlink({ pose: "idle", emotion: "bratty", talking: false }), true);
