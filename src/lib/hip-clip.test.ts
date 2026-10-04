@@ -12,6 +12,7 @@ import {
   HipClipDriver,
   HipClipPlayer,
   hipClipTimeMs,
+  HIP_CUT_LINGER_MS,
   hipFrameDwellMs,
   hipTravelMs,
   loadHipClip,
@@ -174,6 +175,53 @@ describe("hip clip player", () => {
     }
   });
 
+  it("a cut with linger keeps the hip up until the live layer has risen, then hides once", () => {
+    const { state, player, frame } = rig();
+    player.jumpToHold();
+    frame(2);
+    const t0 = state.now;
+    player.cut(HIP_CUT_LINGER_MS);
+    assert.equal(state.hides.length, 0);
+    frame(3);
+    assert.equal(state.hides.length, 0, "still up after ~50 ms");
+    assert.equal(player.view().visible, true);
+    frame(10);
+    assert.equal(state.hides.length, 1);
+    assert.ok(state.hides[0]! - t0 >= HIP_CUT_LINGER_MS - 1 && state.hides[0]! - t0 <= HIP_CUT_LINGER_MS + 40);
+    assert.equal(player.view().visible, false);
+  });
+
+  it("reduced motion: smug -> idle lingers, smug -> another pose cuts at once", () => {
+    const a = rig();
+    const d = new HipClipDriver(a.player);
+    d.commit("idle", { reducedMotion: true, ready: true });
+    d.commit("smug", { reducedMotion: true, ready: true });
+    a.frame(2);
+    d.commit("idle", { reducedMotion: true, ready: true });
+    assert.equal(a.state.hides.length, 0);
+    a.frame(20);
+    assert.equal(a.state.hides.length, 1);
+    const b = rig();
+    const e = new HipClipDriver(b.player);
+    e.commit("idle", { reducedMotion: false, ready: true });
+    e.commit("smug", { reducedMotion: false, ready: true });
+    b.frame(2);
+    e.commit(null, { reducedMotion: false, ready: true });
+    assert.equal(b.state.hides.length, 1);
+  });
+
+  it("a new play during the linger cancels the hide", () => {
+    const { state, player, frame } = rig();
+    player.jumpToHold();
+    frame(2);
+    player.cut(HIP_CUT_LINGER_MS);
+    frame(2);
+    player.jumpToHold();
+    frame(30);
+    assert.equal(state.hides.length, 0);
+    assert.equal(player.view().visible, true);
+  });
+
   it("an exit that starts mid-entry reverses from the picture that is up (no jump)", () => {
     const { state, player, frame } = rig();
     player.playIn();
@@ -261,6 +309,8 @@ describe("hip clip driver", () => {
     b.go("smug", { reducedMotion: true });
     assert.deepEqual(b.state.draws.map((d) => d.i), [HIP_CLIP_LAST]);
     b.go("idle", { reducedMotion: true });
+    assert.equal(b.state.hides.length, 0, "reduced-motion exit lingers while the live idle rises");
+    b.frame(20);
     assert.equal(b.state.hides.length, 1);
     assert.equal(b.player.view().visible, false);
   });
@@ -334,8 +384,7 @@ describe("puppet wiring", () => {
   const puppet = readFileSync(join(root, "src/components/puppet.tsx"), "utf8");
   it("one canvas, live sheets hidden while it is up, phase read off the clip", () => {
     assert.match(puppet, /<HipClipLayer ref=\{canvasRef\} visible=\{clipOnStage\} \/>/);
-    assert.match(puppet, /bridgeSheet \|\| clipOnStage \|\| smugPlateUnderClip \? \(\{ visibility: "hidden" \}/);
-    assert.match(puppet, /clipMode && bridgeKeyOfSrc\(layer\.src\) === "smug"/);
+    assert.match(puppet, /bridgeSheet \|\| clipOnStage \? \(\{ visibility: "hidden" \}/);
     assert.match(puppet, /clipView\.dir === "out"/);
     assert.match(puppet, /data-rai-clip-frame=/);
     assert.match(puppet, /clipPlayer\.current\?\.confirmShown\(\)/);
