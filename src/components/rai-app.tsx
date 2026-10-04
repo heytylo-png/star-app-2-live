@@ -36,6 +36,7 @@ import {
   settledRestPose,
   holdsSmugBeat,
   smugBeatResetDelayMs,
+  smugReleaseWaitMs,
   lineEndedRestPose,
   smugWinkTextRestDelayMs,
   composerShowsStop,
@@ -50,6 +51,7 @@ import {
   type EmotionId,
   type PoseId,
 } from "@/lib/rai";
+import { readPosePhase } from "@/lib/pose-phase";
 import { useMemoryStore } from "@/lib/memory-store";
 import { usePresenceStore } from "@/lib/presence-store";
 import {
@@ -611,13 +613,30 @@ function RaiReady() {
             actLandedAt: actLandedAt.current,
           });
       if (delay != null && delay > 0) {
-        const id = window.setTimeout(() => {
+        // A smug beat is released only once the hip was really on stage for a visible
+        // hold (frames still decoding on a slow phone: wait, up to a cap). Never skips
+        // to the idle body unseen.
+        const smugBeat = holdsSmugBeat(pose, emotion);
+        let timerId = 0;
+        let waited = 0;
+        const release = () => {
+          timerId = 0;
+          const seen = readPosePhase();
+          if (smugBeat && seen.mounted) {
+            const more = smugReleaseWaitMs({ phase: seen.phase, holdSince: seen.holdSince, waitedMs: waited });
+            if (more > 0) {
+              waited += more;
+              timerId = window.setTimeout(release, more);
+              return;
+            }
+          }
           setPose(ended.pose);
           poseRef.current = ended.pose;
           setBubbleLifeKind("none");
           setEmotion(ended.emotion);
-        }, delay);
-        return () => window.clearTimeout(id);
+        };
+        timerId = window.setTimeout(release, delay);
+        return () => window.clearTimeout(timerId);
       }
       setPose(ended.pose);
       poseRef.current = ended.pose;
