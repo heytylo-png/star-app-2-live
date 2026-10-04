@@ -121,6 +121,8 @@ export type ClipView = {
 export type ClipHost = {
   raf: (cb: (ts: number) => void) => number;
   cancelRaf: (handle: number) => void;
+  /** Clock in the rAF timebase (performance.now). A frame's timestamp is its vsync start, which is stale when a long task ran before the callback. */
+  now?: () => number;
   /** Paint picture `index` on the canvas. Called inside an animation frame (or once before show). */
   draw: (index: number) => void;
   /** Make the canvas the one visible layer (hides the live sheets) in this paint. */
@@ -237,8 +239,9 @@ export class HipClipPlayer {
     this.stopLoop();
   }
 
-  private tick = (ts: number) => {
+  private tick = (frameTs: number) => {
     this.raf = 0;
+    const ts = this.host.now ? Math.max(frameTs, this.host.now()) : frameTs;
     if (!this.visible) return;
     if (this.pendingShow) {
       this.startLoop();
