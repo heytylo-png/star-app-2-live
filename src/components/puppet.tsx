@@ -1,5 +1,17 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
+  HIP_CLIP_FRAMES,
+  HIP_CLIP_LAST,
+  HIP_CLIP_RETRY_MS,
+  HIP_CLIP_WAIT_MAX_MS,
+  HipClipDriver,
+  HipClipPlayer,
+  hipClipSupported,
+  hipClipTimeMs,
+  loadHipClip,
+  type ClipView,
+} from "@/lib/hip-clip";
+import {
   blinkPassInFlight,
   canIdleBlink,
   canIdleMouth,
@@ -10,6 +22,7 @@ import {
   idleBlinkFrameUrls,
   idleMouthFrameUrls,
   bridgeFrameSrc,
+  hipClipSrc,
   idleRestSrc,
   isRetiredBlinkSrc,
   layersFor,
@@ -54,6 +67,8 @@ import { PoseCrossfadePool, type CrossfadeLayer } from "@/lib/pose-crossfade";
 import { punchedSpriteUrl } from "@/lib/punch-white";
 import { decodeSheet } from "@/lib/sheet-decode";
 import { sheetBox } from "@/lib/rai-sheet-box";
+import { HipClipLayer } from "@/components/hip-clip-layer";
+import { paintHipPicture } from "@/lib/hip-clip-paint";
 import { buildId, debugOverlayOn } from "@/lib/build-id";
 import { setPoseStageMounted, setPosePhase } from "@/lib/pose-phase";
 import { cn } from "@/lib/utils";
@@ -146,6 +161,9 @@ function afterPaintFrame(fn: () => void): () => void {
   return cancel;
 }
 
+/** Evaluated once in the browser: can this page play the hip clip at all? */
+const clipSupported = hipClipSupported();
+
 export function Puppet({ pose, emotion, talking, amplitude, spokenLine, className }: PuppetProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const pointerTarget = useRef(0);
@@ -180,6 +198,19 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   const [bridgeSrc, setBridgeSrc] = useState<string | null>(null);
   const bridge = useRef<PoseBridge | null>(null);
   const bridgeDriver = useRef<BridgeDriver | null>(null);
+  // Hip clip (hip-clip.ts): the idle <-> smug travel and the hold, painted on one canvas.
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const clipBitmaps = useRef<ImageBitmap[] | null>(null);
+  const clipPlayer = useRef<HipClipPlayer | null>(null);
+  const clipDriver = useRef<HipClipDriver | null>(null);
+  const ensureClipLoad = useRef<() => void>(() => {});
+  /** Bit i set once picture i has decoded. */
+  const [clipBits, setClipBits] = useState(0);
+  const [clipReady, setClipReady] = useState(false);
+  /** The clip never became ready within its bound: the PNG bridge takes over, loudly. */
+  const [clipGaveUp, setClipGaveUp] = useState(false);
+  const [clipView, setClipView] = useState<ClipView>({ visible: false, index: 0, dir: "in" });
+  const clipMode = clipSupported && !clipGaveUp;
   /** Waiting for bridge frames to decode before an idle <-> smug change (bounded). */
   /** The bounded wait ran out: the change cut, loudly. */
   const [bridgeWaitExpiredRaw, setBridgeWaitExpired] = useState(false);
@@ -275,6 +306,38 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
     };
     punchOneRef.current = (src) => punchOne(src, false);
 
+    let clipJob: Promise<void> | null = null;
+    const startClipLoad = (): Promise<void> => {
+      if (clipJob) return clipJob;
+      if (!clipSupported || clipBitmaps.current) return Promise.resolve();
+      const job: Promise<void> = (async () => {
+        const bitmaps = await loadHipClip<ImageBitmap>({
+          fetchBlob: async (src) => {
+            const res = await fetch(src, { priority: "high" } as RequestInit);
+            if (!res.ok) throw new Error(`hip clip ${res.status}`);
+            return res.blob();
+          },
+          decode: (blob) => createImageBitmap(blob),
+          srcFor: hipClipSrc,
+          onFrame: (i) => {
+            if (!cancelled) setClipBits((bits) => bits | (1 << i));
+          },
+          cancelled: () => cancelled,
+        });
+        if (cancelled) return;
+        if (bitmaps) {
+          clipBitmaps.current = bitmaps;
+          setClipReady(true);
+        }
+      })().finally(() => {
+        // Not ready (a picture never loaded): the next ask starts a fresh load.
+        if (clipJob === job) clipJob = null;
+      });
+      clipJob = job;
+      return job;
+    };
+    ensureClipLoad.current = () => void startClipLoad();
+
     const afterPaint = () =>
       new Promise<void>((resolve) => {
         requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
@@ -301,17 +364,27 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
       // idle.png, then the whole smug beat (bridge 01..06 + smug hold, in parallel),
       // then blink and mouth. A named Smug can come any moment on a cold phone; its
       // arm must land on decoded frames, so they go before anything non-essential.
-      const order = stagePreloadOrder();
+      const order = stagePreloadOrder({ clip: clipSupported });
       await punchOne(order.first, order.first !== restSrc);
       if (cancelled) return;
       await afterPaint();
+      if (clipSupported) {
+        // The hip clip's 18 pictures go first (parallel, high priority), ahead of the smug
+        // sheet, blink and mouth. A failed picture is retried; the wait is bounded so a dead
+        // link cannot hold the rest of the queue for ever.
+        await Promise.race([
+          startClipLoad(),
+          new Promise<void>((resolve) => window.setTimeout(resolve, HIP_CLIP_WAIT_MAX_MS)),
+        ]);
+        if (cancelled) return;
+      }
       await Promise.all(order.beat.map((src) => punchOne(src, false)));
       for (let i = 0; i < order.rest.length; i++) {
         if (cancelled) return;
         await punchOne(order.rest[i]!, false);
       }
       if (cancelled) return;
-      const deferred = deferredSpriteUrls();
+      const deferred = deferredSpriteUrls({ skipBridge: clipSupported });
       let index = 0;
       const step = () => {
         if (cancelled || index >= deferred.length) return;
@@ -338,6 +411,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
     void run();
     return () => {
       cancelled = true;
+      ensureClipLoad.current = () => {};
       punchOneRef.current = async () => {};
       clearSchedule();
     };
@@ -673,9 +747,12 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
       }),
     [pose, emotion, talking, ampLive, blinkShown, mouthShown, reducedMotion],
   );
-  const bridgeFramesReady = bridgeFiles().every((file) => sheets[bridgeFrameSrc(file)] != null);
-  // Once the frames are in, an old expiry no longer applies.
-  const bridgeWaitExpired = bridgeWaitExpiredRaw && !bridgeFramesReady;
+  const bridgeFramesReady = clipMode
+    ? clipReady
+    : bridgeFiles().every((file) => sheets[bridgeFrameSrc(file)] != null);
+  // Once the frames are in, an old expiry no longer applies. The clip never expires into the
+  // arms-down smug sheet: after its bound the PNG bridge takes over instead (clipGaveUp).
+  const bridgeWaitExpired = !clipMode && bridgeWaitExpiredRaw && !bridgeFramesReady;
   const shownPlates = useRef<SpriteLayer[]>([]);
   const plates = useMemo(() => {
     const next = desired.filter((layer) => layer.role !== "eyes" && !isRetiredBlinkSrc(layer.src));
@@ -683,7 +760,9 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
     const gate = bridgeGate({
       wantedKey: bridgeKeyOfPlates(next),
       framesReady: bridgeFramesReady,
-      reducedMotion,
+      // Reduced motion hard-cuts but still lands on the hip picture, so with the clip it
+      // waits for it like everyone else (the plain idle stays up meanwhile).
+      reducedMotion: clipMode ? false : reducedMotion,
       waitExpired: bridgeWaitExpired,
     });
     const ready = next.length > 0 && next.every((layer) => sheets[layer.src] != null) && gate === "go";
@@ -702,7 +781,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
     if (same) return prev;
     shownPlates.current = chosen;
     return chosen;
-  }, [desired, sheets, reducedMotion, bridgeWaitExpired, bridgeFramesReady]);
+  }, [desired, sheets, reducedMotion, bridgeWaitExpired, bridgeFramesReady, clipMode]);
 
   // Pose bridge (idle <-> smug, see pose-bridge.ts). The request is made in the
   // crossfade effect below, keyed on the shown plates, so a sheet that has not
@@ -732,8 +811,23 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   // (offline, 404): it is never reached on a working device, and when it is, the change
   // cuts and says so (console + stage attribute), so a missing frame is never silent.
   useEffect(() => {
-    if (bridgeFramesReady || reducedMotion || bridgeWaitExpired) return;
+    if (bridgeFramesReady || (reducedMotion && !clipMode) || bridgeWaitExpired) return;
     if (!bridgeWantsFrames(bridgeKeyOfPlates(desired))) return;
+    if (clipMode) {
+      // Hip clip still decoding: keep asking (a failed picture is retried), show the plain
+      // idle meanwhile, and after a generous bound say so loudly and fall back to the PNG
+      // bridge instead of waiting for ever.
+      ensureClipLoad.current();
+      const clipRetry = window.setInterval(() => ensureClipLoad.current(), HIP_CLIP_RETRY_MS);
+      const clipGiveUp = window.setTimeout(() => {
+        console.warn("[rai] hip clip did not decode in time; falling back to the PNG pose bridge");
+        setClipGaveUp(true);
+      }, HIP_CLIP_WAIT_MAX_MS);
+      return () => {
+        window.clearInterval(clipRetry);
+        window.clearTimeout(clipGiveUp);
+      };
+    }
     const ask = () => {
       for (const file of bridgeFiles()) void punchOneRef.current(bridgeFrameSrc(file));
     };
@@ -752,12 +846,13 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
       window.clearInterval(retry);
       window.clearTimeout(giveUp);
     };
-  }, [desired, sheets, bridgeFramesReady, reducedMotion, bridgeWaitExpired]);
+  }, [desired, sheets, bridgeFramesReady, reducedMotion, bridgeWaitExpired, clipMode]);
 
   // Background tab: timers are throttled or frozen, so the bridge holds its frame and
   // carries on at normal pace when the page is visible again (see PoseBridge.setPaused).
   useEffect(() => {
     const sync = () => bridge.current?.setPaused(document.visibilityState === "hidden");
+    // (The hip clip needs nothing here: its dwell counts animation frames, which stop with the page.)
     document.addEventListener("visibilitychange", sync);
     return () => document.removeEventListener("visibilitychange", sync);
   }, []);
@@ -804,11 +899,32 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
       bridge.current.setPaused(document.visibilityState === "hidden");
     }
     if (!bridgeDriver.current) bridgeDriver.current = new BridgeDriver(bridge.current);
-    bridgeDriver.current.commit(plates, {
-      reducedMotion: reducedRef.current,
-      srcFor: bridgeFrameSrc,
-      isReady: (src) => sheetsRef.current[src] != null,
-    });
+    if (clipMode) {
+      // Hip clip: one canvas plays the travel in, rests on the hip, plays it back out.
+      if (!clipPlayer.current) {
+        clipPlayer.current = new HipClipPlayer({
+          raf: (cb) => window.requestAnimationFrame(cb),
+          cancelRaf: (h) => window.cancelAnimationFrame(h),
+          draw: (i) => paintHipPicture(canvasRef.current, clipBitmaps.current?.[i], i),
+          show: () => {},
+          hide: () => {},
+          onView: setClipView,
+        });
+      }
+      if (!clipDriver.current) clipDriver.current = new HipClipDriver(clipPlayer.current);
+      clipDriver.current.commit(bridgeKeyOfPlates(plates), {
+        reducedMotion: reducedRef.current,
+        ready: clipBitmaps.current != null,
+      });
+    } else {
+      // Fell back to the PNG bridge (or no clip support): drop a clip that was on stage.
+      clipPlayer.current?.cut();
+      bridgeDriver.current.commit(plates, {
+        reducedMotion: reducedRef.current,
+        srcFor: bridgeFrameSrc,
+        isReady: (src) => sheetsRef.current[src] != null,
+      });
+    }
     const openRest = idleRestSrc();
     crossfade.current.update(plates, {
       snap: blinkModeLive === "snap",
@@ -822,11 +938,18 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
           ? { ...layer, src: openRest }
           : layer,
     });
-  }, [plates, talking, blinkModeLive, openRestReady]);
+  }, [plates, talking, blinkModeLive, openRestReady, clipMode]);
 
   useEffect(() => {
-    return () => crossfade.current?.dispose();
+    return () => {
+      crossfade.current?.dispose();
+      clipPlayer.current?.dispose();
+    };
   }, []);
+  // The canvas is on screen: only now does the first picture's dwell start.
+  useEffect(() => {
+    if (clipView.visible) clipPlayer.current?.confirmShown();
+  }, [clipView.visible]);
 
   const restPunched = sheets[idleRestSrc()];
   const stageReady = Boolean(restPunched);
@@ -848,18 +971,31 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   // Smug beat phase, read off what is painted (not what was asked for).
   // oxlint-disable-next-line react/refs -- plates is the painted key; read-only, same as the layers below
   const plateKey = bridgeKeyOfPlates(plates);
-  const phase: PosePhase = bridgeSheet
-    ? plateKey === "smug"
-      ? "bridge-in"
-      : "bridge-out"
-    : plateKey === "smug"
-      ? "hold"
-      : "idle";
+  const clipOnStage = clipMode && clipView.visible;
+  const phase: PosePhase = clipMode
+    ? clipOnStage
+      ? clipView.dir === "out"
+        ? "bridge-out"
+        : clipView.index === HIP_CLIP_LAST
+          ? "hold"
+          : "bridge-in"
+      : "idle"
+    : bridgeSheet
+      ? plateKey === "smug"
+        ? "bridge-in"
+        : "bridge-out"
+      : plateKey === "smug"
+        ? "hold"
+        : "idle";
   // Smug wanted but not on stage yet: frames still decoding, the plain open idle stays up.
-  const poseWait = bridgeWantsFrames(bridgeKeyOfPlates(desired)) && plateKey !== "smug" && !bridgeSheet;
-  const smugDecode = smugBeatSheetUrls()
-    .map((src) => (sheets[src] != null ? "1" : "0"))
-    .join("");
+  const poseWait =
+    bridgeWantsFrames(bridgeKeyOfPlates(desired)) && !bridgeSheet && !clipOnStage && (clipMode ? !clipReady : plateKey !== "smug");
+  const clipDecode = HIP_CLIP_FRAMES.map((_, i) => ((clipBits >> i) & 1 ? "1" : "0")).join("");
+  const smugDecode = clipMode
+    ? `${clipDecode}${sheets[smugBeatSheetUrls().at(-1)!] != null ? "1" : "0"}`
+    : smugBeatSheetUrls()
+        .map((src) => (sheets[src] != null ? "1" : "0"))
+        .join("");
   useEffect(() => {
     setPosePhase(phase);
   }, [phase]);
@@ -885,6 +1021,11 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
       data-rai-pose-phase={phase}
       data-rai-pose-wait={poseWait ? "1" : "0"}
       data-rai-smug-decode={smugDecode}
+      data-rai-clip={clipMode ? "1" : "0"}
+      data-rai-clip-ready={clipReady ? "1" : "0"}
+      data-rai-clip-frame={clipOnStage ? String(clipView.index).padStart(2, "0") : "off"}
+      data-rai-clip-time={clipOnStage ? String(hipClipTimeMs(clipView.index)) : "off"}
+      data-rai-clip-dir={clipOnStage ? clipView.dir : "off"}
       data-rai-build={buildId()}
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
     >
@@ -908,7 +1049,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
               };
           // While a bridge frame is up the live layers are hidden, not unmounted, so they
           // stay decoded and come back (mid-fade or not) in the commit the bridge lands.
-          const hidden = bridgeSheet ? ({ visibility: "hidden" } as const) : null;
+          const hidden = bridgeSheet || clipOnStage ? ({ visibility: "hidden" } as const) : null;
           return (
             <img
               key={layer.id}
@@ -928,6 +1069,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
             />
           );
         })}
+        {clipSupported ? <HipClipLayer ref={canvasRef} visible={clipOnStage} /> : null}
         {bridgeSheet ? (
           <img
             key="pose-bridge"
@@ -961,7 +1103,11 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
             whiteSpace: "pre",
           }}
         >
-          {`build ${buildId()}\npose ${pose} / ${emotion}\nphase ${phase}${poseWait ? " (waiting for frames)" : ""}\nreduced-motion ${reducedMotion ? "on" : "off"}\nsmug decode ${smugDecode.slice(0, 6)}+${smugDecode.slice(6)} (bridge 01..06 + sheet)${bridgeWaitExpired ? "\nBRIDGE FALLBACK" : ""}`}
+          {`build ${buildId()}\npose ${pose} / ${emotion}\nphase ${phase}${poseWait ? " (waiting for frames)" : ""}\nreduced-motion ${reducedMotion ? "on" : "off"}\n${
+            clipMode
+              ? `hip clip ${clipReady ? "ready" : "loading"} ${clipBits.toString(2).split("1").length - 1}/${HIP_CLIP_FRAMES.length}\nclip time ${clipOnStage ? `${hipClipTimeMs(clipView.index)} ms (pic ${clipView.index}/${HIP_CLIP_LAST}, ${clipView.dir})` : "off"}\nclip decode ${clipDecode} sheet ${smugDecode.slice(-1)}`
+              : `PNG bridge${clipGaveUp ? " (clip gave up)" : ""}\nsmug decode ${smugDecode.slice(0, 6)}+${smugDecode.slice(6)} (bridge 01..06 + sheet)`
+          }${bridgeWaitExpired ? "\nBRIDGE FALLBACK" : ""}`}
         </pre>
       ) : null}
     </div>
