@@ -1,0 +1,327 @@
+import assert from "node:assert/strict";
+import { readFileSync, statSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
+import {
+  HIP_CLIP_CROP,
+  HIP_CLIP_FRAMES,
+  HIP_CLIP_LAST,
+  HIP_CLIP_MAX_ATTEMPTS,
+  HIP_TICK_MS,
+  HipClipDriver,
+  HipClipPlayer,
+  hipClipTimeMs,
+  hipFrameDwellMs,
+  hipTravelMs,
+  loadHipClip,
+  type ClipHost,
+  type ClipView,
+} from "./hip-clip.ts";
+import { SPRITES, deferredSpriteUrls, stagePreloadOrder } from "./rai.ts";
+import { bridgeFiles } from "./pose-bridge.ts";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
+
+/** A 60 Hz display with a hand-cranked clock. `stall(ms)` skips frames like a busy main thread. */
+function rig() {
+  const state = { now: 1000, queue: [] as ((ts: number) => void)[], draws: [] as { t: number; i: number }[], hides: [] as number[], shows: 0, views: [] as ClipView[] };
+  const host: ClipHost = {
+    raf: (cb) => {
+      state.queue.push(cb);
+      return state.queue.length;
+    },
+    cancelRaf: () => {
+      state.queue = [];
+    },
+    draw: (i) => state.draws.push({ t: state.now, i }),
+    show: () => {
+      state.shows += 1;
+    },
+    hide: () => state.hides.push(state.now),
+    onView: (v) => state.views.push(v),
+  };
+  const player = new HipClipPlayer(host);
+  const frame = (n = 1) => {
+    for (let k = 0; k < n; k++) {
+      state.now += 1000 / 60;
+      const cbs = state.queue;
+      state.queue = [];
+      for (const cb of cbs) cb(state.now);
+    }
+  };
+  const stall = (ms: number) => {
+    state.now += ms;
+  };
+  return { state, player, frame, stall };
+}
+
+describe("hip clip data", () => {
+  it("is the clip's travel: 29 then 30..78 every third tick, 18 pictures", () => {
+    assert.equal(HIP_CLIP_FRAMES.length, 18);
+    assert.deepEqual(HIP_CLIP_FRAMES.map((f) => f.source), [29, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78]);
+    assert.equal(HIP_CLIP_LAST, 17);
+    assert.equal(hipFrameDwellMs(0), HIP_TICK_MS);
+    assert.equal(hipFrameDwellMs(5), 3 * HIP_TICK_MS);
+    assert.equal(hipClipTimeMs(1), 1250);
+    assert.equal(hipClipTimeMs(17), 3250);
+    assert.ok(Math.abs(hipTravelMs() - 49 * HIP_TICK_MS) < 0.01);
+  });
+
+  it("ships all 18 pictures, small, with the crop's size", () => {
+    let total = 0;
+    for (const f of HIP_CLIP_FRAMES) {
+      const path = join(root, "public", f.file);
+      total += statSync(path).size;
+      const b = readFileSync(path);
+      assert.equal(b.toString("ascii", 0, 4), "RIFF");
+      assert.equal(b.toString("ascii", 8, 12), "WEBP");
+      assert.equal(b.toString("ascii", 12, 16), "VP8X");
+      assert.ok((b[20]! & 0x10) !== 0, `${f.file} has alpha`);
+      const w = 1 + (b[24]! | (b[25]! << 8) | (b[26]! << 16));
+      const h = 1 + (b[27]! | (b[28]! << 8) | (b[29]! << 16));
+      assert.deepEqual([w, h], [HIP_CLIP_CROP.w, HIP_CLIP_CROP.h], f.file);
+    }
+    assert.ok(total < 1_500_000, `clip assets ${total} bytes`);
+  });
+
+  it("preloads the clip, not the six PNGs, and never downloads the PNG bridge with it", () => {
+    const order = stagePreloadOrder({ clip: true });
+    assert.deepEqual(order.beat, [SPRITES.poses.smug]);
+    const deferred = deferredSpriteUrls({ skipBridge: true });
+    for (const file of bridgeFiles()) assert.ok(!deferred.some((u) => u.includes(file)), file);
+    assert.ok(deferredSpriteUrls().some((u) => u.includes("bridge_idle_smug_01")));
+    const puppet = readFileSync(join(root, "src/components/puppet.tsx"), "utf8");
+    assert.match(puppet, /stagePreloadOrder\(\{ clip: clipSupported \}\)/);
+    assert.match(puppet, /startClipLoad\(\)/);
+  });
+});
+
+describe("hip clip player", () => {
+  it("entry: every picture 00..17 once, in order, each held for its ticks, then rests on the hold picture", () => {
+    const { state, player, frame } = rig();
+    player.playIn();
+    assert.equal(state.shows, 1);
+    assert.deepEqual(state.draws.map((d) => d.i), [0]);
+    frame(30); // not confirmed on screen yet: nothing changes
+    assert.deepEqual(state.draws.map((d) => d.i), [0]);
+    player.confirmShown();
+    frame(400);
+    assert.deepEqual(state.draws.map((d) => d.i), Array.from({ length: 18 }, (_, i) => i));
+    for (let k = 1; k < state.draws.length - 1; k++) {
+      const dwell = state.draws[k + 1]!.t - state.draws[k]!.t;
+      assert.ok(Math.abs(dwell - hipFrameDwellMs(k)) <= 18, `picture ${k} held ${dwell.toFixed(0)} ms`);
+    }
+    assert.equal(player.view().index, HIP_CLIP_LAST);
+    assert.equal(player.view().visible, true);
+    frame(600); // the hold: no more draws, no hide
+    assert.equal(state.draws.length, 18);
+    assert.equal(state.hides.length, 0);
+  });
+
+  it("exit: the same pictures backwards 17..00, then hands back to the live sheet", () => {
+    const { state, player, frame } = rig();
+    player.playIn();
+    player.confirmShown();
+    frame(400);
+    state.draws.length = 0;
+    frame(120); // hold for a good while
+    player.playOut();
+    assert.equal(player.view().dir, "out");
+    frame(500);
+    assert.deepEqual(state.draws.map((d) => d.i), Array.from({ length: 17 }, (_, i) => 16 - i));
+    assert.equal(state.hides.length, 1);
+    assert.equal(player.view().visible, false);
+    // picture 00 stays up for its own tick before the idle sheet comes back
+    const last = state.draws.at(-1)!;
+    assert.ok(state.hides[0]! - last.t >= HIP_TICK_MS - 18);
+  });
+
+  it("a stall never skips a picture or squeezes one", () => {
+    const { state, player, frame, stall } = rig();
+    player.playIn();
+    player.confirmShown();
+    frame(10);
+    stall(400);
+    frame(2);
+    stall(250);
+    frame(2);
+    frame(500);
+    assert.deepEqual(state.draws.map((d) => d.i), Array.from({ length: 18 }, (_, i) => i));
+    for (let k = 1; k < state.draws.length - 1; k++) {
+      const dwell = state.draws[k + 1]!.t - state.draws[k]!.t;
+      assert.ok(dwell >= hipFrameDwellMs(k) - 18, `picture ${k} squeezed to ${dwell.toFixed(0)} ms`);
+    }
+  });
+
+  it("an exit that starts mid-entry reverses from the picture that is up (no jump)", () => {
+    const { state, player, frame } = rig();
+    player.playIn();
+    player.confirmShown();
+    frame(40);
+    const at = player.view().index;
+    assert.ok(at > 1 && at < HIP_CLIP_LAST);
+    state.draws.length = 0;
+    player.playOut();
+    frame(400);
+    assert.deepEqual(state.draws.map((d) => d.i), Array.from({ length: at }, (_, i) => at - 1 - i));
+    assert.equal(state.shows, 1);
+    assert.equal(state.hides.length, 1);
+  });
+
+  it("an entry that starts mid-exit resumes forward from the picture that is up", () => {
+    const { state, player, frame } = rig();
+    player.playIn();
+    player.confirmShown();
+    frame(400);
+    player.playOut();
+    frame(40);
+    const at = player.view().index;
+    assert.ok(at > 1 && at < HIP_CLIP_LAST);
+    state.draws.length = 0;
+    player.playIn();
+    frame(400);
+    assert.deepEqual(state.draws.map((d) => d.i), Array.from({ length: HIP_CLIP_LAST - at }, (_, i) => at + 1 + i));
+    assert.equal(state.hides.length, 0);
+  });
+
+  it("jumpToHold is a cut onto the hip picture, cut() a cut back", () => {
+    const { state, player, frame } = rig();
+    player.jumpToHold();
+    assert.deepEqual(state.draws.map((d) => d.i), [HIP_CLIP_LAST]);
+    assert.equal(player.view().visible, true);
+    frame(60);
+    assert.equal(state.draws.length, 1);
+    player.cut();
+    assert.equal(player.view().visible, false);
+    assert.equal(state.hides.length, 1);
+  });
+});
+
+describe("hip clip driver", () => {
+  function driverRig() {
+    const r = rig();
+    const d = new HipClipDriver(r.player);
+    const go = (key: string | null, o: Partial<{ reducedMotion: boolean; ready: boolean }> = {}) =>
+      d.commit(key, { reducedMotion: false, ready: true, ...o });
+    return { ...r, d, go };
+  }
+
+  it("idle -> smug plays in, smug -> idle plays out", () => {
+    const { state, player, go, frame } = driverRig();
+    go("idle");
+    assert.equal(player.view().visible, false);
+    go("smug");
+    player.confirmShown();
+    frame(400);
+    assert.equal(state.draws.length, 18);
+    go("idle");
+    frame(400);
+    assert.equal(state.hides.length, 1);
+  });
+
+  it("deduped on the key: a re-commit of the same key does nothing", () => {
+    const { state, go } = driverRig();
+    go("idle");
+    go("smug");
+    const n = state.draws.length;
+    go("smug");
+    go("smug");
+    assert.equal(state.draws.length, n);
+    assert.equal(state.shows, 1);
+  });
+
+  it("smug from a pose that is not idle, or with reduced motion, is a cut onto the hip picture; never the arms-down sheet", () => {
+    const a = driverRig();
+    a.go("wave");
+    a.go("smug");
+    assert.deepEqual(a.state.draws.map((d) => d.i), [HIP_CLIP_LAST]);
+    const b = driverRig();
+    b.go("idle");
+    b.go("smug", { reducedMotion: true });
+    assert.deepEqual(b.state.draws.map((d) => d.i), [HIP_CLIP_LAST]);
+    b.go("idle", { reducedMotion: true });
+    assert.equal(b.state.hides.length, 1);
+    assert.equal(b.player.view().visible, false);
+  });
+
+  it("smug -> a different pose is a cut back", () => {
+    const { state, go, player } = driverRig();
+    go("idle");
+    go("smug");
+    player.confirmShown();
+    go("wave");
+    assert.equal(state.hides.length, 1);
+  });
+
+  it("does nothing until the clip is ready", () => {
+    const { state, go } = driverRig();
+    go("idle");
+    go("smug", { ready: false });
+    assert.equal(state.draws.length, 0);
+  });
+});
+
+describe("hip clip loader", () => {
+  it("loads every picture in play order, retrying the ones that fail", async () => {
+    const failures = new Map<string, number>([["hip_bridge_03", 2], ["hip_bridge_11", 1]]);
+    const seen: number[] = [];
+    const out = await loadHipClip<number>({
+      srcFor: (f) => f,
+      fetchBlob: async (src) => {
+        for (const [k, left] of failures) {
+          if (src.includes(k) && left > 0) {
+            failures.set(k, left - 1);
+            throw new Error("net");
+          }
+        }
+        return new Blob([src]);
+      },
+      decode: async (b) => Number((await b.text()).match(/hip_bridge_(\d\d)/)![1]),
+      onFrame: (i) => seen.push(i),
+      wait: async () => {},
+    });
+    assert.deepEqual(out, Array.from({ length: 18 }, (_, i) => i));
+    assert.equal(seen.length, 18);
+  });
+
+  it("gives up (null) when a picture never loads, and stops when cancelled", async () => {
+    let calls = 0;
+    const dead = await loadHipClip<number>({
+      srcFor: (f) => f,
+      fetchBlob: async (src) => {
+        calls += 1;
+        if (src.includes("hip_bridge_05")) throw new Error("404");
+        return new Blob([src]);
+      },
+      decode: async () => 1,
+      wait: async () => {},
+    });
+    assert.equal(dead, null);
+    assert.ok(calls >= HIP_CLIP_MAX_ATTEMPTS);
+    const cancelled = await loadHipClip<number>({
+      srcFor: (f) => f,
+      fetchBlob: async (src) => new Blob([src]),
+      decode: async () => 1,
+      cancelled: () => true,
+      wait: async () => {},
+    });
+    assert.equal(cancelled, null);
+  });
+});
+
+describe("puppet wiring", () => {
+  const puppet = readFileSync(join(root, "src/components/puppet.tsx"), "utf8");
+  it("one canvas, live sheets hidden while it is up, phase read off the clip", () => {
+    assert.match(puppet, /<HipClipLayer ref=\{canvasRef\} visible=\{clipOnStage\} \/>/);
+    assert.match(puppet, /bridgeSheet \|\| clipOnStage \? \(\{ visibility: "hidden" \}/);
+    assert.match(puppet, /clipView\.dir === "out"/);
+    assert.match(puppet, /data-rai-clip-frame=/);
+    assert.match(puppet, /clipPlayer\.current\?\.confirmShown\(\)/);
+  });
+  it("waits for the clip (bounded, loud) and never expires into the arms-down sheet", () => {
+    assert.match(puppet, /console\.warn\("\[rai\] hip clip did not decode in time/);
+    assert.match(puppet, /reducedMotion: clipMode \? false : reducedMotion/);
+    assert.match(puppet, /const bridgeWaitExpired = !clipMode &&/);
+  });
+});

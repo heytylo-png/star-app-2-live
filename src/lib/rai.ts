@@ -576,6 +576,11 @@ export function bridgeFrameSrc(file: string): string {
   return ASSET(file);
 }
 
+/** Stage src for a hip-clip frame file (public/rai/hip/*.webp). */
+export function hipClipSrc(file: string): string {
+  return ASSET(file);
+}
+
 /** Live key → file under the static tree the puppet already serves. */
 export const LIVE_POSE_FILES = {
   idle: "rai/idle.png",
@@ -802,9 +807,11 @@ export function smugBeatSheetUrls(): string[] {
  * named Smug can arrive any moment and has to land on a decoded arm), then the
  * rest of the startup set (blink, mouth). Everything else stays deferred.
  */
-export function stagePreloadOrder(): { first: string; beat: string[]; rest: string[] } {
+export function stagePreloadOrder(opts?: { clip?: boolean }): { first: string; beat: string[]; rest: string[] } {
   const startup = startupSpriteUrls();
-  const beat = smugBeatSheetUrls();
+  // With the hip clip (keyed frames, hip-clip.ts) the six bridge PNGs are only a fallback
+  // and never downloaded; the smug sheet is still needed as the plate under the clip.
+  const beat = opts?.clip ? [SPRITES.poses.smug] : smugBeatSheetUrls();
   const first = startup[0]!;
   return { first, beat: beat.filter((u) => u !== first), rest: startup.slice(1).filter((u) => !beat.includes(u)) };
 }
@@ -851,14 +858,14 @@ export function openRestFallback<T extends { id: string; src: string }>(
  * Expo busts, and unused Helix extras stay out — `layersFor` never
  * references them while `USE_EXPO_TALK_BUST` is off and angle is 0.
  */
-export function deferredSpriteUrls(): string[] {
+export function deferredSpriteUrls(opts?: { skipBridge?: boolean }): string[] {
   const skip = new Set(startupSpriteUrls());
   const seen = new Set<string>();
   const urls: string[] = [];
   // Pose-bridge frames lead: six small pre-cut frames, decoded before any other
   // pose sheet, so smug can never be reachable with a frame still missing (a pair
   // with an undecoded frame can only hard-cut).
-  for (const file of bridgeFiles()) {
+  for (const file of opts?.skipBridge ? [] : bridgeFiles()) {
     const src = bridgeFrameSrc(file);
     if (skip.has(src) || seen.has(src)) continue;
     seen.add(src);

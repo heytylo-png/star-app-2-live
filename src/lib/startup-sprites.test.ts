@@ -127,8 +127,8 @@ describe("startup sprite lists", () => {
 
   it("punches startup then deferred from the puppet, not the full catalog", () => {
     const puppet = readFileSync(join(root, "src/components/puppet.tsx"), "utf8");
-    assert.match(puppet, /stagePreloadOrder\(\)/);
-    assert.match(puppet, /deferredSpriteUrls\(\)/);
+    assert.match(puppet, /stagePreloadOrder\(/);
+    assert.match(puppet, /deferredSpriteUrls\(/);
     assert.match(puppet, /requestIdleCallback/);
     assert.match(puppet, /setTimeout/);
     assert.match(puppet, /punchedSpriteUrl/);

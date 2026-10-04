@@ -37,7 +37,7 @@ describe("smug beat on a cold slow phone", () => {
 
   it("the puppet uses that order and reports its phase", () => {
     const puppet = readFileSync(join(root, "src/components/puppet.tsx"), "utf8");
-    assert.match(puppet, /stagePreloadOrder\(\)/);
+    assert.match(puppet, /stagePreloadOrder\(/);
     assert.match(puppet, /order\.beat\.map/);
     assert.match(puppet, /data-rai-pose-phase=\{phase\}/);
     assert.match(puppet, /data-rai-build=\{buildId\(\)\}/);
