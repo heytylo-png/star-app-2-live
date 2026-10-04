@@ -334,7 +334,8 @@ describe("puppet wiring", () => {
   const puppet = readFileSync(join(root, "src/components/puppet.tsx"), "utf8");
   it("one canvas, live sheets hidden while it is up, phase read off the clip", () => {
     assert.match(puppet, /<HipClipLayer ref=\{canvasRef\} visible=\{clipOnStage\} \/>/);
-    assert.match(puppet, /bridgeSheet \|\| clipOnStage \? \(\{ visibility: "hidden" \}/);
+    assert.match(puppet, /bridgeSheet \|\| clipOnStage \|\| smugPlateUnderClip \? \(\{ visibility: "hidden" \}/);
+    assert.match(puppet, /clipMode && bridgeKeyOfSrc\(layer\.src\) === "smug"/);
     assert.match(puppet, /clipView\.dir === "out"/);
     assert.match(puppet, /data-rai-clip-frame=/);
     assert.match(puppet, /clipPlayer\.current\?\.confirmShown\(\)/);

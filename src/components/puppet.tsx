@@ -61,6 +61,7 @@ import {
   bridgeFiles,
   bridgeGate,
   bridgeKeyOfPlates,
+  bridgeKeyOfSrc,
   bridgeWantsFrames,
 } from "@/lib/pose-bridge";
 import { PoseCrossfadePool, type CrossfadeLayer } from "@/lib/pose-crossfade";
@@ -1050,7 +1051,11 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
               };
           // While a bridge frame is up the live layers are hidden, not unmounted, so they
           // stay decoded and come back (mid-fade or not) in the commit the bridge lands.
-          const hidden = bridgeSheet || clipOnStage ? ({ visibility: "hidden" } as const) : null;
+          // In clip mode the arms-down smug sheet is only a decoded plate: it is never what the
+          // stage shows (a plate fading out after a cut, e.g. reduced motion, would flash it).
+          const smugPlateUnderClip = clipMode && bridgeKeyOfSrc(layer.src) === "smug";
+          const hidden =
+            bridgeSheet || clipOnStage || smugPlateUnderClip ? ({ visibility: "hidden" } as const) : null;
           return (
             <img
               key={layer.id}
