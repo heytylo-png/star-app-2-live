@@ -22,6 +22,7 @@ import {
   poseResetDelayMs,
   settledRestPose,
   smugBeatResetDelayMs,
+  smugWinkTextRestDelayMs,
   spokenTurnStartPose,
   streamSpokenAct,
   type EmotionId,
@@ -830,5 +831,85 @@ describe("hold: the beat belongs to the line, not the pose", () => {
   it("a long line reads at 45 ms a character from its landing", () => {
     const long = "x".repeat(200);
     assert.equal(resetDelay({ line: long, landed: 6000, speechEnded: 0, now: 6000 }), 200 * SMUG_READ_MS_PER_CHAR + SMUG_BEAT_TAIL_MS);
+  });
+});
+
+describe("named smug send at 5 / 7 / 9 / 12 s reply latency", () => {
+  const LINE = "Smug pose locked in, all for you";
+  const need = (landed: number) => landed + Math.max(POSE_HOLD_MIN_MS, LINE.length * SMUG_READ_MS_PER_CHAR) + SMUG_BEAT_TAIL_MS;
+
+  /**
+   * The app's turn: a named send puts smug on stage at once (sending stays true, so the
+   * reset effect arms nothing), the reply lands at `latency`, then (voiced) she talks for
+   * `speechMs`. Returns the stage and the absolute time the rest timer is armed to.
+   */
+  function turn(latency: number, o: { speechMs?: number; nonStreamed?: boolean } = {}) {
+    const s = stage({ paced: true });
+    s.commit(IDLE);
+    s.wait(100);
+    s.commit({ pose: "smug", emotion: "smug" }); // send(): setPose(named); complete(): sending = true
+    // nothing may release smug while the reply is in flight: the reset effect returns on `sending`
+    s.wait(latency);
+    const landed = s.clock.now(); // line lands: setCaption(line), lineLandedAt = now
+    let speechEnded = 0;
+    if (o.speechMs) {
+      s.commit({ pose: "smug", emotion: "smug", talking: true });
+      s.wait(o.speechMs);
+      speechEnded = s.clock.now();
+    }
+    s.commit({ pose: "smug", emotion: "smug", talking: false }); // finally: sending/talking false, effect arms
+    const now = s.clock.now();
+    const delay = smugBeatResetDelayMs({ line: LINE, lineLandedAt: landed, speechEndedAt: speechEnded, now });
+    return { s, landed, speechEnded, now, delay };
+  }
+
+  for (const latency of [5000, 7000, 9000, 12000]) {
+    it(`${latency / 1000} s, text only: the hip is up through the landing and held to landing + beat + 1.5 s`, () => {
+      const { s, landed, now, delay } = turn(latency);
+      assert.deepEqual(s.painted.slice(0, IN.length), IN, "entry 01..06 then smug");
+      assert.equal(now + delay, need(landed));
+      assert.ok(now + delay - landed >= POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
+      // hip continuous: smug from entry end until the timer, nothing else on the stage
+      assert.equal(s.log.at(-1), "smug");
+      s.wait(delay - 20);
+      assert.deepEqual(s.log, IN, "no idle / bridge frame at any point before the release");
+      s.commit(IDLE); // timer fires
+      s.wait(900);
+      assert.deepEqual(s.log.slice(s.log.lastIndexOf("smug")), OUT, "exit 06..01 as before");
+    });
+
+    it(`${latency / 1000} s, voiced (2.2 s clip): released at speech end + 1.5 s, never at speech end`, () => {
+      const { s, landed, speechEnded, now, delay } = turn(latency, { speechMs: 2200 });
+      assert.equal(speechEnded, landed + 2200);
+      assert.equal(now + delay, need(landed), "the 3.4 s reading minimum from the landing outlasts a 2.2 s clip");
+      const long = turn(latency, { speechMs: 9000 });
+      assert.equal(long.now + long.delay, long.speechEnded + SMUG_BEAT_TAIL_MS);
+      s.wait(delay - 20);
+      assert.equal(s.log.at(-1), "smug");
+      assert.deepEqual(s.log, IN);
+    });
+
+    it(`${latency / 1000} s: the release depends only on the landing + the line, never on when the pose resolved`, () => {
+      const base = turn(latency);
+      for (const poseAt of [0, 1500, latency - 100]) {
+        const e = smugBeatResetDelayMs({ line: LINE, lineLandedAt: base.landed, speechEndedAt: 0, now: base.now });
+        assert.equal(base.now + e, need(base.landed), `pose at ${poseAt}`);
+      }
+      // the rest rule that shipped in #104 (landing + 3.4 s, no tail, no reading) would have let go 1.5 s too early
+      const old = smugWinkTextRestDelayMs({ voiced: false, chewUntil: 0, pose: "smug", emotion: "smug", actLandedAt: base.landed, now: base.now })!;
+      assert.ok(base.now + old < need(base.landed));
+    });
+  }
+
+  it("a non-streamed reply (whole JSON at once) lands the same way: nothing runs before it, then landing + beat + 1.5 s", () => {
+    const { s, landed, now, delay } = turn(7000, { nonStreamed: true });
+    assert.equal(now + delay, need(landed));
+    s.wait(delay - 20);
+    assert.deepEqual(s.log, IN);
+  });
+
+  it("nothing is armed while the reply is in flight: the delay is for a landed line only", () => {
+    // not landed (0) and not sending counts from now, so an aborted turn still rests, but only after a full beat
+    assert.equal(smugBeatResetDelayMs({ line: "", lineLandedAt: 0, speechEndedAt: 0, now: 3000 }), POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
   });
 });

@@ -34,6 +34,8 @@ import {
   namedPoseFromText,
   parseAct,
   settledRestPose,
+  holdsSmugBeat,
+  smugBeatResetDelayMs,
   lineEndedRestPose,
   smugWinkTextRestDelayMs,
   composerShowsStop,
@@ -288,6 +290,10 @@ function RaiReady() {
   const actLandedAt = useRef(0);
   /** This reply actually spoke. Text-only stays false so smug/wink keep the chew. */
   const lineVoicedRef = useRef(false);
+  /** When the voiced line stopped being spoken (0 = not voiced). Smug holds until the beat ends. */
+  const speechEndedAt = useRef(0);
+  /** When the current reply's line became the bubble (0 until it lands). The smug beat counts from here, never from the pose. */
+  const lineLandedAt = useRef(0);
   const chewUntilRef = useRef(0);
   chewUntilRef.current = chewUntil;
   /** Life slots before this turn's ingest — used to detect track changes. */
@@ -493,6 +499,7 @@ function RaiReady() {
       source: "return",
     });
     setCaption(offer.line);
+    lineLandedAt.current = Date.now();
     const nextPose = poseForCallReply({
       namedPose: null,
       modelPose: null,
@@ -575,10 +582,10 @@ function RaiReady() {
   useEffect(() => {
     // Still saying the line. Smug and wink stay up for that, not as the rest.
     if (sending || talking) return;
-    // A smug or wink line has ended. Voiced lines commit official idle now.
-    // Text-only lines wait out the chew window and the normal pose hold so
-    // the sheet can paint, then the same idle commit. Not the long smug beat.
-    // A greeting snap below still drops an inferred wink immediately.
+    // A smug or wink line has ended. Smug rests on idle only after its beat (the
+    // line landed AND finished, + 1.5 s). A wink waits out the chew window and the
+    // normal pose hold (voiced: speech end). A greeting snap below still drops an
+    // inferred wink immediately.
     const ended = lineEndedRestPose({ pose, emotion });
     const greetingSnap = snapGreetingSheet({
       pose,
@@ -587,13 +594,22 @@ function RaiReady() {
       replyPose: replyPoseRef.current,
     });
     if (!greetingSnap && ended && (pose !== ended.pose || emotion !== ended.emotion)) {
-      const delay = smugWinkTextRestDelayMs({
-        voiced: lineVoicedRef.current,
-        chewUntil: chewUntilRef.current,
-        pose,
-        emotion,
-        actLandedAt: actLandedAt.current,
-      });
+      // Smug holds its LINE's beat: from the line landing, through its reading time
+      // or speech, plus 1.5 s. Only that releases it (never the pose resolving, the
+      // generic pose hold or the chew). Wink keeps the plain rest rule.
+      const delay = holdsSmugBeat(pose, emotion)
+        ? smugBeatResetDelayMs({
+            line: captionRef.current,
+            lineLandedAt: lineLandedAt.current,
+            speechEndedAt: speechEndedAt.current,
+          })
+        : smugWinkTextRestDelayMs({
+            voiced: lineVoicedRef.current,
+            chewUntil: chewUntilRef.current,
+            pose,
+            emotion,
+            actLandedAt: actLandedAt.current,
+          });
       if (delay != null && delay > 0) {
         const id = window.setTimeout(() => {
           setPose(ended.pose);
@@ -934,6 +950,8 @@ function RaiReady() {
     namedTurnRef.current = namedThisTurn;
     replyPoseRef.current = null;
     lineVoicedRef.current = false;
+    speechEndedAt.current = 0;
+    lineLandedAt.current = 0;
     // A new spoken line re-resolves — leftover think / pout / tired must not
     // sit under this bubble. Speech talks on idle (SPOKEN_TALK_TO_IDLE), so the
     // turn starts on idle, not talk_official. Named poses already swapped.
@@ -1120,6 +1138,7 @@ function RaiReady() {
       const line = shapeSpoken(parsedLine) || "…";
       store.patchMessage(threadId, assistant.id, { content: line });
       setCaption(line);
+      lineLandedAt.current = Date.now();
       if (line !== "…") armTextChew(line);
       const lifeTitle = parseTrackTitle(lastUser);
       const named = lifeTitle ? null : namedPoseFromText(lastUser);
@@ -1193,6 +1212,7 @@ function RaiReady() {
       sendingRef.current = false;
       talkingRef.current = false;
       listenPausedForTtsRef.current = false;
+      if (voiced) speechEndedAt.current = Date.now();
       setSending(false);
       setTalking(false);
       setAmp(0);
