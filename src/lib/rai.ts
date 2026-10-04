@@ -303,6 +303,38 @@ export function smugBeatResetDelayMs(opts: {
   return Math.max(0, beatEnd - now);
 }
 
+/** What the stage is doing with the smug beat (puppet `data-rai-pose-phase`). */
+export type PosePhase = "idle" | "bridge-in" | "hold" | "bridge-out";
+
+/** Once the hip is up it stays at least this long before the beat may release it (a late decode never flashes it). */
+export const SMUG_MIN_VISIBLE_HOLD_MS = 1500;
+/** Longest the release waits for the stage to show the hip at all (frames still decoding). Matches BRIDGE_WAIT_MAX_MS. */
+export const SMUG_RELEASE_WAIT_CAP_MS = 30_000;
+
+/**
+ * The beat timer fired: may smug go back to idle now? 0 = yes. Otherwise ms to
+ * wait and ask again. The hip has to have actually been on stage for a visible
+ * hold: entry still playing, or the frames not decoded yet (stage still on idle),
+ * both wait, up to the cap. The exit's own bridge never waits.
+ */
+export function smugReleaseWaitMs(opts: {
+  phase: PosePhase;
+  /** When the stage reached `hold` (0 if it has not). */
+  holdSince: number;
+  /** How long this release has already waited. */
+  waitedMs: number;
+  now?: number;
+}): number {
+  if (opts.waitedMs >= SMUG_RELEASE_WAIT_CAP_MS) return 0;
+  const now = opts.now ?? Date.now();
+  if (opts.phase === "bridge-out") return 0;
+  if (opts.phase === "hold") {
+    const shown = opts.holdSince ? now - opts.holdSince : 0;
+    return Math.max(0, SMUG_MIN_VISIBLE_HOLD_MS - shown);
+  }
+  return 150;
+}
+
 /**
  * Settle delay for the pose just put on a spoken bubble.
  *
@@ -757,6 +789,24 @@ export function startupSpriteUrls(): string[] {
     ...idleBlinkFrameUrls(),
     ...(IDLE_MOUTH_ENABLED ? idleMouthFrameUrls() : []),
   ];
+}
+
+/** The seven sheets of the idle <-> smug beat: bridge 01..06, then the smug hold. */
+export function smugBeatSheetUrls(): string[] {
+  return [...bridgeFiles().map(bridgeFrameSrc), SPRITES.poses.smug];
+}
+
+/**
+ * Where the stage's first decodes go. idle.png first (the stage cannot paint
+ * without it), then the whole smug beat (bridge 01..06 + smug_official, a
+ * named Smug can arrive any moment and has to land on a decoded arm), then the
+ * rest of the startup set (blink, mouth). Everything else stays deferred.
+ */
+export function stagePreloadOrder(): { first: string; beat: string[]; rest: string[] } {
+  const startup = startupSpriteUrls();
+  const beat = smugBeatSheetUrls();
+  const first = startup[0]!;
+  return { first, beat: beat.filter((u) => u !== first), rest: startup.slice(1).filter((u) => !beat.includes(u)) };
 }
 
 /** Lid pass 02–04. Open hold is 0 or 1. Deferred punches wait this out. */

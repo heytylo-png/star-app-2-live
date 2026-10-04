@@ -16,7 +16,9 @@ import {
   openRestFallback,
   POSE_CROSSFADE_MS,
   priorityPoseSrc,
-  startupSpriteUrls,
+  stagePreloadOrder,
+  smugBeatSheetUrls,
+  type PosePhase,
   USE_EXPO_TALK_BUST,
   type EmotionId,
   type PoseId,
@@ -52,6 +54,8 @@ import { PoseCrossfadePool, type CrossfadeLayer } from "@/lib/pose-crossfade";
 import { punchedSpriteUrl } from "@/lib/punch-white";
 import { decodeSheet } from "@/lib/sheet-decode";
 import { sheetBox } from "@/lib/rai-sheet-box";
+import { buildId, debugOverlayOn } from "@/lib/build-id";
+import { setPoseStageMounted, setPosePhase } from "@/lib/pose-phase";
 import { cn } from "@/lib/utils";
 
 type PuppetProps = {
@@ -294,14 +298,19 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
     };
 
     const run = async () => {
-      const startup = startupSpriteUrls();
-      for (let i = 0; i < startup.length; i++) {
+      // idle.png, then the whole smug beat (bridge 01..06 + smug hold, in parallel),
+      // then blink and mouth. A named Smug can come any moment on a cold phone; its
+      // arm must land on decoded frames, so they go before anything non-essential.
+      const order = stagePreloadOrder();
+      await punchOne(order.first, order.first !== restSrc);
+      if (cancelled) return;
+      await afterPaint();
+      await Promise.all(order.beat.map((src) => punchOne(src, false)));
+      for (let i = 0; i < order.rest.length; i++) {
         if (cancelled) return;
-        const src = startup[i]!;
-        await punchOne(src, i === 0 && src !== restSrc);
-        if (cancelled) return;
-        if (i === 0) await afterPaint();
+        await punchOne(order.rest[i]!, false);
       }
+      if (cancelled) return;
       const deferred = deferredSpriteUrls();
       let index = 0;
       const step = () => {
@@ -836,6 +845,28 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   // While a bridge frame is up, it is the only visible image.
   const bridgeSheet = bridgeSrc ? sheets[bridgeSrc] : undefined;
   const bridgeFrame = bridgeSheet && bridgeSrc ? (/_(\d\d)\.png/.exec(bridgeSrc)?.[1] ?? "on") : "off";
+  // Smug beat phase, read off what is painted (not what was asked for).
+  // oxlint-disable-next-line react/refs -- plates is the painted key; read-only, same as the layers below
+  const plateKey = bridgeKeyOfPlates(plates);
+  const phase: PosePhase = bridgeSheet
+    ? plateKey === "smug"
+      ? "bridge-in"
+      : "bridge-out"
+    : plateKey === "smug"
+      ? "hold"
+      : "idle";
+  // Smug wanted but not on stage yet: frames still decoding, the plain open idle stays up.
+  const poseWait = bridgeWantsFrames(bridgeKeyOfPlates(desired)) && plateKey !== "smug" && !bridgeSheet;
+  const smugDecode = smugBeatSheetUrls()
+    .map((src) => (sheets[src] != null ? "1" : "0"))
+    .join("");
+  useEffect(() => {
+    setPosePhase(phase);
+  }, [phase]);
+  useEffect(() => {
+    setPoseStageMounted(true);
+    return () => setPoseStageMounted(false);
+  }, []);
   return (
     <div
       ref={stageRef}
@@ -851,6 +882,10 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
       data-rai-bridge-frame={bridgeFrame}
       data-rai-bridge-fallback={bridgeWaitExpired ? "1" : "0"}
       data-rai-reduced={reducedMotion ? "1" : "0"}
+      data-rai-pose-phase={phase}
+      data-rai-pose-wait={poseWait ? "1" : "0"}
+      data-rai-smug-decode={smugDecode}
+      data-rai-build={buildId()}
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
     >
       <div data-rai-rig className="rai-rig">
@@ -909,6 +944,26 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
         {/* Ahoge / hair tip proxy — rotates over the crown */}
         <span data-rai-ahoge className="rai-ahoge" />
       </div>
+      {debugOverlayOn() ? (
+        <pre
+          data-rai-debug
+          style={{
+            position: "fixed",
+            left: 4,
+            top: 4,
+            zIndex: 99999,
+            margin: 0,
+            padding: "4px 6px",
+            font: "11px/1.3 monospace",
+            color: "#0f0",
+            background: "rgba(0,0,0,0.72)",
+            pointerEvents: "none",
+            whiteSpace: "pre",
+          }}
+        >
+          {`build ${buildId()}\npose ${pose} / ${emotion}\nphase ${phase}${poseWait ? " (waiting for frames)" : ""}\nreduced-motion ${reducedMotion ? "on" : "off"}\nsmug decode ${smugDecode.slice(0, 6)}+${smugDecode.slice(6)} (bridge 01..06 + sheet)${bridgeWaitExpired ? "\nBRIDGE FALLBACK" : ""}`}
+        </pre>
+      ) : null}
     </div>
   );
 }
