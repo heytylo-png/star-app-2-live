@@ -905,6 +905,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
         clipPlayer.current = new HipClipPlayer({
           raf: (cb) => window.requestAnimationFrame(cb),
           cancelRaf: (h) => window.cancelAnimationFrame(h),
+          now: () => performance.now(),
           draw: (i) => paintHipPicture(canvasRef.current, clipBitmaps.current?.[i], i),
           show: () => {},
           hide: () => {},

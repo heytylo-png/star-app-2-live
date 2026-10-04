@@ -25,7 +25,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 /** A 60 Hz display with a hand-cranked clock. `stall(ms)` skips frames like a busy main thread. */
 function rig() {
-  const state = { now: 1000, queue: [] as ((ts: number) => void)[], draws: [] as { t: number; i: number }[], hides: [] as number[], shows: 0, views: [] as ClipView[] };
+  const state = { now: 1000, lag: 0, queue: [] as ((ts: number) => void)[], draws: [] as { t: number; i: number }[], hides: [] as number[], shows: 0, views: [] as ClipView[] };
   const host: ClipHost = {
     raf: (cb) => {
       state.queue.push(cb);
@@ -34,7 +34,8 @@ function rig() {
     cancelRaf: () => {
       state.queue = [];
     },
-    draw: (i) => state.draws.push({ t: state.now, i }),
+    now: () => state.now + state.lag,
+    draw: (i) => state.draws.push({ t: state.now + state.lag, i }),
     show: () => {
       state.shows += 1;
     },
@@ -147,6 +148,25 @@ describe("hip clip player", () => {
     stall(250);
     frame(2);
     frame(500);
+    assert.deepEqual(state.draws.map((d) => d.i), Array.from({ length: 18 }, (_, i) => i));
+    for (let k = 1; k < state.draws.length - 1; k++) {
+      const dwell = state.draws[k + 1]!.t - state.draws[k]!.t;
+      assert.ok(dwell >= hipFrameDwellMs(k) - 18, `picture ${k} squeezed to ${dwell.toFixed(0)} ms`);
+    }
+  });
+
+  it("a long task before the callback (stale frame timestamp) does not squeeze the next picture", () => {
+    const { state, player, frame } = rig();
+    player.playIn();
+    player.confirmShown();
+    frame(12);
+    for (let k = 0; k < 6; k++) {
+      state.lag = 110;
+      frame(1);
+      state.lag = 0;
+      frame(3);
+    }
+    frame(600);
     assert.deepEqual(state.draws.map((d) => d.i), Array.from({ length: 18 }, (_, i) => i));
     for (let k = 1; k < state.draws.length - 1; k++) {
       const dwell = state.draws[k + 1]!.t - state.draws[k]!.t;
