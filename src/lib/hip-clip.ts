@@ -67,6 +67,8 @@ export function hipTravelMs(): number {
 }
 
 /** Longest the stage waits for the clip before it gives up on it (loud). */
+/** Reduced-motion exit: the hip stays up this long while the live idle layer rises (the pool paints an incoming sheet at 0 for ~48 ms first), so the swap is hip -> idle with no blank or plate in between. */
+export const HIP_CUT_LINGER_MS = 96;
 export const HIP_CLIP_WAIT_MAX_MS = 30_000;
 export const HIP_CLIP_RETRY_MS = 800;
 /** Retries per picture before the loader stops asking (the stage's own wait bound is HIP_CLIP_WAIT_MAX_MS). */
@@ -149,6 +151,9 @@ export class HipClipPlayer {
   private due = Number.NaN;
   /** The canvas was asked to show but the stage has not confirmed it is on screen yet: no picture changes meanwhile. */
   private pendingShow = false;
+  /** A cut is waiting for the live layer to come up: the picture stays until then (rAF timebase). */
+  private lingerUntil = Number.NaN;
+  private lingerFor = 0;
 
   constructor(host: ClipHost) {
     this.host = host;
@@ -174,6 +179,8 @@ export class HipClipPlayer {
 
   /** idle -> smug: the arm travels onto the hip and stays. Resumes from the picture up if mid-exit. */
   playIn() {
+    this.lingerUntil = Number.NaN;
+    this.lingerFor = 0;
     if (!this.visible) {
       this.index = 0;
       this.host.draw(0);
@@ -202,6 +209,8 @@ export class HipClipPlayer {
   /** smug -> idle: the same pictures backwards, then the live idle sheet. */
   playOut() {
     if (!this.visible) return;
+    this.lingerUntil = Number.NaN;
+    this.lingerFor = 0;
     this.dir = "out";
     this.target = 0;
     this.emit();
@@ -210,6 +219,8 @@ export class HipClipPlayer {
 
   /** Straight to the hold picture (reduced motion, or smug reached from a non-idle pose). */
   jumpToHold() {
+    this.lingerUntil = Number.NaN;
+    this.lingerFor = 0;
     this.stopLoop();
     this.index = HIP_CLIP_LAST;
     this.host.draw(HIP_CLIP_LAST);
@@ -224,10 +235,33 @@ export class HipClipPlayer {
     this.emit();
   }
 
-  /** Back to the live sheet at once (the pose left smug for something that is not idle). */
-  cut() {
+  /**
+   * Back to the live sheet (the pose left smug for something that is not a playable exit).
+   * With `lingerMs` the picture up stays that long first (reduced-motion exit to idle), so the
+   * live sheet is on screen before the canvas goes.
+   */
+  cut(lingerMs = 0) {
+    if (!this.visible) {
+      this.stopLoop();
+      return;
+    }
+    if (lingerMs > 0) {
+      this.stopLoop();
+      this.lingerFor = lingerMs;
+      this.lingerUntil = Number.NaN;
+      this.dir = "out";
+      this.target = this.index;
+      this.emit();
+      this.startLoop();
+      return;
+    }
+    this.finishCut();
+  }
+
+  private finishCut() {
     this.stopLoop();
-    if (!this.visible) return;
+    this.lingerUntil = Number.NaN;
+    this.lingerFor = 0;
     this.visible = false;
     this.pendingShow = false;
     this.due = Number.NaN;
@@ -245,6 +279,12 @@ export class HipClipPlayer {
     if (!this.visible) return;
     if (this.pendingShow) {
       this.startLoop();
+      return;
+    }
+    if (this.lingerFor > 0) {
+      if (Number.isNaN(this.lingerUntil)) this.lingerUntil = ts + this.lingerFor;
+      if (ts >= this.lingerUntil) this.finishCut();
+      else this.startLoop();
       return;
     }
     // First frame of a picture that was drawn outside an animation frame: it paints now.
@@ -314,7 +354,7 @@ export class HipClipDriver {
     }
     if (from === "smug") {
       if (key === "idle" && !env.reducedMotion) this.player.playOut();
-      else this.player.cut();
+      else this.player.cut(key === "idle" ? HIP_CUT_LINGER_MS : 0);
     }
   }
 }
