@@ -35,7 +35,6 @@ import {
   parseAct,
   settledRestPose,
   holdsSmugBeat,
-  isReplyCaption,
   smugBeatResetDelayMs,
   smugReleaseWaitMs,
   lineEndedRestPose,
@@ -597,17 +596,16 @@ function RaiReady() {
       replyPose: replyPoseRef.current,
     });
     if (!greetingSnap && ended && (pose !== ended.pose || emotion !== ended.emotion)) {
-      // Smug: the reply caption on screen BLOCKS rest. Only after the bubble is
-      // gone (and TTS has ended when voiced) + 1.5 s do we release into 962.
-      // Never a reading-time cut under a live line (TyLo phone FAIL ~10s).
-      // Wink keeps the plain rest rule.
-      const captionLive = isReplyCaption(caption);
+      // Smug holds its LINE's beat: landing → reading/speech + 1.5 s → 962.
+      // Do not gate on caption state (it stays set after the bubble commits).
+      // Mid-hold wink/think cannot steal the body while pose is still smug.
+      // Mid-exit unpaired keys are ignored by PoseBridge.exitInFlight (#116).
+      // Wink lines keep the plain rest rule.
       const delay = holdsSmugBeat(pose, emotion)
         ? smugBeatResetDelayMs({
             line: captionRef.current,
             lineLandedAt: lineLandedAt.current,
             speechEndedAt: speechEndedAt.current,
-            captionLive,
           })
         : smugWinkTextRestDelayMs({
             voiced: lineVoicedRef.current,
@@ -616,7 +614,6 @@ function RaiReady() {
             emotion,
             actLandedAt: actLandedAt.current,
           });
-      if (delay == null) return; // smug caption still up — keep hold
       if (delay != null && delay > 0) {
         // A smug beat is released only once the hip was really on stage for a visible
         // hold (frames still decoding on a slow phone: wait, up to a cap). Never skips
@@ -698,7 +695,7 @@ function RaiReady() {
       setEmotion(DEFAULT_EMOTION);
     }, delay);
     return () => window.clearTimeout(id);
-  }, [draft, sending, talking, holding, callListening, pose, emotion, bubbleLifeKind, chewBlocksReturn, caption]);
+  }, [draft, sending, talking, holding, callListening, pose, emotion, bubbleLifeKind, chewBlocksReturn]);
 
   function clearCallListenTimers() {
     if (listenRestartTimerRef.current) {
@@ -1141,10 +1138,10 @@ function RaiReady() {
             });
             if (streamed) {
               setEmotion(streamed.emotion);
-              // Smug beat owns the body while the reply is up — never wink/think mid-hold/exit.
+              // Named Smug / still on smug: never wink/think mid-hold. Exit is idle pose;
+              // unpaired keys are handled by PoseBridge.exitInFlight.
               const keep =
-                namedTurnRef.current === "smug" ||
-                (isReplyCaption(captionRef.current) && holdsSmugBeat(poseRef.current, streamed.emotion))
+                namedTurnRef.current === "smug" || poseRef.current === "smug"
                   ? "smug"
                   : streamed.pose;
               setPose(keep);
@@ -1188,8 +1185,7 @@ function RaiReady() {
       });
       setEmotion(landed.emotion);
       const keepLand =
-        namedTurnRef.current === "smug" ||
-        (isReplyCaption(captionRef.current) && holdsSmugBeat(poseRef.current, landed.emotion))
+        namedTurnRef.current === "smug" || poseRef.current === "smug"
           ? "smug"
           : landed.pose;
       setPose(keepLand);

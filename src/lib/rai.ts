@@ -279,12 +279,13 @@ export function holdsSmugBeat(pose: PoseId, emotion: EmotionId): boolean {
 }
 
 /**
- * Smug lasts until its LINE is finished, then a 1.5 s tail — never a fixed
- * clock from send. While the reply caption is still on screen (`captionLive`),
- * rest is blocked (returns null): the phone must not cut to idle under a live
- * bubble. Once the caption is gone (and speech has ended when voiced), the
- * beat ends at the later of the reading floor, speech end, and "now" (caption
- * clear), plus SMUG_BEAT_TAIL_MS. Callers only use this for holdsSmugBeat.
+ * Smug lasts until its beat is over, and the beat belongs to the LINE, not to
+ * the pose: from line landing, through reading time (45 ms/char, never under
+ * POSE_HOLD_MIN_MS) or speech end, whichever is later, plus SMUG_BEAT_TAIL_MS.
+ * The stage `caption` string stays set after the chat bubble commits, so it
+ * must NOT gate this timer (that froze 962 forever on live 5e8dd73). Wink /
+ * emotion tags are blocked from stealing the body while pose is still smug
+ * (rai-app keep). Callers only use this for holdsSmugBeat.
  */
 export function smugBeatResetDelayMs(opts: {
   line: string;
@@ -292,19 +293,18 @@ export function smugBeatResetDelayMs(opts: {
   lineLandedAt: number;
   /** When speech ended; 0 when the line was not voiced. */
   speechEndedAt: number;
-  /** Reply bubble still showing this line. Blocks release entirely. */
+  /**
+   * Ignored for release timing. Kept optional so older call sites / tests
+   * compile; the chat transcript caption never clears on its own.
+   */
   captionLive?: boolean;
   now?: number;
-}): number | null {
-  if (opts.captionLive) return null;
+}): number {
   const now = opts.now ?? Date.now();
   const landed = opts.lineLandedAt || now;
   const readEnd = landed + Math.max(POSE_HOLD_MIN_MS, opts.line.trim().length * SMUG_READ_MS_PER_CHAR);
-  // Caption just cleared at `now` (effect re-ran). Never release sooner than
-  // the reading floor / speech end, and always keep the 1.5 s tail after the
-  // later of those and the clear moment.
-  const finishedAt = Math.max(readEnd, opts.speechEndedAt || 0, now);
-  return Math.max(0, finishedAt + SMUG_BEAT_TAIL_MS - now);
+  const beatEnd = Math.max(readEnd, opts.speechEndedAt || 0) + SMUG_BEAT_TAIL_MS;
+  return Math.max(0, beatEnd - now);
 }
 
 /** True when the stage caption is an assistant reply (not listening chrome). */

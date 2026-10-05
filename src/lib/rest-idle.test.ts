@@ -87,9 +87,10 @@ describe("smug and wink lines rest on official idle", () => {
     assert.match(app, /lineEndedRestPose\(\{/);
     assert.match(app, /smugWinkTextRestDelayMs\(\{/);
     assert.match(app, /smugBeatResetDelayMs\(\{/);
-    assert.match(app, /captionLive/);
-    assert.match(app, /isReplyCaption/);
     assert.match(app, /lineLandedAt\.current = Date\.now\(\)/);
+    // Caption state must not freeze 962 (chat bubble commits but caption stays).
+    assert.equal(app.includes("isReplyCaption"), false);
+    assert.match(app, /poseRef\.current === "smug"/);
     // nothing arms the release while the reply is in flight or she is talking, and a new turn clears the landing
     assert.match(app, /if \(sending \|\| talking\) return;/);
     assert.match(app, /lineLandedAt\.current = 0;/);
