@@ -138,6 +138,8 @@ export class PoseBridge {
    * screen ever showed it, which is how an arm-rise frame got skipped.
    */
   private paintPaced = false;
+  /** True while Helix 962 (smug→idle) is the sequence on stage. */
+  private exitInFlight = false;
   private cancelPaint: (() => void) | null = null;
 
   private readonly timers: BridgeTimers;
@@ -187,6 +189,7 @@ export class PoseBridge {
     if (this.cancelPaint) this.cancelPaint();
     this.cancelPaint = null;
     this.running = false;
+    this.exitInFlight = false;
     this.frames = [];
     this.index = 0;
   }
@@ -199,11 +202,18 @@ export class PoseBridge {
   request(req: BridgeRequest): boolean {
     const wasRunning = this.running;
     const onStage = this.current();
-    this.stop();
     const files = bridgeFilesFor(req.from, req.to);
     // A spoken line does not gate this: the pair is a pose change, and speech
     // (voice on or off) lands the pose within a few ms of the line starting. A
     // normal talk line never changes the pose, so it never gets here.
+    //
+    // Smug→idle exit (962) in flight: an unpaired key (wink, wave, …) must not
+    // abort — finish the out frames; the live sheet settles under the last one
+    // (213ea91 / TyLo phone: wink at out_02 was dropping the rest).
+    if (wasRunning && this.exitInFlight && !files && !req.reducedMotion) {
+      return true;
+    }
+    this.stop();
     if (!files || req.reducedMotion) {
       if (wasRunning) this.onFrame(null);
       return false;
@@ -221,6 +231,7 @@ export class PoseBridge {
     const resume = onStage ? srcs.indexOf(onStage) : -1;
     this.index = resume >= 0 ? resume : 0;
     this.running = true;
+    this.exitInFlight = req.from === "smug" && req.to === "idle";
     // Both directions wait for a paint before the dwell starts (never skip an unpainted frame).
     this.paintPaced = Boolean(this.afterPaint);
     this.onFrame(srcs[this.index]!);

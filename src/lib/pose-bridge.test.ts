@@ -229,7 +229,7 @@ describe("pose bridge sequencing", () => {
     assert.equal(bridge.active(), false);
   });
 
-  it("an interrupt to an unpaired pose drops the rest and hard-cuts to live", () => {
+  it("an unpaired interrupt during intro still hard-cuts (entry path unchanged)", () => {
     const { clock, req, names, bridge } = rig();
     req({ from: "idle", to: "smug" });
     clock.advance(150);
@@ -240,6 +240,27 @@ describe("pose bridge sequencing", () => {
     assert.equal(clock.pending(), 0);
     clock.advance(2000);
     assert.deepEqual(names(), ["01", "02", "live"], "dropped frames never come back");
+  });
+
+  it("an unpaired interrupt during 962 exit lets the rest of out finish (wink settles under last frame)", () => {
+    const { clock, req, names, bridge, shown } = rig();
+    req({ from: "idle", to: "smug" });
+    clock.advance(1000);
+    assert.equal(bridge.active(), false);
+    assert.equal(req({ from: "smug", to: "idle" }), true);
+    clock.advance(150); // out 01 → 02
+    assert.match(bridge.current()!, /smug_out_02/);
+    // wink (no pair): must NOT abort — keep playing o03..o05
+    assert.equal(req({ from: "idle", to: "wink" }), true);
+    assert.equal(bridge.active(), true);
+    assert.match(bridge.current()!, /smug_out_02/);
+    clock.advance(1000);
+    const joined = shown.map((x) => x.src ?? "live").join(" ");
+    assert.match(joined, /smug_out_03/);
+    assert.match(joined, /smug_out_04/);
+    assert.match(joined, /smug_out_05/);
+    assert.equal(names().at(-1), "live");
+    assert.equal(bridge.active(), false);
   });
 
   it("non-paired poses hard-cut: no frame is ever shown", () => {
