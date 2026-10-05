@@ -5,10 +5,9 @@
  * the last arms-down frame, 30..75 is the right arm travelling out and onto the hip
  * (a new picture every 3rd tick, so 8 distinct pictures a second), and 78 is the
  * last travel picture. The HOLD is not a clip frame: after travel the stage shows
- * `smug_hold.png` (keyed Helix 06, hand on hip + smirk). Exit plays the same 18
- * pictures backwards. Nothing was repainted: the pictures were cut to RGBA offline
- * with the same matte engine as the other pre-cut sheets (scripts/cut-hip-clip.md),
- * cropped to their common box and stored as lossy WebP with alpha.
+ * `smug_hold.png` (keyed Helix 06, hand on hip + smirk). Exit is NOT the clip
+ * played backwards: the stage plays the Helix stills 06→05→04→03→02→01
+ * (PoseBridge). This module only drives the forward travel onto the hold.
  *
  * Why not a <video>: Chrome cannot play backwards (negative playbackRate is not
  * supported), seeking frame by frame is async and drops frames on phones, and a video
@@ -358,8 +357,8 @@ export class HipClipPlayer {
  * decision uses only the key of the sheet that is on stage (idle / smug / null), so every
  * route onto smug (named, model pose tag, emotion tint, local brain) is the same change.
  *
- *  - idle -> smug: the arm travels (forward), then rests on the hip picture.
- *  - smug -> idle: the same pictures backwards, then the live idle sheet.
+ *  - idle -> smug: the arm travels (forward), then rests on smug_hold.
+ *  - smug -> idle: clear the hold flag (Helix reverse exit is PoseBridge's job).
  *  - anything else onto smug (or reduced motion): the smug_hold sheet straight away;
  *    smug -> anything else: a cut back to the live sheet.
  * The hold is always smug_hold.png (hand on hip + smirk), never a clip frame and never
@@ -389,8 +388,9 @@ export class HipClipDriver {
       return;
     }
     if (from === "smug") {
-      if (key === "idle" && !env.reducedMotion) this.player.playOut();
-      else this.player.cut(key === "idle" ? HIP_CUT_LINGER_MS : 0);
+      // Exit travel is Helix 06..01 via PoseBridge (puppet). Clear the hold; do not
+      // reverse the clip (that was the mid-exit snap TyLo saw).
+      this.player.cut(key === "idle" && env.reducedMotion ? HIP_CUT_LINGER_MS : 0);
     }
   }
 }

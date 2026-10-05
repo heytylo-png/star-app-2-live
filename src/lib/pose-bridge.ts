@@ -2,7 +2,7 @@
  * Helix pose bridge: a short run of in-between frames played when the shown
  * sheet changes between a paired set of poses. First pair only, idle <-> smug.
  *
- * Frames are hard cuts on one `<img>` (no crossfade, no loop), about 100 ms
+ * Frames are hard cuts on one `<img>` (no crossfade, no loop), about 150 ms
  * each. 01 is the idle pose and 06 is the hand-on-hip step into smug; the
  * live `idle.png` and the shipped `smug_hold.png` (Helix 06, hip + smirk) stay the rest and the
  * hold, so a bridge is only ever the in-betweens.
@@ -52,8 +52,8 @@ export function bridgeFilesFor(from: string | null, to: string | null): readonly
   return POSE_BRIDGE_PAIRS[`${from}>${to}`] ?? null;
 }
 
-/** Per-frame hold: 100 ms with a little jitter, always inside 80-120 ms. */
-export const BRIDGE_FRAME_MS = 100;
+/** Per-frame hold: ~150 ms with a little jitter, always inside 130-170 ms. */
+export const BRIDGE_FRAME_MS = 150;
 export const BRIDGE_JITTER_MS = 20;
 
 export function bridgeFrameMs(rand: () => number): number {
@@ -207,7 +207,8 @@ export class PoseBridge {
     const resume = onStage ? srcs.indexOf(onStage) : -1;
     this.index = resume >= 0 ? resume : 0;
     this.running = true;
-    this.paintPaced = req.to === "smug";
+    // Both directions wait for a paint before the dwell starts (never skip an unpainted frame).
+    this.paintPaced = Boolean(this.afterPaint);
     this.onFrame(srcs[this.index]!);
     this.armDwell();
     return true;
