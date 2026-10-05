@@ -93,6 +93,7 @@ describe("smug and wink lines rest on official idle", () => {
     assert.match(app, /poseRef\.current === "smug"/);
     // nothing arms the release while the reply is in flight or she is talking, and a new turn clears the landing
     assert.match(app, /if \(sending \|\| talking\) return;/);
+    assert.match(app, /if \(delay == null\) return;/);
     assert.match(app, /lineLandedAt\.current = 0;/);
     assert.doesNotMatch(app, /chewUntil > Date\.now\(\)/);
   });
@@ -122,11 +123,11 @@ describe("smug and wink lines rest on official idle", () => {
     assert.ok(delay != null && delay > chew);
     const beat = smugBeatResetDelayMs({
       line: reply,
-      lineLandedAt: 0,
+      lineLandedAt: 1,
       speechEndedAt: 0,
-      now: 0,
+      now: 1,
     });
-    assert.ok(delay != null && delay < beat);
+    assert.ok(delay != null && beat != null && delay < beat);
     assert.equal(
       smugWinkTextRestDelayMs({
         voiced: true,

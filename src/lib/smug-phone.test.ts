@@ -18,6 +18,9 @@ import {
   isReplyCaption,
   isSmugPathSheetSrc,
   smugBeatResetDelayMs,
+  smugReadingEndAt,
+  smugLineFinishedAt,
+  smugBeatEndAt,
   smugBeatSheetUrls,
   smugReleaseWaitMs,
   stagePreloadOrder,
@@ -128,7 +131,15 @@ describe("smug path allowlist + caption-blocked release", () => {
 
   it("reading floor + tail from landing; captionLive does not freeze release", () => {
     const now = 50_000;
-    // Long past reading floor (+ tail): ready now. captionLive must not null the timer.
+    assert.equal(
+      smugBeatResetDelayMs({
+        line: "x".repeat(32),
+        lineLandedAt: 0,
+        speechEndedAt: 0,
+        now,
+      }),
+      null,
+    );
     assert.equal(
       smugBeatResetDelayMs({
         line: "x".repeat(32),
@@ -139,7 +150,6 @@ describe("smug path allowlist + caption-blocked release", () => {
       }),
       0,
     );
-    // Mid-beat: still waiting out reading floor + tail.
     const mid = smugBeatResetDelayMs({
       line: "x".repeat(32),
       lineLandedAt: now - 1_000,
@@ -147,6 +157,39 @@ describe("smug path allowlist + caption-blocked release", () => {
       captionLive: true,
       now,
     });
-    assert.ok(mid > SMUG_BEAT_TAIL_MS);
+    assert.ok(mid != null && mid > SMUG_BEAT_TAIL_MS);
+  });
+
+  it("beat end is max(reading from land, speech) + 1.5s; release waits for beat even mid-entry", () => {
+    const land = 10_000;
+    const line = "x".repeat(156); // ~7.0 s reading
+    const readEnd = smugReadingEndAt({ line, lineLandedAt: land });
+    assert.equal(readEnd, land + 156 * 45);
+    assert.equal(smugLineFinishedAt({ line, lineLandedAt: land, speechEndedAt: 0 }), readEnd);
+    assert.equal(smugLineFinishedAt({ line, lineLandedAt: land, speechEndedAt: land + 20_000 }), land + 20_000);
+    const end = smugBeatEndAt({ line, lineLandedAt: land, speechEndedAt: 0 });
+    assert.equal(end, readEnd + SMUG_BEAT_TAIL_MS);
+    // Entry still playing, beat not done: wait out the remaining beat (not a bare 150ms poll).
+    const now = land + 2_000;
+    const more = smugReleaseWaitMs({
+      phase: "bridge-in",
+      holdSince: 0,
+      waitedMs: 0,
+      beatEndAt: end!,
+      now,
+    });
+    assert.equal(more, end! - now);
+    // Hold painted after beat already elapsed: still at least MIN visible hold.
+    const late = land + 30_000;
+    assert.equal(
+      smugReleaseWaitMs({
+        phase: "hold",
+        holdSince: late,
+        waitedMs: 0,
+        beatEndAt: end!,
+        now: late,
+      }),
+      SMUG_MIN_VISIBLE_HOLD_MS,
+    );
   });
 });

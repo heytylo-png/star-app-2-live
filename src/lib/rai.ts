@@ -279,32 +279,61 @@ export function holdsSmugBeat(pose: PoseId, emotion: EmotionId): boolean {
 }
 
 /**
- * Smug lasts until its beat is over, and the beat belongs to the LINE, not to
- * the pose: from line landing, through reading time (45 ms/char, never under
- * POSE_HOLD_MIN_MS) or speech end, whichever is later, plus SMUG_BEAT_TAIL_MS.
- * The stage `caption` string stays set after the chat bubble commits, so it
- * must NOT gate this timer (that froze 962 forever on live 5e8dd73). Wink /
- * emotion tags are blocked from stealing the body while pose is still smug
- * (rai-app keep). Callers only use this for holdsSmugBeat.
+ * Reading floor for a fully landed smug line (45 ms/char, never under
+ * POSE_HOLD_MIN_MS). Anchored to landing / stream-complete — never send or
+ * first token.
+ */
+export function smugReadingEndAt(opts: { line: string; lineLandedAt: number }): number {
+  const landed = opts.lineLandedAt;
+  return landed + Math.max(POSE_HOLD_MIN_MS, opts.line.trim().length * SMUG_READ_MS_PER_CHAR);
+}
+
+/**
+ * When the smug LINE is finished on the stage: later of reading floor (from
+ * full-line landing) and speech end (voice on). There is no separate stage
+ * subtitle that auto-hides — ChatThread's assistant bubble stays in the
+ * transcript — so this clock is the gate, not React `caption` state.
+ */
+export function smugLineFinishedAt(opts: {
+  line: string;
+  lineLandedAt: number;
+  speechEndedAt: number;
+}): number {
+  return Math.max(smugReadingEndAt(opts), opts.speechEndedAt || 0);
+}
+
+/**
+ * Wall clock when 962 may start: line finished + SMUG_BEAT_TAIL_MS (1.5 s).
+ * Null when the full line has not landed yet (do not arm from pose-resolve).
+ */
+export function smugBeatEndAt(opts: {
+  line: string;
+  lineLandedAt: number;
+  speechEndedAt: number;
+}): number | null {
+  if (!opts.lineLandedAt) return null;
+  return smugLineFinishedAt(opts) + SMUG_BEAT_TAIL_MS;
+}
+
+/**
+ * Ms until smug may leave for 962. Null while the full line has not landed.
+ * `captionLive` is ignored — the transcript bubble never auto-clears; gating
+ * on React caption froze exit (#117). Callers only use this for holdsSmugBeat.
  */
 export function smugBeatResetDelayMs(opts: {
   line: string;
-  /** When the line became the current bubble; 0 when it has not landed. */
+  /** When the full line became the bubble (stream-complete / land); 0 until then. */
   lineLandedAt: number;
   /** When speech ended; 0 when the line was not voiced. */
   speechEndedAt: number;
-  /**
-   * Ignored for release timing. Kept optional so older call sites / tests
-   * compile; the chat transcript caption never clears on its own.
-   */
+  /** Ignored (API compat). Transcript caption does not auto-hide. */
   captionLive?: boolean;
   now?: number;
-}): number {
+}): number | null {
+  const end = smugBeatEndAt(opts);
+  if (end == null) return null;
   const now = opts.now ?? Date.now();
-  const landed = opts.lineLandedAt || now;
-  const readEnd = landed + Math.max(POSE_HOLD_MIN_MS, opts.line.trim().length * SMUG_READ_MS_PER_CHAR);
-  const beatEnd = Math.max(readEnd, opts.speechEndedAt || 0) + SMUG_BEAT_TAIL_MS;
-  return Math.max(0, beatEnd - now);
+  return Math.max(0, end - now);
 }
 
 /** True when the stage caption is an assistant reply (not listening chrome). */
@@ -354,16 +383,25 @@ export function smugReleaseWaitMs(opts: {
   holdSince: number;
   /** How long this release has already waited. */
   waitedMs: number;
+  /**
+   * Absolute beat end (line finished + 1.5 s). While still entering, or if the
+   * first timer fired early, keep waiting until this wall clock — never cut
+   * hold before line-finished+1.5s just because the hip painted late.
+   */
+  beatEndAt?: number;
   now?: number;
 }): number {
   if (opts.waitedMs >= SMUG_RELEASE_WAIT_CAP_MS) return 0;
   const now = opts.now ?? Date.now();
   if (opts.phase === "bridge-out") return 0;
+  const untilBeat = opts.beatEndAt ? Math.max(0, opts.beatEndAt - now) : 0;
   if (opts.phase === "hold") {
     const shown = opts.holdSince ? now - opts.holdSince : 0;
-    return Math.max(0, SMUG_MIN_VISIBLE_HOLD_MS - shown);
+    const untilMin = Math.max(0, SMUG_MIN_VISIBLE_HOLD_MS - shown);
+    return Math.max(untilMin, untilBeat);
   }
-  return 150;
+  // Entry / decode: poll, but never schedule a cut before the beat end.
+  return Math.max(150, untilBeat);
 }
 
 /**

@@ -544,8 +544,8 @@ describe("guard: a bridge-eligible pair never hard-cuts when its frames are deco
 });
 
 /**
- * The reset timer the app arms once a line is over. smug: the beat counts from the line's
- * landing (`landed`; 0 = not landed, counts from now) and its speech end, never the pose.
+ * The reset timer the app arms once a line is over. smug: the beat counts from the
+ * full line's landing and speech end (0 landed → null, not yet armed).
  */
 function resetDelay(opts: { line: string; landed: number; speechEnded: number; now: number; pose?: PoseId; emotion?: EmotionId }) {
   const pose = opts.pose ?? "smug";
@@ -567,22 +567,23 @@ describe("smug holds until its beat ends (early drop)", () => {
   it("a long silent line (typed reply, no voice) holds for its reading time plus the tail", () => {
     const chars = LONG_LINE.length;
     assert.ok(chars > 300);
-    const d = resetDelay({ line: LONG_LINE, landed: 0, speechEnded: 0, now: 0 });
+    assert.equal(resetDelay({ line: LONG_LINE, landed: 0, speechEnded: 0, now: 0 }), null);
+    const d = resetDelay({ line: LONG_LINE, landed: 1, speechEnded: 0, now: 1 });
     assert.equal(d, chars * SMUG_READ_MS_PER_CHAR + SMUG_BEAT_TAIL_MS);
     // the old rule dropped a long line after ~3.4 s from landing
-    assert.ok(d > 3400 * 3);
+    assert.ok(d! > 3400 * 3);
   });
 
   it("a voiced line holds until the speech ended plus the tail (never the reading time alone)", () => {
     const speechEnd = 40_000; // a slow voice, much longer than the reading time
-    const landed = 0;
+    const landed = 1;
     const d = resetDelay({ line: LONG_LINE, landed, speechEnded: speechEnd, now: speechEnd });
-    assert.ok(d >= SMUG_BEAT_TAIL_MS, "at least the tail after speech ends");
-    assert.ok(speechEnd + d >= speechEnd + SMUG_BEAT_TAIL_MS);
+    assert.ok(d != null && d >= SMUG_BEAT_TAIL_MS, "at least the tail after speech ends");
+    assert.ok(speechEnd + d! >= speechEnd + SMUG_BEAT_TAIL_MS);
   });
 
   it("a short line keeps the 3.4 s minimum from its landing, plus the 1.5 s tail exactly", () => {
-    const d = resetDelay({ line: "Hm.", landed: 0, speechEnded: 0, now: 0 });
+    const d = resetDelay({ line: "Hm.", landed: 1, speechEnded: 0, now: 1 });
     assert.equal(d, POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
   });
 
@@ -609,9 +610,11 @@ describe("smug holds until its beat ends (early drop)", () => {
     s.commit({ pose: spokenTurnStartPose(), emotion: "glance" });
     s.commit({ pose: "smug", emotion: "smug" });
     s.commit({ pose: "smug", emotion: "smug", talking: false });
+    s.wait(1); // clock 0 means "not landed" for the beat helper
     const landedAt = s.clock.now();
     const delay = resetDelay({ line: LONG_LINE, landed: landedAt, speechEnded: 0, now: landedAt });
-    s.wait(delay - 10);
+    assert.ok(delay != null && delay > 0);
+    s.wait(delay! - 10);
     assert.ok(!s.log.slice(-1).includes("idle"), "still on smug just before the beat ends");
     assert.equal(s.log.at(-1), "smug");
     s.commit({ pose: settledRestPose(), emotion: "glance" }); // the timer fires
@@ -830,9 +833,9 @@ describe("hold: the beat belongs to the line, not the pose", () => {
     assert.equal(s.log.at(-1), "smug");
   });
 
-  it("no landing yet counts from now (a timer is never armed against a line not on screen)", () => {
+  it("no landing yet: do not arm (null) — never count from pose-resolve/now", () => {
     const d = resetDelay({ line: LINE, landed: 0, speechEnded: 0, now: 4000 });
-    assert.equal(d, POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
+    assert.equal(d, null);
   });
 
   it("re-arming later (typing then clearing the draft) keeps the same absolute end", () => {
@@ -930,6 +933,7 @@ describe("named smug send at 5 / 7 / 9 / 12 s reply latency", () => {
 
   it("nothing is armed while the reply is in flight: the delay is for a landed line only", () => {
     // not landed (0) and not sending counts from now, so an aborted turn still rests, but only after a full beat
-    assert.equal(smugBeatResetDelayMs({ line: "", lineLandedAt: 0, speechEndedAt: 0, captionLive: false, now: 3000 }), POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
+    assert.equal(smugBeatResetDelayMs({ line: "", lineLandedAt: 0, speechEndedAt: 0, captionLive: false, now: 3000 }), null);
+    assert.equal(smugBeatResetDelayMs({ line: "", lineLandedAt: 3000, speechEndedAt: 0, captionLive: false, now: 3000 }), POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
   });
 });
