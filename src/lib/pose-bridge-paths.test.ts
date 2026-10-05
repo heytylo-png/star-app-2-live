@@ -512,7 +512,11 @@ describe("guard: a bridge-eligible pair never hard-cuts when its frames are deco
     assert.equal(bridgeGate({ wantedKey: "smug", ...wait, framesReady: true }), "go");
     assert.equal(bridgeGate({ wantedKey: "smug", ...wait, waitExpired: true }), "go");
     assert.equal(bridgeGate({ wantedKey: "smug", ...wait, reducedMotion: true }), "go");
-    for (const wanted of ["idle", null]) assert.equal(bridgeGate({ wantedKey: wanted, ...wait }), "go");
+    // Bare idle/null wants no wait — but leaving smug for idle must wait for 962.
+    assert.equal(bridgeGate({ wantedKey: "idle", shownKey: null, ...wait }), "go");
+    assert.equal(bridgeGate({ wantedKey: null, shownKey: null, ...wait }), "go");
+    assert.equal(bridgeGate({ wantedKey: "idle", shownKey: "smug", ...wait }), "wait");
+    assert.equal(bridgeGate({ wantedKey: "idle", shownKey: "smug", ...wait, framesReady: true }), "go");
   });
 
   it("slow decode on the real send path: wait, then the full bridge in and out", () => {
@@ -926,6 +930,6 @@ describe("named smug send at 5 / 7 / 9 / 12 s reply latency", () => {
 
   it("nothing is armed while the reply is in flight: the delay is for a landed line only", () => {
     // not landed (0) and not sending counts from now, so an aborted turn still rests, but only after a full beat
-    assert.equal(smugBeatResetDelayMs({ line: "", lineLandedAt: 0, speechEndedAt: 0, now: 3000 }), POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
+    assert.equal(smugBeatResetDelayMs({ line: "", lineLandedAt: 0, speechEndedAt: 0, captionLive: false, now: 3000 }), POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
   });
 });

@@ -5,6 +5,7 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import { bridgeFiles } from "./pose-bridge.ts";
 import {
+  SMUG_BEAT_TAIL_MS,
   SMUG_MIN_VISIBLE_HOLD_MS,
   SMUG_RELEASE_WAIT_CAP_MS,
   SPRITES,
@@ -14,6 +15,9 @@ import {
   holdsSmugBeat,
   idleBlinkFrameUrls,
   idleMouthFrameUrls,
+  isReplyCaption,
+  isSmugPathSheetSrc,
+  smugBeatResetDelayMs,
   smugBeatSheetUrls,
   smugReleaseWaitMs,
   stagePreloadOrder,
@@ -102,5 +106,45 @@ describe("smug beat on a cold slow phone", () => {
   it("the service worker cache name is a stamped constant", () => {
     const sw = readFileSync(join(root, "public/sw.js"), "utf8");
     assert.match(sw, /const CACHE = "star-rai-shell-[^"]+"/);
+  });
+});
+
+describe("smug path allowlist + caption-blocked release", () => {
+  it("allows only idle / smug_in / smug_hold / smug_out sheets", () => {
+    assert.equal(isSmugPathSheetSrc(SPRITES.poses.smug), true);
+    assert.equal(isSmugPathSheetSrc(SPRITES.poses.idle), true);
+    assert.equal(isSmugPathSheetSrc("rai/smug_in_01.png?v=rgba3"), true);
+    assert.equal(isSmugPathSheetSrc("rai/smug_out_05.png"), true);
+    assert.equal(isSmugPathSheetSrc(SPRITES.poses.think), false);
+    assert.equal(isSmugPathSheetSrc("rai/smug_official.png"), false);
+    assert.equal(isSmugPathSheetSrc(SPRITES.poses.peace), false);
+  });
+
+  it("reply captions block the beat; empty / listening do not", () => {
+    assert.equal(isReplyCaption("Obviously."), true);
+    assert.equal(isReplyCaption(""), false);
+    assert.equal(isReplyCaption("Listening…"), false);
+  });
+
+  it("returns null while the caption is live, else at least the 1.5 s tail after clear", () => {
+    const now = 50_000;
+    assert.equal(
+      smugBeatResetDelayMs({
+        line: "x".repeat(32),
+        lineLandedAt: now - 10_000,
+        speechEndedAt: 0,
+        captionLive: true,
+        now,
+      }),
+      null,
+    );
+    const afterClear = smugBeatResetDelayMs({
+      line: "x".repeat(32),
+      lineLandedAt: now - 10_000,
+      speechEndedAt: 0,
+      captionLive: false,
+      now,
+    });
+    assert.equal(afterClear, SMUG_BEAT_TAIL_MS);
   });
 });

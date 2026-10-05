@@ -26,6 +26,8 @@ import {
   idleRestSrc,
   isRetiredBlinkSrc,
   layersFor,
+  holdsSmugBeat,
+  isSmugPathSheetSrc,
   openRestFallback,
   POSE_CROSSFADE_MS,
   priorityPoseSrc,
@@ -731,22 +733,27 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
 
   const mouthShown: IdleMouthFrame = talkingIdle && mouthReady ? mouth : 0;
 
-  const desired = useMemo(
-    () =>
-      layersFor({
-        pose,
-        emotion,
-        talking,
-        amplitude: ampLive,
-        angle: 0,
-        talkPhase: 0,
-        blink: blinkShown,
-        mouth: mouthShown,
-        idleBeat: "none",
-        reducedMotion,
-      }),
-    [pose, emotion, talking, ampLive, blinkShown, mouthShown, reducedMotion],
-  );
+  const desired = useMemo(() => {
+    const raw = layersFor({
+      pose,
+      emotion,
+      talking,
+      amplitude: ampLive,
+      angle: 0,
+      talkPhase: 0,
+      blink: blinkShown,
+      mouth: mouthShown,
+      idleBeat: "none",
+      reducedMotion,
+    });
+    // Smug path allowlist: never paint think / smug_official / peace / etc.
+    // Illegal sheets fall back to idle rest until 956 paints (TyLo phone FAIL).
+    if (!holdsSmugBeat(pose, emotion)) return raw;
+    const fallback = idleRestSrc();
+    return raw.map((layer) =>
+      isSmugPathSheetSrc(layer.src) ? layer : { ...layer, src: fallback },
+    );
+  }, [pose, emotion, talking, ampLive, blinkShown, mouthShown, reducedMotion]);
   const bridgeFramesReady = clipMode
     ? clipReady
     : bridgeFiles().every((file) => sheets[bridgeFrameSrc(file)] != null);
@@ -757,8 +764,11 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   const plates = useMemo(() => {
     const next = desired.filter((layer) => layer.role !== "eyes" && !isRetiredBlinkSrc(layer.src));
     // A paired idle <-> smug change waits for its frames (bounded) instead of cutting.
+    const wantedKey = bridgeKeyOfPlates(next);
+    const shownKey = bridgeKeyOfPlates(shownPlates.current);
     const gate = bridgeGate({
-      wantedKey: bridgeKeyOfPlates(next),
+      wantedKey,
+      shownKey,
       framesReady: bridgeFramesReady,
       // Reduced motion hard-cuts but still lands on the hip picture, so with the clip it
       // waits for it like everyone else (the plain idle stays up meanwhile).
@@ -812,7 +822,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   // cuts and says so (console + stage attribute), so a missing frame is never silent.
   useEffect(() => {
     if (bridgeFramesReady || (reducedMotion && !clipMode) || bridgeWaitExpired) return;
-    if (!bridgeWantsFrames(bridgeKeyOfPlates(desired))) return;
+    if (!bridgeWantsFrames(bridgeKeyOfPlates(desired), bridgeKeyOfPlates(shownPlates.current))) return;
     if (clipMode) {
       // Hip clip still decoding: keep asking (a failed picture is retried), show the plain
       // idle meanwhile, and after a generous bound say so loudly and fall back to the PNG
@@ -1020,7 +1030,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
         : "idle";
   // Smug wanted but not on stage yet: frames still decoding, the plain open idle stays up.
   const poseWait =
-    bridgeWantsFrames(bridgeKeyOfPlates(desired)) && !bridgeSheet && !clipOnStage && (clipMode ? !clipReady : plateKey !== "smug");
+    bridgeWantsFrames(bridgeKeyOfPlates(desired), plateKey) && !bridgeSheet && !clipOnStage && (clipMode ? !clipReady : plateKey !== "smug");
   const clipDecode = HIP_CLIP_FRAMES.map((_, i) => ((clipBits >> i) & 1 ? "1" : "0")).join("");
   const smugDecode = clipMode
     ? `${clipDecode}${sheets[smugBeatSheetUrls().at(-1)!] != null ? "1" : "0"}`
