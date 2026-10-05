@@ -25,11 +25,11 @@ import { readPosePhase, setPoseStageMounted, setPosePhase } from "./pose-phase.t
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 describe("smug beat on a cold slow phone", () => {
-  it("preloads idle, then the 6 bridge frames + smug sheet, before blink and mouth", () => {
+  it("preloads idle, then Helix 956+962 frames + smug_hold, before blink and mouth", () => {
     const { first, beat, rest } = stagePreloadOrder();
     assert.equal(first, SPRITES.poses.idle);
     assert.deepEqual(beat, [...bridgeFiles().map(bridgeFrameSrc), SPRITES.poses.smug]);
-    assert.equal(beat.length, 7);
+    assert.equal(beat.length, 11);
     assert.deepEqual(rest, [...idleBlinkFrameUrls(), ...idleMouthFrameUrls()]);
     assert.deepEqual(new Set([first, ...beat, ...rest]), new Set([...startupSpriteUrls(), ...smugBeatSheetUrls()]));
     assert.equal(new Set([first, ...beat, ...rest]).size, 1 + beat.length + rest.length);

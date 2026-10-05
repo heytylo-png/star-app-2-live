@@ -30,7 +30,7 @@ Body sheets swap by stable layer id (`body:<src>`). Incoming starts at opacity 0
 
 **Interrupted fades** (`PoseCrossfadePool`, `src/lib/pose-crossfade.ts`). The incoming sheet sits at 0 for one ~48ms paint before it fades up. If the pool updates again inside that window, a fade-in still wanted is re-armed, and one no longer wanted is dropped. Before, A → B → A within ~48ms left B stranded at opacity 0, and the next switch to B faded A out over nothing (an empty stage until something else re-rendered).
 
-### Pose bridge (idle ↔ smug, first pair only) — legacy six-PNG path, now only the fallback (see Hip clip)
+### Pose bridge (idle ↔ smug) — legacy six-PNG path (retired; see Helix 956 / 962)
 
 **On** (TyLo, 2026-10-02). When the sheet on stage changes idle → smug, six Helix in-betweens play as hard cuts, then the live smug holds. smug → idle plays the same six reversed, then lands on the live idle. Nothing else bridges: every other pair keeps its normal pose change (the ~380ms crossfade above).
 
@@ -46,16 +46,17 @@ Body sheets swap by stable layer id (`body:<src>`). Incoming starts at opacity 0
 - Background tab: `PoseBridge.setPaused` (wired to `visibilitychange`). A hidden page has throttled or frozen timers, so the bridge holds the frame it is on and resumes at normal pace on return; a bridge that starts while hidden shows 06 and plays 05..01 on return, never a cut.
 - Smug holds until its beat ends (`smugBeatResetDelayMs`, `holdsSmugBeat` in `rai.ts`; used by the reset timer in `rai-app.tsx`). The old rule let go 2.8-3.4 s after the line landed, even on a long line still being read. Now the hold ends at the later of the speech end (voiced lines, `speechEndedAt`) and the reading time from landing (45 ms per character, never under the 3.4 s pose minimum), plus a 1.5 s tail (exactly: the delay is beat end minus now, not the old 2.8 s post-talk hold). The beat is the LINE's, not the pose's: it counts from `lineLandedAt` in `rai-app.tsx`, set when the final line becomes the bubble and cleared at the start of every turn. A pose that resolves early (a model tag at ~1.5 s with the line at ~6 s) starts nothing, and no timer runs while a turn is sending; a re-arm (typing, a voice end) keeps the same absolute end. Only the smug sheet (pose smug, or idle carrying the smug emotion) is stretched; other poses keep their timing. A new send still resets the pose at once, as before. The reply line itself stays in the chat strip after the beat; the beat is what the hold follows.
 
-### Hip clip (idle <-> smug, replaces the six-PNG bridge, 2026-10-04)
+### Helix 956 / 962 stills (idle ↔ smug, 2026-10-05)
 
-TyLo: the phone skipped the six PNGs (80 ms each) and "941 held the hip, then cut both ways". The idle <-> smug pair is now the existing clip `hip-bridge-917.mp4` (travel segment, muted, audio/cover not shipped), see `scripts/cut-hip-clip.md`.
+TyLo paste replaces paste-10: idle↔smug only, Helix assets only, no new art. Hip-clip travel and the old six-PNG / Helix 06→01 reverse exit are retired (`hipClipSupported()` is false).
 
-- Finding: `smug_official.png` is the arms-down smirk sheet (kept on disk, unused as the hold). Hold option B (TyLo, 2026-10-05): after travel, hold `smug_hold.png` (keyed Helix 06, hand on hip + smirk). Never a clip frame, never `smug_official.png`.
-- Assets: 18 keyed RGBA WebP travel pictures `public/rai/hip/hip_bridge_00..17.webp` plus `public/rai/smug_hold.png` and Helix stills `bridge_idle_smug_01..06.png`. Entry: clip 00→17 then hold sheet. Exit: Helix reverse 06→05→04→03→02→01 (~150 ms each, paint-paced), then idle. No clip reverse. No `<video>`.
-- Player: `HipClipPlayer` forward travel only; `arrived` hands off to `smug_hold`. Exit is `PoseBridge` Helix reverse (not clip reverse). Exactly one visible layer.
-- Hold/exit: `smugBeatResetDelayMs` (+1.5 s) and #107 hip-shown guard (`smugReleaseWaitMs`, phase `hold` = sheet up / `arrived`). Never release while the smug line's beat is running.
-- Preload: `idle.png`, clip pictures, `smug_hold.png`, Helix 01..06 (for exit), then blink/mouth. Clip not ready -> wait up to 30 s then legacy PNG bridge.
-- Reduced motion: hard cut onto `smug_hold.png`, hard cut back to idle (no travel).
+- Entry (956): `public/rai/smug_in_01..05.png` (keyed from `/workspace/bridge/smug-in-956/`). Play **forward** on Smug send. Paint-paced (~150 ms).
+- Hold: `public/rai/smug_hold.png` (hip + smirk; Helix `06-hand-on-hip`). Never `smug_official.png`. Never 960.
+- Exit (962): `public/rai/smug_out_01..05.png` (keyed from `/workspace/bridge/smug-out-962/`). Play **forward** after hold (not reversed). Land on idle glare then live idle. Do not snap to `idle.png` mid-exit.
+- Flow: Smug send → 956 forward → hold until line finished + 1.5 s → 962 forward → idle. Mute all clip audio (stills only).
+- Player: `PoseBridge` only. Hold/exit timing still uses `smugBeatResetDelayMs` (+1.5 s) and `smugReleaseWaitMs` (phase `hold`).
+- Preload: `idle.png`, then `smug_in_*` + `smug_out_*` + `smug_hold.png`, then blink/mouth.
+- Reduced motion: hard cut onto `smug_hold.png`, hard cut back to idle.
 - Debug: `data-rai-hold-sheet=smug_hold` while holding; `?debug=1` shows which hold sheet is active.
 
 ### Talk / mouth

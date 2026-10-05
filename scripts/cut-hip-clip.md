@@ -1,3 +1,5 @@
+> **RETIRED 2026-10-05:** idle↔smug is Helix 956 intro + `smug_hold` + 962 rest forward (`PoseBridge`). Hip clip travel and Helix 06→01 reverse exit are off (`hipClipSupported() === false`).
+
 # Hip clip cut (idle <-> smug travel, 2026-10-04)
 
 Source: `hip-bridge-917.mp4` (9.04 s, 24 fps, 720x1280 h264 + aac + mjpeg cover on studio white). Audio and cover are not shipped (the mp4 itself is not shipped).
@@ -7,4 +9,4 @@ Source: `hip-bridge-917.mp4` (9.04 s, 24 fps, 720x1280 h264 + aac + mjpeg cover 
 3. Nothing was repainted, regenerated or rescaled: the pictures sit in the 720x1280 sheet space (same box and `object-fit: contain` as every sheet), so no position or scale offset is applied.
 
 Known: `public/rai/smug_official.png` is an arms-down smirk sheet (kept on disk, not the hold).
-Hold (option B): `public/rai/smug_hold.png` — keyed Helix `06-hand-on-hip.png` (hip + smirk). Exit (2026-10-05): Helix stills 06→01 (~150 ms, paint-paced), not clip reverse. Entry stays clip forward → hold.
+Hold (option B): `public/rai/smug_hold.png` — keyed Helix `06-hand-on-hip.png` (hip + smirk). Live exit is now Helix 962 `smug_out_01..05` forward (not 06→01 reverse, not clip reverse).

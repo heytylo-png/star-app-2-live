@@ -3,24 +3,38 @@
  * sheet changes between a paired set of poses. First pair only, idle <-> smug.
  *
  * Frames are hard cuts on one `<img>` (no crossfade, no loop), about 150 ms
- * each. 01 is the idle pose and 06 is the hand-on-hip step into smug; the
- * live `idle.png` and the shipped `smug_hold.png` (Helix 06, hip + smirk) stay the rest and the
- * hold, so a bridge is only ever the in-betweens.
+ * each, paint-paced. Intro (956) lands on `smug_hold.png`; rest (962) plays
+ * forward onto idle glare then the live idle sheet. No clip reverse, no
+ * Helix 06→01 reverse.
  *
  * This module is pure (no DOM, no React). The puppet owns the one `<img>`;
  * the sequencer only says which frame is up. Timers and randomness are
  * injected so the order can be tested without a clock.
  */
 
-/** In-between frames for idle -> smug, in play order. Smug -> idle plays them reversed. */
-export const BRIDGE_IDLE_SMUG_FILES = [
-  "rai/bridge_idle_smug_01.png",
-  "rai/bridge_idle_smug_02.png",
-  "rai/bridge_idle_smug_03.png",
-  "rai/bridge_idle_smug_04.png",
-  "rai/bridge_idle_smug_05.png",
-  "rai/bridge_idle_smug_06.png",
+/**
+ * Helix intro (956): idle → elbow → hand rise → hip → smirk-hold, then the live
+ * smug_hold sheet. Exit (962) is a separate forward set, not these files reversed.
+ */
+export const SMUG_IN_FILES = [
+  "rai/smug_in_01.png",
+  "rai/smug_in_02.png",
+  "rai/smug_in_03.png",
+  "rai/smug_in_04.png",
+  "rai/smug_in_05.png",
 ] as const;
+
+/** Helix rest (962): hip → hand leave → arm out → arm down → idle glare, then idle.png. Forward only. */
+export const SMUG_OUT_FILES = [
+  "rai/smug_out_01.png",
+  "rai/smug_out_02.png",
+  "rai/smug_out_03.png",
+  "rai/smug_out_04.png",
+  "rai/smug_out_05.png",
+] as const;
+
+/** @deprecated old six-PNG set; kept as an alias of the intro for any leftover imports. */
+export const BRIDGE_IDLE_SMUG_FILES = SMUG_IN_FILES;
 
 /**
  * Pair table: "<from>><to>" -> files to play, in order. Keys are the shown
@@ -28,8 +42,8 @@ export const BRIDGE_IDLE_SMUG_FILES = [
  * the way every pose change did before. Add a row to grow it.
  */
 export const POSE_BRIDGE_PAIRS: Readonly<Record<string, readonly string[]>> = {
-  "idle>smug": BRIDGE_IDLE_SMUG_FILES,
-  "smug>idle": [...BRIDGE_IDLE_SMUG_FILES].reverse(),
+  "idle>smug": SMUG_IN_FILES,
+  "smug>idle": SMUG_OUT_FILES,
 };
 
 /** Every file any pair plays, in first-seen order, no repeats. */

@@ -396,11 +396,10 @@ export class HipClipDriver {
 }
 
 /** The browser can decode the pictures to bitmaps and fetch them. */
+/**
+ * Hip-clip travel is retired for idle↔smug (TyLo 2026-10-05): entry is Helix 956
+ * stills, exit is Helix 962 stills. Kept as `false` so the PNG PoseBridge path runs.
+ */
 export function hipClipSupported(): boolean {
-  return (
-    typeof createImageBitmap === "function" &&
-    typeof fetch === "function" &&
-    typeof document !== "undefined" &&
-    typeof HTMLCanvasElement !== "undefined"
-  );
+  return false;
 }
