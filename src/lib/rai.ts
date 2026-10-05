@@ -534,6 +534,17 @@ export const PRE_CUT_ALPHA_FILES = [
   "rai/bridge_idle_smug_04.png",
   "rai/bridge_idle_smug_05.png",
   "rai/bridge_idle_smug_06.png",
+  // Helix 956 intro + 962 rest (idle↔smug), 2026-10-05
+  "rai/smug_in_01.png",
+  "rai/smug_in_02.png",
+  "rai/smug_in_03.png",
+  "rai/smug_in_04.png",
+  "rai/smug_in_05.png",
+  "rai/smug_out_01.png",
+  "rai/smug_out_02.png",
+  "rai/smug_out_03.png",
+  "rai/smug_out_04.png",
+  "rai/smug_out_05.png",
 ] as const;
 
 /**
@@ -804,16 +815,14 @@ export function smugBeatSheetUrls(): string[] {
 
 /**
  * Where the stage's first decodes go. idle.png first (the stage cannot paint
- * without it), then the whole smug beat (bridge 01..06 + smug_hold, a
+ * without it), then the whole smug beat (956 in + 962 out + smug_hold, a
  * named Smug can arrive any moment and has to land on a decoded arm), then the
  * rest of the startup set (blink, mouth). Everything else stays deferred.
  */
-export function stagePreloadOrder(opts?: { clip?: boolean }): { first: string; beat: string[]; rest: string[] } {
+export function stagePreloadOrder(_opts?: { clip?: boolean }): { first: string; beat: string[]; rest: string[] } {
   const startup = startupSpriteUrls();
-  // Clip entry + smug_hold; Helix 01..06 preloaded for the reverse exit (06→01).
-  const beat = opts?.clip
-    ? [SPRITES.poses.smug, ...bridgeFiles().map(bridgeFrameSrc)]
-    : smugBeatSheetUrls();
+  // Helix 956 intro + smug_hold + 962 rest (clip path retired).
+  const beat = smugBeatSheetUrls();
   const first = startup[0]!;
   return { first, beat: beat.filter((u) => u !== first), rest: startup.slice(1).filter((u) => !beat.includes(u)) };
 }
@@ -864,7 +873,7 @@ export function deferredSpriteUrls(opts?: { skipBridge?: boolean }): string[] {
   const skip = new Set(startupSpriteUrls());
   const seen = new Set<string>();
   const urls: string[] = [];
-  // Pose-bridge frames lead: six small pre-cut frames, decoded before any other
+  // Pose-bridge frames lead: Helix 956/962 pre-cut frames, decoded before any other
   // pose sheet, so smug can never be reachable with a frame still missing (a pair
   // with an undecoded frame can only hard-cut).
   for (const file of opts?.skipBridge ? [] : bridgeFiles()) {

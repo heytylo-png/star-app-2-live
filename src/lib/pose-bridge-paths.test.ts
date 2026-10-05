@@ -73,6 +73,10 @@ type Commit = Partial<PuppetState> & { pose: PoseId; emotion: EmotionId };
 
 /** Names what is visible: bridge NN, smug, idle (rest / blink / mouth), or the sheet file. */
 function nameOf(src: string): string {
+  const inn = /smug_in_(\d\d)/.exec(src);
+  if (inn) return `i${inn[1]}`;
+  const out = /smug_out_(\d\d)/.exec(src);
+  if (out) return `o${out[1]}`;
   const b = /bridge_idle_smug_(\d\d)/.exec(src);
   if (b) return `b${b[1]}`;
   if (/smug_hold|smug_official/.test(src)) return "smug";
@@ -179,16 +183,23 @@ function stage(opts: { decoded?: boolean; reduced?: boolean; paced?: boolean } =
 }
 
 const IDLE: Commit = { pose: "idle", emotion: "glance" };
-const IN = ["idle", "b01", "b02", "b03", "b04", "b05", "b06", "smug"];
-const OUT = ["smug", "b06", "b05", "b04", "b03", "b02", "b01", "idle"];
+const IN = ["idle", "i01", "i02", "i03", "i04", "i05", "smug"];
+const OUT = ["smug", "o01", "o02", "o03", "o04", "o05", "idle"];
 
 /** Joins in then out: ends on smug, holds, leaves for idle. */
 function expectInThenOut(log: string[]) {
-  const ins = log.indexOf("smug");
-  assert.ok(ins > 0, `reaches smug: ${log.join(">")}`);
-  assert.deepEqual(log.slice(0, ins + 1).slice(-8), IN, `way in: ${log.join(">")}`);
-  const outs = log.lastIndexOf("smug");
-  assert.deepEqual(log.slice(outs, outs + 8), OUT, `way out: ${log.join(">")}`);
+  assert.ok(log.includes("smug"), `reaches smug: ${log.join(">")}`);
+  // Typed-smug send can briefly leave mid-entry (complete() → idle) before the
+  // clean 956 run — require contiguous arm frames, not a leading idle.
+  const find = (seq: string[]) => {
+    for (let i = 0; i <= log.length - seq.length; i++) {
+      if (seq.every((v, j) => log[i + j] === v)) return i;
+    }
+    return -1;
+  };
+  const inArm = IN.slice(1); // i01..i05,smug
+  assert.ok(find(inArm) >= 0, `way in: ${log.join(">")}`);
+  assert.ok(find(OUT) >= 0, `way out: ${log.join(">")}`);
 }
 
 /** The reply turn the app runs, minus the network: start, stream act, land, speak, finish. */
@@ -314,14 +325,14 @@ describe("idle <-> smug bridge on the real resolution paths", () => {
     s.wait(300);
     s.commit(IDLE);
     s.wait(300);
-    assert.equal(s.log.includes("b01"), false, "wave <-> idle hard-cuts");
+    assert.equal(s.log.includes("i01"), false, "wave <-> idle hard-cuts");
     const act = { emotion: "bratty" as EmotionId, pose: "smug" as PoseId };
     replyTurn(s, act, { voice: true });
     // next reply on idle: smug is already gone (timeout), plain talk line, no bridge
     const before = s.log.length;
     s.commit({ pose: "idle", emotion: "bratty", talking: true, mouth: 2 });
     s.wait(600);
-    assert.equal(s.log.slice(before).some((n) => /^b\d\d$/.test(n)), false);
+    assert.equal(s.log.slice(before).some((n) => /^[io]\d\d$/.test(n)), false);
     expectInThenOut(s.log);
   });
 
@@ -344,7 +355,7 @@ describe("idle <-> smug bridge on the real resolution paths", () => {
     s.wait(1200);
     s.commit({ pose: "pout", emotion: "bratty" });
     s.wait(600);
-    assert.equal(s.log.includes("b06") && s.log.lastIndexOf("b06") > s.log.indexOf("smug"), false);
+    assert.equal(s.log.includes("o01") && s.log.lastIndexOf("o01") > s.log.indexOf("smug"), false);
     assert.equal(s.log.at(-1), "pout_official");
   });
 
@@ -381,7 +392,7 @@ describe("idle <-> smug bridge on the real resolution paths", () => {
     replyTurn(s, { emotion: "bratty", pose: settledRestPose() }, { voice: true });
     s.commit({ pose: "idle", emotion: "bratty", talking: true, mouth: 3 });
     s.wait(800);
-    assert.equal(s.log.some((n) => /^b\d\d$/.test(n) || n === "smug"), false, s.log.join(">"));
+    assert.equal(s.log.some((n) => /^[io]\d\d$/.test(n) || n === "smug"), false, s.log.join(">"));
   });
 
   it("wave, pout and talk still hard-cut in and out", () => {
@@ -392,7 +403,7 @@ describe("idle <-> smug bridge on the real resolution paths", () => {
       s.wait(500);
       s.commit(IDLE);
       s.wait(500);
-      assert.equal(s.log.some((n) => /^b\d\d$/.test(n)), false, pose);
+      assert.equal(s.log.some((n) => /^[io]\d\d$/.test(n)), false, pose);
     }
   });
 
@@ -414,7 +425,7 @@ describe("idle <-> smug bridge on the real resolution paths", () => {
     // React batches setPose(idle); setPose(smug) into one render of smug
     s.commit({ pose: "smug", emotion: "smug" });
     s.wait(600);
-    assert.equal(s.log.some((n) => /^b\d\d$/.test(n)), false);
+    assert.equal(s.log.some((n) => /^[io]\d\d$/.test(n)), false);
     assert.deepEqual(s.log, ["smug"]);
   });
 
@@ -448,7 +459,7 @@ describe("guard: a bridge-eligible pair never hard-cuts when its frames are deco
     smugs.push({ pose: "idle", emotion: "smug", talking }); // emotion path
   }
 
-  it("every idle state -> every smug state plays 01..06 first, and back plays 06..01", () => {
+  it("every idle state -> every smug state plays 956 in first, and back plays 962 out", () => {
     let pairs = 0;
     for (const a of idles) {
       for (const b of smugs) {
@@ -458,7 +469,7 @@ describe("guard: a bridge-eligible pair never hard-cuts when its frames are deco
         toSmug.commit(b);
         assert.equal(toSmug.bridge.active(), true, `in: ${JSON.stringify(a)} -> ${JSON.stringify(b)}`);
         toSmug.wait(900);
-        assert.deepEqual(toSmug.log.slice(-8), IN, JSON.stringify([a, b]));
+        assert.deepEqual(toSmug.log.slice(-IN.length), IN, JSON.stringify([a, b]));
 
         const back = stage();
         back.commit(b);
@@ -588,7 +599,7 @@ describe("smug holds until its beat ends (early drop)", () => {
     assert.equal(wave, poseResetDelayMs({ pose: "wave", emotion: "bratty", talking: false, actLandedAt: 0, now: 0 }));
   });
 
-  it("long line on the real turn: smug is on stage the whole beat, then bridge 06..01 to idle", () => {
+  it("long line on the real turn: smug is on stage the whole beat, then 962 forward to idle", () => {
     const s = stage();
     s.commit(IDLE);
     s.commit({ pose: spokenTurnStartPose(), emotion: "glance" });
@@ -625,10 +636,10 @@ describe("backgrounded page", () => {
     s.bridge.setPaused(true);
     s.commit(IDLE); // the timer fired in the background
     s.wait(5000);
-    assert.deepEqual(s.log, ["b06"], "no frame moves while hidden, no cut to idle");
+    assert.deepEqual(s.log, ["o01"], "no frame moves while hidden, no cut to idle");
     s.bridge.setPaused(false);
     s.wait(1200);
-    assert.deepEqual(s.log, ["b06", "b05", "b04", "b03", "b02", "b01", "idle"]);
+    assert.deepEqual(s.log, ["o01", "o02", "o03", "o04", "o05", "idle"]);
   });
 
   it("hiding mid-bridge freezes the frame; returning continues with the next one", () => {
@@ -636,10 +647,10 @@ describe("backgrounded page", () => {
     s.commit(IDLE);
     s.commit({ pose: "smug", emotion: "smug" });
     s.wait(400);
-    assert.equal(s.log.at(-1), "b03");
+    assert.equal(s.log.at(-1), "i03");
     s.bridge.setPaused(true);
     s.wait(10_000);
-    assert.equal(s.log.at(-1), "b03");
+    assert.equal(s.log.at(-1), "i03");
     s.bridge.setPaused(false);
     s.wait(1000);
     assert.deepEqual(s.log, IN);
@@ -688,7 +699,7 @@ describe("entry: every arm frame is seen, in order, before smug (paint-paced)", 
         s.commit(from);
         s.wait(200);
         s.commit(to);
-        assert.equal(s.log.at(-1), "b01", `first frame after the change: ${JSON.stringify([from, to])}`);
+        assert.equal(s.log.at(-1), "i01", `first frame after the change: ${JSON.stringify([from, to])}`);
         assert.ok(!s.log.slice(-2).includes("smug"));
         s.wait(1200);
         assert.deepEqual(s.painted.slice(-IN.length + 1), IN.slice(1));
@@ -702,12 +713,12 @@ describe("entry: every arm frame is seen, in order, before smug (paint-paced)", 
     s.paint();
     s.commit({ pose: "smug", emotion: "smug" });
     s.stall(1500); // sheets punching / a stream of renders: no paint for 1.5 s
-    assert.equal(s.log.at(-1), "b01", "still on 01, the timer has not run out under it");
+    assert.equal(s.log.at(-1), "i01", "still on 01, the timer has not run out under it");
     s.wait(1000);
     assert.deepEqual(s.painted, IN, `painted: ${s.painted.join(">")}`);
   });
 
-  it("repeated stalls through the bridge: 01..06 each painted once, in order, then smug", () => {
+  it("repeated stalls through the bridge: i01..i05 each painted once, in order, then smug", () => {
     const s = stage({ paced: true });
     s.commit(BLINK);
     s.paint();
@@ -737,8 +748,9 @@ describe("entry: every arm frame is seen, in order, before smug (paint-paced)", 
         last = name;
       }
     }
-    // stamps[k] = when 01..06 (then smug) appeared
-    for (let k = 1; k < 7; k += 1) {
+    // stamps[k] = when i01..i05 (then smug) appeared — 5 frames + hold = 6 stamps
+    assert.ok(stamps.length >= 6, `stamps ${stamps.length}`);
+    for (let k = 1; k < 6; k += 1) {
       const dwell = stamps[k]! - stamps[k - 1]!;
       assert.ok(dwell >= 130 && dwell <= 180, `frame ${k} dwell ${dwell}`);
     }
@@ -761,12 +773,12 @@ describe("entry: every arm frame is seen, in order, before smug (paint-paced)", 
     s.wait(1200);
     s.log.length = 0;
     s.commit(IDLE);
-    // First exit frame is set; stall without paint must not burn through 06..01.
+    // First exit frame is set; stall without paint must not burn through 962.
     s.stall(1500);
-    assert.deepEqual(s.log, ["b06"], `only the first exit frame while unpainted: ${s.log.join(">")}`);
+    assert.deepEqual(s.log, ["o01"], `only the first exit frame while unpainted: ${s.log.join(">")}`);
     s.paint(); // dwell starts
     s.wait(1200);
-    assert.deepEqual(s.log, ["b06", "b05", "b04", "b03", "b02", "b01", "idle"]);
+    assert.deepEqual(s.log, ["o01", "o02", "o03", "o04", "o05", "idle"]);
   });
 });
 
@@ -800,7 +812,7 @@ describe("hold: the beat belongs to the line, not the pose", () => {
     assert.ok(now + delay > 1500 + POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
     s.wait(delay - 20);
     assert.equal(s.log.at(-1), "smug", "still on the hip just before the beat ends");
-    assert.ok(!s.log.slice(IN.length).some((n) => n === "idle" || /^b0/.test(n)), "no bridge or idle in the hold");
+    assert.ok(!s.log.slice(IN.length).some((n) => n === "idle" || /^[io]\d/.test(n)), "no bridge or idle in the hold");
     s.commit(IDLE); // the timer fires
     s.wait(1200);
     assert.deepEqual(s.log.slice(s.log.lastIndexOf("smug")), OUT, "then the exit as before");
@@ -870,7 +882,7 @@ describe("named smug send at 5 / 7 / 9 / 12 s reply latency", () => {
   for (const latency of [5000, 7000, 9000, 12000]) {
     it(`${latency / 1000} s, text only: the hip is up through the landing and held to landing + beat + 1.5 s`, () => {
       const { s, landed, now, delay } = turn(latency);
-      assert.deepEqual(s.painted.slice(0, IN.length), IN, "entry 01..06 then smug");
+      assert.deepEqual(s.painted.slice(0, IN.length), IN, "entry i01..i05 then smug");
       assert.equal(now + delay, need(landed));
       assert.ok(now + delay - landed >= POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
       // hip continuous: smug from entry end until the timer, nothing else on the stage
@@ -879,7 +891,7 @@ describe("named smug send at 5 / 7 / 9 / 12 s reply latency", () => {
       assert.deepEqual(s.log, IN, "no idle / bridge frame at any point before the release");
       s.commit(IDLE); // timer fires
       s.wait(1200);
-      assert.deepEqual(s.log.slice(s.log.lastIndexOf("smug")), OUT, "exit 06..01 as before");
+      assert.deepEqual(s.log.slice(s.log.lastIndexOf("smug")), OUT, "exit o01..o05 forward");
     });
 
     it(`${latency / 1000} s, voiced (2.2 s clip): released at speech end + 1.5 s, never at speech end`, () => {

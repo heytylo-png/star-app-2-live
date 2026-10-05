@@ -900,7 +900,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
     }
     if (!bridgeDriver.current) bridgeDriver.current = new BridgeDriver(bridge.current);
     if (clipMode) {
-      // Hip clip: forward travel onto smug_hold. Exit is Helix stills 06→01 (PoseBridge), not clip reverse.
+      // Clip path retired: PoseBridge plays Helix 956 intro + hold + 962 rest forward.
       if (!clipPlayer.current) {
         clipPlayer.current = new HipClipPlayer({
           raf: (cb) => window.requestAnimationFrame(cb),
@@ -919,7 +919,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
         reducedMotion: reducedRef.current,
         ready: clipBitmaps.current != null,
       });
-      // Helix reverse exit after the hold (same sheets as the PNG fallback bridge).
+      // Helix 962 rest forward after the hold (PoseBridge).
       if (
         prevClipKey === "smug" &&
         nextKey === "idle" &&
@@ -991,12 +991,18 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
     restOnly && restPlate ? [{ ...restPlate, opacity: 1, z: 1 }] : display;
   // While a bridge frame is up, it is the only visible image.
   const bridgeSheet = bridgeSrc ? sheets[bridgeSrc] : undefined;
-  const bridgeFrame = bridgeSheet && bridgeSrc ? (/_(\d\d)\.png/.exec(bridgeSrc)?.[1] ?? "on") : "off";
+  const bridgeFrame = (() => {
+    if (!bridgeSheet || !bridgeSrc) return "off";
+    const io = /smug_(in|out)_(\d\d)/.exec(bridgeSrc);
+    if (io) return `${io[1]}-${io[2]}`;
+    const legacy = /bridge_idle_smug_(\d\d)/.exec(bridgeSrc) || /_(\d\d)\.png/.exec(bridgeSrc);
+    return legacy?.[1] ?? "on";
+  })();
   // Smug beat phase, read off what is painted (not what was asked for).
   // oxlint-disable-next-line react/refs -- plates is the painted key; read-only, same as the layers below
   const plateKey = bridgeKeyOfPlates(plates);
   const clipOnStage = clipMode && clipView.visible;
-  // Hold is the live smug_hold sheet (clip arrived). Exit is Helix stills (bridgeSheet), not clip reverse.
+  // Hold is the live smug_hold sheet. Exit is Helix 962 stills (bridgeSheet) forward.
   const phase: PosePhase = clipMode
     ? bridgeSheet
       ? "bridge-out"
@@ -1105,7 +1111,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
             decoding="sync"
             className="rai-layer"
             data-rai-role="bridge"
-            data-rai-sheet={`bridge-${bridgeFrame}`}
+            data-rai-sheet={bridgeFrame.startsWith("in-") || bridgeFrame.startsWith("out-") ? bridgeFrame : `bridge-${bridgeFrame}`}
             style={{ opacity: 1, zIndex: 60, transition: "none" }}
           />
         ) : null}
