@@ -126,8 +126,9 @@ describe("smug path allowlist + caption-blocked release", () => {
     assert.equal(isReplyCaption("Listening…"), false);
   });
 
-  it("returns null while the caption is live, else at least the 1.5 s tail after clear", () => {
+  it("reading floor + tail from landing; captionLive does not freeze release", () => {
     const now = 50_000;
+    // Long past reading floor (+ tail): ready now. captionLive must not null the timer.
     assert.equal(
       smugBeatResetDelayMs({
         line: "x".repeat(32),
@@ -136,15 +137,16 @@ describe("smug path allowlist + caption-blocked release", () => {
         captionLive: true,
         now,
       }),
-      null,
+      0,
     );
-    const afterClear = smugBeatResetDelayMs({
+    // Mid-beat: still waiting out reading floor + tail.
+    const mid = smugBeatResetDelayMs({
       line: "x".repeat(32),
-      lineLandedAt: now - 10_000,
+      lineLandedAt: now - 1_000,
       speechEndedAt: 0,
-      captionLive: false,
+      captionLive: true,
       now,
     });
-    assert.equal(afterClear, SMUG_BEAT_TAIL_MS);
+    assert.ok(mid > SMUG_BEAT_TAIL_MS);
   });
 });
