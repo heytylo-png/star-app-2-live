@@ -900,7 +900,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
     }
     if (!bridgeDriver.current) bridgeDriver.current = new BridgeDriver(bridge.current);
     if (clipMode) {
-      // Hip clip: one canvas plays the travel in, rests on the hip, plays it back out.
+      // Hip clip: forward travel onto smug_hold. Exit is Helix stills 06→01 (PoseBridge), not clip reverse.
       if (!clipPlayer.current) {
         clipPlayer.current = new HipClipPlayer({
           raf: (cb) => window.requestAnimationFrame(cb),
@@ -913,10 +913,33 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
         });
       }
       if (!clipDriver.current) clipDriver.current = new HipClipDriver(clipPlayer.current);
-      clipDriver.current.commit(bridgeKeyOfPlates(plates), {
+      const prevClipKey = clipDriver.current.key();
+      const nextKey = bridgeKeyOfPlates(plates);
+      clipDriver.current.commit(nextKey, {
         reducedMotion: reducedRef.current,
         ready: clipBitmaps.current != null,
       });
+      // Helix reverse exit after the hold (same sheets as the PNG fallback bridge).
+      if (
+        prevClipKey === "smug" &&
+        nextKey === "idle" &&
+        !reducedRef.current &&
+        bridge.current
+      ) {
+        const helixReady = bridgeFiles().every((file) => sheetsRef.current[bridgeFrameSrc(file)] != null);
+        if (!helixReady) {
+          for (const file of bridgeFiles()) void punchOneRef.current(bridgeFrameSrc(file));
+        }
+        bridge.current.request({
+          from: "smug",
+          to: "idle",
+          reducedMotion: false,
+          srcFor: bridgeFrameSrc,
+          isReady: (src) => sheetsRef.current[src] != null,
+        });
+      } else if (nextKey === "smug" || reducedRef.current) {
+        bridge.current?.cancel();
+      }
     } else {
       // Fell back to the PNG bridge (or no clip support): drop a clip that was on stage.
       clipPlayer.current?.cut();
@@ -973,15 +996,15 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   // oxlint-disable-next-line react/refs -- plates is the painted key; read-only, same as the layers below
   const plateKey = bridgeKeyOfPlates(plates);
   const clipOnStage = clipMode && clipView.visible;
-  // Hold is the live smug_hold sheet (clip arrived), never a parked clip frame.
+  // Hold is the live smug_hold sheet (clip arrived). Exit is Helix stills (bridgeSheet), not clip reverse.
   const phase: PosePhase = clipMode
-    ? clipOnStage
-      ? clipView.dir === "out"
-        ? "bridge-out"
-        : "bridge-in"
-      : clipView.arrived || plateKey === "smug"
-        ? "hold"
-        : "idle"
+    ? bridgeSheet
+      ? "bridge-out"
+      : clipOnStage
+        ? "bridge-in"
+        : clipView.arrived || plateKey === "smug"
+          ? "hold"
+          : "idle"
     : bridgeSheet
       ? plateKey === "smug"
         ? "bridge-in"

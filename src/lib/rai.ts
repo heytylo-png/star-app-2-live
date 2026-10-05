@@ -810,9 +810,10 @@ export function smugBeatSheetUrls(): string[] {
  */
 export function stagePreloadOrder(opts?: { clip?: boolean }): { first: string; beat: string[]; rest: string[] } {
   const startup = startupSpriteUrls();
-  // With the hip clip the six bridge PNGs are only a fallback; smug_hold.png is the hold
-  // sheet (hip + smirk) after travel — never a clip frame, never arms-down smug_official.
-  const beat = opts?.clip ? [SPRITES.poses.smug] : smugBeatSheetUrls();
+  // Clip entry + smug_hold; Helix 01..06 preloaded for the reverse exit (06→01).
+  const beat = opts?.clip
+    ? [SPRITES.poses.smug, ...bridgeFiles().map(bridgeFrameSrc)]
+    : smugBeatSheetUrls();
   const first = startup[0]!;
   return { first, beat: beat.filter((u) => u !== first), rest: startup.slice(1).filter((u) => !beat.includes(u)) };
 }

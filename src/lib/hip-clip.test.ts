@@ -89,7 +89,9 @@ describe("hip clip data", () => {
 
   it("preloads the clip, not the six PNGs, and never downloads the PNG bridge with it", () => {
     const order = stagePreloadOrder({ clip: true });
-    assert.deepEqual(order.beat, [SPRITES.poses.smug]);
+    assert.equal(order.beat[0], SPRITES.poses.smug);
+    assert.ok(order.beat.some((u) => /bridge_idle_smug_06/.test(u)));
+    assert.ok(order.beat.some((u) => /bridge_idle_smug_01/.test(u)));
     const deferred = deferredSpriteUrls({ skipBridge: true });
     for (const file of bridgeFiles()) assert.ok(!deferred.some((u) => u.includes(file)), file);
     assert.ok(deferredSpriteUrls().some((u) => u.includes("bridge_idle_smug_01")));
@@ -309,7 +311,7 @@ describe("hip clip driver", () => {
     return { ...r, d, go };
   }
 
-  it("idle -> smug plays in, smug -> idle plays out", () => {
+  it("idle -> smug plays in; smug -> idle clears the hold (Helix reverse is PoseBridge)", () => {
     const { state, player, go, frame } = driverRig();
     go("idle");
     assert.equal(player.view().visible, false);
@@ -320,9 +322,11 @@ describe("hip clip driver", () => {
     assert.equal(player.view().arrived, true);
     assert.equal(state.hides.length, 1);
     go("idle");
-    player.confirmShown();
+    assert.equal(player.view().arrived, false);
+    assert.equal(player.view().visible, false);
+    // No clip reverse: no further draws
     frame(400);
-    assert.equal(state.hides.length, 2);
+    assert.equal(state.draws.length, 18);
   });
 
   it("deduped on the key: a re-commit of the same key does nothing", () => {
@@ -422,9 +426,11 @@ describe("puppet wiring", () => {
   it("one canvas, live sheets hidden while it is up, phase read off the clip", () => {
     assert.match(puppet, /<HipClipLayer ref=\{canvasRef\} visible=\{clipOnStage\} \/>/);
     assert.match(puppet, /bridgeSheet \|\| clipOnStage \? \(\{ visibility: "hidden" \}/);
-    assert.match(puppet, /clipView\.dir === "out"/);
     assert.match(puppet, /clipView\.arrived \|\| plateKey === "smug"/);
     assert.match(puppet, /data-rai-hold-sheet=/);
+    assert.match(puppet, /from: "smug"/);
+    assert.match(puppet, /to: "idle"/);
+    assert.match(puppet, /Helix reverse exit/);
     assert.match(puppet, /data-rai-clip-frame=/);
     assert.match(puppet, /clipPlayer\.current\?\.confirmShown\(\)/);
   });

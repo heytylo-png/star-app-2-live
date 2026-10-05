@@ -146,17 +146,17 @@ describe("pose bridge keys", () => {
 });
 
 describe("pose bridge timing", () => {
-  it("holds each frame 100 ms +/- 20, always 80-120", () => {
-    assert.equal(BRIDGE_FRAME_MS, 100);
+  it("holds each frame 150 ms +/- 20, always 130-170", () => {
+    assert.equal(BRIDGE_FRAME_MS, 150);
     assert.equal(BRIDGE_JITTER_MS, 20);
-    assert.equal(bridgeFrameMs(() => 0), 80);
-    assert.equal(bridgeFrameMs(() => 0.5), 100);
-    assert.equal(bridgeFrameMs(() => 1), 120);
-    assert.equal(bridgeFrameMs(() => -3), 80);
-    assert.equal(bridgeFrameMs(() => 9), 120);
+    assert.equal(bridgeFrameMs(() => 0), 130);
+    assert.equal(bridgeFrameMs(() => 0.5), 150);
+    assert.equal(bridgeFrameMs(() => 1), 170);
+    assert.equal(bridgeFrameMs(() => -3), 130);
+    assert.equal(bridgeFrameMs(() => 9), 170);
     for (let i = 0; i < 200; i++) {
       const ms = bridgeFrameMs(Math.random);
-      assert.ok(ms >= 80 && ms <= 120, String(ms));
+      assert.ok(ms >= 130 && ms <= 170, String(ms));
     }
   });
 });
@@ -167,22 +167,22 @@ describe("pose bridge sequencing", () => {
     assert.equal(req({ from: "idle", to: "smug" }), true);
     assert.deepEqual(names(), ["01"]);
     assert.equal(bridge.active(), true);
-    clock.advance(100);
+    clock.advance(150);
     assert.deepEqual(names(), ["01", "02"]);
-    clock.advance(400);
+    clock.advance(600);
     assert.deepEqual(names(), ["01", "02", "03", "04", "05", "06"]);
     assert.equal(bridge.active(), true);
-    clock.advance(100);
+    clock.advance(150);
     assert.deepEqual(names(), ["01", "02", "03", "04", "05", "06", "live"]);
     assert.equal(bridge.active(), false);
     assert.equal(bridge.current(), null);
     assert.equal(clock.pending(), 0, "no loop: nothing left scheduled");
     clock.advance(5000);
     assert.equal(shown.length, 7);
-    // frames are cuts: every frame is one src, at 100 ms apart
+    // frames are cuts: every frame is one src, at 150 ms apart
     assert.deepEqual(
       shown.map((s) => s.at),
-      [0, 100, 200, 300, 400, 500, 600],
+      [0, 150, 300, 450, 600, 750, 900],
     );
   });
 
@@ -193,21 +193,21 @@ describe("pose bridge sequencing", () => {
     assert.deepEqual(names(), ["06", "05", "04", "03", "02", "01", "live"]);
   });
 
-  it("jitters the hold per frame inside 80-120 ms", () => {
+  it("jitters the hold per frame inside 130-170 ms", () => {
     const seq = [0, 1, 0.25, 0.75, 0.5, 0, 1];
     let i = 0;
     const { clock, req, shown } = rig(() => seq[i++ % seq.length]!);
     req({ from: "idle", to: "smug" });
     clock.advance(2000);
     const gaps = shown.slice(1).map((s, k) => s.at - shown[k]!.at);
-    assert.deepEqual(gaps, [80, 120, 90, 110, 100, 80]);
-    for (const g of gaps) assert.ok(g >= 80 && g <= 120);
+    assert.deepEqual(gaps, [130, 170, 140, 160, 150, 130]);
+    for (const g of gaps) assert.ok(g >= 130 && g <= 170);
   });
 
   it("an interrupt by the opposite pair carries on from the frame that is up", () => {
     const { clock, req, names, bridge } = rig();
     req({ from: "idle", to: "smug" });
-    clock.advance(250); // 01 02 03 up
+    clock.advance(400); // 01 02 03 up (~150 ms each)
     assert.deepEqual(names(), ["01", "02", "03"]);
     // smug -> idle mid-bridge: carries on from the frame that is up (03), never jumps to 06
     assert.equal(req({ from: "smug", to: "idle" }), true);
@@ -260,7 +260,7 @@ describe("pose bridge sequencing", () => {
   it("speech starting mid-bridge drops the rest (cancel)", () => {
     const { clock, req, names, bridge } = rig();
     req({ from: "idle", to: "smug" });
-    clock.advance(120);
+    clock.advance(160);
     bridge.cancel();
     assert.deepEqual(names(), ["01", "02", "live"]);
     assert.equal(clock.pending(), 0);
@@ -292,7 +292,7 @@ describe("pose bridge sequencing", () => {
     assert.equal(bridge.current(), null);
     req({ from: "idle", to: "smug" });
     assert.match(bridge.current()!, /bridge_idle_smug_01\.png/);
-    clock.advance(100);
+    clock.advance(150);
     assert.match(bridge.current()!, /bridge_idle_smug_02\.png/);
     bridge.dispose();
     assert.equal(bridge.current(), null);
