@@ -279,14 +279,12 @@ export function holdsSmugBeat(pose: PoseId, emotion: EmotionId): boolean {
 }
 
 /**
- * Smug lasts until its beat is over, and the beat belongs to the LINE, not to
- * the pose: it runs from the moment the line lands (is the current bubble) for
- * its reading time (45 ms a character, never under the 3.4 s minimum) or until
- * speech ends, whichever is later, plus a 1.5 s tail. The pose resolving
- * earlier (a tag at ~1.5 s, the line at ~6 s) starts nothing: the clock is the
- * line's landing. No landing yet (`lineLandedAt` 0) counts from now, so a timer
- * can never be armed against a line that is not on screen. Returns ms from now.
- * Other poses keep their normal timing (callers only use this for holdsSmugBeat).
+ * Smug lasts until its LINE is finished, then a 1.5 s tail — never a fixed
+ * clock from send. While the reply caption is still on screen (`captionLive`),
+ * rest is blocked (returns null): the phone must not cut to idle under a live
+ * bubble. Once the caption is gone (and speech has ended when voiced), the
+ * beat ends at the later of the reading floor, speech end, and "now" (caption
+ * clear), plus SMUG_BEAT_TAIL_MS. Callers only use this for holdsSmugBeat.
  */
 export function smugBeatResetDelayMs(opts: {
   line: string;
@@ -294,13 +292,46 @@ export function smugBeatResetDelayMs(opts: {
   lineLandedAt: number;
   /** When speech ended; 0 when the line was not voiced. */
   speechEndedAt: number;
+  /** Reply bubble still showing this line. Blocks release entirely. */
+  captionLive?: boolean;
   now?: number;
-}): number {
+}): number | null {
+  if (opts.captionLive) return null;
   const now = opts.now ?? Date.now();
   const landed = opts.lineLandedAt || now;
   const readEnd = landed + Math.max(POSE_HOLD_MIN_MS, opts.line.trim().length * SMUG_READ_MS_PER_CHAR);
-  const beatEnd = Math.max(readEnd, opts.speechEndedAt || 0) + SMUG_BEAT_TAIL_MS;
-  return Math.max(0, beatEnd - now);
+  // Caption just cleared at `now` (effect re-ran). Never release sooner than
+  // the reading floor / speech end, and always keep the 1.5 s tail after the
+  // later of those and the clear moment.
+  const finishedAt = Math.max(readEnd, opts.speechEndedAt || 0, now);
+  return Math.max(0, finishedAt + SMUG_BEAT_TAIL_MS - now);
+}
+
+/** True when the stage caption is an assistant reply (not listening chrome). */
+export function isReplyCaption(caption: string): boolean {
+  const t = caption.trim();
+  if (!t) return false;
+  if (t === "Listening…" || t === "Listening...") return false;
+  if (t.startsWith("Mic busy")) return false;
+  if (t.startsWith("Call mode needs")) return false;
+  if (t.startsWith("Hold-to-talk needs")) return false;
+  return true;
+}
+
+/**
+ * Sheets allowed on the idle↔smug beat. Anything else (think, smug_official,
+ * peace, …) must not paint during a Smug send — keep idle / prior allowed frame.
+ */
+export function isSmugPathSheetSrc(src: string): boolean {
+  const path = src.split(/[?#]/)[0] ?? src;
+  const name = path.slice(path.lastIndexOf("/") + 1);
+  if (name === "smug_hold.png") return true;
+  if (/^smug_in_\d\d\.png$/.test(name)) return true;
+  if (/^smug_out_\d\d\.png$/.test(name)) return true;
+  if (name === "idle.png") return true;
+  if (/^idle_blink_/.test(name)) return true;
+  if (/^idle_mouth_/.test(name)) return true;
+  return false;
 }
 
 /** What the stage is doing with the smug beat (puppet `data-rai-pose-phase`). */

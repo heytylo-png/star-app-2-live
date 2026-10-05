@@ -35,6 +35,7 @@ import {
   parseAct,
   settledRestPose,
   holdsSmugBeat,
+  isReplyCaption,
   smugBeatResetDelayMs,
   smugReleaseWaitMs,
   lineEndedRestPose,
@@ -596,14 +597,17 @@ function RaiReady() {
       replyPose: replyPoseRef.current,
     });
     if (!greetingSnap && ended && (pose !== ended.pose || emotion !== ended.emotion)) {
-      // Smug holds its LINE's beat: from the line landing, through its reading time
-      // or speech, plus 1.5 s. Only that releases it (never the pose resolving, the
-      // generic pose hold or the chew). Wink keeps the plain rest rule.
+      // Smug: the reply caption on screen BLOCKS rest. Only after the bubble is
+      // gone (and TTS has ended when voiced) + 1.5 s do we release into 962.
+      // Never a reading-time cut under a live line (TyLo phone FAIL ~10s).
+      // Wink keeps the plain rest rule.
+      const captionLive = isReplyCaption(caption);
       const delay = holdsSmugBeat(pose, emotion)
         ? smugBeatResetDelayMs({
             line: captionRef.current,
             lineLandedAt: lineLandedAt.current,
             speechEndedAt: speechEndedAt.current,
+            captionLive,
           })
         : smugWinkTextRestDelayMs({
             voiced: lineVoicedRef.current,
@@ -612,6 +616,7 @@ function RaiReady() {
             emotion,
             actLandedAt: actLandedAt.current,
           });
+      if (delay == null) return; // smug caption still up — keep hold
       if (delay != null && delay > 0) {
         // A smug beat is released only once the hip was really on stage for a visible
         // hold (frames still decoding on a slow phone: wait, up to a cap). Never skips
@@ -693,7 +698,7 @@ function RaiReady() {
       setEmotion(DEFAULT_EMOTION);
     }, delay);
     return () => window.clearTimeout(id);
-  }, [draft, sending, talking, holding, callListening, pose, emotion, bubbleLifeKind, chewBlocksReturn]);
+  }, [draft, sending, talking, holding, callListening, pose, emotion, bubbleLifeKind, chewBlocksReturn, caption]);
 
   function clearCallListenTimers() {
     if (listenRestartTimerRef.current) {
@@ -1136,8 +1141,10 @@ function RaiReady() {
             });
             if (streamed) {
               setEmotion(streamed.emotion);
-              setPose(streamed.pose);
-              poseRef.current = streamed.pose;
+              // Named Smug owns the body until the beat releases — never think/peace/etc.
+              const keep = namedTurnRef.current === "smug" ? "smug" : streamed.pose;
+              setPose(keep);
+              poseRef.current = keep;
               setBubbleLifeKind(lifeTurn.kind);
               actLandedAt.current = Date.now();
             }
@@ -1176,8 +1183,9 @@ function RaiReady() {
         currentPose: poseAtTurnRef.current,
       });
       setEmotion(landed.emotion);
-      setPose(landed.pose);
-      poseRef.current = landed.pose;
+      const keepLand = namedTurnRef.current === "smug" ? "smug" : landed.pose;
+      setPose(keepLand);
+      poseRef.current = keepLand;
       setBubbleLifeKind(lifeTurn.kind);
       actLandedAt.current = Date.now();
       if (act.memories.length) useMemoryStore.getState().addMany(act.memories);

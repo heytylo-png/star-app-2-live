@@ -316,12 +316,18 @@ export const BRIDGE_WAIT_MAX_MS = 30_000;
 export const BRIDGE_WAIT_RETRY_MS = 400;
 
 /**
- * The sheet that is the far end of a bridged pair (smug). Showing it needs the
- * bridge frames, because every way onto it from idle plays them, and every way
- * back to idle plays them again. Idle is startup-decoded and never waits.
+ * Idle↔smug needs its Helix frames before either end of the pair may hard-cut.
+ * Entering smug (wanted smug) waits for 956+962 files. Leaving smug (shown smug
+ * → wanted idle) also waits — otherwise the stage snaps to idle.png and 962
+ * never plays (TyLo phone FAIL on 7c4e54f).
  */
-export function bridgeWantsFrames(wantedKey: string | null): boolean {
-  return wantedKey === "smug";
+export function bridgeWantsFrames(
+  wantedKey: string | null,
+  shownKey: string | null = null,
+): boolean {
+  if (wantedKey === "smug") return true;
+  if (shownKey === "smug" && wantedKey === "idle") return true;
+  return false;
 }
 
 /**
@@ -329,16 +335,19 @@ export function bridgeWantsFrames(wantedKey: string | null): boolean {
  * change never hard-cuts) just because its frames have not decoded yet: the
  * old sheet stays up until every frame is ready, up to BRIDGE_WAIT_MAX_MS, and
  * only then does it cut, loudly (the puppet logs it and sets
- * `data-rai-bridge-fallback`). Reduced motion is the one user request that skips
- * the bridge, and it never waits.
+ * `data-rai-bridge-fallback`). Leaving smug for idle keeps `smug_hold` up until
+ * 962 can play — never a straight hold→idle.png snap. Reduced motion is the
+ * one user request that skips the bridge, and it never waits.
  */
 export function bridgeGate(opts: {
   wantedKey: string | null;
+  /** Key of the plates currently on stage (smug while holding). */
+  shownKey?: string | null;
   framesReady: boolean;
   reducedMotion: boolean;
   waitExpired: boolean;
 }): "go" | "wait" {
-  if (!bridgeWantsFrames(opts.wantedKey)) return "go";
+  if (!bridgeWantsFrames(opts.wantedKey, opts.shownKey ?? null)) return "go";
   if (opts.reducedMotion || opts.framesReady || opts.waitExpired) return "go";
   return "wait";
 }
