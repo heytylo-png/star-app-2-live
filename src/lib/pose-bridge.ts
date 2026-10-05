@@ -4,7 +4,7 @@
  *
  * Frames are hard cuts on one `<img>` (no crossfade, no loop), about 100 ms
  * each. 01 is the idle pose and 06 is the hand-on-hip step into smug; the
- * live `idle.png` and the shipped `smug_official.png` stay the rest and the
+ * live `idle.png` and the shipped `smug_hold.png` (Helix 06, hip + smirk) stay the rest and the
  * hold, so a bridge is only ever the in-betweens.
  *
  * This module is pure (no DOM, no React). The puppet owns the one `<img>`;
@@ -70,7 +70,7 @@ export function bridgeKeyOfSrc(src: string): string | null {
   const path = src.split(/[?#]/)[0] ?? src;
   const name = path.slice(path.lastIndexOf("/") + 1);
   if (name === "idle.png" || /^idle_(blink|mouth)_\d\d_/.test(name)) return "idle";
-  if (name === "smug_official.png") return "smug";
+  if (name === "smug_hold.png" || name === "smug_official.png") return "smug";
   return null;
 }
 

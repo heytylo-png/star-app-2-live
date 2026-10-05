@@ -4,10 +4,11 @@
  * The clip's own frames (720x1280, 24 fps, white background) are the art: frame 29 is
  * the last arms-down frame, 30..75 is the right arm travelling out and onto the hip
  * (a new picture every 3rd tick, so 8 distinct pictures a second), and 78 is the
- * settled hand-on-hip frame the clip then holds until 149. Nothing was repainted: the
- * 18 distinct pictures were cut to RGBA offline with the same matte engine as the
- * other pre-cut sheets (scripts/cut-hip-clip.md), cropped to their common box and
- * stored as lossy WebP with alpha.
+ * last travel picture. The HOLD is not a clip frame: after travel the stage shows
+ * `smug_hold.png` (keyed Helix 06, hand on hip + smirk). Exit plays the same 18
+ * pictures backwards. Nothing was repainted: the pictures were cut to RGBA offline
+ * with the same matte engine as the other pre-cut sheets (scripts/cut-hip-clip.md),
+ * cropped to their common box and stored as lossy WebP with alpha.
  *
  * Why not a <video>: Chrome cannot play backwards (negative playbackRate is not
  * supported), seeking frame by frame is async and drops frames on phones, and a video
@@ -116,8 +117,10 @@ export type ClipView = {
   visible: boolean;
   /** Picture on the canvas (meaningful while visible). */
   index: number;
-  /** in: travelling to / resting on the hip. out: travelling back. */
+  /** in: travelling to the hip. out: travelling back. */
   dir: "in" | "out";
+  /** Travel finished: live smug_hold.png is the hold (canvas off). */
+  arrived: boolean;
 };
 
 export type ClipHost = {
@@ -151,6 +154,8 @@ export class HipClipPlayer {
   private due = Number.NaN;
   /** The canvas was asked to show but the stage has not confirmed it is on screen yet: no picture changes meanwhile. */
   private pendingShow = false;
+  /** Travel finished; the smug_hold sheet is up. */
+  private arrived = false;
   /** A cut is waiting for the live layer to come up: the picture stays until then (rAF timebase). */
   private lingerUntil = Number.NaN;
   private lingerFor = 0;
@@ -160,7 +165,7 @@ export class HipClipPlayer {
   }
 
   view(): ClipView {
-    return { visible: this.visible, index: this.index, dir: this.dir };
+    return { visible: this.visible, index: this.index, dir: this.dir, arrived: this.arrived };
   }
 
   private emit() {
@@ -177,10 +182,11 @@ export class HipClipPlayer {
     this.raf = this.host.raf(this.tick);
   }
 
-  /** idle -> smug: the arm travels onto the hip and stays. Resumes from the picture up if mid-exit. */
+  /** idle -> smug: the arm travels onto the hip, then the live smug_hold sheet takes over. */
   playIn() {
     this.lingerUntil = Number.NaN;
     this.lingerFor = 0;
+    this.arrived = false;
     if (!this.visible) {
       this.index = 0;
       this.host.draw(0);
@@ -206,32 +212,44 @@ export class HipClipPlayer {
     if (this.visible) this.startLoop();
   }
 
-  /** smug -> idle: the same pictures backwards, then the live idle sheet. */
+  /**
+   * smug -> idle: the same pictures backwards, then the live idle sheet.
+   * Starts from the hold sheet too: the last travel picture goes up, then reverses.
+   */
   playOut() {
-    if (!this.visible) return;
     this.lingerUntil = Number.NaN;
     this.lingerFor = 0;
+    this.arrived = false;
+    if (!this.visible) {
+      this.index = HIP_CLIP_LAST;
+      this.host.draw(HIP_CLIP_LAST);
+      this.visible = true;
+      this.pendingShow = true;
+      this.due = Number.NaN;
+      this.host.show();
+    }
     this.dir = "out";
     this.target = 0;
     this.emit();
     this.startLoop();
   }
 
-  /** Straight to the hold picture (reduced motion, or smug reached from a non-idle pose). */
+  /**
+   * Straight to the hold sheet (reduced motion, or smug reached from a non-idle pose).
+   * The clip canvas stays off: `smug_hold.png` is the visible layer.
+   */
   jumpToHold() {
     this.lingerUntil = Number.NaN;
     this.lingerFor = 0;
     this.stopLoop();
     this.index = HIP_CLIP_LAST;
-    this.host.draw(HIP_CLIP_LAST);
-    if (!this.visible) {
-      this.visible = true;
-      this.host.show();
-    }
+    this.visible = false;
     this.pendingShow = false;
+    this.arrived = true;
     this.dir = "in";
     this.target = HIP_CLIP_LAST;
     this.due = Number.NaN;
+    this.host.hide();
     this.emit();
   }
 
@@ -241,8 +259,10 @@ export class HipClipPlayer {
    * live sheet is on screen before the canvas goes.
    */
   cut(lingerMs = 0) {
+    this.arrived = false;
     if (!this.visible) {
       this.stopLoop();
+      this.emit();
       return;
     }
     if (lingerMs > 0) {
@@ -262,6 +282,18 @@ export class HipClipPlayer {
     this.stopLoop();
     this.lingerUntil = Number.NaN;
     this.lingerFor = 0;
+    this.visible = false;
+    this.pendingShow = false;
+    this.arrived = false;
+    this.due = Number.NaN;
+    this.host.hide();
+    this.emit();
+  }
+
+  /** Travel done: hide the canvas so the live smug_hold sheet is the hold. */
+  private arriveHold() {
+    this.stopLoop();
+    this.arrived = true;
     this.visible = false;
     this.pendingShow = false;
     this.due = Number.NaN;
@@ -295,6 +327,7 @@ export class HipClipPlayer {
       if (atTarget) {
         if (this.dir === "out") {
           this.visible = false;
+          this.arrived = false;
           this.due = Number.NaN;
           this.host.hide();
           this.emit();
@@ -310,10 +343,11 @@ export class HipClipPlayer {
       const late = ts - this.due;
       this.due = (late <= HIP_ON_TIME_MS ? this.due : ts) + hipFrameDwellMs(this.index);
       this.emit();
-    }
-    if (this.index === this.target && this.dir === "in") {
-      // On the hip: nothing left to animate until the exit.
-      return;
+      if (this.dir === "in" && this.index === this.target) {
+        // Last travel picture painted once: switch to smug_hold (no glare dwell on the clip).
+        this.arriveHold();
+        return;
+      }
     }
     this.startLoop();
   };
@@ -326,9 +360,10 @@ export class HipClipPlayer {
  *
  *  - idle -> smug: the arm travels (forward), then rests on the hip picture.
  *  - smug -> idle: the same pictures backwards, then the live idle sheet.
- *  - anything else onto smug (or reduced motion): the hip picture straight away, a cut;
+ *  - anything else onto smug (or reduced motion): the smug_hold sheet straight away;
  *    smug -> anything else: a cut back to the live sheet.
- * The arms-down smug sheet is never what the stage rests on while the clip is in use.
+ * The hold is always smug_hold.png (hand on hip + smirk), never a clip frame and never
+ * the arms-down smug_official.png.
  */
 export class HipClipDriver {
   private last: string | null = null;
@@ -348,7 +383,8 @@ export class HipClipDriver {
     if (from === key) return;
     if (key === "smug") {
       if (!env.ready) return;
-      if (env.reducedMotion || (from !== "idle" && !this.player.view().visible)) this.player.jumpToHold();
+      const v = this.player.view();
+      if (env.reducedMotion || (from !== "idle" && !v.visible && !v.arrived)) this.player.jumpToHold();
       else this.player.playIn();
       return;
     }

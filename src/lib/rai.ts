@@ -386,7 +386,7 @@ export function settledRestPose(): PoseId {
  * line can chew. The idle↔smug bridge is only the transition the puppet
  * plays when this commit leaves the smug sheet — bridge frames are not a rest.
  *
- * Idle plus the smug emotion still paints smug_official (see layersFor), so
+ * Idle plus the smug emotion still paints smug_hold (hand on hip + smirk; see layersFor), so
  * that sheet counts too. Every other pose keeps its normal hold.
  * Call this only after she has stopped speaking.
  */
@@ -511,6 +511,7 @@ export const PRE_CUT_ALPHA_FILES = [
   "rai/laugh_official.png",
   "rai/surprise_official.png",
   "rai/smug_official.png",
+  "rai/smug_hold.png",
   "rai/content_official.png",
   "rai/sad_official.png",
   "rai/heart_official.png",
@@ -592,7 +593,7 @@ export const LIVE_POSE_FILES = {
   think: "rai/think_official.png",
   pout: "rai/pout_official.png",
   tired: "rai/tired_official.png",
-  smug: "rai/smug_official.png",
+  smug: "rai/smug_hold.png",
   /** Shipping PNG-puppet wave: retoned full-body (TyLo dark sheet → idle/live cheek). */
   wave: "rai/wave_official.png",
   hold: "rai/hold_official.png",
@@ -803,14 +804,14 @@ export function smugBeatSheetUrls(): string[] {
 
 /**
  * Where the stage's first decodes go. idle.png first (the stage cannot paint
- * without it), then the whole smug beat (bridge 01..06 + smug_official, a
+ * without it), then the whole smug beat (bridge 01..06 + smug_hold, a
  * named Smug can arrive any moment and has to land on a decoded arm), then the
  * rest of the startup set (blink, mouth). Everything else stays deferred.
  */
 export function stagePreloadOrder(opts?: { clip?: boolean }): { first: string; beat: string[]; rest: string[] } {
   const startup = startupSpriteUrls();
-  // With the hip clip (keyed frames, hip-clip.ts) the six bridge PNGs are only a fallback
-  // and never downloaded; the smug sheet is still needed as the plate under the clip.
+  // With the hip clip the six bridge PNGs are only a fallback; smug_hold.png is the hold
+  // sheet (hip + smirk) after travel — never a clip frame, never arms-down smug_official.
   const beat = opts?.clip ? [SPRITES.poses.smug] : smugBeatSheetUrls();
   const first = startup[0]!;
   return { first, beat: beat.filter((u) => u !== first), rest: startup.slice(1).filter((u) => !beat.includes(u)) };

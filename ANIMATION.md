@@ -50,13 +50,13 @@ Body sheets swap by stable layer id (`body:<src>`). Incoming starts at opacity 0
 
 TyLo: the phone skipped the six PNGs (80 ms each) and "941 held the hip, then cut both ways". The idle <-> smug pair is now the existing clip `hip-bridge-917.mp4` (travel segment, muted, audio/cover not shipped), see `scripts/cut-hip-clip.md`.
 
-- Finding: `smug_official.png` is the arms-down smirk sheet. The old bridge ended on hand-on-hip and then popped to that sheet, which is the "smile-on-idle" TyLo saw. So the hold is the clip's own settled hip picture (index 17, frame 78 of the clip); `smug_official.png` is unchanged and still loaded (hidden plate under the clip, and the fallback hold).
-- Assets: 18 keyed RGBA WebP pictures `public/rai/hip/hip_bridge_00..17.webp` (clip frames 29, 30, 33 ... 78). Picture 0 is the idle (29, dwell one tick), then 8 pictures/s as the clip itself steps (125 ms each). Entry plays 00 -> 17, exit plays 17 -> 00 (same pictures reversed). No `<video>`: Chrome cannot play backward, per-frame seeking drops frames on phones, and mp4 has no alpha.
-- Player: `HipClipPlayer` (`src/lib/hip-clip.ts`) on one `<canvas class="rai-layer">` (`HipClipLayer`), rAF-driven, at most one picture change per animation frame, dwell counted from the paint, a late step gets its full dwell (never skips, never squeezes). `HipClipDriver` decides: idle -> smug plays in, smug -> idle plays out, any other change cuts. The clip canvas is the only visible layer while it is up; idle/blink/mouth/sheets are `visibility: hidden`.
-- Hold/exit: unchanged `smugBeatResetDelayMs` (+1.5 s tail) and the #107 hip-shown guard (`smugReleaseWaitMs`, phase `hold` = picture 17 up).
-- Preload: `idle.png`, then the 18 clip pictures (high priority, retried), then the smug sheet, then blink/mouth. If the clip is not ready, smug waits (idle plain stays up, up to 30 s, then a loud `console.warn` and the legacy six-PNG bridge is used). Browsers without `createImageBitmap`/canvas use the legacy path directly.
-- Reduced motion: hard cuts as before (no travel); idle <-> the hip picture.
-- Debug: stage `data-rai-clip`, `-clip-ready`, `-clip-frame`, `-clip-time`, `-clip-dir`; `?debug=1` readout shows clip readiness (n/18), clip time and picture.
+- Finding: `smug_official.png` is the arms-down smirk sheet (kept on disk, unused as the hold). Hold option B (TyLo, 2026-10-05): after travel, hold `smug_hold.png` (keyed Helix 06, hand on hip + smirk). Never a clip frame, never `smug_official.png`.
+- Assets: 18 keyed RGBA WebP travel pictures `public/rai/hip/hip_bridge_00..17.webp` plus `public/rai/smug_hold.png`. Entry plays 00 -> 17 then switches to the hold sheet; exit plays 17 -> 00 from the hold. No `<video>`.
+- Player: `HipClipPlayer` travel-only; `arrived` hands off to the live `smug_hold` plate (pose smug). Canvas is the only visible layer during travel; during hold the sheet is the only visible layer.
+- Hold/exit: `smugBeatResetDelayMs` (+1.5 s) and #107 hip-shown guard (`smugReleaseWaitMs`, phase `hold` = sheet up / `arrived`). Never release while the smug line's beat is running.
+- Preload: `idle.png`, clip pictures (high priority), `smug_hold.png`, then blink/mouth. Clip not ready -> wait up to 30 s then legacy PNG bridge.
+- Reduced motion: hard cut onto `smug_hold.png`, hard cut back to idle (no travel).
+- Debug: `data-rai-hold-sheet=smug_hold` while holding; `?debug=1` shows which hold sheet is active.
 
 ### Talk / mouth
 

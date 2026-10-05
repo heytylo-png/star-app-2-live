@@ -116,7 +116,7 @@ describe("pose bridge pair table", () => {
 
   it("keeps the live keys: bridge files are new names, smug and idle are untouched", () => {
     assert.match(SPRITES.poses.idle, /rai\/idle\.png/);
-    assert.match(SPRITES.poses.smug, /rai\/smug_official\.png/);
+    assert.match(SPRITES.poses.smug, /rai\/smug_hold\.png/);
     for (const f of BRIDGE_IDLE_SMUG_FILES) {
       assert.ok(!SPRITES.poses.idle.includes(f) && !SPRITES.poses.smug.includes(f));
     }
