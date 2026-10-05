@@ -1141,8 +1141,12 @@ function RaiReady() {
             });
             if (streamed) {
               setEmotion(streamed.emotion);
-              // Named Smug owns the body until the beat releases — never think/peace/etc.
-              const keep = namedTurnRef.current === "smug" ? "smug" : streamed.pose;
+              // Smug beat owns the body while the reply is up — never wink/think mid-hold/exit.
+              const keep =
+                namedTurnRef.current === "smug" ||
+                (isReplyCaption(captionRef.current) && holdsSmugBeat(poseRef.current, streamed.emotion))
+                  ? "smug"
+                  : streamed.pose;
               setPose(keep);
               poseRef.current = keep;
               setBubbleLifeKind(lifeTurn.kind);
@@ -1183,7 +1187,11 @@ function RaiReady() {
         currentPose: poseAtTurnRef.current,
       });
       setEmotion(landed.emotion);
-      const keepLand = namedTurnRef.current === "smug" ? "smug" : landed.pose;
+      const keepLand =
+        namedTurnRef.current === "smug" ||
+        (isReplyCaption(captionRef.current) && holdsSmugBeat(poseRef.current, landed.emotion))
+          ? "smug"
+          : landed.pose;
       setPose(keepLand);
       poseRef.current = keepLand;
       setBubbleLifeKind(lifeTurn.kind);
