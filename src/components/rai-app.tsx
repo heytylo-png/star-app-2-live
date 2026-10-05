@@ -596,12 +596,13 @@ function RaiReady() {
       replyPose: replyPoseRef.current,
     });
     if (!greetingSnap && ended && (pose !== ended.pose || emotion !== ended.emotion)) {
-      // Smug holds its LINE's beat: landing → reading/speech + 1.5 s → 962.
-      // Do not gate on caption state (it stays set after the bubble commits).
-      // Mid-hold wink/think cannot steal the body while pose is still smug.
-      // Mid-exit unpaired keys are ignored by PoseBridge.exitInFlight (#116).
-      // Wink lines keep the plain rest rule.
-      const delay = holdsSmugBeat(pose, emotion)
+      // Smug: 962 only after line finished + 1.5 s.
+      // Line finished = max(landing + reading floor, speech end). There is no
+      // stage subtitle that auto-hides (ChatThread assistant bubble stays in
+      // the transcript), so do not gate on React caption state.
+      // Mid-hold: keep pose smug. Mid-exit unpaired keys: exitInFlight (#116).
+      const smugBeat = holdsSmugBeat(pose, emotion);
+      const delay = smugBeat
         ? smugBeatResetDelayMs({
             line: captionRef.current,
             lineLandedAt: lineLandedAt.current,
@@ -614,18 +615,35 @@ function RaiReady() {
             emotion,
             actLandedAt: actLandedAt.current,
           });
-      if (delay != null && delay > 0) {
-        // A smug beat is released only once the hip was really on stage for a visible
-        // hold (frames still decoding on a slow phone: wait, up to a cap). Never skips
-        // to the idle body unseen.
-        const smugBeat = holdsSmugBeat(pose, emotion);
+      // Full line not landed yet (named smug before stream-complete): keep hold.
+      if (delay == null) return;
+      if (delay > 0) {
         let timerId = 0;
         let waited = 0;
         const release = () => {
           timerId = 0;
-          const seen = readPosePhase();
-          if (smugBeat && seen.mounted) {
-            const more = smugReleaseWaitMs({ phase: seen.phase, holdSince: seen.holdSince, waitedMs: waited });
+          if (smugBeat) {
+            // Re-check beat every poll so a late speechEndedAt / land cannot cut early.
+            const moreBeat = smugBeatResetDelayMs({
+              line: captionRef.current,
+              lineLandedAt: lineLandedAt.current,
+              speechEndedAt: speechEndedAt.current,
+            });
+            if (moreBeat == null) {
+              timerId = window.setTimeout(release, 150);
+              return;
+            }
+            const seen = readPosePhase();
+            const beatEndAt = Date.now() + moreBeat;
+            const moreStage = seen.mounted
+              ? smugReleaseWaitMs({
+                  phase: seen.phase,
+                  holdSince: seen.holdSince,
+                  waitedMs: waited,
+                  beatEndAt,
+                })
+              : Math.max(150, moreBeat);
+            const more = Math.max(moreBeat, moreStage);
             if (more > 0) {
               waited += more;
               timerId = window.setTimeout(release, more);
