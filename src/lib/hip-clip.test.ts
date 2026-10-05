@@ -100,7 +100,7 @@ describe("hip clip data", () => {
 });
 
 describe("hip clip player", () => {
-  it("entry: every picture 00..17 once, in order, each held for its ticks, then rests on the hold picture", () => {
+  it("entry: every picture 00..17 once, in order, each held for its ticks, then hands off to the hold sheet", () => {
     const { state, player, frame } = rig();
     player.playIn();
     assert.equal(state.shows, 1);
@@ -115,10 +115,12 @@ describe("hip clip player", () => {
       assert.ok(Math.abs(dwell - hipFrameDwellMs(k)) <= 18, `picture ${k} held ${dwell.toFixed(0)} ms`);
     }
     assert.equal(player.view().index, HIP_CLIP_LAST);
-    assert.equal(player.view().visible, true);
-    frame(600); // the hold: no more draws, no hide
+    assert.equal(player.view().visible, false);
+    assert.equal(player.view().arrived, true);
+    assert.equal(state.hides.length, 1);
+    frame(600); // hold sheet is up: no more clip draws
     assert.equal(state.draws.length, 18);
-    assert.equal(state.hides.length, 0);
+    assert.equal(state.hides.length, 1);
   });
 
   it("exit: the same pictures backwards 17..00, then hands back to the live sheet", () => {
@@ -126,17 +128,19 @@ describe("hip clip player", () => {
     player.playIn();
     player.confirmShown();
     frame(400);
+    assert.equal(player.view().arrived, true);
     state.draws.length = 0;
-    frame(120); // hold for a good while
+    const hidesBefore = state.hides.length;
     player.playOut();
+    player.confirmShown();
     assert.equal(player.view().dir, "out");
     frame(500);
-    assert.deepEqual(state.draws.map((d) => d.i), Array.from({ length: 17 }, (_, i) => 16 - i));
-    assert.equal(state.hides.length, 1);
+    assert.deepEqual(state.draws.map((d) => d.i), Array.from({ length: 18 }, (_, i) => HIP_CLIP_LAST - i));
+    assert.equal(state.hides.length, hidesBefore + 1);
     assert.equal(player.view().visible, false);
-    // picture 00 stays up for its own tick before the idle sheet comes back
+    assert.equal(player.view().arrived, false);
     const last = state.draws.at(-1)!;
-    assert.ok(state.hides[0]! - last.t >= HIP_TICK_MS - 18);
+    assert.ok(state.hides.at(-1)! - last.t >= HIP_TICK_MS - 18);
   });
 
   it("a stall never skips a picture or squeezes one", () => {
@@ -175,51 +179,56 @@ describe("hip clip player", () => {
     }
   });
 
-  it("a cut with linger keeps the hip up until the live layer has risen, then hides once", () => {
+  it("a cut with linger (clip visible mid-travel) keeps the picture up until the live layer has risen", () => {
     const { state, player, frame } = rig();
-    player.jumpToHold();
-    frame(2);
+    player.playIn();
+    player.confirmShown();
+    frame(20);
+    assert.equal(player.view().visible, true);
     const t0 = state.now;
+    const hidesBefore = state.hides.length;
     player.cut(HIP_CUT_LINGER_MS);
-    assert.equal(state.hides.length, 0);
     frame(3);
-    assert.equal(state.hides.length, 0, "still up after ~50 ms");
+    assert.equal(state.hides.length, hidesBefore, "still up after ~50 ms");
     assert.equal(player.view().visible, true);
     frame(10);
-    assert.equal(state.hides.length, 1);
-    assert.ok(state.hides[0]! - t0 >= HIP_CUT_LINGER_MS - 1 && state.hides[0]! - t0 <= HIP_CUT_LINGER_MS + 40);
+    assert.equal(state.hides.length, hidesBefore + 1);
+    assert.ok(state.hides.at(-1)! - t0 >= HIP_CUT_LINGER_MS - 1 && state.hides.at(-1)! - t0 <= HIP_CUT_LINGER_MS + 40);
     assert.equal(player.view().visible, false);
   });
 
-  it("reduced motion: smug -> idle lingers, smug -> another pose cuts at once", () => {
+  it("reduced motion: smug -> idle clears the hold sheet flag (live crossfade); smug -> other pose cuts", () => {
     const a = rig();
     const d = new HipClipDriver(a.player);
     d.commit("idle", { reducedMotion: true, ready: true });
     d.commit("smug", { reducedMotion: true, ready: true });
+    assert.equal(a.player.view().arrived, true);
     a.frame(2);
     d.commit("idle", { reducedMotion: true, ready: true });
-    assert.equal(a.state.hides.length, 0);
-    a.frame(20);
-    assert.equal(a.state.hides.length, 1);
+    assert.equal(a.player.view().arrived, false);
     const b = rig();
     const e = new HipClipDriver(b.player);
     e.commit("idle", { reducedMotion: false, ready: true });
     e.commit("smug", { reducedMotion: false, ready: true });
-    b.frame(2);
+    b.player.confirmShown();
+    b.frame(400);
+    assert.equal(b.player.view().arrived, true);
     e.commit(null, { reducedMotion: false, ready: true });
-    assert.equal(b.state.hides.length, 1);
+    assert.equal(b.player.view().arrived, false);
   });
 
-  it("a new play during the linger cancels the hide", () => {
-    const { state, player, frame } = rig();
-    player.jumpToHold();
-    frame(2);
+  it("a new playIn during a linger cancels the hide and resumes travel", () => {
+    const { player, frame } = rig();
+    player.playIn();
+    player.confirmShown();
+    frame(20);
     player.cut(HIP_CUT_LINGER_MS);
     frame(2);
-    player.jumpToHold();
-    frame(30);
-    assert.equal(state.hides.length, 0);
-    assert.equal(player.view().visible, true);
+    player.playIn();
+    player.confirmShown();
+    frame(500);
+    assert.equal(player.view().arrived, true);
+    assert.equal(player.view().visible, false);
   });
 
   it("an exit that starts mid-entry reverses from the picture that is up (no jump)", () => {
@@ -242,27 +251,52 @@ describe("hip clip player", () => {
     player.playIn();
     player.confirmShown();
     frame(400);
+    assert.equal(player.view().arrived, true);
     player.playOut();
+    player.confirmShown();
     frame(40);
     const at = player.view().index;
-    assert.ok(at > 1 && at < HIP_CLIP_LAST);
+    assert.ok(at > 1 && at < HIP_CLIP_LAST, `expected mid-exit index, got ${at}`);
     state.draws.length = 0;
+    const hidesBefore = state.hides.length;
     player.playIn();
     frame(400);
     assert.deepEqual(state.draws.map((d) => d.i), Array.from({ length: HIP_CLIP_LAST - at }, (_, i) => at + 1 + i));
-    assert.equal(state.hides.length, 0);
+    assert.equal(player.view().arrived, true);
+    assert.equal(state.hides.length, hidesBefore + 1);
   });
 
-  it("jumpToHold is a cut onto the hip picture, cut() a cut back", () => {
+  it("jumpToHold lands on the hold sheet (canvas off); cut() clears arrived", () => {
     const { state, player, frame } = rig();
     player.jumpToHold();
-    assert.deepEqual(state.draws.map((d) => d.i), [HIP_CLIP_LAST]);
-    assert.equal(player.view().visible, true);
+    assert.deepEqual(state.draws.map((d) => d.i), []);
+    assert.equal(player.view().visible, false);
+    assert.equal(player.view().arrived, true);
     frame(60);
-    assert.equal(state.draws.length, 1);
+    assert.equal(state.draws.length, 0);
     player.cut();
+    assert.equal(player.view().arrived, false);
+    assert.equal(player.view().visible, false);
+  });
+
+  it("playIn hands off to the hold sheet after the last travel picture; playOut restarts the clip backward", () => {
+    const { state, player, frame } = rig();
+    player.playIn();
+    player.confirmShown();
+    frame(500);
+    assert.deepEqual(state.draws.map((d) => d.i), Array.from({ length: 18 }, (_, i) => i));
+    assert.equal(player.view().arrived, true);
     assert.equal(player.view().visible, false);
     assert.equal(state.hides.length, 1);
+    state.draws.length = 0;
+    player.playOut();
+    player.confirmShown();
+    frame(500);
+    assert.equal(state.draws[0]!.i, HIP_CLIP_LAST);
+    assert.deepEqual(state.draws.map((d) => d.i), Array.from({ length: 18 }, (_, i) => HIP_CLIP_LAST - i));
+    assert.equal(player.view().visible, false);
+    assert.equal(player.view().arrived, false);
+    assert.equal(state.hides.length, 2);
   });
 });
 
@@ -283,9 +317,12 @@ describe("hip clip driver", () => {
     player.confirmShown();
     frame(400);
     assert.equal(state.draws.length, 18);
-    go("idle");
-    frame(400);
+    assert.equal(player.view().arrived, true);
     assert.equal(state.hides.length, 1);
+    go("idle");
+    player.confirmShown();
+    frame(400);
+    assert.equal(state.hides.length, 2);
   });
 
   it("deduped on the key: a re-commit of the same key does nothing", () => {
@@ -299,19 +336,19 @@ describe("hip clip driver", () => {
     assert.equal(state.shows, 1);
   });
 
-  it("smug from a pose that is not idle, or with reduced motion, is a cut onto the hip picture; never the arms-down sheet", () => {
+  it("smug from a pose that is not idle, or with reduced motion, is a cut onto the hold sheet; never a clip frame", () => {
     const a = driverRig();
     a.go("wave");
     a.go("smug");
-    assert.deepEqual(a.state.draws.map((d) => d.i), [HIP_CLIP_LAST]);
+    assert.deepEqual(a.state.draws.map((d) => d.i), []);
+    assert.equal(a.player.view().arrived, true);
     const b = driverRig();
     b.go("idle");
     b.go("smug", { reducedMotion: true });
-    assert.deepEqual(b.state.draws.map((d) => d.i), [HIP_CLIP_LAST]);
+    assert.deepEqual(b.state.draws.map((d) => d.i), []);
+    assert.equal(b.player.view().arrived, true);
     b.go("idle", { reducedMotion: true });
-    assert.equal(b.state.hides.length, 0, "reduced-motion exit lingers while the live idle rises");
-    b.frame(20);
-    assert.equal(b.state.hides.length, 1);
+    assert.equal(b.player.view().arrived, false);
     assert.equal(b.player.view().visible, false);
   });
 
@@ -386,6 +423,8 @@ describe("puppet wiring", () => {
     assert.match(puppet, /<HipClipLayer ref=\{canvasRef\} visible=\{clipOnStage\} \/>/);
     assert.match(puppet, /bridgeSheet \|\| clipOnStage \? \(\{ visibility: "hidden" \}/);
     assert.match(puppet, /clipView\.dir === "out"/);
+    assert.match(puppet, /clipView\.arrived \|\| plateKey === "smug"/);
+    assert.match(puppet, /data-rai-hold-sheet=/);
     assert.match(puppet, /data-rai-clip-frame=/);
     assert.match(puppet, /clipPlayer\.current\?\.confirmShown\(\)/);
   });

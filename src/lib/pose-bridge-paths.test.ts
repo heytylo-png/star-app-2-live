@@ -75,7 +75,7 @@ type Commit = Partial<PuppetState> & { pose: PoseId; emotion: EmotionId };
 function nameOf(src: string): string {
   const b = /bridge_idle_smug_(\d\d)/.exec(src);
   if (b) return `b${b[1]}`;
-  if (/smug_official/.test(src)) return "smug";
+  if (/smug_hold|smug_official/.test(src)) return "smug";
   if (/idle_mouth_/.test(src)) return "idle";
   if (/idle_blink_|\/idle\.png/.test(src)) return "idle";
   return src.split("/").pop()!.replace(/\.png.*$/, "");
@@ -523,7 +523,7 @@ describe("guard: a bridge-eligible pair never hard-cuts when its frames are deco
   });
 
   it("the smug sheet key is the live one, so a bridge never replaces idle.png or smug", () => {
-    assert.match(SPRITES.poses.smug, /smug_official\.png/);
+    assert.match(SPRITES.poses.smug, /smug_hold\.png/);
     assert.match(SPRITES.poses.idle, /\/idle\.png/);
   });
 });

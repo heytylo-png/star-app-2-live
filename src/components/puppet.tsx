@@ -209,7 +209,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   const [clipReady, setClipReady] = useState(false);
   /** The clip never became ready within its bound: the PNG bridge takes over, loudly. */
   const [clipGaveUp, setClipGaveUp] = useState(false);
-  const [clipView, setClipView] = useState<ClipView>({ visible: false, index: 0, dir: "in" });
+  const [clipView, setClipView] = useState<ClipView>({ visible: false, index: 0, dir: "in", arrived: false });
   const clipMode = clipSupported && !clipGaveUp;
   /** Waiting for bridge frames to decode before an idle <-> smug change (bounded). */
   /** The bounded wait ran out: the change cut, loudly. */
@@ -973,14 +973,15 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   // oxlint-disable-next-line react/refs -- plates is the painted key; read-only, same as the layers below
   const plateKey = bridgeKeyOfPlates(plates);
   const clipOnStage = clipMode && clipView.visible;
+  // Hold is the live smug_hold sheet (clip arrived), never a parked clip frame.
   const phase: PosePhase = clipMode
     ? clipOnStage
       ? clipView.dir === "out"
         ? "bridge-out"
-        : clipView.index === HIP_CLIP_LAST
-          ? "hold"
-          : "bridge-in"
-      : "idle"
+        : "bridge-in"
+      : clipView.arrived || plateKey === "smug"
+        ? "hold"
+        : "idle"
     : bridgeSheet
       ? plateKey === "smug"
         ? "bridge-in"
@@ -1027,6 +1028,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
       data-rai-clip-frame={clipOnStage ? String(clipView.index).padStart(2, "0") : "off"}
       data-rai-clip-time={clipOnStage ? String(hipClipTimeMs(clipView.index)) : "off"}
       data-rai-clip-dir={clipOnStage ? clipView.dir : "off"}
+      data-rai-hold-sheet={phase === "hold" ? "smug_hold" : "off"}
       data-rai-build={buildId()}
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
     >
@@ -1106,7 +1108,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
         >
           {`build ${buildId()}\npose ${pose} / ${emotion}\nphase ${phase}${poseWait ? " (waiting for frames)" : ""}\nreduced-motion ${reducedMotion ? "on" : "off"}\n${
             clipMode
-              ? `hip clip ${clipReady ? "ready" : "loading"} ${clipBits.toString(2).split("1").length - 1}/${HIP_CLIP_FRAMES.length}\nclip time ${clipOnStage ? `${hipClipTimeMs(clipView.index)} ms (pic ${clipView.index}/${HIP_CLIP_LAST}, ${clipView.dir})` : "off"}\nclip decode ${clipDecode} sheet ${smugDecode.slice(-1)}`
+              ? `hip clip ${clipReady ? "ready" : "loading"} ${clipBits.toString(2).split("1").length - 1}/${HIP_CLIP_FRAMES.length}\nclip time ${clipOnStage ? `${hipClipTimeMs(clipView.index)} ms (pic ${clipView.index}/${HIP_CLIP_LAST}, ${clipView.dir})` : "off"}\nhold ${phase === "hold" ? "smug_hold.png (hip+smirk)" : clipView.arrived ? "smug_hold.png" : "off"}\nclip decode ${clipDecode} sheet ${smugDecode.slice(-1)}`
               : `PNG bridge${clipGaveUp ? " (clip gave up)" : ""}\nsmug decode ${smugDecode.slice(0, 6)}+${smugDecode.slice(6)} (bridge 01..06 + sheet)`
           }${bridgeWaitExpired ? "\nBRIDGE FALLBACK" : ""}`}
         </pre>
