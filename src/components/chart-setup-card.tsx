@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 type ChartSetupCardProps = {
   onSkip: () => void;
@@ -18,38 +17,44 @@ export function ChartSetupCard({ onSkip, onSave }: ChartSetupCardProps) {
 
   return (
     <form
-      className={cn(
-        "mx-auto mb-2 w-full max-w-lg rounded-xl bg-elevated/88 px-4 py-2.5 shadow-[var(--shadow-border)] backdrop-blur-[2px]",
-      )}
+      className="birthday-card"
+      aria-label="Birthday"
       onSubmit={(e) => {
         e.preventDefault();
         if (!date.trim()) return;
         onSave({ date: date.trim(), time: time.trim(), place: place.trim() });
       }}
     >
-      <p className="font-display text-lg leading-tight">Birthday, if you want</p>
-      <p className="mt-0.5 text-xs text-muted">Date helps. Time and place are extra. Skip anytime.</p>
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        <label className="col-span-2 text-xs text-muted sm:col-span-1">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="font-display text-base leading-tight">Birthday, if you want</p>
+          <p className="text-[0.65rem] leading-tight text-muted">Date helps. Time and place are extra.</p>
+        </div>
+        <Button type="button" className="min-h-11 min-w-11 shrink-0" onClick={onSkip}>
+          Skip
+        </Button>
+      </div>
+      <div className="mt-1 grid grid-cols-2 gap-1">
+        <label className="text-[0.65rem] leading-tight text-muted">
           Date
           <input
             type="date"
             required
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="mt-1 h-10 w-full rounded-md bg-bg px-3 text-sm text-fg shadow-[var(--shadow-border)] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="mt-0.5 h-10 w-full rounded-sm bg-bg px-2 text-sm text-fg outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </label>
-        <label className="col-span-2 text-xs text-muted sm:col-span-1">
+        <label className="text-[0.65rem] leading-tight text-muted">
           Time
           <input
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            className="mt-1 h-10 w-full rounded-md bg-bg px-3 text-sm text-fg shadow-[var(--shadow-border)] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="mt-0.5 h-10 w-full rounded-sm bg-bg px-2 text-sm text-fg outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </label>
-        <label className="col-span-2 text-xs text-muted">
+        <label className="col-span-2 text-[0.65rem] leading-tight text-muted">
           Place
           <input
             type="text"
@@ -57,15 +62,12 @@ export function ChartSetupCard({ onSkip, onSave }: ChartSetupCardProps) {
             placeholder="City, optional"
             value={place}
             onChange={(e) => setPlace(e.target.value)}
-            className="mt-1 h-10 w-full rounded-md bg-bg px-3 text-sm text-fg shadow-[var(--shadow-border)] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="mt-0.5 h-10 w-full rounded-sm bg-bg px-2 text-sm text-fg outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </label>
       </div>
-      <div className="mt-3 flex items-center justify-end gap-2">
-        <Button type="button" variant="ghost" size="sm" onClick={onSkip}>
-          Skip
-        </Button>
-        <Button type="submit" size="sm" disabled={!date.trim()}>
+      <div className="mt-1 flex justify-end">
+        <Button type="submit" variant="secondary" className="min-h-11 min-w-11" disabled={!date.trim()}>
           Save
         </Button>
       </div>

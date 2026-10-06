@@ -14,10 +14,8 @@ import { cn } from "@/lib/utils";
 
 type StageMenuProps = {
   status: string;
+  liveState: string;
   statusDotClass: string;
-  tierLabel: string;
-  streakDays: number;
-  brainLabel: string;
   callActive: boolean;
   callStarting: boolean;
   callSupported: boolean;
@@ -32,10 +30,8 @@ type StageMenuProps = {
 
 export function StageMenu({
   status,
+  liveState,
   statusDotClass,
-  tierLabel,
-  streakDays,
-  brainLabel,
   callActive,
   callStarting,
   callSupported,
@@ -96,10 +92,7 @@ export function StageMenu({
               {status}
               <span className="normal-case tracking-wide text-subtle">
                 {" · "}
-                {tierLabel}
-                {streakDays >= 2 ? ` · ${streakDays}d` : ""}
-                {" · "}
-                {brainLabel}
+                {liveState}
               </span>
             </span>
           </p>

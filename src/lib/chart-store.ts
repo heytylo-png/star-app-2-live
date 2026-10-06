@@ -79,6 +79,28 @@ function parseHerDayByDay(value: unknown): Record<string, StoredHerDay> {
 
 export const CHART_STORE_KEY = "star-rai-chart";
 
+type ChartPersist = Pick<
+  ChartState,
+  "setup" | "lastFiredDate" | "askedBirthday" | "diaryByDay" | "herDayByDay" | "skyNoteByDay"
+>;
+
+/** Reload keeps a skipped or finished birthday card, including across a new day. */
+export function mergeChartPersist(persisted: unknown, current: ChartState): ChartState {
+  const p = (persisted ?? {}) as Partial<ChartPersist>;
+  const setup =
+    p.setup === "skipped" || p.setup === "done" || p.setup === "pending" ? p.setup : current.setup;
+  return {
+    ...current,
+    setup,
+    lastFiredDate: typeof p.lastFiredDate === "string" ? p.lastFiredDate : current.lastFiredDate,
+    askedBirthday: typeof p.askedBirthday === "boolean" ? p.askedBirthday : current.askedBirthday,
+    diaryByDay: p.diaryByDay && typeof p.diaryByDay === "object" ? p.diaryByDay : current.diaryByDay,
+    herDayByDay: parseHerDayByDay(p.herDayByDay),
+    skyNoteByDay: parseSkyNoteByDay(p.skyNoteByDay),
+    hydrated: false,
+  };
+}
+
 export const useChartStore = create<ChartState>()(
   persist(
     (set, get) => ({
@@ -131,27 +153,7 @@ export const useChartStore = create<ChartState>()(
         herDayByDay: state.herDayByDay,
         skyNoteByDay: state.skyNoteByDay,
       }),
-      merge: (persisted, current) => {
-        const p = (persisted ?? {}) as Partial<
-          Pick<
-            ChartState,
-            "setup" | "lastFiredDate" | "askedBirthday" | "diaryByDay" | "herDayByDay" | "skyNoteByDay"
-          >
-        >;
-        const setup =
-          p.setup === "skipped" || p.setup === "done" || p.setup === "pending" ? p.setup : current.setup;
-        return {
-          ...current,
-          setup,
-          lastFiredDate: typeof p.lastFiredDate === "string" ? p.lastFiredDate : current.lastFiredDate,
-          askedBirthday: typeof p.askedBirthday === "boolean" ? p.askedBirthday : current.askedBirthday,
-          diaryByDay:
-            p.diaryByDay && typeof p.diaryByDay === "object" ? p.diaryByDay : current.diaryByDay,
-          herDayByDay: parseHerDayByDay(p.herDayByDay),
-          skyNoteByDay: parseSkyNoteByDay(p.skyNoteByDay),
-          hydrated: false,
-        };
-      },
+      merge: (persisted, current) => mergeChartPersist(persisted, current),
     },
   ),
 );

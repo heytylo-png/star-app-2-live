@@ -81,6 +81,8 @@ import { isSuggestAsk, parseTrackTitle, resolveLifeTurn, type LifeSlots } from "
 import { reduceChartMenu } from "@/lib/chart-menu";
 import { reduceLifeMenu } from "@/lib/life-menu";
 import { useSpotifyPlayback } from "@/lib/use-spotify-playback";
+import { birthdayCardVisible } from "@/lib/birthday-card";
+import { HEADER_STATUS_LEAD, headerLiveState } from "@/lib/header-status";
 import { chatOpenForTab, DEFAULT_SHELL_TAB, lastDiaryEntry, type ShellTab } from "@/lib/shell";
 import { stagePlace, stageSourceFor, type StagePlace } from "@/lib/stage-source";
 import { usePrefersReducedMotion } from "@/lib/use-reduced-motion";
@@ -338,7 +340,11 @@ function RaiReady() {
     [threads, activeId],
   );
   const empty = !thread || thread.messages.length === 0;
-  const showSetup = chartHydrated && chartSetup === "pending" && !slots.user_birth_date;
+  const showSetup = birthdayCardVisible({
+    hydrated: chartHydrated,
+    setup: chartSetup,
+    hasBirthDate: Boolean(slots.user_birth_date),
+  });
 
   useEffect(() => {
     draftRef.current = draft;
@@ -1574,23 +1580,14 @@ function RaiReady() {
   const slotFacts = formatMemoryFacts(slots);
   const hasSlots = Boolean(slotFacts);
 
-  const status = callStarting
-    ? "Allow mic"
-    : callActive
-    ? talking
-      ? "Speaking"
-      : sending
-        ? "Thinking"
-        : callListening
-          ? callListenLabel()
-          : "On call"
-    : talking
-      ? "Speaking"
-      : sending
-        ? "Thinking"
-        : holding
-          ? "Listening"
-          : "With you";
+  const liveState = headerLiveState({
+    talking,
+    sending,
+    holding,
+    callActive,
+    callListening,
+    micNeeded: callStarting || callNotice?.kind === "denied",
+  });
 
   return (
     <div className="relative h-dvh overflow-hidden bg-bg text-fg">
@@ -1623,7 +1620,8 @@ function RaiReady() {
 
       <div className="pointer-events-none absolute inset-0 z-10 flex flex-col">
         <StageMenu
-          status={status}
+          status={HEADER_STATUS_LEAD}
+          liveState={liveState}
           statusDotClass={cn(
             "inline-block size-1.5 shrink-0 rounded-full",
             callActive && callListening
@@ -1640,9 +1638,6 @@ function RaiReady() {
                         ? "bg-fg/70"
                         : "bg-muted/50",
           )}
-          tierLabel={TIER_LABEL[tier]}
-          streakDays={streakDays}
-          brainLabel={xaiSaved ? "Grok" : "Local"}
           callActive={callActive}
           callStarting={callStarting}
           callSupported={callSupported}
@@ -1761,7 +1756,10 @@ function RaiReady() {
           <InstallHint />
           {showSetup ? (
             <ChartSetupCard
-              onSkip={() => useChartStore.getState().markSetupSkipped()}
+              onSkip={() => {
+                useChartStore.getState().markSetupSkipped();
+                selectTab("chat");
+              }}
               onSave={(fields) => {
                 const natal = natalFromSetup(fields);
                 if (natal.user_birth_date) {
