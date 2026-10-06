@@ -285,9 +285,9 @@ export function holdsSmugBeat(pose: PoseId, emotion: EmotionId): boolean {
   return pose === "smug" || (pose === "idle" && emotion === "smug");
 }
 
-/** Named Wave pose (or idle+wave emotion): the idle↔wave beat is on stage. */
-export function holdsWaveBeat(pose: PoseId, emotion: EmotionId): boolean {
-  return pose === "wave" || (pose === "idle" && emotion === "wave");
+/** Named Wave pose: the idle↔wave beat is on stage. */
+export function holdsWaveBeat(pose: PoseId, _emotion?: EmotionId): boolean {
+  return pose === "wave";
 }
 
 /**
@@ -494,7 +494,7 @@ export function lineEndedRestPose(opts: {
   emotion: EmotionId;
 }): { pose: PoseId; emotion: EmotionId } | null {
   const onSmug = opts.pose === "smug" || (opts.pose === "idle" && opts.emotion === "smug");
-  const onWave = opts.pose === "wave" || (opts.pose === "idle" && opts.emotion === "wave");
+  const onWave = opts.pose === "wave";
   const onWink = opts.pose === "wink";
   if (!onSmug && !onWave && !onWink) return null;
   return { pose: settledRestPose(), emotion: DEFAULT_EMOTION };
