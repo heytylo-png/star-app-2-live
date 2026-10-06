@@ -39,7 +39,6 @@ import {
   smugBeatSheetUrls,
   smugClipUrls,
   waveClipUrls,
-  waveBeatSheetUrls,
   type PosePhase,
   USE_EXPO_TALK_BUST,
   type EmotionId,
@@ -80,7 +79,6 @@ import {
   SMUG_OUT_CLIP,
   WAVE_IN_CLIP,
   WAVE_OUT_CLIP,
-  BRIDGE_HOLD_KEYS,
   type BridgeTimers,
 } from "@/lib/pose-bridge";
 import { SmugClipPlayer, smugClipPlayerSupported } from "@/lib/smug-clip-player";
