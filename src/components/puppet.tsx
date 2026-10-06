@@ -27,6 +27,7 @@ import {
   isRetiredBlinkSrc,
   layersFor,
   DEFAULT_EMOTION,
+  SPRITES,
   holdsSmugBeat,
   isSmugPathSheetSrc,
   openRestFallback,
@@ -66,6 +67,7 @@ import {
   bridgeDwellsFor,
   bridgeKeyOfPlates,
   SmugReleaseGate,
+  type SmugGateStep,
   bridgeWantsFrames,
 } from "@/lib/pose-bridge";
 import { PoseCrossfadePool, type CrossfadeLayer } from "@/lib/pose-crossfade";
@@ -79,6 +81,7 @@ import {
   readSmugRelease,
   setPoseStageMounted,
   setPosePhase,
+  setSmugReleasePending,
   subscribeSmugRelease,
 } from "@/lib/pose-phase";
 import { cn } from "@/lib/utils";
@@ -149,8 +152,8 @@ function fadeMsFor(layer: SpriteLayer, talking: boolean, blinkMode: BlinkFadeMod
  * set the bridge frame has reached a paint (the frame it is drawn in), with a
  * 500 ms timer backstop for a page whose frames are throttled.
  */
-/** Idle sits this long after 973 has landed before the next pose takes the stage. */
-const SMUG_EXIT_LAND_MS = 150;
+/** Idle sits this long after 973 has painted before the next pose takes the stage (≈150 ms idle on screen with the paint + crossfade start). */
+const SMUG_EXIT_LAND_MS = 70;
 const SMUG_IN_FRAME = /smug968_in_\d\d/;
 
 /** Plain idle rest (closed mouth, open eyes): where 973 lands before the next pose. */
@@ -233,6 +236,8 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   // idle has landed does the stage take the wanted pose (a new smug runs 968 from idle).
   const smugRelease = useSyncExternalStore(subscribeSmugRelease, readSmugRelease, readSmugRelease);
   const smugGate = useRef<SmugReleaseGate | null>(null);
+  /** Last gate step: anything but "wanted" means the next pose is still held back. */
+  const smugGateStep = useRef<SmugGateStep>("wanted");
   if (!smugGate.current) smugGate.current = new SmugReleaseGate(smugRelease);
   const exitReleasePending = useRef(false);
   const [exitTick, setExitTick] = useState(0);
@@ -817,6 +822,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
       release: smugRelease,
       entering: bridgeSrc != null && SMUG_IN_FRAME.test(bridgeSrc),
     });
+    smugGateStep.current = step;
     if (step === "keep-shown") next = shownPlates.current;
     else if (step === "exit-to-idle") next = smugExitRestPlates(reducedMotion);
     // A paired idle <-> smug change waits for its frames (bounded) instead of cutting.
@@ -1122,6 +1128,17 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
         .join("");
   useEffect(() => {
     setPosePhase(phase);
+  }, [phase]);
+  // paste-15: tell the app when the next pose is let on (its pose / chew clocks start
+  // then, not at line land behind 973). Runs after every commit; only a change notifies.
+  useEffect(() => {
+    setSmugReleasePending(smugGateStep.current !== "wanted");
+  });
+  // Wink is the usual next pose after a held smug: decode it during the hold so a cold
+  // slow phone has it by the time 973 lands (it is lazy otherwise).
+  useEffect(() => {
+    if (phase !== "hold") return;
+    void punchOneRef.current(SPRITES.poses.wink);
   }, [phase]);
   useEffect(() => {
     setPoseStageMounted(true);

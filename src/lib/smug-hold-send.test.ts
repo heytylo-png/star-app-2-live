@@ -51,6 +51,9 @@ function clock() {
   };
 }
 
+/** Mirrors the puppet's SMUG_EXIT_LAND_MS. */
+const LAND_MS = 70;
+
 function short(src: string): string {
   const inn = /smug968_in_(\d\d)/.exec(src);
   if (inn) return `i${inn[1]}`;
@@ -65,7 +68,7 @@ function short(src: string): string {
 /**
  * The puppet's chain without React: wanted state -> SmugReleaseGate -> plates ->
  * BridgeDriver, paints every 16 ms (rAF), and the land callback (bridge off -> paint ->
- * 150 ms of idle -> wanted pose) the stage runs after 973.
+ * LAND_MS of idle -> wanted pose) the stage runs after 973.
  */
 function stage(opts: { paintEvery?: number } = {}) {
   const c = clock();
@@ -85,7 +88,7 @@ function stage(opts: { paintEvery?: number } = {}) {
     (src) => {
       bridgeSrc = src;
       dirty = true;
-      if (src === null && gate.exiting()) landAt = c.now() + paintEvery + 150;
+      if (src === null && gate.exiting()) landAt = c.now() + paintEvery + LAND_MS;
     },
     (fn) => {
       paintQ.push(fn);
@@ -113,7 +116,7 @@ function stage(opts: { paintEvery?: number } = {}) {
     plates = next;
     driver.commit(plates, { reducedMotion: false, srcFor: bridgeFrameSrc, isReady: (s) => ready.has(s) });
     if (gate.exiting() && bridgeKeyOfPlates(plates) === "idle" && !bridge.active() && landAt < 0) {
-      landAt = c.now() + paintEvery + 150;
+      landAt = c.now() + paintEvery + LAND_MS;
     }
   };
   const look = () => {
@@ -255,7 +258,7 @@ describe("smug968_hold holds until the next send (no timer)", () => {
     }
     const idleAt = s.at("idle", o);
     const winkAt = s.at("wink", o);
-    assert.ok(winkAt - idleAt >= 150, `idle sits ${winkAt - idleAt} ms before the next pose`);
+    assert.ok(winkAt - idleAt >= LAND_MS, `idle sits ${winkAt - idleAt} ms before the next pose`);
   });
 
   it("Smug -> Smug back to back: 973 forward, idle, then 968 again from idle", () => {

@@ -315,7 +315,7 @@ describe("idle mouth on the one rest image", () => {
 
     const app = readFileSync(join(root, "src/components/rai-app.tsx"), "utf8");
     assert.match(app, /chewHoldsIdleReturn\(\{/);
-    assert.match(app, /chewBlocksReturn\]/);
+    assert.match(app, /chewBlocksReturn(, releaseLandTick)?\]/);
     assert.doesNotMatch(app, /bubbleLifeKind, chewUntil\]/);
     assert.doesNotMatch(app, /chewUntil > Date\.now\(\)/);
   });
