@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Retone official full-body wave skin to the live plate cheek, punch studio white.
+"""SUPERSEDED 2026-10-06: public/rai/wave_official.png is now TyLo's approved still (no re-tone).
+This script refuses to run unless --force is passed, so it cannot re-colour that file.
+
+Retone official full-body wave skin to the live plate cheek, punch studio white.
 
 Source: public/rai/wave_official.png (dark 720×1280 sheet TyLo flagged).
 Tone target: live public/star-rai/poses/wave.png cheek ~ (221, 150, 116).
@@ -356,4 +359,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    import sys
+    if "--force" not in sys.argv:
+        raise SystemExit("wave_official.png is TyLo's 2026-10-06 still; not re-toning (pass --force to override)")
     main()

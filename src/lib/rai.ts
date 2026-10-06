@@ -623,6 +623,9 @@ export const PRE_CUT_ALPHA_FILES = [
   "rai/middle_finger.png",
   "rai/scold_official.png",
   "rai/tired_official.png",
+  // TyLo's 2026-10-06 wave still (white-matte cut, x1.4 onto the idle canvas). Not on the Wave key:
+  // that key is the 1110/1114 bridge + wave1110_hold.webp.
+  "rai/wave_official.png",
   "rai/peace.png",
   "rai/side_profile.png",
   "rai/three_quarter_left.png",
