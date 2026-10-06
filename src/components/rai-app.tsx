@@ -296,6 +296,10 @@ function RaiReady() {
   const speechEndedAt = useRef(0);
   /** When the current reply's line became the bubble (0 until it lands). The smug beat counts from here, never from the pose. */
   const lineLandedAt = useRef(0);
+  /** Cancel / error before the full line landed: anchor the smug beat at now (partial text or floor). */
+  const anchorUnlandedLine = () => {
+    if (lineLandedAt.current === 0) lineLandedAt.current = Date.now();
+  };
   const chewUntilRef = useRef(0);
   chewUntilRef.current = chewUntil;
   /** Life slots before this turn's ingest — used to detect track changes. */
@@ -602,6 +606,10 @@ function RaiReady() {
       // the transcript), so do not gate on React caption state.
       // Mid-hold: keep pose smug. Mid-exit unpaired keys: exitInFlight (#116).
       const smugBeat = holdsSmugBeat(pose, emotion);
+      // The turn is over (not sending / talking) but the line never landed
+      // (cancel mid-stream, abort before the first token, error). Anchor the
+      // beat now so 962 still runs — never hold smug forever.
+      if (smugBeat) anchorUnlandedLine();
       const delay = smugBeat
         ? smugBeatResetDelayMs({
             line: captionRef.current,
@@ -1247,14 +1255,16 @@ function RaiReady() {
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
         /* barge-in / stop */
+        anchorUnlandedLine();
       } else if (err instanceof Error && err.name === "AbortError") {
-        /* ignore */
+        anchorUnlandedLine();
       } else {
         const message = err instanceof Error ? err.message : "She went quiet.";
         store.patchMessage(threadId, assistant.id, { content: message, error: message });
         setCaption(message);
         setEmotion("soft");
         actLandedAt.current = Date.now();
+        anchorUnlandedLine();
       }
     } finally {
       abortRef.current = null;
