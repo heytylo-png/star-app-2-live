@@ -241,7 +241,7 @@ describe("live key → file map", () => {
     pout: "rai/pout_official.png",
     tired: "rai/tired_official.png",
     smug: "rai/smug1085_hold.webp",
-    wave: "rai/wave_official.png",
+    wave: "rai/wave1110_hold.webp",
     hold: "rai/hold_official.png",
     embarrassed: "rai/embarrassed_official.png",
     scold: "rai/scold_official.png",
@@ -269,26 +269,18 @@ describe("live key → file map", () => {
     assert.doesNotMatch(SPRITES.poses.wave, /front_wave|star-rai\/poses\/wave/);
   });
 
-  it("PNG puppet wave is wired to the retoned official sheet (1008×1792 RGBA)", () => {
-    assert.equal(LIVE_POSE_FILES.wave, "rai/wave_official.png");
-    assert.match(SPRITES.poses.wave, /rai\/wave_official\.png/);
-    const ihdr = (rel: string) => {
-      const buf = readFileSync(join(publicRoot, rel));
-      assert.equal(buf.subarray(0, 8).toString("binary"), "\x89PNG\r\n\x1a\n");
-      return {
-        width: buf.readUInt32BE(16),
-        height: buf.readUInt32BE(20),
-        colorType: buf[25],
-      };
-    };
-    const pack = ihdr("rai/wave_official.png");
-    assert.equal(pack.width, 1008);
-    assert.equal(pack.height, 1792);
-    assert.equal(pack.colorType, 6, "RGBA");
-    // Helix 3/4 crop is not the live wave key (object-fit contain; 9:16 pack).
-    const helix = ihdr("star-rai/poses/wave.png");
-    assert.equal(helix.width, 1152);
-    assert.equal(helix.height, 1728);
+  it("wave pose is the 1110 hold WebP (720×1280, exact 2.0s frame)", () => {
+    assert.equal(LIVE_POSE_FILES.wave, "rai/wave1110_hold.webp");
+    assert.match(SPRITES.poses.wave, /rai\/wave1110_hold\.webp/);
+    const buf = readFileSync(join(publicRoot, "rai/wave1110_hold.webp"));
+    assert.equal(buf[0], 0x52);
+    assert.equal(buf[1], 0x49);
+    assert.equal(buf[2], 0x46);
+    assert.equal(buf[3], 0x46);
+    const helix = readFileSync(join(publicRoot, "star-rai/poses/wave.png"));
+    assert.equal(helix.subarray(0, 8).toString("binary"), "\x89PNG\r\n\x1a\n");
+    assert.equal(helix.readUInt32BE(16), 1152);
+    assert.equal(helix.readUInt32BE(20), 1728);
   });
 
   it("does not point hold at old front_hold", () => {
@@ -518,7 +510,7 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(layersFor({ ...rest, talking: true }).length, 1);
     assert.equal(layersFor({ ...rest, talking: true })[0]!.src, idleRestSrc());
     assert.equal(layersFor({ ...rest, talking: true })[0]!.id, IDLE_REST_LAYER_ID);
-    assert.match(layersFor({ ...rest, pose: "wave" })[0]!.src, /wave_official/);
+    assert.match(layersFor({ ...rest, pose: "wave" })[0]!.src, /wave1110_hold/);
     assert.match(layersFor({ ...rest, pose: "scold" })[0]!.src, /scold_official/);
     assert.match(layersFor({ ...rest, pose: "talk" })[0]!.src, /talk_official/);
     assert.match(layersFor({ ...rest, pose: "smug" })[0]!.src, /smug1085_hold/);
@@ -566,11 +558,11 @@ describe("layersFor talking vs pose hold", () => {
       assert.doesNotMatch(source, /IDLE_BLINK_DEST_RECT|idleBlinkPatchSrc|copyEyeRect|planIdleCanvasDraws|drawEyeRect/);
       assert.doesNotMatch(source, /790-open-brow|788-open|791-half|789-closed/);
     }
-    // Blink never paints through a canvas. The only canvases on the stage are the two smug clip
+    // Blink never paints through a canvas. The only canvases on the stage are the four bridge clip
     // canvases (paste-15), handed to the clip worker: the puppet itself never draws on them.
     assert.doesNotMatch(puppetSrc, /drawImage|getContext/);
     const canvases = puppetSrc.match(/<canvas[\s\S]*?\/>/g) ?? [];
-    assert.equal(canvases.length, 2);
+    assert.equal(canvases.length, 4);
     for (const c of canvases) assert.match(c, /data-rai-role="bridge"/);
     assert.match(puppetSrc, /restOnly/);
     assert.match(puppetSrc, /transition: "none"/);
@@ -720,7 +712,7 @@ describe("layersFor talking vs pose hold", () => {
 
   it("wave/hold/scold use official sheets", () => {
     const waveSrc = layersFor({ ...base, pose: "wave", talking: false })[0]!.src;
-    assert.match(waveSrc, /rai\/wave_official\.png/);
+    assert.match(waveSrc, /rai\/wave1110_hold\.webp/);
     assert.doesNotMatch(waveSrc, /front_wave|star-rai\/poses\/wave/);
     assert.match(layersFor({ ...base, pose: "hold", talking: false })[0]!.src, /hold_official/);
     assert.match(layersFor({ ...base, pose: "scold", talking: false })[0]!.src, /scold_official/);
@@ -1612,7 +1604,7 @@ describe("greeting lines stay on idle and chew", () => {
         angle: 0,
         mouth: 3,
       })[0]!.src,
-      /wave_official/,
+      /wave1110_hold/,
     );
     assert.equal(canIdleMouth({ pose, emotion: "bratty", talking: true, lineLive: true }), false);
     assert.equal(

@@ -35,6 +35,7 @@ import {
   parseAct,
   settledRestPose,
   holdsSmugBeat,
+  holdsWaveBeat,
   lineEndedRestPose,
   smugWinkTextRestDelayMs,
   composerShowsStop,
@@ -653,7 +654,7 @@ function RaiReady() {
       // through reading, speech end, cancel and error alike. The user's next send
       // releases it on the stage (requestSmugRelease): 1084 forward, idle lands,
       // then the next pose. Mid-exit unpaired keys: exitInFlight (#116).
-      if (holdsSmugBeat(pose, emotion)) {
+      if (holdsSmugBeat(pose, emotion) || holdsWaveBeat(pose, emotion)) {
         // Cancel / abort / error before the line landed: anchor it so the turn
         // state is settled; the hold itself still waits for the next send.
         anchorUnlandedLine();
@@ -1321,8 +1322,8 @@ function RaiReady() {
     let active = store.threads.find((t) => t.id === store.activeId) ?? null;
     if (!active) active = store.createThread({ prompt: content, model: defaultModel });
     const lifeTitle = parseTrackTitle(content);
-    // A new send releases a held smug1085_hold: the stage plays 1084 to idle first,
-    // then whatever this turn asks for (a new smug runs 1085 again from idle).
+    // A new send releases a held smug/wave hold: the stage plays the rest clip to idle
+    // first, then whatever this turn asks for (a new smug/wave runs the intro from idle).
     // A new turn: nothing of the last one is still waiting for the stage.
     releaseDeferRef.current = null;
     actDeferredRef.current = false;
