@@ -35,8 +35,6 @@ import {
   parseAct,
   settledRestPose,
   holdsSmugBeat,
-  smugBeatResetDelayMs,
-  smugReleaseWaitMs,
   lineEndedRestPose,
   smugWinkTextRestDelayMs,
   composerShowsStop,
@@ -51,7 +49,7 @@ import {
   type EmotionId,
   type PoseId,
 } from "@/lib/rai";
-import { readPosePhase } from "@/lib/pose-phase";
+import { requestSmugRelease } from "@/lib/pose-phase";
 import { useMemoryStore } from "@/lib/memory-store";
 import { usePresenceStore } from "@/lib/presence-store";
 import {
@@ -588,8 +586,8 @@ function RaiReady() {
   useEffect(() => {
     // Still saying the line. Smug and wink stay up for that, not as the rest.
     if (sending || talking) return;
-    // A smug or wink line has ended. Smug rests on idle only after its beat (the
-    // line landed AND finished, + 1.5 s). A wink waits out the chew window and the
+    // A smug or wink line has ended. Smug never rests on a timer (held until the
+    // user's next send, see below). A wink waits out the chew window and the
     // normal pose hold (voiced: speech end). A greeting snap below still drops an
     // inferred wink immediately.
     const ended = lineEndedRestPose({ pose, emotion });
@@ -600,70 +598,32 @@ function RaiReady() {
       replyPose: replyPoseRef.current,
     });
     if (!greetingSnap && ended && (pose !== ended.pose || emotion !== ended.emotion)) {
-      // Smug: 973 only after line finished + 1.5 s.
-      // Line finished = max(landing + reading floor, speech end). There is no
-      // stage subtitle that auto-hides (ChatThread assistant bubble stays in
-      // the transcript), so do not gate on React caption state.
-      // Mid-hold: keep pose smug. Mid-exit unpaired keys: exitInFlight (#116).
-      const smugBeat = holdsSmugBeat(pose, emotion);
-      // The turn is over (not sending / talking) but the line never landed
-      // (cancel mid-stream, abort before the first token, error). Anchor the
-      // beat now so 973 still runs — never hold smug forever.
-      if (smugBeat) anchorUnlandedLine();
-      const delay = smugBeat
-        ? smugBeatResetDelayMs({
-            line: captionRef.current,
-            lineLandedAt: lineLandedAt.current,
-            speechEndedAt: speechEndedAt.current,
-          })
-        : smugWinkTextRestDelayMs({
-            voiced: lineVoicedRef.current,
-            chewUntil: chewUntilRef.current,
-            pose,
-            emotion,
-            actLandedAt: actLandedAt.current,
-          });
-      // Full line not landed yet (named smug before stream-complete): keep hold.
+      // Smug (paste-14): no timer at all. The chat bubble never auto-hides, so
+      // smug968_hold stays up while the smug line is the latest assistant bubble —
+      // through reading, speech end, cancel and error alike. The user's next send
+      // releases it on the stage (requestSmugRelease): 973 forward, idle lands,
+      // then the next pose. Mid-exit unpaired keys: exitInFlight (#116).
+      if (holdsSmugBeat(pose, emotion)) {
+        // Cancel / abort / error before the line landed: anchor it so the turn
+        // state is settled; the hold itself still waits for the next send.
+        anchorUnlandedLine();
+        return;
+      }
+      const delay = smugWinkTextRestDelayMs({
+        voiced: lineVoicedRef.current,
+        chewUntil: chewUntilRef.current,
+        pose,
+        emotion,
+        actLandedAt: actLandedAt.current,
+      });
       if (delay == null) return;
       if (delay > 0) {
-        let timerId = 0;
-        let waited = 0;
-        const release = () => {
-          timerId = 0;
-          if (smugBeat) {
-            // Re-check beat every poll so a late speechEndedAt / land cannot cut early.
-            const moreBeat = smugBeatResetDelayMs({
-              line: captionRef.current,
-              lineLandedAt: lineLandedAt.current,
-              speechEndedAt: speechEndedAt.current,
-            });
-            if (moreBeat == null) {
-              timerId = window.setTimeout(release, 150);
-              return;
-            }
-            const seen = readPosePhase();
-            const beatEndAt = Date.now() + moreBeat;
-            const moreStage = seen.mounted
-              ? smugReleaseWaitMs({
-                  phase: seen.phase,
-                  holdSince: seen.holdSince,
-                  waitedMs: waited,
-                  beatEndAt,
-                })
-              : Math.max(150, moreBeat);
-            const more = Math.max(moreBeat, moreStage);
-            if (more > 0) {
-              waited += more;
-              timerId = window.setTimeout(release, more);
-              return;
-            }
-          }
+        const timerId = window.setTimeout(() => {
           setPose(ended.pose);
           poseRef.current = ended.pose;
           setBubbleLifeKind("none");
           setEmotion(ended.emotion);
-        };
-        timerId = window.setTimeout(release, delay);
+        }, delay);
         return () => window.clearTimeout(timerId);
       }
       setPose(ended.pose);
@@ -1300,6 +1260,9 @@ function RaiReady() {
     let active = store.threads.find((t) => t.id === store.activeId) ?? null;
     if (!active) active = store.createThread({ prompt: content, model: defaultModel });
     const lifeTitle = parseTrackTitle(content);
+    // A new send releases a held smug968_hold: the stage plays 973 to idle first,
+    // then whatever this turn asks for (a new smug runs 968 again from idle).
+    requestSmugRelease();
     const named = lifeTitle ? null : namedPoseFromText(content);
     namedTurnRef.current = named;
     if (named) {

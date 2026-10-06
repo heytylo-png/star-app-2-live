@@ -68,6 +68,26 @@ export function bridgeFilesFor(from: string | null, to: string | null): readonly
   return POSE_BRIDGE_PAIRS[`${from}>${to}`] ?? null;
 }
 
+/**
+ * Clip timing for the smug pair (paste-14). Each entry is how long that frame stays up,
+ * counted from when it was set (but never ending before it has been painted).
+ * Entry 968: 01 start, 02 at ~0.5 s, 03 (arm up) at ~1.0 s, 04 at ~1.6 s, 05 (hip set) at
+ * ~2.2 s, then the identical smug968_hold sheet.
+ * Exit 973: 02 (hand leaves) at ~0.35 s, 03 (arm down) at ~0.75 s, 04 at ~1.05 s, 05 (glare)
+ * at ~1.35 s, idle at ~1.7 s.
+ */
+export const SMUG_IN_DWELL_MS = [500, 500, 600, 600, 150] as const;
+export const SMUG_OUT_DWELL_MS = [350, 400, 300, 300, 350] as const;
+/** A frame always stays up at least this long after its paint, whatever the clock says. */
+export const BRIDGE_MIN_AFTER_PAINT_MS = 34;
+
+/** Per-frame dwell for a pair, or null (generic ~150 ms jitter). */
+export function bridgeDwellsFor(from: string | null, to: string | null): readonly number[] | null {
+  if (from === "idle" && to === "smug") return SMUG_IN_DWELL_MS;
+  if (from === "smug" && to === "idle") return SMUG_OUT_DWELL_MS;
+  return null;
+}
+
 /** Per-frame hold: ~150 ms with a little jitter, always inside 130-170 ms. */
 export const BRIDGE_FRAME_MS = 150;
 export const BRIDGE_JITTER_MS = 20;
@@ -99,6 +119,8 @@ export function bridgeKeyOfPlates(plates: readonly { src: string }[]): string | 
 export type BridgeTimers = {
   set: (fn: () => void, ms: number) => number;
   clear: (handle: number) => void;
+  /** Clock (ms). With it a frame's dwell counts from when it was set, so paint latency does not stretch the clip. */
+  now?: () => number;
 };
 
 /**
@@ -143,6 +165,11 @@ export class PoseBridge {
   /** True while 973 (smug→idle) is the sequence on stage. */
   private exitInFlight = false;
   private cancelPaint: (() => void) | null = null;
+  /** Per-frame dwell of the sequence on stage (clip timing), or null for the generic jitter. */
+  private dwells: readonly number[] | null = null;
+  private readonly dwellsFor: (from: string | null, to: string | null) => readonly number[] | null;
+  /** When the frame on stage was set (timers.now clock). */
+  private frameSetAt = 0;
 
   private readonly timers: BridgeTimers;
   private readonly rand: () => number;
@@ -154,26 +181,44 @@ export class PoseBridge {
     rand: () => number,
     onFrame: (src: string | null) => void,
     afterPaint?: AfterPaint,
+    /** Per-pair clip timing (the stage passes bridgeDwellsFor); default: generic ~150 ms jitter. */
+    dwellsFor: (from: string | null, to: string | null) => readonly number[] | null = () => null,
   ) {
     this.timers = timers;
     this.rand = rand;
     this.onFrame = onFrame;
     this.afterPaint = afterPaint ?? null;
+    this.dwellsFor = dwellsFor;
   }
 
-  /** Arms the dwell of the frame that is up: from its paint on entry, from now otherwise. */
+  private frameMs(): number {
+    return this.dwells?.[this.index] ?? bridgeFrameMs(this.rand);
+  }
+
+  private markSet() {
+    this.frameSetAt = this.timers.now ? this.timers.now() : 0;
+  }
+
+  /**
+   * Arms the dwell of the frame that is up. Paint-paced: nothing advances before the
+   * frame has painted; with a clock the dwell counts from when the frame was set (so
+   * the sequence keeps the clip's timing), floored at BRIDGE_MIN_AFTER_PAINT_MS after paint.
+   */
   private armDwell() {
     if (this.paused || this.handle || this.cancelPaint) return;
+    const dwell = this.frameMs();
     if (this.paintPaced && this.afterPaint) {
       const index = this.index;
       this.cancelPaint = this.afterPaint(() => {
         this.cancelPaint = null;
         if (!this.running || this.paused || this.index !== index || this.handle) return;
-        this.handle = this.timers.set(this.advance, bridgeFrameMs(this.rand));
+        const now = this.timers.now;
+        const left = now ? Math.max(BRIDGE_MIN_AFTER_PAINT_MS, dwell - (now() - this.frameSetAt)) : dwell;
+        this.handle = this.timers.set(this.advance, left);
       });
       return;
     }
-    this.handle = this.timers.set(this.advance, bridgeFrameMs(this.rand));
+    this.handle = this.timers.set(this.advance, dwell);
   }
 
   active(): boolean {
@@ -192,6 +237,7 @@ export class PoseBridge {
     this.cancelPaint = null;
     this.running = false;
     this.exitInFlight = false;
+    this.dwells = null;
     this.frames = [];
     this.index = 0;
   }
@@ -234,8 +280,10 @@ export class PoseBridge {
     this.index = resume >= 0 ? resume : 0;
     this.running = true;
     this.exitInFlight = req.from === "smug" && req.to === "idle";
+    this.dwells = this.dwellsFor(req.from, req.to);
     // Both directions wait for a paint before the dwell starts (never skip an unpainted frame).
     this.paintPaced = Boolean(this.afterPaint);
+    this.markSet();
     this.onFrame(srcs[this.index]!);
     this.armDwell();
     return true;
@@ -258,7 +306,11 @@ export class PoseBridge {
       this.cancelPaint = null;
       return;
     }
-    if (this.running) this.armDwell();
+    if (this.running) {
+      // Time spent hidden does not count: the frame gets its full dwell again on return.
+      this.markSet();
+      this.armDwell();
+    }
   }
 
   private advance = () => {
@@ -270,6 +322,7 @@ export class PoseBridge {
       this.onFrame(null);
       return;
     }
+    this.markSet();
     this.onFrame(this.frames[this.index]!);
     this.armDwell();
   };
@@ -363,4 +416,52 @@ export function bridgeGate(opts: {
   if (!bridgeWantsFrames(opts.wantedKey, opts.shownKey ?? null)) return "go";
   if (opts.reducedMotion || opts.framesReady || opts.waitExpired) return "go";
   return "wait";
+}
+
+/**
+ * Smug hold release (paste-14). smug968_hold has no timer: it stays up until the
+ * user's next send (`release` changes) or until another pose is wanted over it. Then
+ * the stage shows plain idle rest instead of the wanted plates, so the driver plays
+ * 973 forward; only after idle has landed (`landed()`) does the wanted pose go on.
+ * A release that arrives while 968 is still coming in waits for the hold (973 never
+ * starts from a half-raised arm), and nothing else takes the stage meanwhile.
+ */
+export type SmugGateStep = "wanted" | "keep-shown" | "exit-to-idle";
+
+export class SmugReleaseGate {
+  private seen: number;
+  private wanted = false;
+  private exitActive = false;
+
+  constructor(release = 0) {
+    this.seen = release;
+  }
+
+  /** One plates pass: what the stage should take. */
+  step(opts: { shownKey: string | null; wantedKey: string | null; release: number; entering: boolean }): SmugGateStep {
+    const onSmug = opts.shownKey === "smug";
+    if (opts.release !== this.seen) {
+      this.seen = opts.release;
+      if (onSmug) this.wanted = true;
+    }
+    if (onSmug && opts.wantedKey !== "smug") this.wanted = true;
+    if (!onSmug) this.wanted = false;
+    if (this.wanted && !opts.entering) {
+      this.wanted = false;
+      this.exitActive = true;
+    }
+    if (this.exitActive) return "exit-to-idle";
+    if (this.wanted) return "keep-shown";
+    return "wanted";
+  }
+
+  /** 973 is playing or idle has not landed yet: the wanted pose waits. */
+  exiting(): boolean {
+    return this.exitActive;
+  }
+
+  /** Idle landed after 973 (or there was nothing to play): the wanted pose may go on. */
+  landed(): void {
+    this.exitActive = false;
+  }
 }

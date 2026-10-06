@@ -123,10 +123,15 @@ describe("smug beat on a cold slow phone", () => {
     assert.deepEqual(readPosePhase(), { phase: "idle", holdSince: 0, mounted: false });
   });
 
-  it("the app's smug release asks the stage first", () => {
+  it("the app never times the smug release; its next send hands it to the stage (paste-14)", () => {
     const app = readFileSync(join(root, "src/components/rai-app.tsx"), "utf8");
-    assert.match(app, /smugReleaseWaitMs\(/);
-    assert.match(app, /readPosePhase\(\)/);
+    assert.doesNotMatch(app, /smugReleaseWaitMs\(|smugBeatResetDelayMs\(|readPosePhase\(\)/);
+    const send = app.slice(app.indexOf("async function send("), app.indexOf("await complete(active.id);"));
+    assert.match(send, /requestSmugRelease\(\);/);
+    const puppet = readFileSync(join(root, "src/components/puppet.tsx"), "utf8");
+    assert.match(puppet, /useSyncExternalStore\(subscribeSmugRelease, readSmugRelease, readSmugRelease\)/);
+    assert.match(puppet, /bridgeDwellsFor,\n\s*\);/);
+    assert.match(puppet, /now: \(\) => performance\.now\(\)/);
   });
 
   it("the service worker cache name is a stamped constant", () => {
@@ -235,9 +240,10 @@ describe("smug cancel / error before the line lands never holds forever", () => 
     assert.match(appSrc, /if \(lineLandedAt\.current === 0\) lineLandedAt\.current = Date\.now\(\);/);
   });
 
-  it("the rest effect anchors an unlanded smug turn once sending/talking is over (stop() races the catch)", () => {
+  it("the rest effect anchors an unlanded smug turn once sending/talking is over, then keeps the hold (no timer)", () => {
     const eff = appSrc.slice(appSrc.indexOf("if (sending || talking) return;"), appSrc.indexOf("if (delay == null) return;"));
-    assert.match(eff, /if \(smugBeat\) anchorUnlandedLine\(\);/);
+    // Anchored, then held: no timer; the next send releases it (paste-14).
+    assert.match(eff, /if \(holdsSmugBeat\(pose, emotion\)\) \{[\s\S]*?anchorUnlandedLine\(\);\s*return;\s*\}/);
   });
 
   it("cancel mid-stream: beat = cancel + reading floor of the partial text + 1.5 s", () => {
