@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -71,31 +71,19 @@ describe("hip clip data", () => {
     assert.ok(Math.abs(hipTravelMs() - 49 * HIP_TICK_MS) < 0.01);
   });
 
-  it("ships all 18 pictures, small, with the crop's size", () => {
-    let total = 0;
-    for (const f of HIP_CLIP_FRAMES) {
-      const path = join(root, "public", f.file);
-      total += statSync(path).size;
-      const b = readFileSync(path);
-      assert.equal(b.toString("ascii", 0, 4), "RIFF");
-      assert.equal(b.toString("ascii", 8, 12), "WEBP");
-      assert.equal(b.toString("ascii", 12, 16), "VP8X");
-      assert.ok((b[20]! & 0x10) !== 0, `${f.file} has alpha`);
-      const w = 1 + (b[24]! | (b[25]! << 8) | (b[26]! << 16));
-      const h = 1 + (b[27]! | (b[28]! << 8) | (b[29]! << 16));
-      assert.deepEqual([w, h], [HIP_CLIP_CROP.w, HIP_CLIP_CROP.h], f.file);
-    }
-    assert.ok(total < 1_500_000, `clip assets ${total} bytes`);
+  it("the clip pictures are no longer shipped (paste-13 retired the hip clip from public/)", () => {
+    for (const f of HIP_CLIP_FRAMES) assert.equal(existsSync(join(root, "public", f.file)), false, f.file);
   });
 
-  it("preloads Helix 956 intro + hold + 962 rest (hip clip retired)", () => {
+  it("preloads 968 intro + hold + 973 rest (hip clip retired)", () => {
     const order = stagePreloadOrder({ clip: true });
-    assert.ok(order.beat.some((u) => /smug_hold/.test(u)));
-    assert.ok(order.beat.some((u) => /smug_in_01/.test(u)));
-    assert.ok(order.beat.some((u) => /smug_out_05/.test(u)));
+    assert.ok(order.beat.some((u) => /smug968_hold\.webp/.test(u)));
+    assert.ok(order.beat.some((u) => /smug968_in_01\.webp/.test(u)));
+    assert.ok(order.beat.some((u) => /smug973_out_05\.webp/.test(u)));
+    assert.ok(!order.beat.some((u) => /\/hip\//.test(u)));
     const deferred = deferredSpriteUrls({ skipBridge: true });
     for (const file of bridgeFiles()) assert.ok(!deferred.some((u) => u.includes(file)), file);
-    assert.ok(deferredSpriteUrls().some((u) => u.includes("smug_in_01")));
+    assert.ok(deferredSpriteUrls().some((u) => u.includes("smug968_in_01")));
     assert.equal(hipClipSupported(), false);
   });
 });
@@ -310,7 +298,7 @@ describe("hip clip driver", () => {
     return { ...r, d, go };
   }
 
-  it("idle -> smug plays in; smug -> idle clears the hold (962 forward is PoseBridge)", () => {
+  it("idle -> smug plays in; smug -> idle clears the hold (973 forward is PoseBridge)", () => {
     const { state, player, go, frame } = driverRig();
     go("idle");
     assert.equal(player.view().visible, false);
@@ -429,7 +417,7 @@ describe("puppet wiring", () => {
     assert.match(puppet, /data-rai-hold-sheet=/);
     assert.match(puppet, /from: "smug"/);
     assert.match(puppet, /to: "idle"/);
-    assert.match(puppet, /Helix 962 rest forward/);
+    assert.match(puppet, /973 rest forward after the hold/);
     assert.match(puppet, /data-rai-clip-frame=/);
     assert.match(puppet, /clipPlayer\.current\?\.confirmShown\(\)/);
   });

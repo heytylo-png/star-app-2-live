@@ -363,13 +363,19 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
     };
 
     const run = async () => {
-      // idle.png, then the whole smug beat (bridge 01..06 + smug hold, in parallel),
-      // then blink and mouth. A named Smug can come any moment on a cold phone; its
-      // arm must land on decoded frames, so they go before anything non-essential.
+      // idle.png, then blink 01 (open rest frame), then the whole smug beat (968 in +
+      // smug968_hold + 973 out, in parallel), then blink 02-04 and mouth. A named Smug can
+      // come any moment on a cold phone; its arm must land on decoded frames, so they go
+      // before anything non-essential.
       const order = stagePreloadOrder({ clip: clipSupported });
       await punchOne(order.first, order.first !== restSrc);
       if (cancelled) return;
       await afterPaint();
+      for (const src of order.next) {
+        if (cancelled) return;
+        await punchOne(src, false);
+      }
+      if (cancelled) return;
       if (clipSupported) {
         // The hip clip's 18 pictures go first (parallel, high priority), ahead of the smug
         // sheet, blink and mouth. A failed picture is retried; the wait is bounded so a dead
@@ -746,8 +752,8 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
       idleBeat: "none",
       reducedMotion,
     });
-    // Smug path allowlist: never paint think / smug_official / peace / etc.
-    // Illegal sheets fall back to idle rest until 956 paints (TyLo phone FAIL).
+    // Smug path allowlist: never paint think / peace / retired smug files / etc.
+    // Illegal sheets fall back to idle rest until 968 paints (TyLo phone FAIL).
     if (!holdsSmugBeat(pose, emotion)) return raw;
     const fallback = idleRestSrc();
     return raw.map((layer) =>
@@ -910,7 +916,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
     }
     if (!bridgeDriver.current) bridgeDriver.current = new BridgeDriver(bridge.current);
     if (clipMode) {
-      // Clip path retired: PoseBridge plays Helix 956 intro + hold + 962 rest forward.
+      // Clip path retired: PoseBridge plays 968 intro + hold + 973 rest forward.
       if (!clipPlayer.current) {
         clipPlayer.current = new HipClipPlayer({
           raf: (cb) => window.requestAnimationFrame(cb),
@@ -929,7 +935,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
         reducedMotion: reducedRef.current,
         ready: clipBitmaps.current != null,
       });
-      // Helix 962 rest forward after the hold (PoseBridge).
+      // 973 rest forward after the hold (PoseBridge).
       if (
         prevClipKey === "smug" &&
         nextKey === "idle" &&
@@ -1003,16 +1009,14 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   const bridgeSheet = bridgeSrc ? sheets[bridgeSrc] : undefined;
   const bridgeFrame = (() => {
     if (!bridgeSheet || !bridgeSrc) return "off";
-    const io = /smug_(in|out)_(\d\d)/.exec(bridgeSrc);
-    if (io) return `${io[1]}-${io[2]}`;
-    const legacy = /bridge_idle_smug_(\d\d)/.exec(bridgeSrc) || /_(\d\d)\.png/.exec(bridgeSrc);
-    return legacy?.[1] ?? "on";
+    const io = /smug(?:968|973)_(in|out)_(\d\d)\.webp/.exec(bridgeSrc);
+    return io ? `${io[1]}-${io[2]}` : "on";
   })();
   // Smug beat phase, read off what is painted (not what was asked for).
   // oxlint-disable-next-line react/refs -- plates is the painted key; read-only, same as the layers below
   const plateKey = bridgeKeyOfPlates(plates);
   const clipOnStage = clipMode && clipView.visible;
-  // Hold is the live smug_hold sheet. Exit is Helix 962 stills (bridgeSheet) forward.
+  // Hold is the live smug968_hold sheet. Exit is 973 stills (bridgeSheet) forward.
   const phase: PosePhase = clipMode
     ? bridgeSheet
       ? "bridge-out"
@@ -1067,7 +1071,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
       data-rai-clip-frame={clipOnStage ? String(clipView.index).padStart(2, "0") : "off"}
       data-rai-clip-time={clipOnStage ? String(hipClipTimeMs(clipView.index)) : "off"}
       data-rai-clip-dir={clipOnStage ? clipView.dir : "off"}
-      data-rai-hold-sheet={phase === "hold" ? "smug_hold" : "off"}
+      data-rai-hold-sheet={phase === "hold" ? "smug968_hold" : "off"}
       data-rai-build={buildId()}
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
     >
@@ -1147,7 +1151,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
         >
           {`build ${buildId()}\npose ${pose} / ${emotion}\nphase ${phase}${poseWait ? " (waiting for frames)" : ""}\nreduced-motion ${reducedMotion ? "on" : "off"}\n${
             clipMode
-              ? `hip clip ${clipReady ? "ready" : "loading"} ${clipBits.toString(2).split("1").length - 1}/${HIP_CLIP_FRAMES.length}\nclip time ${clipOnStage ? `${hipClipTimeMs(clipView.index)} ms (pic ${clipView.index}/${HIP_CLIP_LAST}, ${clipView.dir})` : "off"}\nhold ${phase === "hold" ? "smug_hold.png (hip+smirk)" : clipView.arrived ? "smug_hold.png" : "off"}\nclip decode ${clipDecode} sheet ${smugDecode.slice(-1)}`
+              ? `hip clip ${clipReady ? "ready" : "loading"} ${clipBits.toString(2).split("1").length - 1}/${HIP_CLIP_FRAMES.length}\nclip time ${clipOnStage ? `${hipClipTimeMs(clipView.index)} ms (pic ${clipView.index}/${HIP_CLIP_LAST}, ${clipView.dir})` : "off"}\nhold ${phase === "hold" ? "smug968_hold.webp (hip+smirk)" : clipView.arrived ? "smug968_hold.webp" : "off"}\nclip decode ${clipDecode} sheet ${smugDecode.slice(-1)}`
               : `PNG bridge${clipGaveUp ? " (clip gave up)" : ""}\nsmug decode ${smugDecode.slice(0, 6)}+${smugDecode.slice(6)} (bridge 01..06 + sheet)`
           }${bridgeWaitExpired ? "\nBRIDGE FALLBACK" : ""}`}
         </pre>

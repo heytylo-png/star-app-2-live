@@ -3,9 +3,8 @@
  * sheet changes between a paired set of poses. First pair only, idle <-> smug.
  *
  * Frames are hard cuts on one `<img>` (no crossfade, no loop), about 150 ms
- * each, paint-paced. Intro (956) lands on `smug_hold.png`; rest (962) plays
- * forward onto idle glare then the live idle sheet. No clip reverse, no
- * Helix 06→01 reverse.
+ * each, paint-paced. Intro (968) lands on `smug968_hold.webp`; rest (973) plays
+ * forward onto idle glare then the live idle sheet. No reverse.
  *
  * This module is pure (no DOM, no React). The puppet owns the one `<img>`;
  * the sequencer only says which frame is up. Timers and randomness are
@@ -13,28 +12,31 @@
  */
 
 /**
- * Helix intro (956): idle → elbow → hand rise → hip → smirk-hold, then the live
- * smug_hold sheet. Exit (962) is a separate forward set, not these files reversed.
+ * Intro (968, paste-13): start → elbow → hand rise → hip → smirk-hold, then the live
+ * smug968_hold sheet (= the 05 smirk-hold cut). Exit (973) is a separate forward set.
+ * Offline white-matte cuts, 720×1280 RGBA WebP (alpha lossless).
  */
 export const SMUG_IN_FILES = [
-  "rai/smug_in_01.png",
-  "rai/smug_in_02.png",
-  "rai/smug_in_03.png",
-  "rai/smug_in_04.png",
-  "rai/smug_in_05.png",
+  "rai/smug968_in_01.webp",
+  "rai/smug968_in_02.webp",
+  "rai/smug968_in_03.webp",
+  "rai/smug968_in_04.webp",
+  "rai/smug968_in_05.webp",
 ] as const;
 
-/** Helix rest (962): hip → hand leave → arm out → arm down → idle glare, then idle.png. Forward only. */
+/**
+ * Rest (973): hip → hand leave → arm down → soft → glare, then the live idle sheet.
+ * Forward only. 973 frames the figure ~0.78× of 968/idle; the cuts are registered to the
+ * idle sheet offline (uniform ×1.275, translate −98,−173 px in 720×1280, no visible pixel
+ * leaves the canvas), so the stage paints them like every other sheet.
+ */
 export const SMUG_OUT_FILES = [
-  "rai/smug_out_01.png",
-  "rai/smug_out_02.png",
-  "rai/smug_out_03.png",
-  "rai/smug_out_04.png",
-  "rai/smug_out_05.png",
+  "rai/smug973_out_01.webp",
+  "rai/smug973_out_02.webp",
+  "rai/smug973_out_03.webp",
+  "rai/smug973_out_04.webp",
+  "rai/smug973_out_05.webp",
 ] as const;
-
-/** @deprecated old six-PNG set; kept as an alias of the intro for any leftover imports. */
-export const BRIDGE_IDLE_SMUG_FILES = SMUG_IN_FILES;
 
 /**
  * Pair table: "<from>><to>" -> files to play, in order. Keys are the shown
@@ -84,7 +86,7 @@ export function bridgeKeyOfSrc(src: string): string | null {
   const path = src.split(/[?#]/)[0] ?? src;
   const name = path.slice(path.lastIndexOf("/") + 1);
   if (name === "idle.png" || /^idle_(blink|mouth)_\d\d_/.test(name)) return "idle";
-  if (name === "smug_hold.png" || name === "smug_official.png") return "smug";
+  if (name === "smug968_hold.webp") return "smug";
   return null;
 }
 
@@ -138,7 +140,7 @@ export class PoseBridge {
    * screen ever showed it, which is how an arm-rise frame got skipped.
    */
   private paintPaced = false;
-  /** True while Helix 962 (smug→idle) is the sequence on stage. */
+  /** True while 973 (smug→idle) is the sequence on stage. */
   private exitInFlight = false;
   private cancelPaint: (() => void) | null = null;
 
@@ -207,7 +209,7 @@ export class PoseBridge {
     // (voice on or off) lands the pose within a few ms of the line starting. A
     // normal talk line never changes the pose, so it never gets here.
     //
-    // Smug→idle exit (962) in flight: an unpaired key (wink, wave, …) must not
+    // Smug→idle exit (973) in flight: an unpaired key (wink, wave, …) must not
     // abort — finish the out frames; the live sheet settles under the last one
     // (213ea91 / TyLo phone: wink at out_02 was dropping the rest).
     if (wasRunning && this.exitInFlight && !files && !req.reducedMotion) {
@@ -328,8 +330,8 @@ export const BRIDGE_WAIT_RETRY_MS = 400;
 
 /**
  * Idle↔smug needs its Helix frames before either end of the pair may hard-cut.
- * Entering smug (wanted smug) waits for 956+962 files. Leaving smug (shown smug
- * → wanted idle) also waits — otherwise the stage snaps to idle.png and 962
+ * Entering smug (wanted smug) waits for 968+973 files. Leaving smug (shown smug
+ * → wanted idle) also waits — otherwise the stage snaps to idle.png and 973
  * never plays (TyLo phone FAIL on 7c4e54f).
  */
 export function bridgeWantsFrames(
@@ -346,8 +348,8 @@ export function bridgeWantsFrames(
  * change never hard-cuts) just because its frames have not decoded yet: the
  * old sheet stays up until every frame is ready, up to BRIDGE_WAIT_MAX_MS, and
  * only then does it cut, loudly (the puppet logs it and sets
- * `data-rai-bridge-fallback`). Leaving smug for idle keeps `smug_hold` up until
- * 962 can play — never a straight hold→idle.png snap. Reduced motion is the
+ * `data-rai-bridge-fallback`). Leaving smug for idle keeps `smug968_hold` up until
+ * 973 can play — never a straight hold→idle.png snap. Reduced motion is the
  * one user request that skips the bridge, and it never waits.
  */
 export function bridgeGate(opts: {

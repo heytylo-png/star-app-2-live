@@ -73,13 +73,13 @@ type Commit = Partial<PuppetState> & { pose: PoseId; emotion: EmotionId };
 
 /** Names what is visible: bridge NN, smug, idle (rest / blink / mouth), or the sheet file. */
 function nameOf(src: string): string {
-  const inn = /smug_in_(\d\d)/.exec(src);
+  const inn = /smug968_in_(\d\d)/.exec(src);
   if (inn) return `i${inn[1]}`;
-  const out = /smug_out_(\d\d)/.exec(src);
+  const out = /smug973_out_(\d\d)/.exec(src);
   if (out) return `o${out[1]}`;
   const b = /bridge_idle_smug_(\d\d)/.exec(src);
   if (b) return `b${b[1]}`;
-  if (/smug_hold|smug_official/.test(src)) return "smug";
+  if (/smug968_hold|smug_official/.test(src)) return "smug";
   if (/idle_mouth_/.test(src)) return "idle";
   if (/idle_blink_|\/idle\.png/.test(src)) return "idle";
   return src.split("/").pop()!.replace(/\.png.*$/, "");
@@ -190,7 +190,7 @@ const OUT = ["smug", "o01", "o02", "o03", "o04", "o05", "idle"];
 function expectInThenOut(log: string[]) {
   assert.ok(log.includes("smug"), `reaches smug: ${log.join(">")}`);
   // Typed-smug send can briefly leave mid-entry (complete() → idle) before the
-  // clean 956 run — require contiguous arm frames, not a leading idle.
+  // clean 968 run — require contiguous arm frames, not a leading idle.
   const find = (seq: string[]) => {
     for (let i = 0; i <= log.length - seq.length; i++) {
       if (seq.every((v, j) => log[i + j] === v)) return i;
@@ -459,7 +459,7 @@ describe("guard: a bridge-eligible pair never hard-cuts when its frames are deco
     smugs.push({ pose: "idle", emotion: "smug", talking }); // emotion path
   }
 
-  it("every idle state -> every smug state plays 956 in first, and back plays 962 out", () => {
+  it("every idle state -> every smug state plays 968 in first, and back plays 973 out", () => {
     let pairs = 0;
     for (const a of idles) {
       for (const b of smugs) {
@@ -512,7 +512,7 @@ describe("guard: a bridge-eligible pair never hard-cuts when its frames are deco
     assert.equal(bridgeGate({ wantedKey: "smug", ...wait, framesReady: true }), "go");
     assert.equal(bridgeGate({ wantedKey: "smug", ...wait, waitExpired: true }), "go");
     assert.equal(bridgeGate({ wantedKey: "smug", ...wait, reducedMotion: true }), "go");
-    // Bare idle/null wants no wait — but leaving smug for idle must wait for 962.
+    // Bare idle/null wants no wait — but leaving smug for idle must wait for 973.
     assert.equal(bridgeGate({ wantedKey: "idle", shownKey: null, ...wait }), "go");
     assert.equal(bridgeGate({ wantedKey: null, shownKey: null, ...wait }), "go");
     assert.equal(bridgeGate({ wantedKey: "idle", shownKey: "smug", ...wait }), "wait");
@@ -538,7 +538,7 @@ describe("guard: a bridge-eligible pair never hard-cuts when its frames are deco
   });
 
   it("the smug sheet key is the live one, so a bridge never replaces idle.png or smug", () => {
-    assert.match(SPRITES.poses.smug, /smug_hold\.png/);
+    assert.match(SPRITES.poses.smug, /smug968_hold\.webp/);
     assert.match(SPRITES.poses.idle, /\/idle\.png/);
   });
 });
@@ -604,7 +604,7 @@ describe("smug holds until its beat ends (early drop)", () => {
     assert.equal(wave, poseResetDelayMs({ pose: "wave", emotion: "bratty", talking: false, actLandedAt: 0, now: 0 }));
   });
 
-  it("long line on the real turn: smug is on stage the whole beat, then 962 forward to idle", () => {
+  it("long line on the real turn: smug is on stage the whole beat, then 973 forward to idle", () => {
     const s = stage();
     s.commit(IDLE);
     s.commit({ pose: spokenTurnStartPose(), emotion: "glance" });
@@ -780,7 +780,7 @@ describe("entry: every arm frame is seen, in order, before smug (paint-paced)", 
     s.wait(1200);
     s.log.length = 0;
     s.commit(IDLE);
-    // First exit frame is set; stall without paint must not burn through 962.
+    // First exit frame is set; stall without paint must not burn through 973.
     s.stall(1500);
     assert.deepEqual(s.log, ["o01"], `only the first exit frame while unpainted: ${s.log.join(">")}`);
     s.paint(); // dwell starts

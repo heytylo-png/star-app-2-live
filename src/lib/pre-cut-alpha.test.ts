@@ -49,18 +49,6 @@ const POSE_SHEET_SIZE: Record<string, [number, number]> = {
   "rai/wink_official.png": [720, 1280],
   "rai/laugh_official.png": [720, 1280],
   "rai/surprise_official.png": [720, 1280],
-  "rai/smug_official.png": [720, 1280],
-  "rai/smug_hold.png": [720, 1280],
-  "rai/smug_in_01.png": [720, 1280],
-  "rai/smug_in_02.png": [720, 1280],
-  "rai/smug_in_03.png": [720, 1280],
-  "rai/smug_in_04.png": [720, 1280],
-  "rai/smug_in_05.png": [720, 1280],
-  "rai/smug_out_01.png": [720, 1280],
-  "rai/smug_out_02.png": [720, 1280],
-  "rai/smug_out_03.png": [720, 1280],
-  "rai/smug_out_04.png": [720, 1280],
-  "rai/smug_out_05.png": [720, 1280],
   "rai/content_official.png": [720, 1280],
   "rai/sad_official.png": [720, 1280],
   "rai/heart_official.png": [720, 1280],
@@ -76,14 +64,30 @@ const POSE_SHEET_SIZE: Record<string, [number, number]> = {
   "rai/side_profile.png": [768, 1168],
   "rai/three_quarter_left.png": [768, 1168],
   "rai/three_quarter_right.png": [768, 1168],
-  // Pose-bridge in-betweens (idle <-> smug).
-  "rai/bridge_idle_smug_01.png": [720, 1280],
-  "rai/bridge_idle_smug_02.png": [720, 1280],
-  "rai/bridge_idle_smug_03.png": [720, 1280],
-  "rai/bridge_idle_smug_04.png": [720, 1280],
-  "rai/bridge_idle_smug_05.png": [720, 1280],
-  "rai/bridge_idle_smug_06.png": [720, 1280],
+  // Pose-bridge idle <-> smug (paste-13): 968 in, smug968_hold, 973 out (RGBA WebP).
+  "rai/smug968_in_01.webp": [720, 1280],
+  "rai/smug968_in_02.webp": [720, 1280],
+  "rai/smug968_in_03.webp": [720, 1280],
+  "rai/smug968_in_04.webp": [720, 1280],
+  "rai/smug968_in_05.webp": [720, 1280],
+  "rai/smug968_hold.webp": [720, 1280],
+  "rai/smug973_out_01.webp": [720, 1280],
+  "rai/smug973_out_02.webp": [720, 1280],
+  "rai/smug973_out_03.webp": [720, 1280],
+  "rai/smug973_out_04.webp": [720, 1280],
+  "rai/smug973_out_05.webp": [720, 1280],
 };
+
+/** Minimal WebP read: VP8X canvas size + alpha flag (the bridge frames ship as RGBA WebP). */
+function webpInfo(file: string) {
+  const buf = readFileSync(join(root, "public", file));
+  assert.equal(buf.toString("ascii", 0, 4), "RIFF", file);
+  assert.equal(buf.toString("ascii", 8, 12), "WEBP", file);
+  assert.equal(buf.toString("ascii", 12, 16), "VP8X", file);
+  const width = 1 + (buf[24]! | (buf[25]! << 8) | (buf[26]! << 16));
+  const height = 1 + (buf[27]! | (buf[28]! << 8) | (buf[29]! << 16));
+  return { width, height, alpha: (buf[20]! & 0x10) !== 0, bytes: buf };
+}
 
 /** sha256 of every shipped pose-sheet cut. Re-pin when a sheet is re-cut (and bump the version). */
 const POSE_SHEET_SHA256: Record<string, string> = {
@@ -91,18 +95,6 @@ const POSE_SHEET_SHA256: Record<string, string> = {
   "rai/wink_official.png": "75288a29d8a269f05827ce123ac7ce237b9d495fd039f2767037e1c073b37c8c",
   "rai/laugh_official.png": "42eba8cc817f7066346ffcdad4a7cf1def00e0ce841a49e141851f7f58a728dd",
   "rai/surprise_official.png": "0426bfe5c8ace4c174bee10500803e3a7a56846a5f4602f2e251aa98b7c004cc",
-  "rai/smug_official.png": "59a5f3fdafffac20516783d380cadf62bbba5d4601cd726ec4ee271fd9648766",
-  "rai/smug_hold.png": "ad9bbad76f7f0a7e36c722a523e55de1bcde2d06b562999fd9847efa0d999ea4",
-  "rai/smug_in_01.png": "4b282858bae5c0e9a76491eb83edd9c2f7e9cd1b120653cdd8499f3a0353f418",
-  "rai/smug_in_02.png": "d13bc292a7e1fdbd8f2cc19be0e26d91e93e0235d00020b5414826f132136ca6",
-  "rai/smug_in_03.png": "5616f91693683f3479eb96d231957ae6151eb20271ec39cb27cda06d53b79a1a",
-  "rai/smug_in_04.png": "3fae42dec7c3b0b01eb428f3f778b5cb8d3ec304dc28d39475217e97cb64f908",
-  "rai/smug_in_05.png": "f693b06fa0d67420d4e41ad6ac4d57a997704b33f5eeda749300a11eb072bfca",
-  "rai/smug_out_01.png": "42e84286e477a4a3ddc85d92de21f4cb48915200c341bc5092b7704041cf348b",
-  "rai/smug_out_02.png": "b35e4a97d6ff6845d3b5d894c77040e56bc77100fb8b326a1c3ffc2ddab838e5",
-  "rai/smug_out_03.png": "9b89f968b88ce05373a82a28af9a0e2fb60c201477945dd87cec6c4bf6fadf59",
-  "rai/smug_out_04.png": "35a751a354a1ccc960fc2c695b7f8ff2c8cc94ea4229f786a7fd247b4643b629",
-  "rai/smug_out_05.png": "21a20e89f9fce6f6a3671bba57ab5626c28485fba1f8ab7a2c570e0bffbb8af1",
   "rai/content_official.png": "283ae8522f127a20ee95315cf397fe4855257c9ff0985c4d48d2456cb755024e",
   "rai/sad_official.png": "4e6d8fbdfa117566c47f22383663ec51ecc39049ee917776cef39f638329d520",
   "rai/heart_official.png": "f5978119682124a1e4c2d481dc28cd2582be92affbe87c4c9f7331c13f6e6839",
@@ -118,13 +110,18 @@ const POSE_SHEET_SHA256: Record<string, string> = {
   "rai/side_profile.png": "9d33442f05f7334548f2cadde6fd2af63091f8ef7b3c289ab0f2a6550eeb3b81",
   "rai/three_quarter_left.png": "7058fe31566b151075680faf30c756c5878327ea16f4a5c80c767248c2f3ea85",
   "rai/three_quarter_right.png": "528a5439e93271a7e8abc3e7324bcbc3ffdae2ff6a86bd680a0c22bbe6bf244e",
-  // Pose-bridge in-betweens (idle <-> smug).
-  "rai/bridge_idle_smug_01.png": "50ea663a558b520c38224d8e7db764899565336f387310eb9faa63e56889f780",
-  "rai/bridge_idle_smug_02.png": "77980bf759cb13548fc9d47941d992a2dc47b5c2024c13c39f15530cf0f72405",
-  "rai/bridge_idle_smug_03.png": "3b990b025e7be65f4bf420656200bb64b7366b69bd83a0c2bf4df48a0162b243",
-  "rai/bridge_idle_smug_04.png": "f7ddf8f617e754505463e396941649a91d844e25ddef1004d075d4c3021213d5",
-  "rai/bridge_idle_smug_05.png": "fe10fff62919859830e747ac9ed8b1abb1fa0202ad9b10a3b5c0ac051f6c4f84",
-  "rai/bridge_idle_smug_06.png": "ad9bbad76f7f0a7e36c722a523e55de1bcde2d06b562999fd9847efa0d999ea4",
+  // Pose-bridge idle <-> smug (paste-13): 968 in, smug968_hold (= 968 05), 973 out (registered ×1.275).
+  "rai/smug968_in_01.webp": "b5ea2c03e591d2110785ca30ffa9cbed5813d6384ad5c0a233e4a38b2b8f83e9",
+  "rai/smug968_in_02.webp": "e8660b7b1747502a94c021c6bc7bb0df38629d0f6c8dd21e0ee3d3f5ea0ca9dc",
+  "rai/smug968_in_03.webp": "42c121c6350681797779f50d73b0c8b3e33791dc2bbc50727f6d7a62ab2654d9",
+  "rai/smug968_in_04.webp": "bd13b17e71ebf25acb5ea429bb6b073debfd21f341bdcffe19c434201c74d7cd",
+  "rai/smug968_in_05.webp": "a63d5dac4d191829c69235f3b68c98668cbdbcf1dc339b037d3040fc9e16cf6c",
+  "rai/smug968_hold.webp": "a63d5dac4d191829c69235f3b68c98668cbdbcf1dc339b037d3040fc9e16cf6c",
+  "rai/smug973_out_01.webp": "9dae0676581db58e77bf858a31e29a561521b0715c41443e9253c01a60ca9575",
+  "rai/smug973_out_02.webp": "740f6dfa32aa2cb33e137126a15b01729facc796ee6d60f60d09929eae8561f5",
+  "rai/smug973_out_03.webp": "835a23f91dc8aafa1ad96eddedf0d89a604113c73f4db3db77e99d743eec873e",
+  "rai/smug973_out_04.webp": "4e068388cf024ecd7eec49c126500c73c624b52a3b2ae8a6f7b5e7e165cf8bbf",
+  "rai/smug973_out_05.webp": "4395e7c87f355d6c68df4910f5caeedcf812a7416e98ceacce8c4efa93314200",
 };
 
 describe("pre-cut RGBA idle + blink sheets", () => {
@@ -170,6 +167,12 @@ describe("pre-cut RGBA idle + blink sheets", () => {
     // Idle/blink/mouth share the 1008×1792 idle canvas; each pose sheet keeps its own (see POSE_SHEET_SIZE).
     const expectedSize = (file: string): [number, number] => POSE_SHEET_SIZE[file] ?? [1008, 1792];
     for (const file of PRE_CUT_ALPHA_FILES) {
+      if (file.endsWith(".webp")) {
+        const w = webpInfo(file);
+        assert.equal(w.alpha, true, `${file} must carry alpha`);
+        assert.deepEqual([w.width, w.height], expectedSize(file), `${file} size`);
+        continue;
+      }
       const info = pngInfo(file);
       assert.equal(info.colorType, 6, `${file} must be RGBA (PNG colour type 6)`);
       const [w, h] = expectedSize(file);
@@ -180,7 +183,7 @@ describe("pre-cut RGBA idle + blink sheets", () => {
   });
 
   it("ships every cut pose sheet with its pinned bytes and a versioned URL", () => {
-    const sha = (f: string) => createHash("sha256").update(pngInfo(f).bytes).digest("hex");
+    const sha = (f: string) => createHash("sha256").update(readFileSync(join(root, "public", f))).digest("hex");
     for (const [file, pinned] of Object.entries(POSE_SHEET_SHA256)) {
       assert.ok((PRE_CUT_ALPHA_FILES as readonly string[]).includes(file), `${file} in PRE_CUT_ALPHA_FILES`);
       assert.equal(sha(file), pinned, file);
@@ -190,7 +193,9 @@ describe("pre-cut RGBA idle + blink sheets", () => {
       if (/idle(_blink|_mouth)?/.test(file) && !(file in POSE_SHEET_SHA256)) continue;
       assert.ok(file in POSE_SHEET_SHA256, `${file} must be pinned`);
     }
-    for (const key of ["talk", "peace", "smug", "profile", "three_quarter_left", "three_quarter_right"] as const) {
+    assert.match(SPRITES.poses.smug, new RegExp(`smug968_hold\\.webp\\?v=${PRE_CUT_ALPHA_VERSION}$`));
+    assert.equal(spriteNeedsWhitePunch(SPRITES.poses.smug), false);
+    for (const key of ["talk", "peace", "profile", "three_quarter_left", "three_quarter_right"] as const) {
       assert.match(SPRITES.poses[key], new RegExp(`\\.png\\?v=${PRE_CUT_ALPHA_VERSION}$`), key);
       assert.equal(spriteNeedsWhitePunch(SPRITES.poses[key]), false, key);
     }

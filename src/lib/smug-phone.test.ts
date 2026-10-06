@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
-import { bridgeFiles } from "./pose-bridge.ts";
+import { SMUG_IN_FILES, SMUG_OUT_FILES } from "./pose-bridge.ts";
 import {
   SMUG_BEAT_TAIL_MS,
   SMUG_MIN_VISIBLE_HOLD_MS,
@@ -32,14 +32,37 @@ import { readPosePhase, setPoseStageMounted, setPosePhase } from "./pose-phase.t
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 describe("smug beat on a cold slow phone", () => {
-  it("preloads idle, then Helix 956+962 frames + smug_hold, before blink and mouth", () => {
-    const { first, beat, rest } = stagePreloadOrder();
+  it("preloads idle, then blink 01, then 968 in + smug968_hold + 973 out, then blink 02-04 and mouth", () => {
+    const { first, next, beat, rest } = stagePreloadOrder();
     assert.equal(first, SPRITES.poses.idle);
-    assert.deepEqual(beat, [...bridgeFiles().map(bridgeFrameSrc), SPRITES.poses.smug]);
+    assert.deepEqual(next, [idleBlinkFrameUrls()[0]]);
+    assert.deepEqual(beat, [...SMUG_IN_FILES.map(bridgeFrameSrc), SPRITES.poses.smug, ...SMUG_OUT_FILES.map(bridgeFrameSrc)]);
     assert.equal(beat.length, 11);
-    assert.deepEqual(rest, [...idleBlinkFrameUrls(), ...idleMouthFrameUrls()]);
-    assert.deepEqual(new Set([first, ...beat, ...rest]), new Set([...startupSpriteUrls(), ...smugBeatSheetUrls()]));
-    assert.equal(new Set([first, ...beat, ...rest]).size, 1 + beat.length + rest.length);
+    assert.deepEqual(rest, [...idleBlinkFrameUrls().slice(1), ...idleMouthFrameUrls()]);
+    assert.deepEqual(new Set([first, ...next, ...beat, ...rest]), new Set([...startupSpriteUrls(), ...smugBeatSheetUrls()]));
+    assert.equal(new Set([first, ...next, ...beat, ...rest]).size, 1 + next.length + beat.length + rest.length);
+  });
+
+  it("ships the beat small: eleven WebP frames, ~1 MB total, every one well under 150 KB", () => {
+    let total = 0;
+    for (const file of [...SMUG_IN_FILES, "rai/smug968_hold.webp", ...SMUG_OUT_FILES]) {
+      const bytes = statSync(join(root, "public", file)).size;
+      assert.ok(bytes < 150_000, `${file} ${bytes}`);
+      total += bytes;
+    }
+    assert.ok(total < 1_200_000, `total ${total}`);
+  });
+
+  it("retired smug files are gone from public/rai (956/962/06, smug_official, six-PNG, hip clip)", () => {
+    for (const file of [
+      "rai/smug_hold.png",
+      "rai/smug_official.png",
+      ...[1, 2, 3, 4, 5].flatMap((n) => [`rai/smug_in_0${n}.png`, `rai/smug_out_0${n}.png`]),
+      ...[1, 2, 3, 4, 5, 6].map((n) => `rai/bridge_idle_smug_0${n}.png`),
+    ]) {
+      assert.equal(existsSync(join(root, "public", file)), false, file);
+    }
+    assert.equal(existsSync(join(root, "public/rai/hip")), false);
   });
 
   it("the puppet uses that order and reports its phase", () => {
@@ -113,13 +136,16 @@ describe("smug beat on a cold slow phone", () => {
 });
 
 describe("smug path allowlist + caption-blocked release", () => {
-  it("allows only idle / smug_in / smug_hold / smug_out sheets", () => {
+  it("allows only idle sheets / smug968_in / smug968_hold / smug973_out", () => {
     assert.equal(isSmugPathSheetSrc(SPRITES.poses.smug), true);
     assert.equal(isSmugPathSheetSrc(SPRITES.poses.idle), true);
-    assert.equal(isSmugPathSheetSrc("rai/smug_in_01.png?v=rgba3"), true);
-    assert.equal(isSmugPathSheetSrc("rai/smug_out_05.png"), true);
+    for (const f of [...SMUG_IN_FILES, ...SMUG_OUT_FILES]) assert.equal(isSmugPathSheetSrc(bridgeFrameSrc(f)), true, f);
+    assert.equal(isSmugPathSheetSrc("rai/smug968_in_01.webp?v=rgba3"), true);
+    assert.equal(isSmugPathSheetSrc("rai/smug973_out_05.webp"), true);
     assert.equal(isSmugPathSheetSrc(SPRITES.poses.think), false);
-    assert.equal(isSmugPathSheetSrc("rai/smug_official.png"), false);
+    for (const old of ["rai/smug_official.png", "rai/smug_hold.png", "rai/smug_in_01.png", "rai/smug_out_05.png", "rai/bridge_idle_smug_06.png", "rai/smug968_in_06.webp", "rai/hip/hip_bridge_00.webp"]) {
+      assert.equal(isSmugPathSheetSrc(old), false, old);
+    }
     assert.equal(isSmugPathSheetSrc(SPRITES.poses.peace), false);
   });
 
@@ -229,7 +255,7 @@ describe("smug cancel / error before the line lands never holds forever", () => 
     assert.ok(d != null && d <= 3400 + SMUG_BEAT_TAIL_MS);
   });
 
-  it("error before 956 finished: release waits for the hold, then a visible hold, never idle mid-entry", () => {
+  it("error before 968 finished: release waits for the hold, then a visible hold, never idle mid-entry", () => {
     const now = 50_000;
     // beat already over, entry still playing → poll (no cut)
     assert.ok(smugReleaseWaitMs({ phase: "bridge-in", holdSince: 0, waitedMs: 0, beatEndAt: now - 1, now }) > 0);

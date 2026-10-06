@@ -75,7 +75,7 @@ describe("smug and wink lines rest on official idle", () => {
     assert.deepEqual(rest, { pose: settledRestPose(), emotion: DEFAULT_EMOTION });
     assert.equal(rest.pose, "idle");
     assert.match(src, /idle_blink_01_open/);
-    assert.doesNotMatch(src, /smug_official|smug_hold|bridge_idle_smug/);
+    assert.doesNotMatch(src, /smug_official|smug968_hold|bridge_idle_smug/);
     assert.equal(bridgeKeyOfSrc(src), "idle");
     assert.equal(canIdleBlink({ pose: rest.pose, emotion: rest.emotion, talking: false }), true);
     // Idle carrying the smug emotion is the smug sheet. The line end leaves it too.
@@ -83,12 +83,12 @@ describe("smug and wink lines rest on official idle", () => {
     assert.equal(tint.rest.pose, "idle");
     assert.equal(tint.rest.emotion, DEFAULT_EMOTION);
     assert.match(tint.src, /idle_blink_01_open/);
-    assert.doesNotMatch(tint.src, /smug_official|smug_hold|bridge_idle_smug/);
+    assert.doesNotMatch(tint.src, /smug_official|smug968_hold|bridge_idle_smug/);
     assert.match(app, /lineEndedRestPose\(\{/);
     assert.match(app, /smugWinkTextRestDelayMs\(\{/);
     assert.match(app, /smugBeatResetDelayMs\(\{/);
     assert.match(app, /lineLandedAt\.current = Date\.now\(\)/);
-    // Caption state must not freeze 962 (chat bubble commits but caption stays).
+    // Caption state must not freeze 973 (chat bubble commits but caption stays).
     assert.equal(app.includes("isReplyCaption"), false);
     assert.match(app, /poseRef\.current === "smug"/);
     // nothing arms the release while the reply is in flight or she is talking, and a new turn clears the landing
@@ -159,7 +159,7 @@ describe("smug and wink lines rest on official idle", () => {
       amplitude: 0,
       angle: 0,
     })[0]!.src;
-    assert.match(sheet, /smug_hold/);
+    assert.match(sheet, /smug968_hold/);
     assert.doesNotMatch(sheet, /bridge_idle_smug/);
     const longBeat = smugBeatResetDelayMs({ line: "x".repeat(400), lineLandedAt: now, speechEndedAt: 0, now });
     assert.ok(longBeat > POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
@@ -235,7 +235,7 @@ describe("smug and wink lines rest on official idle", () => {
         mouth: 3,
       })[0]!.src;
       assert.match(src, /idle_mouth/);
-      assert.doesNotMatch(src, /smug_official|smug_hold|wink_official|bridge_idle_smug/);
+      assert.doesNotMatch(src, /smug_official|smug968_hold|wink_official|bridge_idle_smug/);
     }
   });
 });
