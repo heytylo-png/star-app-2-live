@@ -8,10 +8,13 @@ export function headerLiveState(opts: {
   holding?: boolean;
   callActive?: boolean;
   callListening?: boolean;
-}): "thinking" | "speaking" | "with you" | "listening" | "on call" {
+  /** Mic prompt is up, or permission was denied. */
+  micNeeded?: boolean;
+}): "thinking" | "speaking" | "with you" | "listening" | "on call" | "allow mic" {
   if (opts.talking) return "speaking";
   if (opts.sending) return "thinking";
   if (opts.callListening || opts.holding) return "listening";
+  if (opts.micNeeded) return "allow mic";
   if (opts.callActive) return "on call";
   return "with you";
 }

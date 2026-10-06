@@ -1584,8 +1584,9 @@ function RaiReady() {
     talking,
     sending,
     holding,
-    callActive: callActive || callStarting,
+    callActive,
     callListening,
+    micNeeded: callStarting || callNotice?.kind === "denied",
   });
 
   return (

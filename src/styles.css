@@ -517,9 +517,9 @@
   }
 }
 
-/* First-launch birthday card. Same low band as the tab menus: above the
-   composer (3.625rem) and the tab row (3.4rem), capped so the top stays
-   under her chin at 412×893 and 412×915. */
+/* First-launch birthday card. Above the composer and the tab row.
+   15rem covers the full form at 780 / 893 / 915. Shorter landscape
+   heights may scroll; Skip stays the first row. */
 .birthday-card {
   position: absolute;
   left: 0.75rem;
@@ -528,7 +528,7 @@
   z-index: 30;
   max-width: 32rem;
   margin-inline: auto;
-  max-height: min(12.5rem, 36dvh);
+  max-height: min(15rem, 40dvh);
   overflow-x: hidden;
   overflow-y: auto;
   border-radius: var(--radius-sm);
@@ -537,5 +537,5 @@
   background: var(--color-elevated);
   color: var(--color-fg);
   box-shadow: 0 10px 28px rgba(28, 25, 22, 0.12), var(--shadow-border);
-  padding: 0.45rem 0.65rem 0.55rem;
+  padding: 0.3rem 0.65rem;
 }

@@ -13,6 +13,8 @@ import {
   BIRTHDAY_TAB_ROW_REM,
   applyBirthdaySkip,
   birthdayCardBottomPx,
+  birthdayCardContentPx,
+  birthdayCardMaxPx,
   birthdayCardStaysHidden,
   birthdayCardTopPx,
   birthdayCardVisible,
@@ -109,22 +111,27 @@ describe("birthday card anchor", () => {
     assert.ok(block);
     assert.match(block![1]!, /position:\s*absolute/);
     assert.match(block![1]!, /bottom:\s*calc\(3\.4rem \+ 3\.625rem \+ 0\.25rem\)/);
-    assert.match(block![1]!, /max-height:\s*min\(12\.5rem,\s*36dvh\)/);
+    assert.match(block![1]!, /max-height:\s*min\(15rem,\s*40dvh\)/);
     assert.match(card, /className="birthday-card"/);
     assert.equal(BIRTHDAY_TAB_ROW_REM + BIRTHDAY_COMPOSER_REM + BIRTHDAY_CARD_GAP_REM, 7.275);
-    assert.equal(BIRTHDAY_CARD_MAX_REM, 12.5);
-    assert.equal(BIRTHDAY_CARD_MAX_DVH, 0.36);
+    assert.equal(BIRTHDAY_CARD_MAX_REM, 15);
+    assert.equal(BIRTHDAY_CARD_MAX_DVH, 0.4);
 
     const width = 412;
-    for (const height of [893, 915]) {
+    const content = birthdayCardContentPx();
+    for (const height of [780, 893, 915]) {
       assert.ok(width / height < BIRTHDAY_FRAME_W / BIRTHDAY_FRAME_H, String(height));
       const chin = birthdayChinPx(height);
       const top = birthdayCardTopPx(height);
+      const max = birthdayCardMaxPx(height);
+      const composerTop = height - (BIRTHDAY_TAB_ROW_REM + BIRTHDAY_COMPOSER_REM) * 16;
       assert.ok(top > chin, `card top ${top} overlaps chin ${chin} at ${height}`);
-      assert.ok(top - chin >= 160, `face clearance ${top - chin}px at ${height}`);
-      assert.ok(birthdayCardBottomPx() > BIRTHDAY_TAB_ROW_REM * 16);
-      assert.equal(top, height - birthdayCardBottomPx() - Math.min(12.5 * 16, 0.36 * height));
+      assert.ok(top - chin >= 200, `face clearance ${top - chin}px at ${height}`);
+      assert.ok(content <= max, `content ${content}px exceeds cap ${max}px at ${height}`);
+      assert.ok(height - birthdayCardBottomPx() <= composerTop, `overlaps composer at ${height}`);
+      assert.equal(top, height - birthdayCardBottomPx() - Math.min(15 * 16, 0.4 * height));
     }
+    assert.equal(Math.round(birthdayChinPx(893)), 195);
     assert.doesNotMatch(css, /\.life-menu,\s*\.chart-menu\s*\{[^}]*birthday-card/);
     assert.match(css, /\.life-menu,\s*\.chart-menu\s*\{[^}]*bottom:\s*calc\(100%\s*\+\s*0\.4rem\)/);
   });
@@ -135,8 +142,14 @@ describe("birthday card anchor", () => {
     assert.ok(skipAt > 0 && saveAt > skipAt);
     const skipButton = card.slice(card.lastIndexOf("<Button", skipAt), skipAt);
     assert.doesNotMatch(skipButton, /variant="ghost"|variant="secondary"/);
-    const saveButton = card.slice(saveAt, saveAt + 48);
+    const saveButton = card.slice(saveAt, saveAt + 80);
     assert.match(saveButton, /variant="secondary"/);
+    assert.match(skipButton, /min-h-11 min-w-11/);
+    assert.match(saveButton, /min-h-11 min-w-11/);
+    assert.doesNotMatch(card, /size="sm"/);
+    assert.match(card, /h-10/);
+    assert.doesNotMatch(card, /\bh-8\b/);
+    assert.ok(card.indexOf("onClick={onSkip}") < card.indexOf("grid grid-cols-2"));
   });
 });
 
@@ -147,6 +160,15 @@ describe("header status chip", () => {
     assert.equal(headerLiveState({ talking: false, sending: true }), "thinking");
     assert.equal(headerLiveState({ talking: true, sending: true }), "speaking");
     assert.equal(headerLiveState({ talking: true, sending: false }), "speaking");
+    assert.equal(headerLiveState({ talking: false, sending: false, callListening: true }), "listening");
+    assert.equal(headerLiveState({ talking: false, sending: false, callActive: true }), "on call");
+    assert.equal(headerLiveState({ talking: false, sending: false, micNeeded: true }), "allow mic");
+    assert.equal(
+      headerLiveState({ talking: false, sending: false, callActive: true, micNeeded: true }),
+      "allow mic",
+    );
+    assert.equal(headerLiveState({ talking: true, micNeeded: true }), "speaking");
+    assert.match(app, /micNeeded: callStarting \|\| callNotice\?\.kind === "denied"/);
     assert.match(menu, /\{status\}/);
     assert.match(menu, /\{liveState\}/);
     assert.doesNotMatch(menu, /Stranger|Local|tierLabel|brainLabel|streakDays/);
