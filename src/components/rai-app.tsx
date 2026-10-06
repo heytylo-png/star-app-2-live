@@ -49,7 +49,11 @@ import {
   type EmotionId,
   type PoseId,
 } from "@/lib/rai";
-import { requestSmugRelease } from "@/lib/pose-phase";
+import {
+  readSmugReleasePending,
+  requestSmugRelease,
+  subscribeSmugReleaseLanded,
+} from "@/lib/pose-phase";
 import { useMemoryStore } from "@/lib/memory-store";
 import { usePresenceStore } from "@/lib/presence-store";
 import {
@@ -300,6 +304,25 @@ function RaiReady() {
   };
   const chewUntilRef = useRef(0);
   chewUntilRef.current = chewUntil;
+  /**
+   * paste-15: this turn's act landed while the stage was still releasing a held smug
+   * (968 finishing / 973 / idle landing). Its pose and text chew are not on stage yet,
+   * so their clocks start when the stage lets the next pose on (subscribeSmugReleaseLanded),
+   * not at land. `line` is the latest text to chew ("" = pose only).
+   */
+  const releaseDeferRef = useRef<{ line: string } | null>(null);
+  /** Bumped when a deferred act goes on stage, so the rest effect re-arms from there. */
+  const [releaseLandTick, setReleaseLandTick] = useState(0);
+  /** This turn's act went on stage late (after a smug release): its pose gets the full hold. */
+  const actDeferredRef = useRef(false);
+  /** actLandedAt = now, or deferred until the smug release lands. */
+  const markActLanded = () => {
+    if (readSmugReleasePending()) {
+      releaseDeferRef.current = releaseDeferRef.current ?? { line: "" };
+      return;
+    }
+    actLandedAt.current = Date.now();
+  };
   /** Life slots before this turn's ingest — used to detect track changes. */
   const lifeBeforeRef = useRef<LifeSlots | undefined>(undefined);
   const sendRef = useRef<(text: string) => Promise<void>>(async () => {});
@@ -583,9 +606,30 @@ function RaiReady() {
     reducedMotion,
   });
 
+  // paste-15: the stage let the next pose on after 973. A line that landed meanwhile
+  // starts its pose clock and its full text chew now, so both play after idle.
+  const armTextChewRef = useRef<(line: string) => void>(() => {});
+  useEffect(
+    () =>
+      subscribeSmugReleaseLanded(() => {
+        const deferred = releaseDeferRef.current;
+        if (!deferred) return;
+        releaseDeferRef.current = null;
+        actDeferredRef.current = true;
+        actLandedAt.current = Date.now();
+        // A voiced line's mouth is the audio; only text-only lines chew.
+        if (deferred.line && !lineVoicedRef.current) armTextChewRef.current(deferred.line);
+        setReleaseLandTick((n) => n + 1);
+      }),
+    [],
+  );
+
   useEffect(() => {
     // Still saying the line. Smug and wink stay up for that, not as the rest.
     if (sending || talking) return;
+    // The act is still behind the smug release (973 / idle landing): nothing of it is
+    // on stage yet, so no rest timer runs. releaseLandTick re-runs this when it lands.
+    if (releaseDeferRef.current && readSmugReleasePending()) return;
     // A smug or wink line has ended. Smug never rests on a timer (held until the
     // user's next send, see below). A wink waits out the chew window and the
     // normal pose hold (voiced: speech end). A greeting snap below still drops an
@@ -610,7 +654,9 @@ function RaiReady() {
         return;
       }
       const delay = smugWinkTextRestDelayMs({
-        voiced: lineVoicedRef.current,
+        // A pose that went on stage after the release gets its full hold even if the
+        // speech already ended behind 973 (voiced normally rests at speech end).
+        voiced: lineVoicedRef.current && !actDeferredRef.current,
         chewUntil: chewUntilRef.current,
         pose,
         emotion,
@@ -681,7 +727,7 @@ function RaiReady() {
       setEmotion(DEFAULT_EMOTION);
     }, delay);
     return () => window.clearTimeout(id);
-  }, [draft, sending, talking, holding, callListening, pose, emotion, bubbleLifeKind, chewBlocksReturn]);
+  }, [draft, sending, talking, holding, callListening, pose, emotion, bubbleLifeKind, chewBlocksReturn, releaseLandTick]);
 
   function clearCallListenTimers() {
     if (listenRestartTimerRef.current) {
@@ -915,6 +961,8 @@ function RaiReady() {
   startCallListenRef.current = startCallListen;
 
   function clearTextChew() {
+    // A deferred act keeps its pose clock; only its chew is dropped.
+    if (releaseDeferRef.current) releaseDeferRef.current = { line: "" };
     if (chewTimerRef.current) window.clearTimeout(chewTimerRef.current);
     chewTimerRef.current = 0;
     chewStartRef.current = 0;
@@ -922,6 +970,11 @@ function RaiReady() {
   }
 
   function armTextChew(line: string) {
+    // Stage still behind 973: chew the line once the next pose is on (full length).
+    if (readSmugReleasePending()) {
+      releaseDeferRef.current = { line };
+      return;
+    }
     const now = Date.now();
     const next = armTextChewState({ start: chewStartRef.current, until: 0 }, line, now);
     if (!next.until) return;
@@ -933,6 +986,8 @@ function RaiReady() {
       setChewUntil(0);
     }, Math.max(0, next.until - now));
   }
+
+  armTextChewRef.current = armTextChew;
 
   async function complete(threadId: string) {
     const store = useChatStore.getState();
@@ -967,7 +1022,7 @@ function RaiReady() {
       const startPose = spokenTurnStartPose();
       setPose(startPose);
       poseRef.current = startPose;
-      actLandedAt.current = Date.now();
+      markActLanded();
     }
     store.appendMessage(threadId, assistant);
     listenPausedForTtsRef.current = false;
@@ -1133,7 +1188,7 @@ function RaiReady() {
               setPose(keep);
               poseRef.current = keep;
               setBubbleLifeKind(lifeTurn.kind);
-              actLandedAt.current = Date.now();
+              markActLanded();
             }
           }
           if (live) {
@@ -1177,7 +1232,7 @@ function RaiReady() {
       setPose(keepLand);
       poseRef.current = keepLand;
       setBubbleLifeKind(lifeTurn.kind);
-      actLandedAt.current = Date.now();
+      markActLanded();
       if (act.memories.length) useMemoryStore.getState().addMany(act.memories);
 
       if (shouldSpeakCallLine({ voiceOn: voiceOnRef.current, line }) && hasCallVoice()) {
@@ -1223,7 +1278,7 @@ function RaiReady() {
         store.patchMessage(threadId, assistant.id, { content: message, error: message });
         setCaption(message);
         setEmotion("soft");
-        actLandedAt.current = Date.now();
+        markActLanded();
         anchorUnlandedLine();
       }
     } finally {
@@ -1262,13 +1317,16 @@ function RaiReady() {
     const lifeTitle = parseTrackTitle(content);
     // A new send releases a held smug968_hold: the stage plays 973 to idle first,
     // then whatever this turn asks for (a new smug runs 968 again from idle).
+    // A new turn: nothing of the last one is still waiting for the stage.
+    releaseDeferRef.current = null;
+    actDeferredRef.current = false;
     requestSmugRelease();
     const named = lifeTitle ? null : namedPoseFromText(content);
     namedTurnRef.current = named;
     if (named) {
       setPose(named);
       poseRef.current = named;
-      actLandedAt.current = Date.now();
+      markActLanded();
     }
     lifeBeforeRef.current = useMemoryStore.getState().slots.life;
     useMemoryStore.getState().ingestUserTurn(content, {
