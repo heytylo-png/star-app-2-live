@@ -3,15 +3,25 @@ import { describe, it } from "node:test";
 import {
   SMUG_IN_FILES,
   SMUG_OUT_FILES,
+  SMUG_IN_CLIP,
+  SMUG_OUT_CLIP,
+  SMUG_HOLD_FILE,
+  SMUG_CLIP_BOX,
+  SMUG_CLIP_FRAME_MS,
+  SMUG_CLIP_SHEET,
   BRIDGE_FRAME_MS,
   BRIDGE_JITTER_MS,
+  BRIDGE_LATE_REANCHOR_MS,
   POSE_BRIDGE_PAIRS,
   PoseBridge,
+  bridgeDwellsFor,
   bridgeFiles,
   bridgeFilesFor,
   bridgeFrameMs,
   bridgeKeyOfPlates,
   bridgeKeyOfSrc,
+  parseClipFrame,
+  type BridgeClipEvents,
   type BridgeRequest,
 } from "./pose-bridge.ts";
 import {
@@ -21,11 +31,12 @@ import {
   deferredSpriteUrls,
   idleBlinkFrameUrls,
   idleMouthFrameUrls,
+  smugClipUrls,
   spriteNeedsWhitePunch,
 } from "./rai.ts";
 
 /** Fake clock: timers fire in due order as time advances. */
-function fakeClock() {
+function fakeClock(withNow = false) {
   let now = 0;
   let seq = 0;
   const due = new Map<number, { at: number; fn: () => void }>();
@@ -39,9 +50,14 @@ function fakeClock() {
       clear: (h: number) => {
         due.delete(h);
       },
+      ...(withNow ? { now: () => now } : {}),
     },
     now: () => now,
     pending: () => due.size,
+    /** Busy main thread: time passes with nothing firing. */
+    jump(ms: number) {
+      now += ms;
+    },
     advance(ms: number) {
       const end = now + ms;
       for (;;) {
@@ -49,7 +65,7 @@ function fakeClock() {
         for (const e of due) if (e[1].at <= end && (!pick || e[1].at < pick[1].at)) pick = e;
         if (!pick) break;
         due.delete(pick[0]);
-        now = pick[1].at;
+        now = Math.max(now, pick[1].at);
         pick[1].fn();
       }
       now = end;
@@ -59,10 +75,26 @@ function fakeClock() {
 
 type Shown = { at: number; src: string | null };
 
-function rig(rand: () => number = () => 0.5) {
-  const clock = fakeClock();
+/** "i000".."i048", "o000".."o144", or "live". */
+function label(src: string | null): string {
+  if (src == null) return "live";
+  const f = parseClipFrame(src);
+  assert.ok(f, src);
+  return `${f.clip.key === "in" ? "i" : "o"}${String(f.index).padStart(3, "0")}`;
+}
+const seqOf = (p: string, from: number, to: number) =>
+  Array.from({ length: to - from + 1 }, (_, k) => `${p}${String(from + k).padStart(3, "0")}`);
+
+function rig(opts: { rand?: () => number; clipClock?: boolean } = {}) {
+  const clock = fakeClock(Boolean(opts.clipClock));
   const shown: Shown[] = [];
-  const bridge = new PoseBridge(clock.timers, rand, (src) => shown.push({ at: clock.now(), src }));
+  const bridge = new PoseBridge(
+    clock.timers,
+    opts.rand ?? (() => 0.5),
+    (src) => shown.push({ at: clock.now(), src }),
+    undefined,
+    opts.clipClock ? bridgeDwellsFor : undefined,
+  );
   const ready = new Set<string>(bridgeFiles().map(bridgeFrameSrc));
   const req = (over: Partial<BridgeRequest> & Pick<BridgeRequest, "from" | "to">): boolean =>
     bridge.request({
@@ -71,31 +103,25 @@ function rig(rand: () => number = () => 0.5) {
       isReady: (src) => ready.has(src),
       ...over,
     });
-  const names = () =>
-    shown.map((s) => {
-      if (s.src == null) return "live";
-      const m = /smug(?:968|973)_(?:in|out)_(\d\d)/.exec(s.src) || /bridge_idle_smug_(\d\d)/.exec(s.src);
-      return m![1];
-    });
+  const names = () => shown.map((s) => label(s.src));
   return { clock, shown, bridge, ready, req, names };
 }
 
-describe("pose bridge pair table", () => {
-  it("is idle<->smug only: 968 intro forward, 973 rest forward", () => {
+describe("pose bridge pair table (paste-15: 1085 / 1084 video)", () => {
+  it("is idle<->smug only: 1085 intro 0.000-2.000 s (49 frames), 1084 rest full length (145)", () => {
     assert.deepEqual(Object.keys(POSE_BRIDGE_PAIRS).sort(), ["idle>smug", "smug>idle"]);
-    assert.equal(SMUG_IN_FILES.length, 5);
-    assert.equal(SMUG_OUT_FILES.length, 5);
+    assert.equal(SMUG_IN_CLIP.file, "rai/smug1085_in.avif");
+    assert.equal(SMUG_OUT_CLIP.file, "rai/smug1084_out.avif");
+    assert.equal(SMUG_IN_FILES.length, 49);
+    assert.equal(SMUG_OUT_FILES.length, 145);
     assert.deepEqual(bridgeFilesFor("idle", "smug"), SMUG_IN_FILES);
     assert.deepEqual(bridgeFilesFor("smug", "idle"), SMUG_OUT_FILES);
-    assert.notDeepEqual(SMUG_OUT_FILES, [...SMUG_IN_FILES].reverse());
-    assert.deepEqual(
-      bridgeFilesFor("idle", "smug")!.map((f) => f.slice(-7, -5)),
-      ["01", "02", "03", "04", "05"],
-    );
-    assert.deepEqual(
-      bridgeFilesFor("smug", "idle")!.map((f) => f.slice(-7, -5)),
-      ["01", "02", "03", "04", "05"],
-    );
+    assert.deepEqual(SMUG_IN_FILES.map((f) => label(f)), seqOf("i", 0, 48));
+    assert.deepEqual(SMUG_OUT_FILES.map((f) => label(f)), seqOf("o", 0, 144));
+    // 48 frames after frame 0 at 24 fps = exactly 2.000 s: nothing past 2.0 s exists.
+    assert.equal((SMUG_IN_FILES.length - 1) * SMUG_CLIP_FRAME_MS, 2000);
+    assert.equal(parseClipFrame("rai/smug1085_in.avif#049"), null, "no frame 49");
+    assert.equal(SMUG_HOLD_FILE, "rai/smug1085_hold.webp");
   });
 
   it("has no bridge for any other pair, same-pose, or missing key", () => {
@@ -115,19 +141,27 @@ describe("pose bridge pair table", () => {
     }
   });
 
-  it("lists each bridge file once, all under public/rai", () => {
-    const files = bridgeFiles();
-    assert.deepEqual(files, [...SMUG_IN_FILES, ...SMUG_OUT_FILES]);
-    for (const f of SMUG_IN_FILES) assert.match(f, /^rai\/smug968_in_0[1-5]\.webp$/);
-    for (const f of SMUG_OUT_FILES) assert.match(f, /^rai\/smug973_out_0[1-5]\.webp$/);
+  it("lists each frame once; frame ids point into the two clip files", () => {
+    assert.deepEqual(bridgeFiles(), [...SMUG_IN_FILES, ...SMUG_OUT_FILES]);
+    for (const f of SMUG_IN_FILES) assert.match(f, /^rai\/smug1085_in\.avif#0[0-4]\d$/);
+    for (const f of SMUG_OUT_FILES) assert.match(f, /^rai\/smug1084_out\.avif#\d{3}$/);
+    assert.deepEqual(parseClipFrame(bridgeFrameSrc("rai/smug1084_out.avif#144")), { clip: SMUG_OUT_CLIP, index: 144 });
+    assert.deepEqual(smugClipUrls().map((u) => u.replace(/^.*?(rai\/)/, "$1").split("?")[0]), [
+      "rai/smug1085_in.avif",
+      "rai/smug1084_out.avif",
+    ]);
   });
 
-  it("keeps the live keys: bridge files are new names, smug and idle are untouched", () => {
+  it("draws the clip band 1:1 inside the 720x1280 sheet space (no crop, no zoom)", () => {
+    assert.deepEqual(SMUG_CLIP_SHEET, { w: 720, h: 1280 });
+    assert.ok(SMUG_CLIP_BOX.x >= 0 && SMUG_CLIP_BOX.x + SMUG_CLIP_BOX.w <= 720);
+    assert.equal(SMUG_CLIP_BOX.y, 0);
+    assert.equal(SMUG_CLIP_BOX.h, 1280);
+  });
+
+  it("keeps the live keys: smug is the hold sheet, idle is idle.png", () => {
     assert.match(SPRITES.poses.idle, /rai\/idle\.png/);
-    assert.match(SPRITES.poses.smug, /rai\/smug968_hold\.webp/);
-    for (const f of [...SMUG_IN_FILES, ...SMUG_OUT_FILES]) {
-      assert.ok(!SPRITES.poses.idle.includes(f) && !SPRITES.poses.smug.includes(f));
-    }
+    assert.match(SPRITES.poses.smug, /rai\/smug1085_hold\.webp/);
   });
 });
 
@@ -141,7 +175,7 @@ describe("pose bridge keys", () => {
     for (const key of ["wave", "pout", "talk", "wink", "peace", "shy", "tired", "think"] as const) {
       assert.equal(bridgeKeyOfSrc(SPRITES.poses[key]), null, key);
     }
-    // a bridge frame is never mistaken for a resting pose
+    // a clip frame is never mistaken for a resting pose
     for (const f of [...SMUG_IN_FILES, ...SMUG_OUT_FILES]) assert.equal(bridgeKeyOfSrc(bridgeFrameSrc(f)), null, f);
   });
 
@@ -154,211 +188,243 @@ describe("pose bridge keys", () => {
 });
 
 describe("pose bridge timing", () => {
-  it("holds each frame 150 ms +/- 20, always 130-170", () => {
+  it("generic pairs (none today) hold each frame 150 ms +/- 20", () => {
     assert.equal(BRIDGE_FRAME_MS, 150);
     assert.equal(BRIDGE_JITTER_MS, 20);
     assert.equal(bridgeFrameMs(() => 0), 130);
-    assert.equal(bridgeFrameMs(() => 0.5), 150);
     assert.equal(bridgeFrameMs(() => 1), 170);
-    assert.equal(bridgeFrameMs(() => -3), 130);
     assert.equal(bridgeFrameMs(() => 9), 170);
-    for (let i = 0; i < 200; i++) {
-      const ms = bridgeFrameMs(Math.random);
-      assert.ok(ms >= 130 && ms <= 170, String(ms));
-    }
+  });
+
+  it("the smug clips run at their native 24 fps, every frame one frame long", () => {
+    for (const d of bridgeDwellsFor("idle", "smug")!) assert.equal(d, 1000 / 24);
+    for (const d of bridgeDwellsFor("smug", "idle")!) assert.equal(d, 1000 / 24);
+    assert.equal(bridgeDwellsFor("idle", "smug")!.length, 49);
+    assert.equal(bridgeDwellsFor("smug", "idle")!.length, 145);
+    assert.equal(bridgeDwellsFor("idle", "wave"), null);
   });
 });
 
-describe("pose bridge sequencing", () => {
-  it("idle -> smug plays intro 01..05 as hard cuts, then lands on the live smug968_hold", () => {
-    const { clock, req, names, shown, bridge } = rig();
+describe("pose bridge sequencing (clock-paced, 24 fps)", () => {
+  it("idle -> smug shows i000..i048 at k x 41.67 ms, then lands on the live hold; never past 2.0 s", () => {
+    const { clock, req, names, shown, bridge } = rig({ clipClock: true });
     assert.equal(req({ from: "idle", to: "smug" }), true);
-    assert.deepEqual(names(), ["01"]);
-    assert.equal(bridge.active(), true);
-    clock.advance(150);
-    assert.deepEqual(names(), ["01", "02"]);
-    clock.advance(450);
-    assert.deepEqual(names(), ["01", "02", "03", "04", "05"]);
-    assert.equal(bridge.active(), true);
-    clock.advance(150);
-    assert.deepEqual(names(), ["01", "02", "03", "04", "05", "live"]);
-    assert.equal(bridge.active(), false);
-    assert.equal(bridge.current(), null);
-    assert.equal(clock.pending(), 0, "no loop: nothing left scheduled");
+    assert.deepEqual(names(), ["i000"]);
     clock.advance(5000);
-    assert.equal(shown.length, 6);
-    assert.deepEqual(
-      shown.map((s) => s.at),
-      [0, 150, 300, 450, 600, 750],
-    );
-  });
-
-  it("smug -> idle plays rest 01..05 forward (not reversed), then lands on idle", () => {
-    const { clock, req, names, shown } = rig();
-    assert.equal(req({ from: "smug", to: "idle" }), true);
-    // names() strips to last 02 digits of filename — out files are also 01..05
-    clock.advance(1000);
-    assert.deepEqual(names(), ["01", "02", "03", "04", "05", "live"]);
-    // Confirm they are the OUT set, not the IN set reversed
-    assert.match(shown[0]!.src, /smug973_out_01/);
-    assert.match(shown[4]!.src, /smug973_out_05/);
-  });
-
-  it("jitters the hold per frame inside 130-170 ms", () => {
-    const seq = [0, 1, 0.25, 0.75, 0.5, 0, 1];
-    let i = 0;
-    const { clock, req, shown } = rig(() => seq[i++ % seq.length]!);
-    req({ from: "idle", to: "smug" });
-    clock.advance(2000);
-    const gaps = shown.slice(1).map((s, k) => s.at - shown[k]!.at);
-    assert.deepEqual(gaps, [130, 170, 140, 160, 150]);
-    for (const g of gaps) assert.ok(g >= 130 && g <= 170);
-  });
-
-  it("an interrupt by the opposite pair starts the exit set (in/out files differ; no shared resume)", () => {
-    const { clock, req, names, bridge } = rig();
-    req({ from: "idle", to: "smug" });
-    clock.advance(400); // 01 02 03 up (~150 ms each)
-    assert.deepEqual(names(), ["01", "02", "03"]);
-    assert.equal(req({ from: "smug", to: "idle" }), true);
-    // Exit is smug973_out_01..05 (different files): starts at out 01
-    assert.deepEqual(names(), ["01", "02", "03", "01"]);
-    clock.advance(1000);
-    assert.deepEqual(names(), ["01", "02", "03", "01", "02", "03", "04", "05", "live"]);
+    assert.deepEqual(names(), [...seqOf("i", 0, 48), "live"]);
+    shown.slice(0, 49).forEach((s, k) => assert.ok(Math.abs(s.at - k * SMUG_CLIP_FRAME_MS) < 1e-6, `i${k} at ${s.at}`));
+    assert.ok(Math.abs(shown[49]!.at - 49 * SMUG_CLIP_FRAME_MS) < 1e-6, "i048 is up one frame, then the hold");
     assert.equal(bridge.active(), false);
+    assert.equal(clock.pending(), 0, "no loop: nothing left scheduled");
   });
 
-  it("an unpaired interrupt during intro still hard-cuts (entry path unchanged)", () => {
-    const { clock, req, names, bridge } = rig();
-    req({ from: "idle", to: "smug" });
-    clock.advance(150);
-    assert.deepEqual(names(), ["01", "02"]);
-    assert.equal(req({ from: "smug", to: "wave" }), false);
-    assert.deepEqual(names(), ["01", "02", "live"]);
-    assert.equal(bridge.active(), false);
+  it("smug -> idle plays o000..o144 forward once (6.04 s), then lands on idle; never loops", () => {
+    const { clock, req, names } = rig({ clipClock: true });
+    assert.equal(req({ from: "smug", to: "idle" }), true);
+    clock.advance(20000);
+    assert.deepEqual(names(), [...seqOf("o", 0, 144), "live"]);
     assert.equal(clock.pending(), 0);
-    clock.advance(2000);
-    assert.deepEqual(names(), ["01", "02", "live"], "dropped frames never come back");
   });
 
-  it("an unpaired interrupt during 973 exit lets the rest of out finish (wink settles under last frame)", () => {
-    const { clock, req, names, bridge, shown } = rig();
+  it("a frame up to one frame late keeps the 24 fps clock (the next follows sooner); never skips", () => {
+    const { clock, req, names, shown } = rig({ clipClock: true });
     req({ from: "idle", to: "smug" });
-    clock.advance(1000);
-    assert.equal(bridge.active(), false);
+    clock.advance(10 * SMUG_CLIP_FRAME_MS);
+    clock.jump(30); // main thread busy for 30 ms
+    clock.advance(5000);
+    assert.deepEqual(names(), [...seqOf("i", 0, 48), "live"]);
+    const end = shown.at(-1)!.at;
+    assert.ok(Math.abs(end - 49 * SMUG_CLIP_FRAME_MS) < 1e-6, `clip length kept (${end})`);
+  });
+
+  it("a stall longer than a frame shifts the rest back: nothing is dropped to catch up", () => {
+    const { clock, req, names, shown } = rig({ clipClock: true });
+    req({ from: "idle", to: "smug" });
+    clock.advance(10 * SMUG_CLIP_FRAME_MS + 1);
+    clock.jump(200);
+    clock.advance(5000);
+    assert.deepEqual(names(), [...seqOf("i", 0, 48), "live"]);
+    const gaps = shown.slice(1).map((s, k) => s.at - shown[k]!.at);
+    assert.ok(BRIDGE_LATE_REANCHOR_MS === SMUG_CLIP_FRAME_MS);
+    assert.equal(gaps.filter((g) => g < SMUG_CLIP_FRAME_MS - 1e-6).length, 0, "no bunching after the stall");
+  });
+
+  it("a frame that has not decoded holds the one up (stall), then carries on in order", () => {
+    const { clock, req, names, ready, bridge } = rig({ clipClock: true });
+    const f20 = bridgeFrameSrc(SMUG_IN_FILES[20]!);
+    ready.delete(f20);
+    req({ from: "idle", to: "smug" });
+    clock.advance(2000);
+    assert.equal(names().at(-1), "i019");
+    assert.ok(bridge.stats().stalls > 0);
+    ready.add(f20);
+    clock.advance(5000);
+    assert.deepEqual(names(), [...seqOf("i", 0, 48), "live"]);
+  });
+
+  it("a send during the intro starts 1084 from o000 (the clips share no frame)", () => {
+    const { clock, req, names, bridge } = rig({ clipClock: true });
+    req({ from: "idle", to: "smug" });
+    clock.advance(10.5 * SMUG_CLIP_FRAME_MS);
     assert.equal(req({ from: "smug", to: "idle" }), true);
-    clock.advance(150); // out 01 → 02
-    assert.match(bridge.current()!, /smug973_out_02/);
-    // wink (no pair): must NOT abort — keep playing o03..o05
-    assert.equal(req({ from: "idle", to: "wink" }), true);
-    assert.equal(bridge.active(), true);
-    assert.match(bridge.current()!, /smug973_out_02/);
-    clock.advance(1000);
-    const joined = shown.map((x) => x.src ?? "live").join(" ");
-    assert.match(joined, /smug973_out_03/);
-    assert.match(joined, /smug973_out_04/);
-    assert.match(joined, /smug973_out_05/);
-    assert.equal(names().at(-1), "live");
+    clock.advance(20000);
+    assert.deepEqual(names(), [...seqOf("i", 0, 10), ...seqOf("o", 0, 144), "live"]);
     assert.equal(bridge.active(), false);
   });
 
-  it("non-paired poses hard-cut: no frame is ever shown", () => {
-    const { clock, req, shown } = rig();
+  it("an unpaired interrupt during the intro hard-cuts; during 1084 the exit finishes", () => {
+    const a = rig({ clipClock: true });
+    a.req({ from: "idle", to: "smug" });
+    a.clock.advance(100);
+    assert.equal(a.req({ from: "smug", to: "wave" }), false);
+    assert.equal(a.names().at(-1), "live");
+    a.clock.advance(5000);
+    assert.equal(a.names().at(-1), "live", "dropped frames never come back");
+
+    const b = rig({ clipClock: true });
+    b.req({ from: "smug", to: "idle" });
+    b.clock.advance(500);
+    assert.equal(b.req({ from: "idle", to: "wink" }), true);
+    b.clock.advance(20000);
+    assert.deepEqual(b.names(), [...seqOf("o", 0, 144), "live"]);
+  });
+
+  it("non-paired poses and reduced motion hard-cut: no frame is ever shown", () => {
+    const { clock, req, shown } = rig({ clipClock: true });
     for (const [from, to] of [
       ["idle", "wave"],
-      ["wave", "idle"],
-      ["idle", "pout"],
       ["pout", "smug"],
       ["smug", "talk"],
-      [null, "idle"],
       [null, "smug"],
       ["idle", "idle"],
     ] as const) {
       assert.equal(req({ from, to }), false, `${from}>${to}`);
     }
-    clock.advance(2000);
-    assert.equal(shown.length, 0);
-  });
-
-  it("a spoken line does not gate the pair: the request has no talking input at all", () => {
-    const { clock, req, names } = rig();
-    assert.equal(req({ from: "idle", to: "smug" }), true);
-    clock.advance(1000);
-    assert.equal(req({ from: "smug", to: "idle" }), true);
-    clock.advance(1000);
-    assert.deepEqual(names().filter((n) => n !== "live").length, 10);
-  });
-
-  it("speech starting mid-bridge drops the rest (cancel)", () => {
-    const { clock, req, names, bridge } = rig();
-    req({ from: "idle", to: "smug" });
-    clock.advance(160);
-    bridge.cancel();
-    assert.deepEqual(names(), ["01", "02", "live"]);
-    assert.equal(clock.pending(), 0);
-    bridge.cancel(); // idempotent: nothing more to drop
-    assert.deepEqual(names(), ["01", "02", "live"]);
-  });
-
-  it("reduced motion hard-cuts", () => {
-    const { clock, req, shown } = rig();
     assert.equal(req({ from: "idle", to: "smug", reducedMotion: true }), false);
     assert.equal(req({ from: "smug", to: "idle", reducedMotion: true }), false);
+    clock.advance(5000);
+    assert.equal(shown.length, 0);
+  });
+
+  it("never starts before frame 0 has decoded", () => {
+    const { clock, req, shown, ready } = rig({ clipClock: true });
+    ready.delete(bridgeFrameSrc(SMUG_IN_FILES[0]!));
+    assert.equal(req({ from: "idle", to: "smug" }), false);
     clock.advance(2000);
     assert.equal(shown.length, 0);
   });
 
-  it("never shows a frame before it has decoded: any missing frame hard-cuts", () => {
-    const { clock, req, shown, ready, bridge } = rig();
-    ready.delete(bridgeFrameSrc("rai/smug968_in_04.webp"));
-    assert.equal(req({ from: "idle", to: "smug" }), false);
-    clock.advance(2000);
-    assert.equal(shown.length, 0, "968 incomplete: nothing shown");
-    // Exit set is independent of intro frames.
-    assert.equal(req({ from: "smug", to: "idle" }), true);
+  it("cancel drops the rest; dispose clears", () => {
+    const { clock, req, names, bridge } = rig({ clipClock: true });
+    req({ from: "idle", to: "smug" });
+    clock.advance(SMUG_CLIP_FRAME_MS);
+    assert.match(bridge.current()!, /smug1085_in\.avif#001/);
+    bridge.cancel();
+    assert.deepEqual(names(), ["i000", "i001", "live"]);
+    assert.equal(clock.pending(), 0);
+    bridge.cancel();
     bridge.dispose();
-    shown.length = 0;
-    ready.add(bridgeFrameSrc("rai/smug968_in_04.webp"));
-    ready.delete(bridgeFrameSrc("rai/smug973_out_03.webp"));
-    assert.equal(req({ from: "smug", to: "idle" }), false);
-    clock.advance(2000);
-    assert.equal(shown.length, 0, "973 incomplete: nothing shown");
-    ready.add(bridgeFrameSrc("rai/smug973_out_03.webp"));
-    assert.equal(req({ from: "idle", to: "smug" }), true);
+    assert.equal(bridge.current(), null);
   });
 
-  it("reports the frame on stage and clears on dispose", () => {
-    const { clock, req, bridge } = rig();
-    assert.equal(bridge.current(), null);
+  it("without a clock (generic pacing) the order is the same: every frame once", () => {
+    const { clock, req, names } = rig();
     req({ from: "idle", to: "smug" });
-    assert.match(bridge.current()!, /smug968_in_01\.webp/);
-    clock.advance(150);
-    assert.match(bridge.current()!, /smug968_in_02\.webp/);
-    bridge.dispose();
-    assert.equal(bridge.current(), null);
-    assert.equal(clock.pending(), 0);
+    clock.advance(49 * 170 + 10);
+    assert.deepEqual(names(), [...seqOf("i", 0, 48), "live"]);
   });
 });
 
-describe("pose bridge files", () => {
-  it("are pre-cut (no runtime punch), versioned, and preloaded ahead of every pose sheet", () => {
-    for (const f of [...SMUG_IN_FILES, ...SMUG_OUT_FILES]) {
-      assert.ok((PRE_CUT_ALPHA_FILES as readonly string[]).includes(f), f);
-      assert.equal(spriteNeedsWhitePunch(bridgeFrameSrc(f)), false, f);
-      assert.match(bridgeFrameSrc(f), /\.webp\?v=rgba3$/);
-    }
+/** A scripted clip player (the worker stand-in): records calls, the test plays the frames. */
+function playerRig() {
+  const calls: string[] = [];
+  let events: BridgeClipEvents | null = null;
+  let files: readonly string[] = [];
+  let accept = true;
+  const shown: string[] = [];
+  const player = {
+    play: (f: readonly string[], start: number, ev: BridgeClipEvents) => {
+      calls.push(`play ${label(f[0]!)} ${start}`);
+      if (!accept) return false;
+      files = f;
+      events = ev;
+      return true;
+    },
+    stop: () => calls.push("stop"),
+    setPaused: (p: boolean) => calls.push(`pause ${p}`),
+  };
+  const clock = fakeClock(true);
+  const bridge = new PoseBridge(clock.timers, () => 0.5, (src) => shown.push(label(src)), undefined, bridgeDwellsFor, player);
+  const req = (from: string, to: string) =>
+    bridge.request({ from, to, reducedMotion: false, srcFor: bridgeFrameSrc, isReady: () => true });
+  return {
+    calls,
+    shown,
+    bridge,
+    clock,
+    req,
+    reject: () => (accept = false),
+    events: () => events!,
+    count: () => files.length,
+  };
+}
+
+describe("pose bridge with the off-main-thread clip player", () => {
+  it("shows frame 0 at once, mirrors each painted frame, and lands on the live sheet when told", () => {
+    const r = playerRig();
+    assert.equal(r.req("idle", "smug"), true);
+    assert.deepEqual(r.calls, ["play i000 0"]);
+    assert.deepEqual(r.shown, ["i000"], "frame 0 goes up in the same task (no live sheet in between)");
+    for (let i = 1; i < r.count(); i++) r.events().shown(i);
+    r.events().shown(48); // a repeat report changes nothing
+    assert.equal(r.clock.pending(), 0, "no timers: the player paces");
+    r.events().done();
+    assert.deepEqual(r.shown, [...seqOf("i", 0, 48), "live"]);
+    assert.equal(r.bridge.active(), false);
+  });
+
+  it("a new pair stops the player and starts the next clip from its frame 0; stale reports are ignored", () => {
+    const r = playerRig();
+    r.req("idle", "smug");
+    const old = r.events();
+    old.shown(1);
+    assert.equal(r.req("smug", "idle"), true);
+    assert.deepEqual(r.calls, ["play i000 0", "stop", "play o000 0"]);
+    old.shown(2);
+    old.done();
+    assert.deepEqual(r.shown, ["i000", "i001", "o000"]);
+    for (let i = 1; i < 145; i++) r.events().shown(i);
+    r.events().done();
+    assert.deepEqual(r.shown, ["i000", "i001", ...seqOf("o", 0, 144), "live"]);
+  });
+
+  it("forwards page hide / show; a player that cannot start cuts to the live sheet", () => {
+    const r = playerRig();
+    r.bridge.setPaused(true);
+    r.bridge.setPaused(false);
+    assert.deepEqual(r.calls, ["pause true", "pause false"]);
+    r.reject();
+    assert.equal(r.req("idle", "smug"), false);
+    assert.deepEqual(r.shown, ["i000", "live"]);
+  });
+
+  it("cancel stops the player", () => {
+    const r = playerRig();
+    r.req("idle", "smug");
+    r.bridge.cancel();
+    assert.deepEqual(r.calls, ["play i000 0", "stop"]);
+    assert.deepEqual(r.shown, ["i000", "live"]);
+  });
+});
+
+describe("smug files", () => {
+  it("the hold is pre-cut and versioned; no clip frame is a sheet or in the decode queue", () => {
+    assert.ok((PRE_CUT_ALPHA_FILES as readonly string[]).includes(SMUG_HOLD_FILE));
+    assert.equal(spriteNeedsWhitePunch(SPRITES.poses.smug), false);
+    assert.match(SPRITES.poses.smug, /smug1085_hold\.webp\?v=rgba3$/);
     const deferred = deferredSpriteUrls();
-    const bridgeList = [...SMUG_IN_FILES, ...SMUG_OUT_FILES];
-    assert.deepEqual(
-      deferred.slice(0, bridgeList.length),
-      bridgeList.map(bridgeFrameSrc),
-      "bridge frames lead the deferred queue, in order, once",
-    );
-    const smugAt = deferred.indexOf(SPRITES.poses.smug);
-    assert.ok(smugAt >= bridgeList.length, "smug decodes after the bridge frames");
-    assert.equal(
-      deferred.filter((src) => /smug968_in_|smug973_out_/.test(src)).length,
-      bridgeList.length,
-    );
+    assert.equal(deferred.filter((src) => /\.avif/.test(src)).length, 0);
+    assert.equal(deferred.filter((src) => /smug9\d\d/.test(src)).length, 0);
+    assert.equal((PRE_CUT_ALPHA_FILES as readonly string[]).some((f) => /smug9\d\d|\.avif/.test(f)), false);
   });
 });

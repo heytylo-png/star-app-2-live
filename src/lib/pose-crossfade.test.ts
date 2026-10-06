@@ -181,7 +181,7 @@ describe("pose change mid-chew", () => {
   const REST_ID = IDLE_REST_LAYER_ID;
   const rest = (file: string): SpriteLayer => ({ id: REST_ID, src: `/rai/${file}.png?v=rgba3`, opacity: 1, role: "body" });
   const CLOSED = rest("idle_blink_01_open");
-  const SMUG = sheet("smug968_hold");
+  const SMUG = sheet("smug1085_hold");
   const closeRest = (layer: CrossfadeLayer): CrossfadeLayer =>
     layer.id === REST_ID && layer.src !== CLOSED.src ? { ...layer, src: CLOSED.src } : layer;
 

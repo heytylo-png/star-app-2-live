@@ -16,7 +16,7 @@ public/
     think_official.png
     pout_official.png
     tired_official.png
-    smug968_hold.webp       # smug hold (968 05 smirk-hold); bridge: smug968_in_01..05.webp, smug973_out_01..05.webp
+    smug1085_hold.webp      # smug hold (1085 at 2.000 s); bridge clips: smug1085_in.avif (0-2 s), smug1084_out.avif (full)
     wave_official.png       # SHIPPING puppet wave (retoned 1008×1792 RGBA). Not poses/wave.png / front_wave.png
     hold_official.png       # NOT front_hold.png
     embarrassed_official.png
@@ -54,7 +54,7 @@ Live chat keys use the **morning official pack** under `public/rai/`. Do not poi
 | `think` | `rai/think_official.png` |
 | `pout` | `rai/pout_official.png` |
 | `tired` | `rai/tired_official.png` |
-| `smug` | `rai/smug968_hold.webp` |
+| `smug` | `rai/smug1085_hold.webp` |
 | `wave` | `rai/wave_official.png` — **shipping PNG puppet body**. Retoned full-body 1008×1792 RGBA (TyLo dark sheet → idle/live cheek ~(221,150,116)). Not `star-rai/poses/wave.png` (Helix 1152×1728 3/4, unused for this key) and not `rai/front_wave.png` (Expo alt). |
 | `hold` | `rai/hold_official.png` |
 | `embarrassed` | `rai/embarrassed_official.png` |
@@ -93,7 +93,7 @@ Tone: the old `*_official` sheets and `middle_finger` carried `gAMA 0.50994`, wh
 
 ## Pose bridge (idle ↔ smug)
 
-The only bridged pair so far. Files `rai/smug968_in_01..05.webp` (entry) and `rai/smug973_out_01..05.webp` (exit) are in-betweens (pre-cut RGBA, `rgba3`), played hard-cut ~150ms a frame between the live `idle.png` and the hold `smug968_hold.webp`; they are not poses and have no live key. Reduced motion and every other pose pair keep the normal change. It plays on spoken smug replies too (voice on or off); a normal talk line on idle never changes pose so never bridges. See [ANIMATION.md](./ANIMATION.md) "Pose bridge" for the order, timing, interrupts, and how to add a pair.
+The only bridged pair so far. Two video clips, `rai/smug1085_in.avif` (entry, 0–2.0 s) and `rai/smug1084_out.avif` (exit, full length), played at their native 24 fps by the clip worker between the live `idle.png` and the hold `smug1085_hold.webp`; they are not poses and have no live key. Reduced motion and every other pose pair keep the normal change. It plays on spoken smug replies too (voice on or off); a normal talk line on idle never changes pose so never bridges. See [ANIMATION.md](./ANIMATION.md) "Pose bridge" for the order, timing, interrupts, and how to add a pair.
 
 ## Talking
 

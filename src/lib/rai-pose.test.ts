@@ -240,7 +240,7 @@ describe("live key → file map", () => {
     think: "rai/think_official.png",
     pout: "rai/pout_official.png",
     tired: "rai/tired_official.png",
-    smug: "rai/smug968_hold.webp",
+    smug: "rai/smug1085_hold.webp",
     wave: "rai/wave_official.png",
     hold: "rai/hold_official.png",
     embarrassed: "rai/embarrassed_official.png",
@@ -521,8 +521,8 @@ describe("layersFor talking vs pose hold", () => {
     assert.match(layersFor({ ...rest, pose: "wave" })[0]!.src, /wave_official/);
     assert.match(layersFor({ ...rest, pose: "scold" })[0]!.src, /scold_official/);
     assert.match(layersFor({ ...rest, pose: "talk" })[0]!.src, /talk_official/);
-    assert.match(layersFor({ ...rest, pose: "smug" })[0]!.src, /smug968_hold/);
-    assert.match(layersFor({ ...rest, emotion: "smug" })[0]!.src, /smug968_hold/);
+    assert.match(layersFor({ ...rest, pose: "smug" })[0]!.src, /smug1085_hold/);
+    assert.match(layersFor({ ...rest, emotion: "smug" })[0]!.src, /smug1085_hold/);
     assert.match(layersFor({ ...rest, emotion: "shy" })[0]!.src, /shy_official/);
     assert.match(layersFor({ ...rest, emotion: "hype" })[0]!.src, /peace\.png/);
     const reduced = layersFor({ ...rest, reducedMotion: true, blink: 0 });
@@ -566,7 +566,12 @@ describe("layersFor talking vs pose hold", () => {
       assert.doesNotMatch(source, /IDLE_BLINK_DEST_RECT|idleBlinkPatchSrc|copyEyeRect|planIdleCanvasDraws|drawEyeRect/);
       assert.doesNotMatch(source, /790-open-brow|788-open|791-half|789-closed/);
     }
-    assert.doesNotMatch(puppetSrc, /<canvas|drawImage|getContext/);
+    // Blink never paints through a canvas. The only canvases on the stage are the two smug clip
+    // canvases (paste-15), handed to the clip worker: the puppet itself never draws on them.
+    assert.doesNotMatch(puppetSrc, /drawImage|getContext/);
+    const canvases = puppetSrc.match(/<canvas[\s\S]*?\/>/g) ?? [];
+    assert.equal(canvases.length, 2);
+    for (const c of canvases) assert.match(c, /data-rai-role="bridge"/);
     assert.match(puppetSrc, /restOnly/);
     assert.match(puppetSrc, /transition: "none"/);
     assert.match(puppetSrc, /if \(!IDLE_BLINK_ENABLED\) return;/);
@@ -672,7 +677,7 @@ describe("layersFor talking vs pose hold", () => {
   it("pins soft/hype off frown idle even when pose is still idle", () => {
     assert.match(layersFor({ ...base, pose: "idle", emotion: "soft", talking: false })[0]!.src, /content_official/);
     assert.match(layersFor({ ...base, pose: "idle", emotion: "hype", talking: false })[0]!.src, /peace\.png/);
-    assert.match(layersFor({ ...base, pose: "idle", emotion: "smug", talking: true })[0]!.src, /smug968_hold/);
+    assert.match(layersFor({ ...base, pose: "idle", emotion: "smug", talking: true })[0]!.src, /smug1085_hold/);
     assert.doesNotMatch(
       layersFor({ ...base, pose: "idle", emotion: "smug", talking: true })[0]!.src,
       /rai\/idle\.png/,
