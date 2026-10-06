@@ -39,7 +39,6 @@ import {
   smugBeatSheetUrls,
   smugClipUrls,
   waveClipUrls,
-  waveBeatSheetUrls,
   type PosePhase,
   USE_EXPO_TALK_BUST,
   type EmotionId,
@@ -80,7 +79,6 @@ import {
   SMUG_OUT_CLIP,
   WAVE_IN_CLIP,
   WAVE_OUT_CLIP,
-  BRIDGE_HOLD_KEYS,
   type BridgeTimers,
 } from "@/lib/pose-bridge";
 import { SmugClipPlayer, smugClipPlayerSupported } from "@/lib/smug-clip-player";
@@ -1321,7 +1319,8 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   // oxlint-disable-next-line react/refs -- plates is the painted key; read-only, same as the layers below
   const plateKey = bridgeKeyOfPlates(plates);
   const clipOnStage = clipMode && clipView.visible;
-  // Hold is the live smug1085_hold sheet. Entry is 1085, exit is 1084 (bridge canvas).
+  // Hold is the live smug/wave hold sheet. Entry/exit are bridge canvases.
+  const onHoldPose = plateKey === "smug" || plateKey === "wave";
   const phase: PosePhase = clipMode
     ? bridgeClip
       ? "bridge-out"
@@ -1331,15 +1330,18 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
           ? "hold"
           : "idle"
     : bridgeClip
-      ? bridgeClip === "in"
+      ? bridgeClip === "in" || bridgeClip === "win"
         ? "bridge-in"
         : "bridge-out"
-      : plateKey === "smug"
+      : onHoldPose
         ? "hold"
         : "idle";
-  // Smug wanted but not on stage yet: frames still decoding, the plain open idle stays up.
+  // Hold pose wanted but not on stage yet: frames still decoding, the plain open idle stays up.
   const poseWait =
-    bridgeWantsFrames(bridgeKeyOfPlates(desired), plateKey) && !bridgeClip && !clipOnStage && (clipMode ? !clipReady : plateKey !== "smug");
+    bridgeWantsFrames(bridgeKeyOfPlates(desired), plateKey) &&
+    !bridgeClip &&
+    !clipOnStage &&
+    (clipMode ? !clipReady : !onHoldPose);
   const clipDecode = HIP_CLIP_FRAMES.map((_, i) => ((clipBits >> i) & 1 ? "1" : "0")).join("");
   const smugDecode = clipMode
     ? `${clipDecode}${sheets[smugBeatSheetUrls().at(-1)!] != null ? "1" : "0"}`
@@ -1385,7 +1387,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
       data-rai-clip-frame={clipOnStage ? String(clipView.index).padStart(2, "0") : "off"}
       data-rai-clip-time={clipOnStage ? String(hipClipTimeMs(clipView.index)) : "off"}
       data-rai-clip-dir={clipOnStage ? clipView.dir : "off"}
-      data-rai-hold-sheet={phase === "hold" ? "smug1085_hold" : "off"}
+      data-rai-hold-sheet={phase === "hold" ? (plateKey === "wave" ? "wave1110_hold" : "smug1085_hold") : "off"}
       data-rai-smug-release={smugGate.current?.exiting() ? "exit" : "off"}
       data-rai-build={buildId()}
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
