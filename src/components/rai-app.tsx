@@ -600,7 +600,7 @@ function RaiReady() {
       replyPose: replyPoseRef.current,
     });
     if (!greetingSnap && ended && (pose !== ended.pose || emotion !== ended.emotion)) {
-      // Smug: 962 only after line finished + 1.5 s.
+      // Smug: 973 only after line finished + 1.5 s.
       // Line finished = max(landing + reading floor, speech end). There is no
       // stage subtitle that auto-hides (ChatThread assistant bubble stays in
       // the transcript), so do not gate on React caption state.
@@ -608,7 +608,7 @@ function RaiReady() {
       const smugBeat = holdsSmugBeat(pose, emotion);
       // The turn is over (not sending / talking) but the line never landed
       // (cancel mid-stream, abort before the first token, error). Anchor the
-      // beat now so 962 still runs — never hold smug forever.
+      // beat now so 973 still runs — never hold smug forever.
       if (smugBeat) anchorUnlandedLine();
       const delay = smugBeat
         ? smugBeatResetDelayMs({

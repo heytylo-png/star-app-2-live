@@ -1,4 +1,4 @@
-> **RETIRED 2026-10-05:** idle↔smug is Helix 956 intro + `smug_hold` + 962 rest forward (`PoseBridge`). Hip clip travel and Helix 06→01 reverse exit are off (`hipClipSupported() === false`).
+> **RETIRED 2026-10-05:** idle↔smug is the 968 intro + `smug968_hold` + 973 rest forward (`PoseBridge`, paste-13). Hip clip files were removed from `public/rai/hip/`; `hipClipSupported() === false`.
 
 # Hip clip cut (idle <-> smug travel, 2026-10-04)
 

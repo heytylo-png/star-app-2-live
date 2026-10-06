@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
-  BRIDGE_IDLE_SMUG_FILES,
   SMUG_IN_FILES,
   SMUG_OUT_FILES,
   BRIDGE_FRAME_MS,
@@ -75,14 +74,14 @@ function rig(rand: () => number = () => 0.5) {
   const names = () =>
     shown.map((s) => {
       if (s.src == null) return "live";
-      const m = /smug_(?:in|out)_(\d\d)/.exec(s.src) || /bridge_idle_smug_(\d\d)/.exec(s.src);
+      const m = /smug(?:968|973)_(?:in|out)_(\d\d)/.exec(s.src) || /bridge_idle_smug_(\d\d)/.exec(s.src);
       return m![1];
     });
   return { clock, shown, bridge, ready, req, names };
 }
 
 describe("pose bridge pair table", () => {
-  it("is idle<->smug only: Helix 956 intro forward, Helix 962 rest forward", () => {
+  it("is idle<->smug only: 968 intro forward, 973 rest forward", () => {
     assert.deepEqual(Object.keys(POSE_BRIDGE_PAIRS).sort(), ["idle>smug", "smug>idle"]);
     assert.equal(SMUG_IN_FILES.length, 5);
     assert.equal(SMUG_OUT_FILES.length, 5);
@@ -90,11 +89,11 @@ describe("pose bridge pair table", () => {
     assert.deepEqual(bridgeFilesFor("smug", "idle"), SMUG_OUT_FILES);
     assert.notDeepEqual(SMUG_OUT_FILES, [...SMUG_IN_FILES].reverse());
     assert.deepEqual(
-      bridgeFilesFor("idle", "smug")!.map((f) => f.slice(-6, -4)),
+      bridgeFilesFor("idle", "smug")!.map((f) => f.slice(-7, -5)),
       ["01", "02", "03", "04", "05"],
     );
     assert.deepEqual(
-      bridgeFilesFor("smug", "idle")!.map((f) => f.slice(-6, -4)),
+      bridgeFilesFor("smug", "idle")!.map((f) => f.slice(-7, -5)),
       ["01", "02", "03", "04", "05"],
     );
   });
@@ -119,13 +118,13 @@ describe("pose bridge pair table", () => {
   it("lists each bridge file once, all under public/rai", () => {
     const files = bridgeFiles();
     assert.deepEqual(files, [...SMUG_IN_FILES, ...SMUG_OUT_FILES]);
-    for (const f of SMUG_IN_FILES) assert.match(f, /^rai\/smug_in_0[1-5]\.png$/);
-    for (const f of SMUG_OUT_FILES) assert.match(f, /^rai\/smug_out_0[1-5]\.png$/);
+    for (const f of SMUG_IN_FILES) assert.match(f, /^rai\/smug968_in_0[1-5]\.webp$/);
+    for (const f of SMUG_OUT_FILES) assert.match(f, /^rai\/smug973_out_0[1-5]\.webp$/);
   });
 
   it("keeps the live keys: bridge files are new names, smug and idle are untouched", () => {
     assert.match(SPRITES.poses.idle, /rai\/idle\.png/);
-    assert.match(SPRITES.poses.smug, /rai\/smug_hold\.png/);
+    assert.match(SPRITES.poses.smug, /rai\/smug968_hold\.webp/);
     for (const f of [...SMUG_IN_FILES, ...SMUG_OUT_FILES]) {
       assert.ok(!SPRITES.poses.idle.includes(f) && !SPRITES.poses.smug.includes(f));
     }
@@ -171,7 +170,7 @@ describe("pose bridge timing", () => {
 });
 
 describe("pose bridge sequencing", () => {
-  it("idle -> smug plays intro 01..05 as hard cuts, then lands on the live smug_hold", () => {
+  it("idle -> smug plays intro 01..05 as hard cuts, then lands on the live smug968_hold", () => {
     const { clock, req, names, shown, bridge } = rig();
     assert.equal(req({ from: "idle", to: "smug" }), true);
     assert.deepEqual(names(), ["01"]);
@@ -201,8 +200,8 @@ describe("pose bridge sequencing", () => {
     clock.advance(1000);
     assert.deepEqual(names(), ["01", "02", "03", "04", "05", "live"]);
     // Confirm they are the OUT set, not the IN set reversed
-    assert.match(shown[0]!.src, /smug_out_01/);
-    assert.match(shown[4]!.src, /smug_out_05/);
+    assert.match(shown[0]!.src, /smug973_out_01/);
+    assert.match(shown[4]!.src, /smug973_out_05/);
   });
 
   it("jitters the hold per frame inside 130-170 ms", () => {
@@ -222,7 +221,7 @@ describe("pose bridge sequencing", () => {
     clock.advance(400); // 01 02 03 up (~150 ms each)
     assert.deepEqual(names(), ["01", "02", "03"]);
     assert.equal(req({ from: "smug", to: "idle" }), true);
-    // Exit is smug_out_01..05 (different files): starts at out 01
+    // Exit is smug973_out_01..05 (different files): starts at out 01
     assert.deepEqual(names(), ["01", "02", "03", "01"]);
     clock.advance(1000);
     assert.deepEqual(names(), ["01", "02", "03", "01", "02", "03", "04", "05", "live"]);
@@ -242,23 +241,23 @@ describe("pose bridge sequencing", () => {
     assert.deepEqual(names(), ["01", "02", "live"], "dropped frames never come back");
   });
 
-  it("an unpaired interrupt during 962 exit lets the rest of out finish (wink settles under last frame)", () => {
+  it("an unpaired interrupt during 973 exit lets the rest of out finish (wink settles under last frame)", () => {
     const { clock, req, names, bridge, shown } = rig();
     req({ from: "idle", to: "smug" });
     clock.advance(1000);
     assert.equal(bridge.active(), false);
     assert.equal(req({ from: "smug", to: "idle" }), true);
     clock.advance(150); // out 01 → 02
-    assert.match(bridge.current()!, /smug_out_02/);
+    assert.match(bridge.current()!, /smug973_out_02/);
     // wink (no pair): must NOT abort — keep playing o03..o05
     assert.equal(req({ from: "idle", to: "wink" }), true);
     assert.equal(bridge.active(), true);
-    assert.match(bridge.current()!, /smug_out_02/);
+    assert.match(bridge.current()!, /smug973_out_02/);
     clock.advance(1000);
     const joined = shown.map((x) => x.src ?? "live").join(" ");
-    assert.match(joined, /smug_out_03/);
-    assert.match(joined, /smug_out_04/);
-    assert.match(joined, /smug_out_05/);
+    assert.match(joined, /smug973_out_03/);
+    assert.match(joined, /smug973_out_04/);
+    assert.match(joined, /smug973_out_05/);
     assert.equal(names().at(-1), "live");
     assert.equal(bridge.active(), false);
   });
@@ -311,20 +310,20 @@ describe("pose bridge sequencing", () => {
 
   it("never shows a frame before it has decoded: any missing frame hard-cuts", () => {
     const { clock, req, shown, ready, bridge } = rig();
-    ready.delete(bridgeFrameSrc("rai/smug_in_04.png"));
+    ready.delete(bridgeFrameSrc("rai/smug968_in_04.webp"));
     assert.equal(req({ from: "idle", to: "smug" }), false);
     clock.advance(2000);
-    assert.equal(shown.length, 0, "956 incomplete: nothing shown");
+    assert.equal(shown.length, 0, "968 incomplete: nothing shown");
     // Exit set is independent of intro frames.
     assert.equal(req({ from: "smug", to: "idle" }), true);
     bridge.dispose();
     shown.length = 0;
-    ready.add(bridgeFrameSrc("rai/smug_in_04.png"));
-    ready.delete(bridgeFrameSrc("rai/smug_out_03.png"));
+    ready.add(bridgeFrameSrc("rai/smug968_in_04.webp"));
+    ready.delete(bridgeFrameSrc("rai/smug973_out_03.webp"));
     assert.equal(req({ from: "smug", to: "idle" }), false);
     clock.advance(2000);
-    assert.equal(shown.length, 0, "962 incomplete: nothing shown");
-    ready.add(bridgeFrameSrc("rai/smug_out_03.png"));
+    assert.equal(shown.length, 0, "973 incomplete: nothing shown");
+    ready.add(bridgeFrameSrc("rai/smug973_out_03.webp"));
     assert.equal(req({ from: "idle", to: "smug" }), true);
   });
 
@@ -332,9 +331,9 @@ describe("pose bridge sequencing", () => {
     const { clock, req, bridge } = rig();
     assert.equal(bridge.current(), null);
     req({ from: "idle", to: "smug" });
-    assert.match(bridge.current()!, /smug_in_01\.png/);
+    assert.match(bridge.current()!, /smug968_in_01\.webp/);
     clock.advance(150);
-    assert.match(bridge.current()!, /smug_in_02\.png/);
+    assert.match(bridge.current()!, /smug968_in_02\.webp/);
     bridge.dispose();
     assert.equal(bridge.current(), null);
     assert.equal(clock.pending(), 0);
@@ -346,7 +345,7 @@ describe("pose bridge files", () => {
     for (const f of [...SMUG_IN_FILES, ...SMUG_OUT_FILES]) {
       assert.ok((PRE_CUT_ALPHA_FILES as readonly string[]).includes(f), f);
       assert.equal(spriteNeedsWhitePunch(bridgeFrameSrc(f)), false, f);
-      assert.match(bridgeFrameSrc(f), /\.png\?v=rgba3$/);
+      assert.match(bridgeFrameSrc(f), /\.webp\?v=rgba3$/);
     }
     const deferred = deferredSpriteUrls();
     const bridgeList = [...SMUG_IN_FILES, ...SMUG_OUT_FILES];
@@ -358,7 +357,7 @@ describe("pose bridge files", () => {
     const smugAt = deferred.indexOf(SPRITES.poses.smug);
     assert.ok(smugAt >= bridgeList.length, "smug decodes after the bridge frames");
     assert.equal(
-      deferred.filter((src) => /smug_in_|smug_out_/.test(src)).length,
+      deferred.filter((src) => /smug968_in_|smug973_out_/.test(src)).length,
       bridgeList.length,
     );
   });

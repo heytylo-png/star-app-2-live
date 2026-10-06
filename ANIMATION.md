@@ -46,18 +46,20 @@ Body sheets swap by stable layer id (`body:<src>`). Incoming starts at opacity 0
 - Background tab: `PoseBridge.setPaused` (wired to `visibilitychange`). A hidden page has throttled or frozen timers, so the bridge holds the frame it is on and resumes at normal pace on return; a bridge that starts while hidden shows 06 and plays 05..01 on return, never a cut.
 - Smug holds until its beat ends (`smugBeatResetDelayMs`, `holdsSmugBeat` in `rai.ts`; used by the reset timer in `rai-app.tsx`). The old rule let go 2.8-3.4 s after the line landed, even on a long line still being read. Now the hold ends at the later of the speech end (voiced lines, `speechEndedAt`) and the reading time from landing (45 ms per character, never under the 3.4 s pose minimum), plus a 1.5 s tail (exactly: the delay is beat end minus now, not the old 2.8 s post-talk hold). The beat is the LINE's, not the pose's: it counts from `lineLandedAt` in `rai-app.tsx`, set when the final line becomes the bubble and cleared at the start of every turn. A pose that resolves early (a model tag at ~1.5 s with the line at ~6 s) starts nothing, and no timer runs while a turn is sending; a re-arm (typing, a voice end) keeps the same absolute end. Only the smug sheet (pose smug, or idle carrying the smug emotion) is stretched; other poses keep their timing. A new send still resets the pose at once, as before. The reply line itself stays in the chat strip after the beat; the beat is what the hold follows.
 
-### Helix 956 / 962 stills (idle ↔ smug, 2026-10-05)
+### 968 / 973 stills (idle ↔ smug, paste-13, 2026-10-05)
 
-TyLo paste replaces paste-10: idle↔smug only, Helix assets only, no new art. Hip-clip travel and the old six-PNG / Helix 06→01 reverse exit are retired (`hipClipSupported()` is false).
+TyLo paste-13 replaces every prior smug bridge asset (956 in, 962 out, `smug_hold.png` = Helix 06, `smug_official.png`, the six-PNG set, the hip clip). Those files are deleted from `public/rai/`. Idle↔smug only, no new art.
 
-- Entry (956): `public/rai/smug_in_01..05.png` (keyed from `/workspace/bridge/smug-in-956/`). Play **forward** on Smug send. Paint-paced (~150 ms).
-- Hold: `public/rai/smug_hold.png` (hip + smirk; Helix `06-hand-on-hip`). Never `smug_official.png`. Never 960.
-- Exit (962): `public/rai/smug_out_01..05.png` (keyed from `/workspace/bridge/smug-out-962/`). Play **forward** after hold (not reversed). Land on idle glare then live idle. Do not snap to `idle.png` mid-exit.
-- Flow: Smug send → 956 forward → hold until line finished + 1.5 s → 962 forward → idle. Mute all clip audio (stills only).
-- Player: `PoseBridge` only. Hold/exit timing still uses `smugBeatResetDelayMs` (+1.5 s) and `smugReleaseWaitMs` (phase `hold`).
-- Preload: `idle.png`, then `smug_in_*` + `smug_out_*` + `smug_hold.png`, then blink/mouth.
-- Reduced motion: hard cut onto `smug_hold.png`, hard cut back to idle.
-- Debug: `data-rai-hold-sheet=smug_hold` while holding; `?debug=1` shows which hold sheet is active.
+- Entry (968): `public/rai/smug968_in_01..05.webp` (keyed from `/workspace/bridge/smug-in-968/` 01-start, 02-elbow, 03-hand-rise, 04-hip, 05-smirk-hold). Play **forward** on Smug send, paint-paced (~150 ms a frame).
+- Hold: `public/rai/smug968_hold.webp` = the 968 `05-smirk-hold` cut (not 06, which kicks the leg).
+- Exit (973): `public/rai/smug973_out_01..05.webp` (keyed from `/workspace/bridge/smug-out-973/` 01-hip, 02-hand-leave, 03-arm-down, 04-soft, 05-glare). Play **forward** after the hold, then the live idle. Never a hold → `idle.png` snap.
+- Registration: 968 frames already match the idle sheet (scale 1.0, offset 0,0). 973 frames the figure at ~0.78×; the cuts are registered offline with a uniform ×1.275 and a whole-pixel translate (−98, −173) in 720×1280 space. Only transparent margin leaves the canvas; every visible pixel stays in frame (no crop, no runtime zoom).
+- Matte: same engine as the pose sheets (`/workspace/f807/bridge/engine/sheets_968_973.py`; seeds are the ahoge loop, the leg gap and the arm/hip loop). Shipped as WebP q92 with lossless alpha (~1 MB for all 11, down from ~4.9 MB as PNG).
+- Allowlist on the smug beat (`isSmugPathSheetSrc`): idle sheets (rest / blink / mouth), `smug968_in_*`, `smug968_hold`, `smug973_out_*`. Nothing else.
+- Flow: Smug send → 968 forward → hold until max(lineLandedAt + readingFloor, speechEndedAt) + 1.5 s → 973 forward → idle.
+- Preload (`stagePreloadOrder`): `idle.png`, then blink 01, then 968 in + hold + 973 out (in parallel), then blink 02-04 and mouth.
+- Reduced motion: hard cut onto `smug968_hold`, hard cut back to idle.
+- Debug: `data-rai-hold-sheet=smug968_hold` while holding; bridge layer `data-rai-sheet` is `in-NN` / `out-NN`.
 
 ### Talk / mouth
 

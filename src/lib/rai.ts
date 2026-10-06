@@ -1,5 +1,5 @@
 import { POSE_CROSSFADE_MS, type IdleBlinkFrame, type IdleMouthFrame } from "./rai-motion.ts";
-import { bridgeFiles } from "./pose-bridge.ts";
+import { bridgeFiles, SMUG_IN_FILES } from "./pose-bridge.ts";
 
 export { POSE_CROSSFADE_MS, type IdleBlinkFrame, type IdleMouthFrame };
 
@@ -303,7 +303,7 @@ export function smugLineFinishedAt(opts: {
 }
 
 /**
- * Wall clock when 962 may start: line finished + SMUG_BEAT_TAIL_MS (1.5 s).
+ * Wall clock when 973 may start: line finished + SMUG_BEAT_TAIL_MS (1.5 s).
  * Null when the full line has not landed yet (do not arm from pose-resolve).
  */
 export function smugBeatEndAt(opts: {
@@ -316,7 +316,7 @@ export function smugBeatEndAt(opts: {
 }
 
 /**
- * Ms until smug may leave for 962. Null while the full line has not landed.
+ * Ms until smug may leave for 973. Null while the full line has not landed.
  * `captionLive` is ignored — the transcript bubble never auto-clears; gating
  * on React caption froze exit (#117). Callers only use this for holdsSmugBeat.
  */
@@ -348,15 +348,16 @@ export function isReplyCaption(caption: string): boolean {
 }
 
 /**
- * Sheets allowed on the idle↔smug beat. Anything else (think, smug_official,
- * peace, …) must not paint during a Smug send — keep idle / prior allowed frame.
+ * Sheets allowed on the idle↔smug beat: idle sheets (rest, blink, mouth), 968 intro,
+ * smug968_hold, 973 rest. Anything else (think, peace, any retired smug file, …) must
+ * not paint during a Smug send — keep idle / prior allowed frame.
  */
 export function isSmugPathSheetSrc(src: string): boolean {
   const path = src.split(/[?#]/)[0] ?? src;
   const name = path.slice(path.lastIndexOf("/") + 1);
-  if (name === "smug_hold.png") return true;
-  if (/^smug_in_\d\d\.png$/.test(name)) return true;
-  if (/^smug_out_\d\d\.png$/.test(name)) return true;
+  if (name === "smug968_hold.webp") return true;
+  if (/^smug968_in_0[1-5]\.webp$/.test(name)) return true;
+  if (/^smug973_out_0[1-5]\.webp$/.test(name)) return true;
   if (name === "idle.png") return true;
   if (/^idle_blink_/.test(name)) return true;
   if (/^idle_mouth_/.test(name)) return true;
@@ -455,7 +456,7 @@ export function settledRestPose(): PoseId {
  * line can chew. The idle↔smug bridge is only the transition the puppet
  * plays when this commit leaves the smug sheet — bridge frames are not a rest.
  *
- * Idle plus the smug emotion still paints smug_hold (hand on hip + smirk; see layersFor), so
+ * Idle plus the smug emotion still paints smug968_hold (hand on hip + smirk; see layersFor), so
  * that sheet counts too. Every other pose keeps its normal hold.
  * Call this only after she has stopped speaking.
  */
@@ -579,8 +580,7 @@ export const PRE_CUT_ALPHA_FILES = [
   "rai/wink_official.png",
   "rai/laugh_official.png",
   "rai/surprise_official.png",
-  "rai/smug_official.png",
-  "rai/smug_hold.png",
+  "rai/smug968_hold.webp",
   "rai/content_official.png",
   "rai/sad_official.png",
   "rai/heart_official.png",
@@ -596,24 +596,18 @@ export const PRE_CUT_ALPHA_FILES = [
   "rai/side_profile.png",
   "rai/three_quarter_left.png",
   "rai/three_quarter_right.png",
-  // Pose-bridge in-betweens (idle <-> smug). Offline cuts, same method as the sheets above.
-  "rai/bridge_idle_smug_01.png",
-  "rai/bridge_idle_smug_02.png",
-  "rai/bridge_idle_smug_03.png",
-  "rai/bridge_idle_smug_04.png",
-  "rai/bridge_idle_smug_05.png",
-  "rai/bridge_idle_smug_06.png",
-  // Helix 956 intro + 962 rest (idle↔smug), 2026-10-05
-  "rai/smug_in_01.png",
-  "rai/smug_in_02.png",
-  "rai/smug_in_03.png",
-  "rai/smug_in_04.png",
-  "rai/smug_in_05.png",
-  "rai/smug_out_01.png",
-  "rai/smug_out_02.png",
-  "rai/smug_out_03.png",
-  "rai/smug_out_04.png",
-  "rai/smug_out_05.png",
+  // Pose-bridge idle↔smug (paste-13): 968 intro + 973 rest, offline white-matte cuts
+  // (same engine as the sheets above), WebP q92 with lossless alpha.
+  "rai/smug968_in_01.webp",
+  "rai/smug968_in_02.webp",
+  "rai/smug968_in_03.webp",
+  "rai/smug968_in_04.webp",
+  "rai/smug968_in_05.webp",
+  "rai/smug973_out_01.webp",
+  "rai/smug973_out_02.webp",
+  "rai/smug973_out_03.webp",
+  "rai/smug973_out_04.webp",
+  "rai/smug973_out_05.webp",
 ] as const;
 
 /**
@@ -673,7 +667,7 @@ export const LIVE_POSE_FILES = {
   think: "rai/think_official.png",
   pout: "rai/pout_official.png",
   tired: "rai/tired_official.png",
-  smug: "rai/smug_hold.png",
+  smug: "rai/smug968_hold.webp",
   /** Shipping PNG-puppet wave: retoned full-body (TyLo dark sheet → idle/live cheek). */
   wave: "rai/wave_official.png",
   hold: "rai/hold_official.png",
@@ -877,23 +871,39 @@ export function startupSpriteUrls(): string[] {
   ];
 }
 
-/** The seven sheets of the idle <-> smug beat: bridge 01..06, then the smug hold. */
+/** The eleven sheets of the idle <-> smug beat, in play order: 968 in 01..05, smug968_hold, 973 out 01..05. */
 export function smugBeatSheetUrls(): string[] {
-  return [...bridgeFiles().map(bridgeFrameSrc), SPRITES.poses.smug];
+  const files = bridgeFiles();
+  const inFiles = files.filter((f) => SMUG_IN_FILES.includes(f as (typeof SMUG_IN_FILES)[number]));
+  const rest = files.filter((f) => !inFiles.includes(f));
+  return [...inFiles.map(bridgeFrameSrc), SPRITES.poses.smug, ...rest.map(bridgeFrameSrc)];
 }
 
 /**
  * Where the stage's first decodes go. idle.png first (the stage cannot paint
- * without it), then the whole smug beat (956 in + 962 out + smug_hold, a
- * named Smug can arrive any moment and has to land on a decoded arm), then the
- * rest of the startup set (blink, mouth). Everything else stays deferred.
+ * without it), then blink 01 (the open rest frame the lids return to), then the
+ * whole smug beat (968 in + smug968_hold + 973 out, in parallel: a named Smug can
+ * arrive any moment and has to land on decoded frames), then the rest of the
+ * startup set (blink 02-04, mouth) so the lids are warm right after. Everything
+ * else stays deferred.
  */
-export function stagePreloadOrder(_opts?: { clip?: boolean }): { first: string; beat: string[]; rest: string[] } {
+export function stagePreloadOrder(_opts?: { clip?: boolean }): {
+  first: string;
+  next: string[];
+  beat: string[];
+  rest: string[];
+} {
   const startup = startupSpriteUrls();
-  // Helix 956 intro + smug_hold + 962 rest (clip path retired).
-  const beat = smugBeatSheetUrls();
   const first = startup[0]!;
-  return { first, beat: beat.filter((u) => u !== first), rest: startup.slice(1).filter((u) => !beat.includes(u)) };
+  const blinks = idleBlinkFrameUrls();
+  const next = blinks.slice(0, 1).filter((u) => u !== first);
+  const beat = smugBeatSheetUrls().filter((u) => u !== first && !next.includes(u));
+  return {
+    first,
+    next,
+    beat,
+    rest: startup.slice(1).filter((u) => !beat.includes(u) && !next.includes(u)),
+  };
 }
 
 /** Lid pass 02–04. Open hold is 0 or 1. Deferred punches wait this out. */
@@ -942,7 +952,7 @@ export function deferredSpriteUrls(opts?: { skipBridge?: boolean }): string[] {
   const skip = new Set(startupSpriteUrls());
   const seen = new Set<string>();
   const urls: string[] = [];
-  // Pose-bridge frames lead: Helix 956/962 pre-cut frames, decoded before any other
+  // Pose-bridge frames lead: 968/973 pre-cut frames, decoded before any other
   // pose sheet, so smug can never be reachable with a frame still missing (a pair
   // with an undecoded frame can only hard-cut).
   for (const file of opts?.skipBridge ? [] : bridgeFiles()) {
