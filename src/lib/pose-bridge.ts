@@ -1,54 +1,93 @@
 /**
- * Helix pose bridge: a short run of in-between frames played when the shown
- * sheet changes between a paired set of poses. First pair only, idle <-> smug.
+ * Helix pose bridge: in-between motion played when the shown sheet changes between a
+ * paired set of poses. First pair only, idle <-> smug.
  *
- * Frames are hard cuts on one `<img>` (no crossfade, no loop), about 150 ms
- * each, paint-paced. Intro (968) lands on `smug968_hold.webp`; rest (973) plays
- * forward onto idle glare then the live idle sheet. No reverse.
+ * paste-15 (final): the pair is two real videos played as video, every source frame in
+ * order at their native 24 fps. 1085 (intro) runs 0.000 → 2.000 s only (frames 0..48;
+ * her mouth opens at 3 s, so nothing past 2.0 s ships) and lands on `smug1085_hold.webp`
+ * (= the exact 2.000 s frame). 1084 (rest) runs its full 145 frames forward onto the
+ * live idle sheet. No reverse, no audio (the clips are AVIF image sequences).
  *
- * This module is pure (no DOM, no React). The puppet owns the one `<img>`;
- * the sequencer only says which frame is up. Timers and randomness are
- * injected so the order can be tested without a clock.
+ * This module is pure (no DOM, no React). The puppet owns the one canvas the frames are
+ * drawn on; the sequencer only says which frame is up. Timers are injected so the order
+ * and pacing can be tested without a clock.
  */
 
-/**
- * Intro (968, paste-13): start → elbow → hand rise → hip → smirk-hold, then the live
- * smug968_hold sheet (= the 05 smirk-hold cut). Exit (973) is a separate forward set.
- * Offline white-matte cuts, 720×1280 RGBA WebP (alpha lossless).
- */
-export const SMUG_IN_FILES = [
-  "rai/smug968_in_01.webp",
-  "rai/smug968_in_02.webp",
-  "rai/smug968_in_03.webp",
-  "rai/smug968_in_04.webp",
-  "rai/smug968_in_05.webp",
-] as const;
+/** Native rate of both clips. */
+export const SMUG_CLIP_FPS = 24;
+/** One clip frame on stage: 41.67 ms. */
+export const SMUG_CLIP_FRAME_MS = 1000 / SMUG_CLIP_FPS;
+
+export type SmugClip = {
+  /** "in" = 1085 intro (idle -> smug), "out" = 1084 rest (smug -> idle). */
+  readonly key: "in" | "out";
+  /** Animated AVIF (AV1 + alpha, 24 fps, no audio) under public/. */
+  readonly file: string;
+  /** Frames in the file; every one is shown, in order. */
+  readonly frames: number;
+};
 
 /**
- * Rest (973): hip → hand leave → arm down → soft → glare, then the live idle sheet.
- * Forward only. 973 frames the figure ~0.78× of 968/idle; the cuts are registered to the
- * idle sheet offline (uniform ×1.275, translate −98,−173 px in 720×1280, no visible pixel
- * leaves the canvas), so the stage paints them like every other sheet.
+ * Intro: 1085 from 0.000 s to 2.000 s inclusive (49 frames at 24 fps). Arms down → hand
+ * rises → hand on hip + smirk. The file ends on the 2.000 s frame; the mouth-open part
+ * (3 s on) is not in it.
  */
-export const SMUG_OUT_FILES = [
-  "rai/smug973_out_01.webp",
-  "rai/smug973_out_02.webp",
-  "rai/smug973_out_03.webp",
-  "rai/smug973_out_04.webp",
-  "rai/smug973_out_05.webp",
-] as const;
+export const SMUG_IN_CLIP: SmugClip = { key: "in", file: "rai/smug1085_in.avif", frames: 49 };
+/** Rest: 1084 over its full length (145 frames, 6.04 s). Hand on hip → arm drops → idle glare. */
+export const SMUG_OUT_CLIP: SmugClip = { key: "out", file: "rai/smug1084_out.avif", frames: 145 };
+/** The smug hold sheet: the exact 2.000 s frame of 1085 (frame 48), 720×1280 RGBA WebP. */
+export const SMUG_HOLD_FILE = "rai/smug1085_hold.webp";
 
 /**
- * Pair table: "<from>><to>" -> files to play, in order. Keys are the shown
+ * Both clips are white-matte cuts registered to idle.png in the 720×1280 sheet space
+ * (1085 shifted 0,−3 px; 1084 uniform ×1.005 + −2,−10 px; no visible pixel leaves the
+ * canvas). The bitstream holds only the x 112..560 band (the rest is transparent margin
+ * in every frame), drawn back 1:1 at this offset: nothing cropped, nothing zoomed.
+ */
+export const SMUG_CLIP_SHEET = { w: 720, h: 1280 } as const;
+export const SMUG_CLIP_BOX = { x: 112, y: 0, w: 448, h: 1280 } as const;
+
+/** Bridge frame id for frame `index` of a clip: `<file>#NNN`. */
+export function clipFrameFile(clip: SmugClip, index: number): string {
+  return `${clip.file}#${String(index).padStart(3, "0")}`;
+}
+
+/** Every frame id of a clip, in play order. */
+export function clipFrameFiles(clip: SmugClip): string[] {
+  return Array.from({ length: clip.frames }, (_, i) => clipFrameFile(clip, i));
+}
+
+/** Clip and frame index of a bridge frame id / src, or null. */
+export function parseClipFrame(src: string): { clip: SmugClip; index: number } | null {
+  const m = /([^/?#]+\.avif)(?:\?[^#]*)?#(\d{3})$/.exec(src);
+  if (!m) return null;
+  const clip = [SMUG_IN_CLIP, SMUG_OUT_CLIP].find((c) => c.file.endsWith(`/${m[1]}`) || c.file === m[1]);
+  if (!clip) return null;
+  const index = Number(m[2]);
+  return index < clip.frames ? { clip, index } : null;
+}
+
+/** Intro frame ids (1085, 0.000–2.000 s). */
+export const SMUG_IN_FILES: readonly string[] = clipFrameFiles(SMUG_IN_CLIP);
+/** Rest frame ids (1084, full length). */
+export const SMUG_OUT_FILES: readonly string[] = clipFrameFiles(SMUG_OUT_CLIP);
+
+/** The clips any pair plays. */
+export function bridgeClips(): SmugClip[] {
+  return [SMUG_IN_CLIP, SMUG_OUT_CLIP];
+}
+
+/**
+ * Pair table: "<from>><to>" -> frames to play, in order. Keys are the shown
  * sheet's bridge key (see bridgeKeyOfSrc). A pair that is not here hard-cuts
- * the way every pose change did before. Add a row to grow it.
+ * the way every pose change did before.
  */
 export const POSE_BRIDGE_PAIRS: Readonly<Record<string, readonly string[]>> = {
   "idle>smug": SMUG_IN_FILES,
   "smug>idle": SMUG_OUT_FILES,
 };
 
-/** Every file any pair plays, in first-seen order, no repeats. */
+/** Every frame any pair plays, in first-seen order, no repeats. */
 export function bridgeFiles(): string[] {
   const seen = new Set<string>();
   const files: string[] = [];
@@ -69,17 +108,24 @@ export function bridgeFilesFor(from: string | null, to: string | null): readonly
 }
 
 /**
- * Clip timing for the smug pair (paste-14). Each entry is how long that frame stays up,
- * counted from when it was set (but never ending before it has been painted).
- * Entry 968: 01 start, 02 at ~0.5 s, 03 (arm up) at ~1.0 s, 04 at ~1.6 s, 05 (hip set) at
- * ~2.2 s, then the identical smug968_hold sheet.
- * Exit 973: 02 (hand leaves) at ~0.35 s, 03 (arm down) at ~0.75 s, 04 at ~1.05 s, 05 (glare)
- * at ~1.35 s, idle at ~1.7 s.
+ * Clip timing: every frame is up for one 24 fps frame (41.67 ms). The schedule is anchored
+ * to the clip start (frame k is due at k × 41.67 ms), so on a 60 Hz screen frames alternate
+ * 3 and 2 refreshes like any 24 fps video, and on 120 Hz each gets 5. A frame is never
+ * skipped: each is drawn in its own animation frame, after the one before has painted, and
+ * a late frame (jank, decode) pushes the schedule back instead of being dropped.
  */
-export const SMUG_IN_DWELL_MS = [500, 500, 600, 600, 150] as const;
-export const SMUG_OUT_DWELL_MS = [350, 400, 300, 300, 350] as const;
-/** A frame always stays up at least this long after its paint, whatever the clock says. */
-export const BRIDGE_MIN_AFTER_PAINT_MS = 34;
+export const SMUG_IN_DWELL_MS: readonly number[] = SMUG_IN_FILES.map(() => SMUG_CLIP_FRAME_MS);
+export const SMUG_OUT_DWELL_MS: readonly number[] = SMUG_OUT_FILES.map(() => SMUG_CLIP_FRAME_MS);
+/** A frame always stays up at least this long after its paint, whatever the clock says (0 = the next animation frame). */
+export const BRIDGE_MIN_AFTER_PAINT_MS = 0;
+/**
+ * Late by more than this (a real stall, not refresh-rate rounding): the rest of the clip
+ * shifts back by the delay. Up to one frame late, the next frame keeps its slot on the
+ * 24 fps clock (it simply follows sooner), so the clip keeps its length. Never skips.
+ */
+export const BRIDGE_LATE_REANCHOR_MS = SMUG_CLIP_FRAME_MS;
+/** Next frame not decoded yet: look again this soon (the frame on stage stays up meanwhile). */
+export const BRIDGE_STALL_POLL_MS = 4;
 
 /** Per-frame dwell for a pair, or null (generic ~150 ms jitter). */
 export function bridgeDwellsFor(from: string | null, to: string | null): readonly number[] | null {
@@ -106,7 +152,7 @@ export function bridgeKeyOfSrc(src: string): string | null {
   const path = src.split(/[?#]/)[0] ?? src;
   const name = path.slice(path.lastIndexOf("/") + 1);
   if (name === "idle.png" || /^idle_(blink|mouth)_\d\d_/.test(name)) return "idle";
-  if (name === "smug968_hold.webp") return "smug";
+  if (name === "smug1085_hold.webp") return "smug";
   return null;
 }
 
@@ -119,13 +165,13 @@ export function bridgeKeyOfPlates(plates: readonly { src: string }[]): string | 
 export type BridgeTimers = {
   set: (fn: () => void, ms: number) => number;
   clear: (handle: number) => void;
-  /** Clock (ms). With it a frame's dwell counts from when it was set, so paint latency does not stretch the clip. */
+  /** Clock (ms). With it frames run on the clip schedule (anchored at frame 0), so paint latency does not stretch the clip. */
   now?: () => number;
 };
 
 /**
  * Runs `fn` once the frame just handed to `onFrame` has been painted, and
- * returns a cancel function. The stage uses two animation frames (with a
+ * returns a cancel function. The stage uses the next animation frame (with a
  * timer backstop); tests use their own clock. Without one a frame's dwell
  * starts the moment it is set.
  */
@@ -139,8 +185,37 @@ export type BridgeRequest = {
   reducedMotion: boolean;
   /** Maps a bridge file to the src the stage paints. */
   srcFor: (file: string) => string;
-  /** True once that src has decoded. A frame is never shown before this. */
+  /** True once that frame has decoded. A frame is never shown before this (the one on stage stays up). */
   isReady: (src: string) => boolean;
+};
+
+/** What the sequencer has done on the clip on stage (debug / proofs). */
+export type BridgeStats = {
+  /** Frames handed to the stage, in order (no index is ever skipped). */
+  shown: number;
+  /** Times the next frame was not decoded when due (the frame on stage stayed up). */
+  stalls: number;
+  /** Times the schedule was pushed back because a frame came late. */
+  reanchors: number;
+};
+
+/** What a clip player reports back while it plays a bridge (see BridgeClipPlayer). */
+export type BridgeClipEvents = {
+  /** Frame `index` has been painted. */
+  shown: (index: number) => void;
+  /** The last frame has had its dwell: the stage shows the live sheet now. */
+  done: () => void;
+};
+
+/**
+ * Optional pacer that plays a bridge's frames itself (the smug clips: a worker paints them at
+ * 24 fps off the main thread, see smug-clip-player.ts). PoseBridge then only mirrors it.
+ */
+export type BridgeClipPlayer = {
+  /** Frame `start` of `files` is already on the stage; play on from it. False: cannot start. */
+  play: (files: readonly string[], start: number, events: BridgeClipEvents) => boolean;
+  stop: () => void;
+  setPaused: (paused: boolean) => void;
 };
 
 /**
@@ -155,21 +230,24 @@ export class PoseBridge {
   private running = false;
   /** Page hidden: frames hold where they are (background timers are throttled to 1 s or frozen). */
   private paused = false;
-  /**
-   * Entry (idle -> smug): each frame's 80-120 ms starts once it has been
-   * painted, not when it was set. A main-thread stall (sheets punching, a
-   * stream of renders) can no longer let a frame's timer run out before the
-   * screen ever showed it, which is how an arm-rise frame got skipped.
-   */
+  /** Paint-paced: nothing advances before the frame on stage has been painted. */
   private paintPaced = false;
-  /** True while 973 (smug→idle) is the sequence on stage. */
+  /** True while 1084 (smug→idle) is the sequence on stage. */
   private exitInFlight = false;
   private cancelPaint: (() => void) | null = null;
   /** Per-frame dwell of the sequence on stage (clip timing), or null for the generic jitter. */
   private dwells: readonly number[] | null = null;
   private readonly dwellsFor: (from: string | null, to: string | null) => readonly number[] | null;
-  /** When the frame on stage was set (timers.now clock). */
-  private frameSetAt = 0;
+  /** Clock time frame 0 was (or would have been, after a late frame) due: frame k is due at anchor + its start offset. */
+  private anchor = 0;
+  /** Start offset of each frame from the anchor (cumulative dwells). */
+  private offsets: number[] = [];
+  private isReady: (src: string) => boolean = () => true;
+  private counts: BridgeStats = { shown: 0, stalls: 0, reanchors: 0 };
+  /** The external player is pacing the sequence on stage (no timers here). */
+  private playing = false;
+  private playToken = 0;
+  private readonly player: BridgeClipPlayer | null;
 
   private readonly timers: BridgeTimers;
   private readonly rand: () => number;
@@ -183,7 +261,10 @@ export class PoseBridge {
     afterPaint?: AfterPaint,
     /** Per-pair clip timing (the stage passes bridgeDwellsFor); default: generic ~150 ms jitter. */
     dwellsFor: (from: string | null, to: string | null) => readonly number[] | null = () => null,
+    /** Plays the frames itself when given (the smug clips); PoseBridge mirrors what it shows. */
+    player: BridgeClipPlayer | null = null,
   ) {
+    this.player = player;
     this.timers = timers;
     this.rand = rand;
     this.onFrame = onFrame;
@@ -191,34 +272,42 @@ export class PoseBridge {
     this.dwellsFor = dwellsFor;
   }
 
-  private frameMs(): number {
-    return this.dwells?.[this.index] ?? bridgeFrameMs(this.rand);
+  private frameMs(index: number): number {
+    return this.dwells?.[index] ?? bridgeFrameMs(this.rand);
   }
 
-  private markSet() {
-    this.frameSetAt = this.timers.now ? this.timers.now() : 0;
+  private now(): number {
+    return this.timers.now ? this.timers.now() : 0;
+  }
+
+  /** When frame `index` is due (timers.now clock). */
+  private dueAt(index: number): number {
+    return this.anchor + (this.offsets[index] ?? 0);
   }
 
   /**
-   * Arms the dwell of the frame that is up. Paint-paced: nothing advances before the
-   * frame has painted; with a clock the dwell counts from when the frame was set (so
-   * the sequence keeps the clip's timing), floored at BRIDGE_MIN_AFTER_PAINT_MS after paint.
+   * Arms the dwell of the frame that is up. Paint-paced: nothing advances before the frame
+   * has painted. With a clock the next frame is due on the clip schedule (anchored at frame
+   * 0), floored at BRIDGE_MIN_AFTER_PAINT_MS after this frame's paint.
    */
   private armDwell() {
     if (this.paused || this.handle || this.cancelPaint) return;
-    const dwell = this.frameMs();
+    const index = this.index;
+    const fire = () => {
+      if (!this.running || this.paused || this.index !== index || this.handle) return;
+      const left = this.timers.now
+        ? Math.max(BRIDGE_MIN_AFTER_PAINT_MS, this.dueAt(index + 1) - this.now())
+        : this.frameMs(index);
+      this.handle = this.timers.set(this.advance, left);
+    };
     if (this.paintPaced && this.afterPaint) {
-      const index = this.index;
       this.cancelPaint = this.afterPaint(() => {
         this.cancelPaint = null;
-        if (!this.running || this.paused || this.index !== index || this.handle) return;
-        const now = this.timers.now;
-        const left = now ? Math.max(BRIDGE_MIN_AFTER_PAINT_MS, dwell - (now() - this.frameSetAt)) : dwell;
-        this.handle = this.timers.set(this.advance, left);
+        fire();
       });
       return;
     }
-    this.handle = this.timers.set(this.advance, dwell);
+    fire();
   }
 
   active(): boolean {
@@ -230,7 +319,17 @@ export class PoseBridge {
     return this.running ? (this.frames[this.index] ?? null) : null;
   }
 
+  /** Counters for the clip on stage (or the last one). */
+  stats(): BridgeStats {
+    return { ...this.counts };
+  }
+
   private stop() {
+    if (this.playing) {
+      this.playing = false;
+      this.playToken += 1;
+      this.player?.stop();
+    }
     if (this.handle) this.timers.clear(this.handle);
     this.handle = 0;
     if (this.cancelPaint) this.cancelPaint();
@@ -239,12 +338,14 @@ export class PoseBridge {
     this.exitInFlight = false;
     this.dwells = null;
     this.frames = [];
+    this.offsets = [];
     this.index = 0;
   }
 
   /**
    * A shown-sheet change. Drops whatever was playing, then starts the pair if
-   * it has one and every frame has decoded; otherwise the change is a hard cut.
+   * it has one and its first frame has decoded (the stage only lets the change
+   * through once the clip is primed); otherwise the change is a hard cut.
    * Returns whether a bridge is now playing.
    */
   request(req: BridgeRequest): boolean {
@@ -255,9 +356,9 @@ export class PoseBridge {
     // (voice on or off) lands the pose within a few ms of the line starting. A
     // normal talk line never changes the pose, so it never gets here.
     //
-    // Smug→idle exit (973) in flight: an unpaired key (wink, wave, …) must not
+    // Smug→idle exit (1084) in flight: an unpaired key (wink, wave, …) must not
     // abort — finish the out frames; the live sheet settles under the last one
-    // (213ea91 / TyLo phone: wink at out_02 was dropping the rest).
+    // (213ea91 / TyLo phone: wink mid-exit was dropping the rest).
     if (wasRunning && this.exitInFlight && !files && !req.reducedMotion) {
       return true;
     }
@@ -267,38 +368,77 @@ export class PoseBridge {
       return false;
     }
     const srcs = files.map((file) => req.srcFor(file));
-    // Not reachable from the stage while it waits for the frames (see bridgeGate);
-    // only a bounded wait that ran out, or a failed load, ends up here.
-    if (!srcs.every((src) => req.isReady(src))) {
+    // Interrupted by the opposite direction: carry on from the frame that is up when
+    // both directions share it (they do not for 1085/1084, so each starts at frame 0).
+    const resume = onStage ? srcs.indexOf(onStage) : -1;
+    const start = resume >= 0 ? resume : 0;
+    // Not reachable from the stage while it waits for the clip (see bridgeGate); only a
+    // bounded wait that ran out, or a failed load, ends up here.
+    if (!req.isReady(srcs[start]!)) {
       if (wasRunning) this.onFrame(null);
       return false;
     }
     this.frames = srcs;
-    // Interrupted by the opposite direction (smug -> idle -> smug inside one reply
-    // turn): carry on from the frame that is up, so the arm never jumps back.
-    const resume = onStage ? srcs.indexOf(onStage) : -1;
-    this.index = resume >= 0 ? resume : 0;
+    this.index = start;
     this.running = true;
+    this.isReady = req.isReady;
     this.exitInFlight = req.from === "smug" && req.to === "idle";
     this.dwells = this.dwellsFor(req.from, req.to);
+    this.offsets = [];
+    let at = 0;
+    for (let i = 0; i < srcs.length; i++) {
+      this.offsets.push(at);
+      at += this.frameMs(i);
+    }
+    this.offsets.push(at);
     // Both directions wait for a paint before the dwell starts (never skip an unpainted frame).
     this.paintPaced = Boolean(this.afterPaint);
-    this.markSet();
+    this.counts = { shown: 1, stalls: 0, reanchors: 0 };
+    if (this.player) return this.startPlayer(srcs, start);
+    this.anchor = this.now() - (this.offsets[start] ?? 0);
     this.onFrame(srcs[this.index]!);
     this.armDwell();
     return true;
   }
 
+  /** Hand the sequence to the external player: the stage shows frame `start` now, the player paces the rest. */
+  private startPlayer(srcs: string[], start: number): boolean {
+    const token = ++this.playToken;
+    this.playing = true;
+    this.onFrame(srcs[start]!);
+    const live = () => this.running && this.playing && this.playToken === token;
+    const ok = this.player!.play(srcs, start, {
+      shown: (index) => {
+        if (!live() || index === this.index || !srcs[index]) return;
+        this.index = index;
+        this.counts.shown += 1;
+        this.onFrame(srcs[index]!);
+      },
+      done: () => {
+        if (!live()) return;
+        this.playing = false;
+        this.stop();
+        this.onFrame(null);
+      },
+    });
+    if (!ok) {
+      this.playing = false;
+      this.stop();
+      this.onFrame(null);
+      return false;
+    }
+    return true;
+  }
+
   /**
    * The page went to the background (true) or came back (false). A hidden page
-   * gets throttled or frozen timers, which would stretch a 100 ms frame into
-   * seconds and let a cut slip in on return. The bridge holds the frame that is
-   * up while hidden and carries on with normal pacing on return, so the way back
-   * is always seen as arm frames.
+   * gets throttled or frozen timers. The bridge holds the frame that is up while
+   * hidden and carries on from it on return (the time spent hidden does not count).
    */
   setPaused(paused: boolean) {
     if (this.paused === paused) return;
     this.paused = paused;
+    this.player?.setPaused(paused);
     if (paused) {
       if (this.handle) this.timers.clear(this.handle);
       this.handle = 0;
@@ -306,9 +446,9 @@ export class PoseBridge {
       this.cancelPaint = null;
       return;
     }
-    if (this.running) {
-      // Time spent hidden does not count: the frame gets its full dwell again on return.
-      this.markSet();
+    if (this.running && !this.playing) {
+      // The frame that is up gets its full dwell again on return.
+      this.anchor = this.now() - (this.offsets[this.index] ?? 0);
       this.armDwell();
     }
   }
@@ -316,13 +456,28 @@ export class PoseBridge {
   private advance = () => {
     this.handle = 0;
     if (!this.running) return;
-    this.index += 1;
-    if (this.index >= this.frames.length) {
+    const next = this.index + 1;
+    if (next >= this.frames.length) {
       this.stop();
       this.onFrame(null);
       return;
     }
-    this.markSet();
+    // Never skip: the next frame is shown only once it has decoded; the frame on stage stays up.
+    if (!this.isReady(this.frames[next]!)) {
+      this.counts.stalls += 1;
+      this.handle = this.timers.set(this.advance, BRIDGE_STALL_POLL_MS);
+      return;
+    }
+    if (this.timers.now) {
+      const late = this.now() - this.dueAt(next);
+      if (late > BRIDGE_LATE_REANCHOR_MS) {
+        // Late frame: shift the rest of the clip back by the delay (no catch-up skipping).
+        this.anchor += late;
+        this.counts.reanchors += 1;
+      }
+    }
+    this.index = next;
+    this.counts.shown += 1;
     this.onFrame(this.frames[this.index]!);
     this.armDwell();
   };
@@ -382,10 +537,10 @@ export const BRIDGE_WAIT_MAX_MS = 30_000;
 export const BRIDGE_WAIT_RETRY_MS = 400;
 
 /**
- * Idle↔smug needs its Helix frames before either end of the pair may hard-cut.
- * Entering smug (wanted smug) waits for 968+973 files. Leaving smug (shown smug
- * → wanted idle) also waits — otherwise the stage snaps to idle.png and 973
- * never plays (TyLo phone FAIL on 7c4e54f).
+ * Idle↔smug needs its clips before either end of the pair may hard-cut.
+ * Entering smug (wanted smug) waits for 1085 + 1084 to be loaded and primed. Leaving
+ * smug (shown smug → wanted idle) also waits — otherwise the stage snaps to idle.png
+ * and 1084 never plays (TyLo phone FAIL on 7c4e54f).
  */
 export function bridgeWantsFrames(
   wantedKey: string | null,
@@ -401,8 +556,8 @@ export function bridgeWantsFrames(
  * change never hard-cuts) just because its frames have not decoded yet: the
  * old sheet stays up until every frame is ready, up to BRIDGE_WAIT_MAX_MS, and
  * only then does it cut, loudly (the puppet logs it and sets
- * `data-rai-bridge-fallback`). Leaving smug for idle keeps `smug968_hold` up until
- * 973 can play — never a straight hold→idle.png snap. Reduced motion is the
+ * `data-rai-bridge-fallback`). Leaving smug for idle keeps `smug1085_hold` up until
+ * 1084 can play — never a straight hold→idle.png snap. Reduced motion is the
  * one user request that skips the bridge, and it never waits.
  */
 export function bridgeGate(opts: {
@@ -419,11 +574,11 @@ export function bridgeGate(opts: {
 }
 
 /**
- * Smug hold release (paste-14). smug968_hold has no timer: it stays up until the
+ * Smug hold release (paste-14). smug1085_hold has no timer: it stays up until the
  * user's next send (`release` changes) or until another pose is wanted over it. Then
  * the stage shows plain idle rest instead of the wanted plates, so the driver plays
- * 973 forward; only after idle has landed (`landed()`) does the wanted pose go on.
- * A release that arrives while 968 is still coming in waits for the hold (973 never
+ * 1084 forward; only after idle has landed (`landed()`) does the wanted pose go on.
+ * A release that arrives while 1085 is still coming in waits for the hold (1084 never
  * starts from a half-raised arm), and nothing else takes the stage meanwhile.
  */
 export type SmugGateStep = "wanted" | "keep-shown" | "exit-to-idle";
@@ -455,12 +610,12 @@ export class SmugReleaseGate {
     return "wanted";
   }
 
-  /** 973 is playing or idle has not landed yet: the wanted pose waits. */
+  /** 1084 is playing or idle has not landed yet: the wanted pose waits. */
   exiting(): boolean {
     return this.exitActive;
   }
 
-  /** Idle landed after 973 (or there was nothing to play): the wanted pose may go on. */
+  /** Idle landed after 1084 (or there was nothing to play): the wanted pose may go on. */
   landed(): void {
     this.exitActive = false;
   }

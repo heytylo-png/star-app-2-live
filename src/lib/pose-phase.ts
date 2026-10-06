@@ -31,17 +31,17 @@ export function readPosePhase(): { phase: PosePhase; holdSince: number; mounted:
 }
 
 /**
- * The smug hold has no timer (paste-14): smug968_hold stays up until the user's next
- * send. The app bumps this on every send; the stage, if it is on the hold, plays 973
- * forward to idle before anything else (a new smug then runs 968 again from idle).
+ * The smug hold has no timer (paste-14): smug1085_hold stays up until the user's next
+ * send. The app bumps this on every send; the stage, if it is on the hold, plays 1084
+ * forward to idle before anything else (a new smug then runs 1085 again from idle).
  */
 let releaseSeq = 0;
 const releaseListeners = new Set<() => void>();
 
 export function requestSmugRelease(): void {
   releaseSeq += 1;
-  // The stage is on the smug beat (968 coming in, the hold, or 973 going out): the
-  // next pose waits behind 973 + idle. Marked here, synchronously, so a reply that
+  // The stage is on the smug beat (1085 coming in, the hold, or 1084 going out): the
+  // next pose waits behind 1084 + idle. Marked here, synchronously, so a reply that
   // lands before the stage re-renders is still deferred (paste-15).
   if (mounted && phase !== "idle") releasePending = true;
   for (const fn of releaseListeners) fn();
@@ -59,7 +59,7 @@ export function subscribeSmugRelease(fn: () => void): () => void {
 }
 
 /**
- * paste-15: while a smug release is pending (973 still to play, or idle not landed
+ * paste-15: while a smug release is pending (1084 still to play, or idle not landed
  * yet) the next reply's pose and chew are not on stage. The app defers their clocks
  * (actLandedAt, text chew) and starts them when the stage lets the next pose on.
  * The puppet clears it from its gate; listeners hear the moment it lands.

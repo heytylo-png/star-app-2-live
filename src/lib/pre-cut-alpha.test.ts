@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -64,18 +64,8 @@ const POSE_SHEET_SIZE: Record<string, [number, number]> = {
   "rai/side_profile.png": [768, 1168],
   "rai/three_quarter_left.png": [768, 1168],
   "rai/three_quarter_right.png": [768, 1168],
-  // Pose-bridge idle <-> smug (paste-13): 968 in, smug968_hold, 973 out (RGBA WebP).
-  "rai/smug968_in_01.webp": [720, 1280],
-  "rai/smug968_in_02.webp": [720, 1280],
-  "rai/smug968_in_03.webp": [720, 1280],
-  "rai/smug968_in_04.webp": [720, 1280],
-  "rai/smug968_in_05.webp": [720, 1280],
-  "rai/smug968_hold.webp": [720, 1280],
-  "rai/smug973_out_01.webp": [720, 1280],
-  "rai/smug973_out_02.webp": [720, 1280],
-  "rai/smug973_out_03.webp": [720, 1280],
-  "rai/smug973_out_04.webp": [720, 1280],
-  "rai/smug973_out_05.webp": [720, 1280],
+  // Smug hold (paste-15): the 2.000 s frame of 1085 (RGBA WebP). The clips are AVIF video, not sheets.
+  "rai/smug1085_hold.webp": [720, 1280],
 };
 
 /** Minimal WebP read: VP8X canvas size + alpha flag (the bridge frames ship as RGBA WebP). */
@@ -110,19 +100,25 @@ const POSE_SHEET_SHA256: Record<string, string> = {
   "rai/side_profile.png": "9d33442f05f7334548f2cadde6fd2af63091f8ef7b3c289ab0f2a6550eeb3b81",
   "rai/three_quarter_left.png": "7058fe31566b151075680faf30c756c5878327ea16f4a5c80c767248c2f3ea85",
   "rai/three_quarter_right.png": "528a5439e93271a7e8abc3e7324bcbc3ffdae2ff6a86bd680a0c22bbe6bf244e",
-  // Pose-bridge idle <-> smug (paste-13): 968 in, smug968_hold (= 968 05), 973 out (registered ×1.275).
-  "rai/smug968_in_01.webp": "b5ea2c03e591d2110785ca30ffa9cbed5813d6384ad5c0a233e4a38b2b8f83e9",
-  "rai/smug968_in_02.webp": "e8660b7b1747502a94c021c6bc7bb0df38629d0f6c8dd21e0ee3d3f5ea0ca9dc",
-  "rai/smug968_in_03.webp": "42c121c6350681797779f50d73b0c8b3e33791dc2bbc50727f6d7a62ab2654d9",
-  "rai/smug968_in_04.webp": "bd13b17e71ebf25acb5ea429bb6b073debfd21f341bdcffe19c434201c74d7cd",
-  "rai/smug968_in_05.webp": "a63d5dac4d191829c69235f3b68c98668cbdbcf1dc339b037d3040fc9e16cf6c",
-  "rai/smug968_hold.webp": "a63d5dac4d191829c69235f3b68c98668cbdbcf1dc339b037d3040fc9e16cf6c",
-  "rai/smug973_out_01.webp": "9dae0676581db58e77bf858a31e29a561521b0715c41443e9253c01a60ca9575",
-  "rai/smug973_out_02.webp": "740f6dfa32aa2cb33e137126a15b01729facc796ee6d60f60d09929eae8561f5",
-  "rai/smug973_out_03.webp": "835a23f91dc8aafa1ad96eddedf0d89a604113c73f4db3db77e99d743eec873e",
-  "rai/smug973_out_04.webp": "4e068388cf024ecd7eec49c126500c73c624b52a3b2ae8a6f7b5e7e165cf8bbf",
-  "rai/smug973_out_05.webp": "4395e7c87f355d6c68df4910f5caeedcf812a7416e98ceacce8c4efa93314200",
+  // Smug hold (paste-15): 1085 frame 48 (2.000 s), the last frame of the intro clip.
+  "rai/smug1085_hold.webp": "45cd6eea6c438b340e1d33c8aaeb6003828b6dfb7cc40ed9ed49359643c75cbf",
 };
+
+/** The two smug clips (paste-15): animated AVIF, AV1 + alpha, 24 fps, no audio; pinned bytes. */
+const SMUG_CLIP_SHA256: Record<string, string> = {
+  "rai/smug1085_in.avif": "0c2c6a4bb9ab5b995720b2026f8919dfe71632a3d19902fa3ac905c870ec5351",
+  "rai/smug1084_out.avif": "c44e3af0a6233c9979747710cab1c731e5d96691dc3816628978f227f9ff1b50",
+};
+
+describe("smug clips (1085 in / 1084 out)", () => {
+  it("ships both clips with pinned bytes, and no 968 / 973 file is left", () => {
+    const sha = (f: string) => createHash("sha256").update(readFileSync(join(root, "public", f))).digest("hex");
+    for (const [file, pinned] of Object.entries(SMUG_CLIP_SHA256)) assert.equal(sha(file), pinned, file);
+    const rai = readdirSync(join(root, "public/rai"));
+    assert.deepEqual(rai.filter((f) => /^smug/.test(f)).sort(), ["smug1084_out.avif", "smug1085_hold.webp", "smug1085_in.avif"]);
+    assert.equal(rai.some((f) => /9(56|60|62|68|70|71|73)/.test(f)), false);
+  });
+});
 
 describe("pre-cut RGBA idle + blink sheets", () => {
   it("skips the runtime white punch for the pre-cut idle and all four blink frames", () => {
@@ -193,7 +189,7 @@ describe("pre-cut RGBA idle + blink sheets", () => {
       if (/idle(_blink|_mouth)?/.test(file) && !(file in POSE_SHEET_SHA256)) continue;
       assert.ok(file in POSE_SHEET_SHA256, `${file} must be pinned`);
     }
-    assert.match(SPRITES.poses.smug, new RegExp(`smug968_hold\\.webp\\?v=${PRE_CUT_ALPHA_VERSION}$`));
+    assert.match(SPRITES.poses.smug, new RegExp(`smug1085_hold\\.webp\\?v=${PRE_CUT_ALPHA_VERSION}$`));
     assert.equal(spriteNeedsWhitePunch(SPRITES.poses.smug), false);
     for (const key of ["talk", "peace", "profile", "three_quarter_left", "three_quarter_right"] as const) {
       assert.match(SPRITES.poses[key], new RegExp(`\\.png\\?v=${PRE_CUT_ALPHA_VERSION}$`), key);

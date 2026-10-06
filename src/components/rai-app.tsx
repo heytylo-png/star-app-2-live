@@ -308,7 +308,7 @@ function RaiReady() {
   chewUntilRef.current = chewUntil;
   /**
    * paste-15: this turn's act landed while the stage was still releasing a held smug
-   * (968 finishing / 973 / idle landing). Its pose and text chew are not on stage yet,
+   * (1085 finishing / 1084 / idle landing). Its pose and text chew are not on stage yet,
    * so their clocks start when the stage lets the next pose on (subscribeSmugReleaseLanded),
    * not at land. `line` is the latest text to chew ("" = pose only).
    */
@@ -612,7 +612,7 @@ function RaiReady() {
     reducedMotion,
   });
 
-  // paste-15: the stage let the next pose on after 973. A line that landed meanwhile
+  // paste-15: the stage let the next pose on after 1084. A line that landed meanwhile
   // starts its pose clock and its full text chew now, so both play after idle.
   const armTextChewRef = useRef<(line: string) => void>(() => {});
   useEffect(
@@ -633,7 +633,7 @@ function RaiReady() {
   useEffect(() => {
     // Still saying the line. Smug and wink stay up for that, not as the rest.
     if (sending || talking) return;
-    // The act is still behind the smug release (973 / idle landing): nothing of it is
+    // The act is still behind the smug release (1084 / idle landing): nothing of it is
     // on stage yet, so no rest timer runs. releaseLandTick re-runs this when it lands.
     if (releaseDeferRef.current && readSmugReleasePending()) return;
     // A smug or wink line has ended. Smug never rests on a timer (held until the
@@ -649,9 +649,9 @@ function RaiReady() {
     });
     if (!greetingSnap && ended && (pose !== ended.pose || emotion !== ended.emotion)) {
       // Smug (paste-14): no timer at all. The chat bubble never auto-hides, so
-      // smug968_hold stays up while the smug line is the latest assistant bubble —
+      // smug1085_hold stays up while the smug line is the latest assistant bubble —
       // through reading, speech end, cancel and error alike. The user's next send
-      // releases it on the stage (requestSmugRelease): 973 forward, idle lands,
+      // releases it on the stage (requestSmugRelease): 1084 forward, idle lands,
       // then the next pose. Mid-exit unpaired keys: exitInFlight (#116).
       if (holdsSmugBeat(pose, emotion)) {
         // Cancel / abort / error before the line landed: anchor it so the turn
@@ -661,7 +661,7 @@ function RaiReady() {
       }
       const delay = smugWinkTextRestDelayMs({
         // A pose that went on stage after the release gets its full hold even if the
-        // speech already ended behind 973 (voiced normally rests at speech end).
+        // speech already ended behind 1084 (voiced normally rests at speech end).
         voiced: lineVoicedRef.current && !actDeferredRef.current,
         chewUntil: chewUntilRef.current,
         pose,
@@ -976,7 +976,7 @@ function RaiReady() {
   }
 
   function armTextChew(line: string) {
-    // Stage still behind 973: chew the line once the next pose is on (full length).
+    // Stage still behind 1084: chew the line once the next pose is on (full length).
     if (readSmugReleasePending()) {
       releaseDeferRef.current = { line };
       return;
@@ -1321,8 +1321,8 @@ function RaiReady() {
     let active = store.threads.find((t) => t.id === store.activeId) ?? null;
     if (!active) active = store.createThread({ prompt: content, model: defaultModel });
     const lifeTitle = parseTrackTitle(content);
-    // A new send releases a held smug968_hold: the stage plays 973 to idle first,
-    // then whatever this turn asks for (a new smug runs 968 again from idle).
+    // A new send releases a held smug1085_hold: the stage plays 1084 to idle first,
+    // then whatever this turn asks for (a new smug runs 1085 again from idle).
     // A new turn: nothing of the last one is still waiting for the stage.
     releaseDeferRef.current = null;
     actDeferredRef.current = false;

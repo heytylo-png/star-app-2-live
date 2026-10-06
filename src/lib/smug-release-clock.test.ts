@@ -26,7 +26,7 @@ import {
 
 /**
  * paste-15: after a held smug the next reply's pose and chew clocks start when the
- * stage lets the next pose on (973 -> idle -> pose), not when the line lands behind 973.
+ * stage lets the next pose on (1084 -> idle -> pose), not when the line lands behind 1084.
  */
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -130,7 +130,7 @@ function run(opts: { sendAt: "hold" | "entry"; landAfterSend: number; line: stri
       shownKey: bridgeKeyOfPlates(plates),
       wantedKey: bridgeKeyOfPlates(next),
       release,
-      entering: bridgeSrc != null && /smug968_in_/.test(bridgeSrc),
+      entering: bridgeSrc != null && /smug1085_in/.test(bridgeSrc),
     });
     if (step === "keep-shown") next = plates;
     else if (step === "exit-to-idle") next = rest();
@@ -193,7 +193,7 @@ function run(opts: { sendAt: "hold" | "entry"; landAfterSend: number; line: stri
     actLandedAt = now;
     chewFrom = now;
   }
-  tick(8000);
+  tick(12_000);
   off();
   const idleAt = shown.find((e) => e.t > sendT && e.name === "idle")?.t ?? -1;
   const poseAt = shown.find((e) => e.t > sendT && e.name === "wink")?.t ?? -1;
@@ -201,7 +201,7 @@ function run(opts: { sendAt: "hold" | "entry"; landAfterSend: number; line: stri
 }
 
 describe("next reply after a held smug: clocks start when the pose goes on", () => {
-  it("a 28-char line landing during 973 chews its full length after idle", () => {
+  it("a 28-char line landing during 1084 chews its full length after idle", () => {
     const line = "Ugh, fine. What do you want";
     const r = run({ sendAt: "hold", landAfterSend: 400, line });
     assert.ok(r.idleAt > r.sendT + 1600, r.names.join(">"));
@@ -223,21 +223,23 @@ describe("next reply after a held smug: clocks start when the pose goes on", () 
     assert.ok(delay != null && delay >= POSE_HOLD_MIN_MS - 1, `wink visible ${delay} ms`);
   });
 
-  it("a send during 968 entry: 968 finishes, hold, 973, idle, then the pose with its full time", () => {
+  it("a send during 1085 entry: 1085 finishes, hold, 1084, idle, then the pose with its full time", () => {
     const r = run({ sendAt: "entry", landAfterSend: 300, line: "Wink. Catch it~" });
     const n = r.names;
-    // smug968_in_05 is byte-identical to smug968_hold: 968 runs to its end, then 973
-    const i05 = n.indexOf("smug968_in_05.webp");
-    const iOut = n.indexOf("smug973_out_01.webp");
-    assert.ok(i05 > 0 && iOut > i05 && n.slice(i05 + 1, iOut).every((x) => x === "hold"), n.join(">"));
-    assert.deepEqual(n.slice(iOut, iOut + 7), ["smug973_out_01.webp", "smug973_out_02.webp", "smug973_out_03.webp", "smug973_out_04.webp", "smug973_out_05.webp", "idle", "wink"]);
+    // 1085 frame 48 is the hold frame: 1085 runs to its end (never past it), then 1084
+    const iLast = n.indexOf("smug1085_in.avif#048");
+    const iOut = n.indexOf("smug1084_out.avif#000");
+    assert.ok(iLast > 0 && iOut > iLast && n.slice(iLast + 1, iOut).every((x) => x === "hold"), n.join(">"));
+    const out = Array.from({ length: 145 }, (_, k) => `smug1084_out.avif#${String(k).padStart(3, "0")}`);
+    assert.deepEqual(n.slice(iOut, iOut + 147), [...out, "idle", "wink"]);
     assert.ok(r.actLandedAt >= r.idleAt + 70, `act clock starts ${r.actLandedAt - r.idleAt} ms after idle`);
     assert.equal(r.actLandedAt, r.poseAt);
   });
 
   it("a line that lands after the release is done keeps the old clock (at land)", () => {
-    const r = run({ sendAt: "hold", landAfterSend: 4000, line: "Late reply, darling" });
-    assert.ok(r.actLandedAt >= r.sendT + 4000 && r.actLandedAt < r.sendT + 4100);
+    // 1084 is 6.04 s + the idle landing: a line 7 s after the send lands after it.
+    const r = run({ sendAt: "hold", landAfterSend: 7000, line: "Late reply, darling" });
+    assert.ok(r.actLandedAt >= r.sendT + 7000 && r.actLandedAt < r.sendT + 7100);
   });
 });
 

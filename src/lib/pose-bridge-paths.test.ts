@@ -5,6 +5,8 @@ import {
   BRIDGE_WAIT_MAX_MS,
   BridgeDriver,
   PoseBridge,
+  SMUG_IN_FILES,
+  SMUG_OUT_FILES,
   bridgeFiles,
   bridgeGate,
   bridgeKeyOfPlates,
@@ -73,16 +75,30 @@ type Commit = Partial<PuppetState> & { pose: PoseId; emotion: EmotionId };
 
 /** Names what is visible: bridge NN, smug, idle (rest / blink / mouth), or the sheet file. */
 function nameOf(src: string): string {
-  const inn = /smug968_in_(\d\d)/.exec(src);
+  const inn = /smug1085_in\.avif#(\d{3})/.exec(src);
   if (inn) return `i${inn[1]}`;
-  const out = /smug973_out_(\d\d)/.exec(src);
+  const out = /smug1084_out\.avif#(\d{3})/.exec(src);
   if (out) return `o${out[1]}`;
   const b = /bridge_idle_smug_(\d\d)/.exec(src);
   if (b) return `b${b[1]}`;
-  if (/smug968_hold|smug_official/.test(src)) return "smug";
+  if (/smug1085_hold|smug_official/.test(src)) return "smug";
   if (/idle_mouth_/.test(src)) return "idle";
   if (/idle_blink_|\/idle\.png/.test(src)) return "idle";
   return src.split("/").pop()!.replace(/\.png.*$/, "");
+}
+
+/**
+ * These tests are about which commits reach the bridge, not its clock: the clips run on a
+ * compressed clock here (each clip ~750 ms, the length of the old five-frame sets) so the
+ * path timings stay readable. Every frame is still shown once, in order, and every frame
+ * change is logged. Real 24 fps pacing: pose-bridge.test.ts / smug-hold-send.test.ts.
+ */
+const PATH_IN_MS = 750 / SMUG_IN_FILES.length;
+const PATH_OUT_MS = 750 / SMUG_OUT_FILES.length;
+function pathDwellsFor(from: string | null, to: string | null): readonly number[] | null {
+  if (from === "idle" && to === "smug") return SMUG_IN_FILES.map(() => PATH_IN_MS);
+  if (from === "smug" && to === "idle") return SMUG_OUT_FILES.map(() => PATH_OUT_MS);
+  return null;
 }
 
 function stage(opts: { decoded?: boolean; reduced?: boolean; paced?: boolean } = {}) {
@@ -108,8 +124,10 @@ function stage(opts: { decoded?: boolean; reduced?: boolean; paced?: boolean } =
     () => 0.5,
     (s) => {
       bridgeSrc = s;
+      see();
     },
     afterPaint,
+    pathDwellsFor,
   );
   const driver = new BridgeDriver(bridge);
   const ready = new Set(bridgeFiles().map(bridgeFrameSrc));
@@ -183,14 +201,16 @@ function stage(opts: { decoded?: boolean; reduced?: boolean; paced?: boolean } =
 }
 
 const IDLE: Commit = { pose: "idle", emotion: "glance" };
-const IN = ["idle", "i01", "i02", "i03", "i04", "i05", "smug"];
-const OUT = ["smug", "o01", "o02", "o03", "o04", "o05", "idle"];
+const clipFrames = (p: string, n: number) => Array.from({ length: n }, (_, k) => `${p}${String(k).padStart(3, "0")}`);
+/** 1085 frames 0..48 (0-2.0 s), 1084 frames 0..144: every one, in order. */
+const IN = ["idle", ...clipFrames("i", 49), "smug"];
+const OUT = ["smug", ...clipFrames("o", 145), "idle"];
 
 /** Joins in then out: ends on smug, holds, leaves for idle. */
 function expectInThenOut(log: string[]) {
   assert.ok(log.includes("smug"), `reaches smug: ${log.join(">")}`);
   // Typed-smug send can briefly leave mid-entry (complete() → idle) before the
-  // clean 968 run — require contiguous arm frames, not a leading idle.
+  // clean 1085 run — require contiguous arm frames, not a leading idle.
   const find = (seq: string[]) => {
     for (let i = 0; i <= log.length - seq.length; i++) {
       if (seq.every((v, j) => log[i + j] === v)) return i;
@@ -459,7 +479,7 @@ describe("guard: a bridge-eligible pair never hard-cuts when its frames are deco
     smugs.push({ pose: "idle", emotion: "smug", talking }); // emotion path
   }
 
-  it("every idle state -> every smug state plays 968 in first, and back plays 973 out", () => {
+  it("every idle state -> every smug state plays 1085 in first, and back plays 1084 out", () => {
     let pairs = 0;
     for (const a of idles) {
       for (const b of smugs) {
@@ -476,7 +496,7 @@ describe("guard: a bridge-eligible pair never hard-cuts when its frames are deco
         back.commit(a);
         assert.equal(back.bridge.active(), true, `out: ${JSON.stringify(b)} -> ${JSON.stringify(a)}`);
         back.wait(900);
-        assert.deepEqual(back.log.slice(0, 8), OUT, JSON.stringify([b, a]));
+        assert.deepEqual(back.log.slice(0, OUT.length), OUT, JSON.stringify([b, a]));
         pairs += 2;
       }
     }
@@ -512,7 +532,7 @@ describe("guard: a bridge-eligible pair never hard-cuts when its frames are deco
     assert.equal(bridgeGate({ wantedKey: "smug", ...wait, framesReady: true }), "go");
     assert.equal(bridgeGate({ wantedKey: "smug", ...wait, waitExpired: true }), "go");
     assert.equal(bridgeGate({ wantedKey: "smug", ...wait, reducedMotion: true }), "go");
-    // Bare idle/null wants no wait — but leaving smug for idle must wait for 973.
+    // Bare idle/null wants no wait — but leaving smug for idle must wait for 1084.
     assert.equal(bridgeGate({ wantedKey: "idle", shownKey: null, ...wait }), "go");
     assert.equal(bridgeGate({ wantedKey: null, shownKey: null, ...wait }), "go");
     assert.equal(bridgeGate({ wantedKey: "idle", shownKey: "smug", ...wait }), "wait");
@@ -538,7 +558,7 @@ describe("guard: a bridge-eligible pair never hard-cuts when its frames are deco
   });
 
   it("the smug sheet key is the live one, so a bridge never replaces idle.png or smug", () => {
-    assert.match(SPRITES.poses.smug, /smug968_hold\.webp/);
+    assert.match(SPRITES.poses.smug, /smug1085_hold\.webp/);
     assert.match(SPRITES.poses.idle, /\/idle\.png/);
   });
 });
@@ -604,7 +624,7 @@ describe("smug holds until its beat ends (early drop)", () => {
     assert.equal(wave, poseResetDelayMs({ pose: "wave", emotion: "bratty", talking: false, actLandedAt: 0, now: 0 }));
   });
 
-  it("long line on the real turn: smug is on stage the whole beat, then 973 forward to idle", () => {
+  it("long line on the real turn: smug is on stage the whole beat, then 1084 forward to idle", () => {
     const s = stage();
     s.commit(IDLE);
     s.commit({ pose: spokenTurnStartPose(), emotion: "glance" });
@@ -643,10 +663,10 @@ describe("backgrounded page", () => {
     s.bridge.setPaused(true);
     s.commit(IDLE); // the timer fired in the background
     s.wait(5000);
-    assert.deepEqual(s.log, ["o01"], "no frame moves while hidden, no cut to idle");
+    assert.deepEqual(s.log, ["o000"], "no frame moves while hidden, no cut to idle");
     s.bridge.setPaused(false);
     s.wait(1200);
-    assert.deepEqual(s.log, ["o01", "o02", "o03", "o04", "o05", "idle"]);
+    assert.deepEqual(s.log, OUT.slice(1));
   });
 
   it("hiding mid-bridge freezes the frame; returning continues with the next one", () => {
@@ -654,10 +674,12 @@ describe("backgrounded page", () => {
     s.commit(IDLE);
     s.commit({ pose: "smug", emotion: "smug" });
     s.wait(400);
-    assert.equal(s.log.at(-1), "i03");
+    const mid = s.log.at(-1)!;
+    assert.match(mid, /^i0[0-4]\d$/);
+    assert.notEqual(mid, "i048");
     s.bridge.setPaused(true);
     s.wait(10_000);
-    assert.equal(s.log.at(-1), "i03");
+    assert.equal(s.log.at(-1), mid);
     s.bridge.setPaused(false);
     s.wait(1000);
     assert.deepEqual(s.log, IN);
@@ -695,7 +717,7 @@ describe("reduced motion", () => {
 describe("entry: every arm frame is seen, in order, before smug (paint-paced)", () => {
   const BLINK = { pose: "idle" as PoseId, emotion: "glance" as EmotionId };
 
-  it("no smug on the pose-change frame: the commit that resolves the pose shows 01, not smug", () => {
+  it("no smug on the pose-change frame: the commit that resolves the pose shows i000, not smug", () => {
     for (const from of [IDLE, { ...IDLE, blink: 1 }, { ...IDLE, blink: 2 }, { ...IDLE, talking: true, mouth: 3 }, { ...IDLE, mouth: 5 }] as Commit[]) {
       for (const to of [
         { pose: "smug", emotion: "smug" },
@@ -706,9 +728,9 @@ describe("entry: every arm frame is seen, in order, before smug (paint-paced)", 
         s.commit(from);
         s.wait(200);
         s.commit(to);
-        assert.equal(s.log.at(-1), "i01", `first frame after the change: ${JSON.stringify([from, to])}`);
+        assert.equal(s.log.at(-1), "i000", `first frame after the change: ${JSON.stringify([from, to])}`);
         assert.ok(!s.log.slice(-2).includes("smug"));
-        s.wait(1200);
+        s.wait(2500);
         assert.deepEqual(s.painted.slice(-IN.length + 1), IN.slice(1));
       }
     }
@@ -720,12 +742,12 @@ describe("entry: every arm frame is seen, in order, before smug (paint-paced)", 
     s.paint();
     s.commit({ pose: "smug", emotion: "smug" });
     s.stall(1500); // sheets punching / a stream of renders: no paint for 1.5 s
-    assert.equal(s.log.at(-1), "i01", "still on 01, the timer has not run out under it");
-    s.wait(1000);
+    assert.equal(s.log.at(-1), "i000", "still on i000, the timer has not run out under it");
+    s.wait(2500);
     assert.deepEqual(s.painted, IN, `painted: ${s.painted.join(">")}`);
   });
 
-  it("repeated stalls through the bridge: i01..i05 each painted once, in order, then smug", () => {
+  it("repeated stalls through the bridge: i000..i048 each painted once, in order, then smug", () => {
     const s = stage({ paced: true });
     s.commit(BLINK);
     s.paint();
@@ -735,11 +757,11 @@ describe("entry: every arm frame is seen, in order, before smug (paint-paced)", 
       s.paint();
       s.wait(30);
     }
-    s.wait(300);
+    s.wait(2500);
     assert.deepEqual(s.painted, IN, `painted: ${s.painted.join(">")}`);
   });
 
-  it("each frame is on screen 130-170 ms once painted (paint-to-paint, at 10 ms resolution)", () => {
+  it("each frame is on screen for its dwell once painted, never less (paint-to-paint, 10 ms resolution)", () => {
     const s = stage({ paced: true });
     s.commit(BLINK);
     s.paint();
@@ -747,7 +769,7 @@ describe("entry: every arm frame is seen, in order, before smug (paint-paced)", 
     let last = "";
     s.commit({ pose: "smug", emotion: "smug" });
     const t0 = s.clock.now();
-    for (let i = 0; i < 150; i += 1) {
+    for (let i = 0; i < 300; i += 1) {
       s.wait(10);
       const name = s.log.at(-1)!;
       if (name !== last) {
@@ -755,11 +777,11 @@ describe("entry: every arm frame is seen, in order, before smug (paint-paced)", 
         last = name;
       }
     }
-    // stamps[k] = when i01..i05 (then smug) appeared — 5 frames + hold = 6 stamps
-    assert.ok(stamps.length >= 6, `stamps ${stamps.length}`);
-    for (let k = 1; k < 6; k += 1) {
+    // stamps[k] = when i000..i048 (then smug) appeared: 49 frames + hold = 50 stamps
+    assert.equal(stamps.length, 50, `stamps ${stamps.length}`);
+    for (let k = 1; k < 50; k += 1) {
       const dwell = stamps[k]! - stamps[k - 1]!;
-      assert.ok(dwell >= 130 && dwell <= 180, `frame ${k} dwell ${dwell}`);
+      assert.ok(dwell >= 10 && dwell <= PATH_IN_MS + 20, `frame ${k} dwell ${dwell}`);
     }
   });
 
@@ -780,12 +802,12 @@ describe("entry: every arm frame is seen, in order, before smug (paint-paced)", 
     s.wait(1200);
     s.log.length = 0;
     s.commit(IDLE);
-    // First exit frame is set; stall without paint must not burn through 973.
+    // First exit frame is set; stall without paint must not burn through 1084.
     s.stall(1500);
-    assert.deepEqual(s.log, ["o01"], `only the first exit frame while unpainted: ${s.log.join(">")}`);
+    assert.deepEqual(s.log, ["o000"], `only the first exit frame while unpainted: ${s.log.join(">")}`);
     s.paint(); // dwell starts
-    s.wait(1200);
-    assert.deepEqual(s.log, ["o01", "o02", "o03", "o04", "o05", "idle"]);
+    s.wait(3000);
+    assert.deepEqual(s.log, OUT.slice(1));
   });
 });
 
@@ -821,7 +843,7 @@ describe("hold: the beat belongs to the line, not the pose", () => {
     assert.equal(s.log.at(-1), "smug", "still on the hip just before the beat ends");
     assert.ok(!s.log.slice(IN.length).some((n) => n === "idle" || /^[io]\d/.test(n)), "no bridge or idle in the hold");
     s.commit(IDLE); // the timer fires
-    s.wait(1200);
+    s.wait(3000);
     assert.deepEqual(s.log.slice(s.log.lastIndexOf("smug")), OUT, "then the exit as before");
   });
 
@@ -889,7 +911,7 @@ describe("named smug send at 5 / 7 / 9 / 12 s reply latency", () => {
   for (const latency of [5000, 7000, 9000, 12000]) {
     it(`${latency / 1000} s, text only: the hip is up through the landing and held to landing + beat + 1.5 s`, () => {
       const { s, landed, now, delay } = turn(latency);
-      assert.deepEqual(s.painted.slice(0, IN.length), IN, "entry i01..i05 then smug");
+      assert.deepEqual(s.painted.slice(0, IN.length), IN, "entry i000..i048 then smug");
       assert.equal(now + delay, need(landed));
       assert.ok(now + delay - landed >= POSE_HOLD_MIN_MS + SMUG_BEAT_TAIL_MS);
       // hip continuous: smug from entry end until the timer, nothing else on the stage
@@ -897,8 +919,8 @@ describe("named smug send at 5 / 7 / 9 / 12 s reply latency", () => {
       s.wait(delay - 20);
       assert.deepEqual(s.log, IN, "no idle / bridge frame at any point before the release");
       s.commit(IDLE); // timer fires
-      s.wait(1200);
-      assert.deepEqual(s.log.slice(s.log.lastIndexOf("smug")), OUT, "exit o01..o05 forward");
+      s.wait(3000);
+      assert.deepEqual(s.log.slice(s.log.lastIndexOf("smug")), OUT, "exit o000..o144 forward");
     });
 
     it(`${latency / 1000} s, voiced (2.2 s clip): released at speech end + 1.5 s, never at speech end`, () => {

@@ -345,7 +345,7 @@ describe("idle mouth on the one rest image", () => {
     for (const mouth of [0, 3, 5] as const) {
       assert.match(layersFor({ ...talkingIdle, pose: "talk", mouth })[0]!.src, /talk_official/);
       assert.match(layersFor({ ...talkingIdle, pose: "wave", mouth })[0]!.src, /wave_official/);
-      assert.match(layersFor({ ...talkingIdle, emotion: "smug", mouth })[0]!.src, /smug968_hold/);
+      assert.match(layersFor({ ...talkingIdle, emotion: "smug", mouth })[0]!.src, /smug1085_hold/);
       assert.match(layersFor({ ...talkingIdle, emotion: "hype", mouth })[0]!.src, /peace\.png/);
     }
     // Not talking: mouth is ignored, rest sits on 01 / blink frames.

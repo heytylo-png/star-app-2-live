@@ -75,15 +75,14 @@ describe("hip clip data", () => {
     for (const f of HIP_CLIP_FRAMES) assert.equal(existsSync(join(root, "public", f.file)), false, f.file);
   });
 
-  it("preloads 968 intro + hold + 973 rest (hip clip retired)", () => {
+  it("preloads the 1085 hold; the 1085 / 1084 clips load in the clip worker (hip clip retired)", () => {
     const order = stagePreloadOrder({ clip: true });
-    assert.ok(order.beat.some((u) => /smug968_hold\.webp/.test(u)));
-    assert.ok(order.beat.some((u) => /smug968_in_01\.webp/.test(u)));
-    assert.ok(order.beat.some((u) => /smug973_out_05\.webp/.test(u)));
+    assert.deepEqual(order.beat.map((u) => u.split("?")[0]!.replace(/^.*\/rai\//, "rai/")), ["rai/smug1085_hold.webp"]);
     assert.ok(!order.beat.some((u) => /\/hip\//.test(u)));
-    const deferred = deferredSpriteUrls({ skipBridge: true });
-    for (const file of bridgeFiles()) assert.ok(!deferred.some((u) => u.includes(file)), file);
-    assert.ok(deferredSpriteUrls().some((u) => u.includes("smug968_in_01")));
+    for (const skip of [true, false]) {
+      const deferred = deferredSpriteUrls({ skipBridge: skip });
+      for (const file of bridgeFiles()) assert.ok(!deferred.some((u) => u.includes(file.split("#")[0]!)), file);
+    }
     assert.equal(hipClipSupported(), false);
   });
 });
@@ -298,7 +297,7 @@ describe("hip clip driver", () => {
     return { ...r, d, go };
   }
 
-  it("idle -> smug plays in; smug -> idle clears the hold (973 forward is PoseBridge)", () => {
+  it("idle -> smug plays in; smug -> idle clears the hold (1084 forward is PoseBridge)", () => {
     const { state, player, go, frame } = driverRig();
     go("idle");
     assert.equal(player.view().visible, false);
@@ -412,18 +411,18 @@ describe("puppet wiring", () => {
   const puppet = readFileSync(join(root, "src/components/puppet.tsx"), "utf8");
   it("one canvas, live sheets hidden while it is up, phase read off the clip", () => {
     assert.match(puppet, /<HipClipLayer ref=\{canvasRef\} visible=\{clipOnStage\} \/>/);
-    assert.match(puppet, /bridgeSheet \|\| clipOnStage \? \(\{ visibility: "hidden" \}/);
+    assert.match(puppet, /const hidden = clipOnStage \? \(\{ visibility: "hidden" \}/);
     assert.match(puppet, /clipView\.arrived \|\| plateKey === "smug"/);
     assert.match(puppet, /data-rai-hold-sheet=/);
     assert.match(puppet, /from: "smug"/);
     assert.match(puppet, /to: "idle"/);
-    assert.match(puppet, /973 rest forward after the hold/);
+    assert.match(puppet, /1084 rest forward after the hold/);
     assert.match(puppet, /data-rai-clip-frame=/);
     assert.match(puppet, /clipPlayer\.current\?\.confirmShown\(\)/);
   });
   it("waits for the clip (bounded, loud) and never expires into the arms-down sheet", () => {
     assert.match(puppet, /console\.warn\("\[rai\] hip clip did not decode in time/);
-    assert.match(puppet, /reducedMotion: clipMode \? false : reducedMotion/);
+    assert.match(puppet, /reducedMotion: clipMode \? false : bridgeCut/);
     assert.match(puppet, /const bridgeWaitExpired = !clipMode &&/);
   });
 });

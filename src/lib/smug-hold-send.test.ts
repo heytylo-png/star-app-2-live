@@ -14,9 +14,10 @@ import {
 import { DEFAULT_EMOTION, bridgeFrameSrc, layersFor, type EmotionId, type PoseId, type SpriteLayer } from "./rai.ts";
 
 /**
- * paste-14: smug968_hold has no timer. It holds until the user's next send, which plays
- * 973 forward to idle before the next pose (a new smug runs 968 again from idle). 968 and
- * 973 run at the clip's own timing, paint-paced, never skipping a frame.
+ * paste-14 / paste-15: smug1085_hold has no timer. It holds until the user's next send, which
+ * plays 1084 forward to idle before the next pose (a new smug runs 1085 again from idle).
+ * 1085 (0-2.0 s, 49 frames) and 1084 (145 frames) run at their native 24 fps, paint-paced,
+ * never skipping a frame.
  */
 
 function clock() {
@@ -55,11 +56,11 @@ function clock() {
 const LAND_MS = 70;
 
 function short(src: string): string {
-  const inn = /smug968_in_(\d\d)/.exec(src);
+  const inn = /smug1085_in\.avif#(\d{3})/.exec(src);
   if (inn) return `i${inn[1]}`;
-  const out = /smug973_out_(\d\d)/.exec(src);
+  const out = /smug1084_out\.avif#(\d{3})/.exec(src);
   if (out) return `o${out[1]}`;
-  if (/smug968_hold/.test(src)) return "hold";
+  if (/smug1085_hold/.test(src)) return "hold";
   if (/wink/.test(src)) return "wink";
   if (/idle/.test(src)) return "idle";
   return src.split("/").pop()!;
@@ -68,7 +69,7 @@ function short(src: string): string {
 /**
  * The puppet's chain without React: wanted state -> SmugReleaseGate -> plates ->
  * BridgeDriver, paints every 16 ms (rAF), and the land callback (bridge off -> paint ->
- * LAND_MS of idle -> wanted pose) the stage runs after 973.
+ * LAND_MS of idle -> wanted pose) the stage runs after 1084.
  */
 function stage(opts: { paintEvery?: number } = {}) {
   const c = clock();
@@ -109,7 +110,7 @@ function stage(opts: { paintEvery?: number } = {}) {
       shownKey: bridgeKeyOfPlates(plates),
       wantedKey: bridgeKeyOfPlates(next),
       release,
-      entering: bridgeSrc != null && /smug968_in_/.test(bridgeSrc),
+      entering: bridgeSrc != null && /smug1085_in/.test(bridgeSrc),
     });
     if (step === "keep-shown") next = plates;
     else if (step === "exit-to-idle") next = rest();
@@ -167,8 +168,10 @@ function stage(opts: { paintEvery?: number } = {}) {
   return api;
 }
 
-const IN = ["i01", "i02", "i03", "i04", "i05", "hold"];
-const OUT = ["o01", "o02", "o03", "o04", "o05", "idle"];
+const F = 1000 / 24;
+const frames = (p: string, n: number) => Array.from({ length: n }, (_, k) => `${p}${String(k).padStart(3, "0")}`);
+const IN = [...frames("i", 49), "hold"];
+const OUT = [...frames("o", 145), "idle"];
 
 function seq(names: string[], want: string[], from = 0): number {
   for (let i = from; i <= names.length - want.length; i++) {
@@ -177,48 +180,45 @@ function seq(names: string[], want: string[], from = 0): number {
   return -1;
 }
 
-describe("clip timing for 968 / 973 (paint-paced)", () => {
-  it("schedules: 968 01@0 02@0.5 03@1.0 04@1.6 05@2.2 s; 973 02@0.35 03@0.75 04@1.05 05@1.35, idle 1.7 s", () => {
-    assert.deepEqual([...SMUG_IN_DWELL_MS], [500, 500, 600, 600, 150]);
-    assert.deepEqual([...SMUG_OUT_DWELL_MS], [350, 400, 300, 300, 350]);
+describe("clip timing for 1085 / 1084 (24 fps, paint-paced)", () => {
+  it("every frame of both clips is one 24 fps frame; 1085 is 2.000 s to its last frame, 1084 6.04 s", () => {
+    assert.equal(SMUG_IN_DWELL_MS.length, 49);
+    assert.equal(SMUG_OUT_DWELL_MS.length, 145);
+    for (const ms of [...SMUG_IN_DWELL_MS, ...SMUG_OUT_DWELL_MS]) assert.equal(ms, F);
     assert.equal(bridgeDwellsFor("idle", "smug"), SMUG_IN_DWELL_MS);
     assert.equal(bridgeDwellsFor("smug", "idle"), SMUG_OUT_DWELL_MS);
     assert.equal(bridgeDwellsFor("idle", "wink"), null);
-    for (const ms of SMUG_OUT_DWELL_MS) assert.ok(ms >= 200 && ms <= 400, `exit frame ${ms} ms`);
+    assert.equal(BRIDGE_MIN_AFTER_PAINT_MS, 0);
   });
 
-  it("entry lands each frame on the clip's time (within one paint), never skipping", () => {
+  it("entry lands each frame on the 24 fps clock (within one paint), never skipping, then the hold", () => {
     const s = stage();
     s.set("idle", "glance");
     s.wait(100);
     s.set("smug", "smug");
     s.wait(3000);
     const n = s.names();
-    const i = seq(n, IN);
-    assert.ok(i >= 0, n.join(">"));
-    const t0 = s.at("i01");
-    const want = { i02: 500, i03: 1000, i04: 1600, i05: 2200, hold: 2350 };
-    for (const [name, ms] of Object.entries(want)) {
-      const d = s.at(name) - t0;
-      assert.ok(d >= ms && d <= ms + 32, `${name} at ${d} ms, want ~${ms}`);
+    assert.ok(seq(n, IN) >= 0, n.join(">"));
+    const t0 = s.at("i000");
+    for (let k = 1; k < 49; k++) {
+      const d = s.at(`i${String(k).padStart(3, "0")}`) - t0;
+      assert.ok(d >= k * F - 16 && d <= k * F + 32, `i${k} at ${d} ms, want ~${k * F}`);
     }
+    const hold = s.at("hold") - t0;
+    assert.ok(hold >= 49 * F - 16 && hold <= 49 * F + 32, `hold at ${hold}`);
   });
 
-  it("slow paints do not stretch the clip (dwell counts from when the frame was set)", () => {
+  it("slow paints (120 ms) never skip: every frame once, in order (the clip stretches instead)", () => {
     const s = stage({ paintEvery: 120 });
     s.set("idle", "glance");
     s.wait(240);
     s.set("smug", "smug");
-    s.wait(4000);
-    const t0 = s.at("i01");
-    const d = s.at("i05") - t0;
-    assert.ok(d >= 2200 && d <= 2200 + 240, `i05 at ${d}`);
+    s.wait(12_000);
     assert.ok(seq(s.names(), IN) >= 0, s.names().join(">"));
-    assert.ok(BRIDGE_MIN_AFTER_PAINT_MS > 0);
   });
 });
 
-describe("smug968_hold holds until the next send (no timer)", () => {
+describe("smug1085_hold holds until the next send (no timer)", () => {
   function onHold() {
     const s = stage();
     s.set("idle", "glance");
@@ -227,8 +227,9 @@ describe("smug968_hold holds until the next send (no timer)", () => {
     s.wait(3000);
     return s;
   }
+  const at = (k: number) => `o${String(k).padStart(3, "0")}`;
 
-  it("the hold persists 30 s+ with no 973 (line ended, speech over, cancel or error alike)", () => {
+  it("the hold persists 30 s+ with no 1084 (line ended, speech over, cancel or error alike)", () => {
     const s = onHold();
     s.wait(45_000);
     const n = s.names();
@@ -236,54 +237,54 @@ describe("smug968_hold holds until the next send (no timer)", () => {
     assert.equal(n.some((x) => x.startsWith("o")), false, n.join(">"));
   });
 
-  it("a non-smug send: 973 plays fully, lands on idle, then the next pose", () => {
+  it("a non-smug send: 1084 plays fully, lands on idle, then the next pose", () => {
     const s = onHold();
     s.wait(30_000);
     const sendAt = s.timeline.at(-1)!.t + 30_000;
     s.send("idle", "glance");
     s.wait(200);
-    // the reply's pose arrives while 973 is still going: it waits
+    // the reply's pose arrives while 1084 is still going: it waits
     s.set("wink", "bratty");
-    s.wait(3000);
+    s.wait(8000);
     const n = s.names();
     const o = seq(n, OUT);
     assert.ok(o >= 0, n.join(">"));
     assert.equal(n[o + OUT.length], "wink", n.join(">"));
-    const t0 = s.at("o01");
-    assert.ok(t0 >= sendAt - 20, "973 starts on the send");
-    const want = { o02: 350, o03: 750, o04: 1050, o05: 1350, idle: 1700 };
-    for (const [name, ms] of Object.entries(want)) {
+    const t0 = s.at("o000");
+    assert.ok(t0 >= sendAt - 20, "1084 starts on the send");
+    for (let k = 1; k <= 145; k++) {
+      const name = k === 145 ? "idle" : at(k);
       const d = s.at(name, o) - t0;
-      assert.ok(d >= ms && d <= ms + 32, `${name} at ${d} ms, want ~${ms}`);
+      assert.ok(d >= k * F - 16 && d <= k * F + 32, `${name} at ${d} ms, want ~${k * F}`);
     }
     const idleAt = s.at("idle", o);
     const winkAt = s.at("wink", o);
     assert.ok(winkAt - idleAt >= LAND_MS, `idle sits ${winkAt - idleAt} ms before the next pose`);
   });
 
-  it("Smug -> Smug back to back: 973 forward, idle, then 968 again from idle", () => {
+  it("Smug -> Smug back to back: 1084 forward, idle, then 1085 again from idle (frame 0)", () => {
     const s = onHold();
     s.wait(5000);
     // a new named smug: pose stays smug, only the send says "release"
     s.send();
-    s.wait(5000);
+    s.wait(10_000);
     const n = s.names();
     const o = seq(n, OUT);
     assert.ok(o >= 0, n.join(">"));
-    assert.ok(seq(n, IN, o) > o, `968 again after 973: ${n.join(">")}`);
+    assert.ok(seq(n, IN, o) > o, `1085 again after 1084: ${n.join(">")}`);
     assert.equal(n.at(-1), "hold");
     s.wait(40_000);
     assert.equal(s.names().at(-1), "hold", "the second hold also waits for a send");
   });
 
-  it("a send while 968 is still coming in lets it reach the hold, then 973 goes out", () => {
+  it("a send while 1085 is still coming in lets it reach the hold, then 1084 goes out", () => {
     const s = stage();
     s.set("idle", "glance");
     s.wait(100);
     s.set("smug", "smug");
     s.wait(700);
     s.send("idle", "glance");
-    s.wait(5000);
+    s.wait(9000);
     const n = s.names();
     assert.ok(seq(n, [...IN, ...OUT]) >= 0, n.join(">"));
   });
@@ -294,10 +295,10 @@ describe("smug968_hold holds until the next send (no timer)", () => {
     s.wait(3000);
     const n = s.names();
     const h = n.indexOf("hold");
-    assert.equal(n[h + 1], "o01", n.join(">"));
+    assert.equal(n[h + 1], "o000", n.join(">"));
   });
 
-  it("a hidden tab freezes 973 on its frame and finishes it on return; the hold survives hide/show", () => {
+  it("a hidden tab freezes 1084 on its frame and finishes it on return; the hold survives hide/show", () => {
     const s = onHold();
     s.hidden(true);
     s.wait(10_000);
@@ -309,7 +310,7 @@ describe("smug968_hold holds until the next send (no timer)", () => {
     s.hidden(true);
     s.wait(8000);
     s.hidden(false);
-    s.wait(3000);
+    s.wait(8000);
     const n = s.names();
     assert.ok(seq(n, OUT) >= 0, n.join(">"));
   });
