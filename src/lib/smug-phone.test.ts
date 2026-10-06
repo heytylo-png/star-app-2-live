@@ -193,3 +193,55 @@ describe("smug path allowlist + caption-blocked release", () => {
     );
   });
 });
+
+describe("smug cancel / error before the line lands never holds forever", () => {
+  const appSrc = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "../components/rai-app.tsx"),
+    "utf8",
+  );
+
+  it("abort and error branches anchor the beat when the line never landed", () => {
+    const catchBlock = appSrc.slice(
+      appSrc.indexOf('if (err instanceof DOMException && err.name === "AbortError")'),
+      appSrc.indexOf("} finally {", appSrc.indexOf('if (err instanceof DOMException && err.name === "AbortError")')),
+    );
+    assert.equal((catchBlock.match(/anchorUnlandedLine\(\)/g) ?? []).length, 3, "DOMException abort, Error abort, error");
+    assert.match(appSrc, /if \(lineLandedAt\.current === 0\) lineLandedAt\.current = Date\.now\(\);/);
+  });
+
+  it("the rest effect anchors an unlanded smug turn once sending/talking is over (stop() races the catch)", () => {
+    const eff = appSrc.slice(appSrc.indexOf("if (sending || talking) return;"), appSrc.indexOf("if (delay == null) return;"));
+    assert.match(eff, /if \(smugBeat\) anchorUnlandedLine\(\);/);
+  });
+
+  it("cancel mid-stream: beat = cancel + reading floor of the partial text + 1.5 s", () => {
+    const cancelAt = 20_000;
+    const partial = "x".repeat(120); // 5.4 s reading
+    assert.equal(
+      smugBeatResetDelayMs({ line: partial, lineLandedAt: cancelAt, speechEndedAt: 0, now: cancelAt }),
+      120 * 45 + SMUG_BEAT_TAIL_MS,
+    );
+  });
+
+  it("cancel before the first token: floor minimum + 1.5 s (bounded)", () => {
+    const cancelAt = 3_000;
+    const d = smugBeatResetDelayMs({ line: "", lineLandedAt: cancelAt, speechEndedAt: 0, now: cancelAt });
+    assert.ok(d != null && d <= 3400 + SMUG_BEAT_TAIL_MS);
+  });
+
+  it("error before 956 finished: release waits for the hold, then a visible hold, never idle mid-entry", () => {
+    const now = 50_000;
+    // beat already over, entry still playing → poll (no cut)
+    assert.ok(smugReleaseWaitMs({ phase: "bridge-in", holdSince: 0, waitedMs: 0, beatEndAt: now - 1, now }) > 0);
+    // hold just reached → at least the min visible hold
+    assert.equal(
+      smugReleaseWaitMs({ phase: "hold", holdSince: now, waitedMs: 0, beatEndAt: now - 1, now }),
+      SMUG_MIN_VISIBLE_HOLD_MS,
+    );
+    // capped: never waits forever
+    assert.equal(
+      smugReleaseWaitMs({ phase: "bridge-in", holdSince: 0, waitedMs: SMUG_RELEASE_WAIT_CAP_MS, beatEndAt: now + 99_999, now }),
+      0,
+    );
+  });
+});
