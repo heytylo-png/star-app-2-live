@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   HIP_CLIP_FRAMES,
   HIP_CLIP_LAST,
@@ -26,6 +26,7 @@ import {
   idleRestSrc,
   isRetiredBlinkSrc,
   layersFor,
+  DEFAULT_EMOTION,
   holdsSmugBeat,
   isSmugPathSheetSrc,
   openRestFallback,
@@ -62,7 +63,9 @@ import {
   PoseBridge,
   bridgeFiles,
   bridgeGate,
+  bridgeDwellsFor,
   bridgeKeyOfPlates,
+  SmugReleaseGate,
   bridgeWantsFrames,
 } from "@/lib/pose-bridge";
 import { PoseCrossfadePool, type CrossfadeLayer } from "@/lib/pose-crossfade";
@@ -72,7 +75,12 @@ import { sheetBox } from "@/lib/rai-sheet-box";
 import { HipClipLayer } from "@/components/hip-clip-layer";
 import { paintHipPicture } from "@/lib/hip-clip-paint";
 import { buildId, debugOverlayOn } from "@/lib/build-id";
-import { setPoseStageMounted, setPosePhase } from "@/lib/pose-phase";
+import {
+  readSmugRelease,
+  setPoseStageMounted,
+  setPosePhase,
+  subscribeSmugRelease,
+} from "@/lib/pose-phase";
 import { cn } from "@/lib/utils";
 
 type PuppetProps = {
@@ -141,6 +149,26 @@ function fadeMsFor(layer: SpriteLayer, talking: boolean, blinkMode: BlinkFadeMod
  * set the bridge frame has reached a paint (the frame it is drawn in), with a
  * 500 ms timer backstop for a page whose frames are throttled.
  */
+/** Idle sits this long after 973 has landed before the next pose takes the stage. */
+const SMUG_EXIT_LAND_MS = 150;
+const SMUG_IN_FRAME = /smug968_in_\d\d/;
+
+/** Plain idle rest (closed mouth, open eyes): where 973 lands before the next pose. */
+function smugExitRestPlates(reducedMotion: boolean): SpriteLayer[] {
+  return layersFor({
+    pose: "idle",
+    emotion: DEFAULT_EMOTION,
+    talking: false,
+    amplitude: 0,
+    angle: 0,
+    talkPhase: 0,
+    blink: 0,
+    mouth: 0,
+    idleBeat: "none",
+    reducedMotion,
+  }).filter((layer) => layer.role !== "eyes" && !isRetiredBlinkSrc(layer.src));
+}
+
 function afterPaintFrame(fn: () => void): () => void {
   let done = false;
   let raf = 0;
@@ -200,6 +228,14 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   const [bridgeSrc, setBridgeSrc] = useState<string | null>(null);
   const bridge = useRef<PoseBridge | null>(null);
   const bridgeDriver = useRef<BridgeDriver | null>(null);
+  // Smug hold release (paste-14): the hold has no timer. The user's next send (or any
+  // other pose wanted while the hold is up) first plays 973 forward to idle; only once
+  // idle has landed does the stage take the wanted pose (a new smug runs 968 from idle).
+  const smugRelease = useSyncExternalStore(subscribeSmugRelease, readSmugRelease, readSmugRelease);
+  const smugGate = useRef<SmugReleaseGate | null>(null);
+  if (!smugGate.current) smugGate.current = new SmugReleaseGate(smugRelease);
+  const exitReleasePending = useRef(false);
+  const [exitTick, setExitTick] = useState(0);
   // Hip clip (hip-clip.ts): the idle <-> smug travel and the hold, painted on one canvas.
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const clipBitmaps = useRef<ImageBitmap[] | null>(null);
@@ -768,10 +804,23 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   const bridgeWaitExpired = !clipMode && bridgeWaitExpiredRaw && !bridgeFramesReady;
   const shownPlates = useRef<SpriteLayer[]>([]);
   const plates = useMemo(() => {
-    const next = desired.filter((layer) => layer.role !== "eyes" && !isRetiredBlinkSrc(layer.src));
+    // exitTick: idle landed after 973, the wanted pose may go on (re-run only).
+    void exitTick;
+    let next = desired.filter((layer) => layer.role !== "eyes" && !isRetiredBlinkSrc(layer.src));
+    const shownKey = bridgeKeyOfPlates(shownPlates.current);
+    // Hold released by a send while smug968_hold is up, or by any other pose wanted over
+    // it (see SmugReleaseGate). While released, the wanted pose waits behind plain idle
+    // rest: the driver sees smug -> idle, so 973 plays forward (never a cut to idle.png).
+    const step = smugGate.current!.step({
+      shownKey,
+      wantedKey: bridgeKeyOfPlates(next),
+      release: smugRelease,
+      entering: bridgeSrc != null && SMUG_IN_FRAME.test(bridgeSrc),
+    });
+    if (step === "keep-shown") next = shownPlates.current;
+    else if (step === "exit-to-idle") next = smugExitRestPlates(reducedMotion);
     // A paired idle <-> smug change waits for its frames (bounded) instead of cutting.
     const wantedKey = bridgeKeyOfPlates(next);
-    const shownKey = bridgeKeyOfPlates(shownPlates.current);
     const gate = bridgeGate({
       wantedKey,
       shownKey,
@@ -797,7 +846,30 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
     if (same) return prev;
     shownPlates.current = chosen;
     return chosen;
-  }, [desired, sheets, reducedMotion, bridgeWaitExpired, bridgeFramesReady, clipMode]);
+  }, [desired, sheets, reducedMotion, bridgeWaitExpired, bridgeFramesReady, clipMode, smugRelease, exitTick, bridgeSrc]);
+
+  // 973 done (bridge off) or no bridge to run (reduced motion / cut): let idle paint and
+  // sit a moment, then hand the stage to the wanted pose. Never while hidden (rAF waits).
+  const releaseSmugExit = useCallback(() => {
+    if (!smugGate.current?.exiting() || exitReleasePending.current) return;
+    exitReleasePending.current = true;
+    afterPaintFrame(() => {
+      window.setTimeout(() => {
+        exitReleasePending.current = false;
+        if (!smugGate.current?.exiting() || bridge.current?.active()) return;
+        if (bridgeKeyOfPlates(shownPlates.current) !== "idle") return;
+        smugGate.current.landed();
+        setExitTick((n) => n + 1);
+      }, SMUG_EXIT_LAND_MS);
+    });
+  }, []);
+  const onBridgeFrame = useCallback(
+    (src: string | null) => {
+      setBridgeSrc(src);
+      if (src === null) releaseSmugExit();
+    },
+    [releaseSmugExit],
+  );
 
   // Pose bridge (idle <-> smug, see pose-bridge.ts). The request is made in the
   // crossfade effect below, keyed on the shown plates, so a sheet that has not
@@ -828,7 +900,8 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   // cuts and says so (console + stage attribute), so a missing frame is never silent.
   useEffect(() => {
     if (bridgeFramesReady || (reducedMotion && !clipMode) || bridgeWaitExpired) return;
-    if (!bridgeWantsFrames(bridgeKeyOfPlates(desired), bridgeKeyOfPlates(shownPlates.current))) return;
+    const wantKey = smugGate.current?.exiting() ? "idle" : bridgeKeyOfPlates(desired);
+    if (!bridgeWantsFrames(wantKey, bridgeKeyOfPlates(shownPlates.current))) return;
     if (clipMode) {
       // Hip clip still decoding: keep asking (a failed picture is retried), show the plain
       // idle meanwhile, and after a generous bound say so loudly and fall back to the PNG
@@ -907,10 +980,12 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
         {
           set: (fn, ms) => window.setTimeout(fn, ms),
           clear: (handle) => window.clearTimeout(handle),
+          now: () => performance.now(),
         },
         Math.random,
-        setBridgeSrc,
+        onBridgeFrame,
         afterPaintFrame,
+        bridgeDwellsFor,
       );
       bridge.current.setPaused(document.visibilityState === "hidden");
     }
@@ -964,6 +1039,10 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
         srcFor: bridgeFrameSrc,
         isReady: (src) => sheetsRef.current[src] != null,
       });
+      // Released hold with nothing to play (reduced motion cut, or the exit already done).
+      if (smugGate.current?.exiting() && bridgeKeyOfPlates(plates) === "idle" && !bridge.current.active()) {
+        releaseSmugExit();
+      }
     }
     const openRest = idleRestSrc();
     crossfade.current.update(plates, {
@@ -978,7 +1057,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
           ? { ...layer, src: openRest }
           : layer,
     });
-  }, [plates, talking, blinkModeLive, openRestReady, clipMode]);
+  }, [plates, talking, blinkModeLive, openRestReady, clipMode, onBridgeFrame, releaseSmugExit]);
 
   useEffect(() => {
     return () => {
@@ -1072,6 +1151,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
       data-rai-clip-time={clipOnStage ? String(hipClipTimeMs(clipView.index)) : "off"}
       data-rai-clip-dir={clipOnStage ? clipView.dir : "off"}
       data-rai-hold-sheet={phase === "hold" ? "smug968_hold" : "off"}
+      data-rai-smug-release={smugGate.current?.exiting() ? "exit" : "off"}
       data-rai-build={buildId()}
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
     >

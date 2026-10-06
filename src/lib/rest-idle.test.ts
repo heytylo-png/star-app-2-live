@@ -86,7 +86,10 @@ describe("smug and wink lines rest on official idle", () => {
     assert.doesNotMatch(tint.src, /smug_official|smug968_hold|bridge_idle_smug/);
     assert.match(app, /lineEndedRestPose\(\{/);
     assert.match(app, /smugWinkTextRestDelayMs\(\{/);
-    assert.match(app, /smugBeatResetDelayMs\(\{/);
+    // paste-14: smug has no timed rest at all; the next send releases it on the stage.
+    assert.doesNotMatch(app, /smugBeatResetDelayMs\(/);
+    assert.match(app, /if \(holdsSmugBeat\(pose, emotion\)\) \{\s*\/\/[^\n]*\n[^\n]*\n\s*anchorUnlandedLine\(\);\s*return;/);
+    assert.match(app, /requestSmugRelease\(\);/);
     assert.match(app, /lineLandedAt\.current = Date\.now\(\)/);
     // Caption state must not freeze 973 (chat bubble commits but caption stays).
     assert.equal(app.includes("isReplyCaption"), false);

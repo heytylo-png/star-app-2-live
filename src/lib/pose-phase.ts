@@ -27,3 +27,27 @@ export function setPosePhase(next: PosePhase, now: number = Date.now()): void {
 export function readPosePhase(): { phase: PosePhase; holdSince: number; mounted: boolean } {
   return { phase, holdSince, mounted };
 }
+
+/**
+ * The smug hold has no timer (paste-14): smug968_hold stays up until the user's next
+ * send. The app bumps this on every send; the stage, if it is on the hold, plays 973
+ * forward to idle before anything else (a new smug then runs 968 again from idle).
+ */
+let releaseSeq = 0;
+const releaseListeners = new Set<() => void>();
+
+export function requestSmugRelease(): void {
+  releaseSeq += 1;
+  for (const fn of releaseListeners) fn();
+}
+
+export function readSmugRelease(): number {
+  return releaseSeq;
+}
+
+export function subscribeSmugRelease(fn: () => void): () => void {
+  releaseListeners.add(fn);
+  return () => {
+    releaseListeners.delete(fn);
+  };
+}
