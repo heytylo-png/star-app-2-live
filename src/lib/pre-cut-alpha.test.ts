@@ -104,6 +104,8 @@ const POSE_SHEET_SHA256: Record<string, string> = {
   // Smug hold (paste-15): 1085 frame 48 (2.000 s), the last frame of the intro clip.
   "rai/smug1085_hold.webp": "45cd6eea6c438b340e1d33c8aaeb6003828b6dfb7cc40ed9ed49359643c75cbf",
   "rai/wave1110_hold.webp": "4f0ea2dc8416c9c35b6fc411fceb380fee3926b8665927e1a70cb86eff8d04ea",
+  // TyLo's 2026-10-06 wave still: white-matte cut, uniform x1.4 to the 1008x1792 idle canvas, no re-tone.
+  "rai/wave_official.png": "1c1a888074b64729c9937c9dbc407eebec82f6b6c4699a1ec30a02c2574cddb9",
 };
 
 /** The two smug clips (paste-15): animated AVIF, AV1 + alpha, 24 fps, no audio; pinned bytes. */
@@ -204,7 +206,7 @@ describe("pre-cut RGBA idle + blink sheets", () => {
   });
 
   it("holds back the sheets whose edges are not chosen yet", () => {
-    for (const file of ["rai/three_quarter.png", "rai/wave_official.png", "star-rai/poses/turn-away.png", "star-rai/point-front.png"]) {
+    for (const file of ["rai/three_quarter.png", "star-rai/poses/turn-away.png", "star-rai/point-front.png"]) {
       assert.equal((PRE_CUT_ALPHA_FILES as readonly string[]).includes(file), false, file);
     }
   });

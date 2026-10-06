@@ -227,7 +227,7 @@ Do not rename keys without a migrator. Document schema bumps here.
 See **[POSING.md](./POSING.md)** for the drop-in guide:
 
 - Morning official pack under `public/rai/` (`*_official.png`, `idle.png`, `peace.png`, `middle_finger.png`, `heart_official.png`)
-- Live key → file table (`wave` → `wave_official.png`, `hold` → `hold_official.png`, `scold` → `scold_official.png`; `kiss` unmapped)
+- Live key → file table (`wave` → 1110/1114 video bridge + `wave1110_hold.webp`; `wave_official.png` is TyLo's 2026-10-06 still, not on the Wave key; `hold` → `hold_official.png`, `scold` → `scold_official.png`; `kiss` unmapped)
 - Kept as-today: `turn`, `profile`, `three_quarter_left`, `three_quarter_right`; Helix extra `point` → `point-front.png`
 - Voice card (`artifacts/star-rai-voice-card.txt`) is baked into `RAI_SYSTEM` at sync/build (`scripts/sync-star-rai-artifacts.js`); offline fallback is `artifacts/star-rai-local-brain.txt` (pose-keyed lines); memory-slot contract is `artifacts/star-rai-memory-slots.txt` (appended after the voice card on grok-4-latest, filled keys only). Chart v1 SoT is `artifacts/star-chart-v1.txt`. Cheap sky SoT is `artifacts/star-rai-horoscope-cheap.txt` (client-side astronomy-engine). Call mode SoT is `artifacts/star-rai-call-mode.txt`. Clock / NOW SoT is `artifacts/star-rai-clock.txt`. Do not edit `src/lib/generated/star-rai-artifacts.ts` by hand.
 
