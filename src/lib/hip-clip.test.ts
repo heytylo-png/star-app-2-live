@@ -77,7 +77,10 @@ describe("hip clip data", () => {
 
   it("preloads the 1085 hold; the 1085 / 1084 clips load in the clip worker (hip clip retired)", () => {
     const order = stagePreloadOrder({ clip: true });
-    assert.deepEqual(order.beat.map((u) => u.split("?")[0]!.replace(/^.*\/rai\//, "rai/")), ["rai/smug1085_hold.webp"]);
+    assert.deepEqual(order.beat.map((u) => u.split("?")[0]!.replace(/^.*\/rai\//, "rai/")), [
+      "rai/smug1085_hold.webp",
+      "rai/wave1110_hold.webp",
+    ]);
     assert.ok(!order.beat.some((u) => /\/hip\//.test(u)));
     for (const skip of [true, false]) {
       const deferred = deferredSpriteUrls({ skipBridge: skip });

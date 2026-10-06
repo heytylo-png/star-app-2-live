@@ -66,6 +66,7 @@ const POSE_SHEET_SIZE: Record<string, [number, number]> = {
   "rai/three_quarter_right.png": [768, 1168],
   // Smug hold (paste-15): the 2.000 s frame of 1085 (RGBA WebP). The clips are AVIF video, not sheets.
   "rai/smug1085_hold.webp": [720, 1280],
+  "rai/wave1110_hold.webp": [720, 1280],
 };
 
 /** Minimal WebP read: VP8X canvas size + alpha flag (the bridge frames ship as RGBA WebP). */
@@ -102,12 +103,15 @@ const POSE_SHEET_SHA256: Record<string, string> = {
   "rai/three_quarter_right.png": "528a5439e93271a7e8abc3e7324bcbc3ffdae2ff6a86bd680a0c22bbe6bf244e",
   // Smug hold (paste-15): 1085 frame 48 (2.000 s), the last frame of the intro clip.
   "rai/smug1085_hold.webp": "45cd6eea6c438b340e1d33c8aaeb6003828b6dfb7cc40ed9ed49359643c75cbf",
+  "rai/wave1110_hold.webp": "4f0ea2dc8416c9c35b6fc411fceb380fee3926b8665927e1a70cb86eff8d04ea",
 };
 
 /** The two smug clips (paste-15): animated AVIF, AV1 + alpha, 24 fps, no audio; pinned bytes. */
 const SMUG_CLIP_SHA256: Record<string, string> = {
   "rai/smug1085_in.avif": "0c2c6a4bb9ab5b995720b2026f8919dfe71632a3d19902fa3ac905c870ec5351",
   "rai/smug1084_out.avif": "c44e3af0a6233c9979747710cab1c731e5d96691dc3816628978f227f9ff1b50",
+  "rai/wave1110_in.avif": "d4e6caf971c211baea78981a9a59516e127c994ac77a344ceeaaed79e9e0ff45",
+  "rai/wave1114_out.avif": "eae714e7538f43038db017c29f0b786b5f2a24069f3b976d9927486610d035c2",
 };
 
 describe("smug clips (1085 in / 1084 out)", () => {
@@ -116,6 +120,7 @@ describe("smug clips (1085 in / 1084 out)", () => {
     for (const [file, pinned] of Object.entries(SMUG_CLIP_SHA256)) assert.equal(sha(file), pinned, file);
     const rai = readdirSync(join(root, "public/rai"));
     assert.deepEqual(rai.filter((f) => /^smug/.test(f)).sort(), ["smug1084_out.avif", "smug1085_hold.webp", "smug1085_in.avif"]);
+    assert.deepEqual(rai.filter((f) => /^wave111/.test(f)).sort(), ["wave1110_hold.webp", "wave1110_in.avif", "wave1114_out.avif"]);
     assert.equal(rai.some((f) => /9(56|60|62|68|70|71|73)/.test(f)), false);
   });
 });
@@ -129,9 +134,10 @@ describe("pre-cut RGBA idle + blink sheets", () => {
       assert.equal(spriteNeedsWhitePunch(`${src}?v=abc`), false, `${src} with query`);
     }
     // Sheets that are still RGB on white (held back from the cut sweep) keep the punch.
-    for (const src of [SPRITES.poses.three_quarter, SPRITES.poses.point, SPRITES.poses.turn, SPRITES.poses.wave]) {
+    for (const src of [SPRITES.poses.three_quarter, SPRITES.poses.point, SPRITES.poses.turn]) {
       assert.equal(spriteNeedsWhitePunch(src), true, src);
     }
+    assert.equal(spriteNeedsWhitePunch(SPRITES.poses.wave), false);
     assert.equal(spriteNeedsWhitePunch("/star-app-2-live/rai/not_idle.png"), true);
   });
 
@@ -141,7 +147,7 @@ describe("pre-cut RGBA idle + blink sheets", () => {
       assert.ok(src.endsWith(`.png?v=${PRE_CUT_ALPHA_VERSION}`), src);
       assert.equal(spriteNeedsWhitePunch(src), false, src);
     }
-    for (const src of [SPRITES.poses.three_quarter, SPRITES.poses.point, SPRITES.poses.turn, SPRITES.poses.wave]) {
+    for (const src of [SPRITES.poses.three_quarter, SPRITES.poses.point, SPRITES.poses.turn]) {
       assert.equal(src.includes("?"), false, src);
     }
     const sw = readFileSync(join(root, "public/sw.js"), "utf8");
@@ -281,8 +287,7 @@ describe("punchedSpriteUrl skips the punch for pre-cut sheets", () => {
     const { calls, restore } = stubBrowser(0);
     try {
       assert.equal(await punchedSpriteUrl(SPRITES.poses.three_quarter), "blob:punched");
-      assert.equal(await punchedSpriteUrl(SPRITES.poses.wave), "blob:punched");
-      assert.equal(calls.punched, 2);
+      assert.equal(calls.punched, 1);
     } finally {
       restore();
     }

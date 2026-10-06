@@ -1,5 +1,12 @@
 import { POSE_CROSSFADE_MS, type IdleBlinkFrame, type IdleMouthFrame } from "./rai-motion.ts";
-import { SMUG_HOLD_FILE, SMUG_IN_CLIP, SMUG_OUT_CLIP } from "./pose-bridge.ts";
+import {
+  SMUG_HOLD_FILE,
+  SMUG_IN_CLIP,
+  SMUG_OUT_CLIP,
+  WAVE_HOLD_FILE,
+  WAVE_IN_CLIP,
+  WAVE_OUT_CLIP,
+} from "./pose-bridge.ts";
 
 export { POSE_CROSSFADE_MS, type IdleBlinkFrame, type IdleMouthFrame };
 
@@ -278,6 +285,11 @@ export function holdsSmugBeat(pose: PoseId, emotion: EmotionId): boolean {
   return pose === "smug" || (pose === "idle" && emotion === "smug");
 }
 
+/** Named Wave pose (or idle+wave emotion): the idle↔wave beat is on stage. */
+export function holdsWaveBeat(pose: PoseId, emotion: EmotionId): boolean {
+  return pose === "wave" || (pose === "idle" && emotion === "wave");
+}
+
 /**
  * Reading floor for a fully landed smug line (45 ms/char, never under
  * POSE_HOLD_MIN_MS). Anchored to landing / stream-complete — never send or
@@ -359,6 +371,22 @@ export function isSmugPathSheetSrc(src: string): boolean {
   if (name === "smug1085_hold.webp") return true;
   if (name === "smug1085_in.avif") return true;
   if (name === "smug1084_out.avif") return true;
+  if (name === "idle.png") return true;
+  if (/^idle_blink_/.test(name)) return true;
+  if (/^idle_mouth_/.test(name)) return true;
+  return false;
+}
+
+/**
+ * Sheets allowed on the idle↔wave beat: idle sheets, the 1110 intro clip, wave1110_hold,
+ * the 1114 rest clip. Anything else must not paint during a Wave send.
+ */
+export function isWavePathSheetSrc(src: string): boolean {
+  const path = src.split(/[?#]/)[0] ?? src;
+  const name = path.slice(path.lastIndexOf("/") + 1);
+  if (name === "wave1110_hold.webp") return true;
+  if (name === "wave1110_in.avif") return true;
+  if (name === "wave1114_out.avif") return true;
   if (name === "idle.png") return true;
   if (/^idle_blink_/.test(name)) return true;
   if (/^idle_mouth_/.test(name)) return true;
@@ -466,8 +494,9 @@ export function lineEndedRestPose(opts: {
   emotion: EmotionId;
 }): { pose: PoseId; emotion: EmotionId } | null {
   const onSmug = opts.pose === "smug" || (opts.pose === "idle" && opts.emotion === "smug");
+  const onWave = opts.pose === "wave" || (opts.pose === "idle" && opts.emotion === "wave");
   const onWink = opts.pose === "wink";
-  if (!onSmug && !onWink) return null;
+  if (!onSmug && !onWave && !onWink) return null;
   return { pose: settledRestPose(), emotion: DEFAULT_EMOTION };
 }
 
@@ -582,6 +611,7 @@ export const PRE_CUT_ALPHA_FILES = [
   "rai/laugh_official.png",
   "rai/surprise_official.png",
   "rai/smug1085_hold.webp",
+  "rai/wave1110_hold.webp",
   "rai/content_official.png",
   "rai/sad_official.png",
   "rai/heart_official.png",
@@ -657,8 +687,8 @@ export const LIVE_POSE_FILES = {
   pout: "rai/pout_official.png",
   tired: "rai/tired_official.png",
   smug: SMUG_HOLD_FILE,
-  /** Shipping PNG-puppet wave: retoned full-body (TyLo dark sheet → idle/live cheek). */
-  wave: "rai/wave_official.png",
+  /** Wave hold: exact 2.000 s frame of 1110 (wave hand up, other hand on hip, smile). */
+  wave: WAVE_HOLD_FILE,
   hold: "rai/hold_official.png",
   embarrassed: "rai/embarrassed_official.png",
   scold: "rai/scold_official.png",
@@ -870,6 +900,16 @@ export function smugClipUrls(): string[] {
   return [ASSET(SMUG_IN_CLIP.file), ASSET(SMUG_OUT_CLIP.file)];
 }
 
+/** The sheet of the idle <-> wave beat: wave1110_hold. */
+export function waveBeatSheetUrls(): string[] {
+  return [SPRITES.poses.wave];
+}
+
+/** The two clips of the idle <-> wave beat: 1110 intro, 1114 rest. */
+export function waveClipUrls(): string[] {
+  return [ASSET(WAVE_IN_CLIP.file), ASSET(WAVE_OUT_CLIP.file)];
+}
+
 /**
  * Where the stage's first decodes go. idle.png first (the stage cannot paint
  * without it), then blink 01 (the open rest frame the lids return to), then the
@@ -888,7 +928,9 @@ export function stagePreloadOrder(_opts?: { clip?: boolean }): {
   const first = startup[0]!;
   const blinks = idleBlinkFrameUrls();
   const next = blinks.slice(0, 1).filter((u) => u !== first);
-  const beat = smugBeatSheetUrls().filter((u) => u !== first && !next.includes(u));
+  const beat = [...smugBeatSheetUrls(), ...waveBeatSheetUrls()].filter(
+    (u) => u !== first && !next.includes(u),
+  );
   return {
     first,
     next,

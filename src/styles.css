@@ -540,15 +540,16 @@
   padding: 0.3rem 0.65rem;
 }
 
-/* Smug clips (1085 in / 1084 out, pose-bridge.ts): one canvas per clip, painted by the clip
-   worker. Both are hidden unless their clip is on stage; while one is, it is the only visible
-   image. The puppet flips the rig's data-rai-bridge-on attribute ("in" / "out"), so a canvas
-   and the live sheets swap in one style change (the same paint) at both ends of a clip. */
+/* Bridge clips (smug 1085/1084 + wave 1110/1114): one canvas per clip, painted by the clip
+   worker. Hidden unless their clip is on stage; while one is, it is the only visible image.
+   The puppet flips data-rai-bridge-on ("in"/"out" for smug, "win"/"wout" for wave). */
 .rai-rig > .rai-layer[data-rai-role="bridge"] {
   visibility: hidden;
 }
 .rai-rig[data-rai-bridge-on="in"] > .rai-layer[data-rai-role="bridge"][data-rai-clip="in"],
-.rai-rig[data-rai-bridge-on="out"] > .rai-layer[data-rai-role="bridge"][data-rai-clip="out"] {
+.rai-rig[data-rai-bridge-on="out"] > .rai-layer[data-rai-role="bridge"][data-rai-clip="out"],
+.rai-rig[data-rai-bridge-on="win"] > .rai-layer[data-rai-role="bridge"][data-rai-clip="win"],
+.rai-rig[data-rai-bridge-on="wout"] > .rai-layer[data-rai-role="bridge"][data-rai-clip="wout"] {
   visibility: visible;
 }
 .rai-rig[data-rai-bridge-on] > .rai-layer:not([data-rai-role="bridge"]) {

@@ -127,19 +127,23 @@ describe("smug clip worker / player (source contracts: Worker + OffscreenCanvas 
     assert.match(player, /requestAnimationFrame\(\(\) =>\s*requestAnimationFrame\(\(\) => \{[\s\S]*?type: "hidden"/);
   });
 
-  it("the stage hands both canvases to the worker and never draws on them itself", () => {
+  it("the stage hands four canvases to the workers and never draws on them itself", () => {
     assert.match(player, /transferControlToOffscreen\(\)/);
     assert.match(player, /new Worker\(new URL\("\.\/smug-clip-worker\.ts", import\.meta\.url\), \{ type: "module" \}\)/);
     assert.doesNotMatch(puppet, /drawImage|getContext/);
     assert.match(puppet, /data-rai-clip="in"/);
     assert.match(puppet, /data-rai-clip="out"/);
-    assert.match(puppet, /rig\.dataset\.raiBridgeOn = key;/);
+    assert.match(puppet, /data-rai-clip="win"/);
+    assert.match(puppet, /data-rai-clip="wout"/);
+    assert.match(puppet, /rig\.dataset\.raiBridgeOn = stageKey;/);
   });
 
   it("only the playing clip's canvas is visible, and while it is, no live sheet (idle.png included) is", () => {
     assert.match(css, /\.rai-rig > \.rai-layer\[data-rai-role="bridge"\] \{\s*visibility: hidden;/);
     assert.match(css, /\.rai-rig\[data-rai-bridge-on="in"\] > \.rai-layer\[data-rai-role="bridge"\]\[data-rai-clip="in"\]/);
     assert.match(css, /\.rai-rig\[data-rai-bridge-on="out"\] > \.rai-layer\[data-rai-role="bridge"\]\[data-rai-clip="out"\]/);
+    assert.match(css, /\.rai-rig\[data-rai-bridge-on="win"\] > \.rai-layer\[data-rai-role="bridge"\]\[data-rai-clip="win"\]/);
+    assert.match(css, /\.rai-rig\[data-rai-bridge-on="wout"\] > \.rai-layer\[data-rai-role="bridge"\]\[data-rai-clip="wout"\]/);
     assert.match(css, /\.rai-rig\[data-rai-bridge-on\] > \.rai-layer:not\(\[data-rai-role="bridge"\]\) \{\s*visibility: hidden;/);
   });
 });

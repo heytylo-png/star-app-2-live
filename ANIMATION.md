@@ -62,6 +62,16 @@ TyLo paste-15 replaces the 968/973 stills (and every earlier smug asset) with tw
 - Reduced motion, or a browser without `ImageDecoder` / `OffscreenCanvas` workers: hard cut onto the hold, hard cut back to idle.
 - Debug: `data-rai-hold-sheet=smug1085_hold` while holding; each clip canvas has `data-rai-clip` and `data-rai-sheet` = `in-NNN` / `out-NNN` (last frame reported); `window.__raiBridgeLog` = `[t, clip, frame]` per painted frame (stage clock), `window.__raiBridgeDone` = `[t, clip, stalls, reanchors]` per play.
 
+### 1110 / 1114 video (idle ↔ wave, 2026-10-06)
+
+Same player path as 1085/1084: muted animated AVIF, WebCodecs ImageDecoder in a worker, OffscreenCanvas at 24 fps, every frame in order, no skips. Own canvases (`win`/`wout`).
+
+- Entry (1110): `public/rai/wave1110_in.avif`, frames 0..48 = 0.000–2.000 s only. Arms-down glare → wave hand up → other hand on hip + smile.
+- Hold: `public/rai/wave1110_hold.webp` = the exact 2.000 s frame, until the next send (same `SmugReleaseGate` / `requestSmugRelease`).
+- Exit (1114): `public/rai/wave1114_out.avif`, all 145 frames forward → idle → next pose (#122 timing kept).
+- Registration: identity vs `idle.png` (soles already match). Allowlist: idle sheets + the two clips + hold. Smug 1085/1084 unchanged.
+
+
 ### Talk / mouth
 
 Idle is rest **and** the talking body (TyLo, 2026-09-27: "route talking to the idle mouth instead of `talk_official`"). `SPOKEN_TALK_TO_IDLE` in `src/lib/rai.ts` is on: `routeSpokenTalk()` turns every *automatic* `talk` into `idle` for a spoken line — bratty (`EMOTION_TO_POSE.bratty` is now `idle`), a model `"pose":"talk"` key, Music Set / Chart / life / clock `talk` tints, the plain-chat fallback, and the Call turn-start placeholder (`spokenTurnStartPose()`). So an ordinary talky/bratty line stays on `idle.png` and the idle talking mouth plays (below).
