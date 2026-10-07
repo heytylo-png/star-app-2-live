@@ -105,7 +105,7 @@ import {
   setStoredElevenKey,
   setStoredVoiceId,
 } from "@/lib/settings-keys";
-import { mouthFrameFromPlayback } from "@/lib/mouth-sync";
+import { initialMouthPlayback, stepMouthPlayback } from "@/lib/mouth-sync";
 import { speak, stopVoice, unlockVoice } from "@/lib/voice";
 import { speakable } from "@/lib/companion";
 import {
@@ -271,7 +271,7 @@ function RaiReady() {
   const talkingRef = useRef(false);
   const chewStartRef = useRef(0);
   const audioTurnRef = useRef(false);
-  const mouthPrevRef = useRef(0);
+  const mouthPlayRef = useRef(initialMouthPlayback());
   const chewTimerRef = useRef(0);
   const listenAfterSpeakRef = useRef(false);
   const hangUpRef = useRef<() => void>(() => {});
@@ -792,7 +792,7 @@ function RaiReady() {
       stopVoice();
       audioTurnRef.current = false;
       setAudioTurn(false);
-      mouthPrevRef.current = 0;
+      mouthPlayRef.current = initialMouthPlayback();
       setAudioMouth(null);
       setTalking(false);
       setAmp(0);
@@ -1035,7 +1035,7 @@ function RaiReady() {
     const wantAudio = voiceOnRef.current && hasCallVoice();
     audioTurnRef.current = wantAudio;
     setAudioTurn(wantAudio);
-    mouthPrevRef.current = 0;
+    mouthPlayRef.current = initialMouthPlayback();
     setAudioMouth(null);
     speechEndedAt.current = 0;
     lineLandedAt.current = 0;
@@ -1287,22 +1287,29 @@ function RaiReady() {
                   lineVoicedRef.current = true;
                   talkingRef.current = true;
                   setTalking(true);
-                  mouthPrevRef.current = 0;
-                  setAudioMouth(analyserOk ? 0 : null);
+                  const now = performance.now();
+                  mouthPlayRef.current = stepMouthPlayback(initialMouthPlayback(now), {
+                    type: "playing",
+                    analyserOk,
+                    t: now,
+                  });
+                  setAudioMouth(analyserOk ? mouthPlayRef.current.frame : null);
                 },
                 onSample: ({ rms, analyserOk }) => {
                   if (!analyserOk) return;
-                  const next = mouthFrameFromPlayback({
-                    phase: "playing",
+                  const next = stepMouthPlayback(mouthPlayRef.current, {
+                    type: "rms",
                     rms,
-                    prev: mouthPrevRef.current,
-                    analyserOk: true,
+                    t: performance.now(),
                   });
-                  mouthPrevRef.current = next.frame;
+                  mouthPlayRef.current = next;
                   setAudioMouth((cur) => (cur === next.frame ? cur : next.frame));
                 },
                 onStop: () => {
-                  mouthPrevRef.current = 0;
+                  mouthPlayRef.current = stepMouthPlayback(mouthPlayRef.current, {
+                    type: "stop",
+                    t: performance.now(),
+                  });
                   setAudioMouth(null);
                   talkingRef.current = false;
                   setTalking(false);
@@ -1364,7 +1371,7 @@ function RaiReady() {
       if (voiced) speechEndedAt.current = Date.now();
       audioTurnRef.current = false;
       setAudioTurn(false);
-      mouthPrevRef.current = 0;
+      mouthPlayRef.current = initialMouthPlayback();
       setAudioMouth(null);
       setSending(false);
       setTalking(false);
@@ -1437,7 +1444,7 @@ function RaiReady() {
     stopRec();
     audioTurnRef.current = false;
     setAudioTurn(false);
-    mouthPrevRef.current = 0;
+    mouthPlayRef.current = initialMouthPlayback();
     setAudioMouth(null);
     setTalking(false);
     setSending(false);
@@ -1476,7 +1483,7 @@ function RaiReady() {
     sendingRef.current = false;
     audioTurnRef.current = false;
     setAudioTurn(false);
-    mouthPrevRef.current = 0;
+    mouthPlayRef.current = initialMouthPlayback();
     setAudioMouth(null);
     stopVoice();
     abortRef.current?.abort();

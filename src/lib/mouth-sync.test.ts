@@ -1,13 +1,17 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  MOUTH_FRAME_HOLD_MS,
   MOUTH_RMS_HALF_OFF,
   MOUTH_RMS_HALF_ON,
   MOUTH_RMS_OPEN_OFF,
   MOUTH_RMS_OPEN_ON,
+  initialMouthPlayback,
   mouthFrameFromPlayback,
   reduceMouthPlayback,
+  stepMouthPlayback,
   type MouthAudioEvent,
+  type MouthPlaybackState,
 } from "./mouth-sync.ts";
 
 describe("mouth sync from playback", () => {
@@ -112,6 +116,62 @@ describe("mouth sync from playback", () => {
     });
     assert.equal(gap.frame, 1);
     assert.equal(gap.open, false);
+  });
+
+  it("keeps each playback frame up for at least 66 ms, and rests immediately on stop", () => {
+    let state = stepMouthPlayback(initialMouthPlayback(0), { type: "playing", t: 0 });
+    state = stepMouthPlayback(state, { type: "rms", rms: 0, t: 0 });
+    assert.equal(state.frame, 1);
+    state = stepMouthPlayback(state, { type: "rms", rms: 1, t: 30 });
+    assert.equal(state.frame, 1);
+    state = stepMouthPlayback(state, { type: "rms", rms: 1, t: MOUTH_FRAME_HOLD_MS - 1 });
+    assert.equal(state.frame, 1);
+    state = stepMouthPlayback(state, { type: "rms", rms: 1, t: MOUTH_FRAME_HOLD_MS });
+    assert.equal(state.frame, 3);
+
+    const openedAt = state.shownAt;
+    state = stepMouthPlayback(state, { type: "rms", rms: 0, t: openedAt + 20 });
+    assert.equal(state.frame, 3);
+    const ended = stepMouthPlayback(state, { type: "ended", t: openedAt + 20 });
+    assert.equal(ended.frame, 0);
+    assert.equal(ended.drive, "rest");
+    assert.equal(ended.shownAt, openedAt + 20);
+
+    for (const type of ["pause", "error", "stop"] as const) {
+      const cut = stepMouthPlayback(state, { type, t: openedAt + 10 });
+      assert.equal(cut.frame, 0);
+      assert.equal(cut.drive, "rest");
+      assert.equal(cut.shownAt, openedAt + 10);
+    }
+  });
+
+  it("does not hold a playback frame under 66 ms, and closes a silence within about 100 ms", () => {
+    const events: MouthAudioEvent[] = [{ type: "playing", t: 0 }];
+    for (let t = 0; t < 200; t += 16) events.push({ type: "rms", rms: 0, t });
+    for (let t = 200; t < 400; t += 16) events.push({ type: "rms", rms: 0.8, t });
+    const loudAt = 400;
+    for (let t = loudAt; t < 520; t += 16) events.push({ type: "rms", rms: t % 32 === 0 ? 0.9 : 0, t });
+    for (let t = 520; t < 700; t += 16) events.push({ type: "rms", rms: 0, t });
+    events.push({ type: "ended", t: 700 });
+
+    let state = initialMouthPlayback(0);
+    const shown: Array<{ t: number; frame: MouthPlaybackState["frame"] }> = [];
+    for (const event of events) {
+      const prev = state.frame;
+      state = stepMouthPlayback(state, event);
+      if (state.frame !== prev) shown.push({ t: event.t ?? 0, frame: state.frame });
+    }
+    const playback = shown.filter((row) => row.frame !== 0);
+    for (let i = 1; i < playback.length; i++) {
+      const held = playback[i]!.t - playback[i - 1]!.t;
+      assert.ok(held >= MOUTH_FRAME_HOLD_MS, `frame ${playback[i - 1]!.frame} held ${held} ms`);
+    }
+    const open = playback.find((row) => row.frame === 3);
+    assert.ok(open && open.t - 200 <= 100, `loud→open in ${open ? open.t - 200 : "never"} ms`);
+    const closedAfter = playback.find((row) => row.frame === 1 && row.t >= 520);
+    assert.ok(closedAfter && closedAfter.t - 520 <= 100, `silence→closed in ${closedAfter ? closedAfter.t - 520 : "never"} ms`);
+    assert.equal(state.frame, 0);
+    assert.equal(shown.at(-1)!.t, 700);
   });
 
   it("falls back to the timed chew only while playing when the analyser cannot attach", () => {

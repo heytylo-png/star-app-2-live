@@ -4,8 +4,32 @@ let ctx: AudioContext | null = null;
 let analyser: AnalyserNode | null = null;
 let bins: Uint8Array<ArrayBuffer> | null = null;
 let timeBins: Uint8Array<ArrayBuffer> | null = null;
-let current: HTMLAudioElement | null = null;
+type SpeakAudio = {
+  crossOrigin: string;
+  src: string;
+  pause: () => void;
+  play: () => Promise<void>;
+  addEventListener: (type: string, listener: () => void, options?: { once?: boolean }) => void;
+};
+
+let current: SpeakAudio | null = null;
 let raf = 0;
+let elementSource: { disconnect: () => void } | null = null;
+
+/** A suspended context must not stall the line. Past this, play outside the graph. */
+export const AUDIO_RESUME_TIMEOUT_MS = 250;
+
+export type SpeakEnv = {
+  key?: string | null;
+  voiceId?: string | null;
+  fetchImpl?: typeof fetch;
+  context?: () => {
+    state: string;
+    resume: () => Promise<void>;
+    createMediaElementSource: (audio: SpeakAudio) => { connect: (node: unknown) => void; disconnect: () => void };
+  };
+  Audio?: new (src?: string) => SpeakAudio;
+};
 
 export type SpeakHooks = {
   /** Fires on the audio element's `playing` event. */
@@ -14,6 +38,8 @@ export type SpeakHooks = {
   onSample?: (sample: { rms: number; analyserOk: boolean }) => void;
   /** ended, pause, error, or abort. Mouth and speaking stop here. */
   onStop?: () => void;
+  /** Tests only. Production callers leave this unset. */
+  env?: SpeakEnv;
 };
 
 const ELEVEN_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech/";
@@ -194,14 +220,25 @@ export function unlockVoice() {
   }
 }
 
+function releaseElementSource() {
+  const source = elementSource;
+  elementSource = null;
+  try {
+    source?.disconnect();
+  } catch {
+    /* already torn down */
+  }
+}
+
 export function stopVoice() {
   if (raf) cancelAnimationFrame(raf);
   raf = 0;
-  if (current) {
-    current.pause();
-    current.src = "";
-    current = null;
-  }
+  releaseElementSource();
+  const audio = current;
+  if (!audio) return;
+  audio.pause();
+  audio.src = "";
+  if (current === audio) current = null;
 }
 
 function sampleAmplitude() {
@@ -226,14 +263,36 @@ function sampleRms() {
   return Math.min(1, Math.sqrt(sum / n));
 }
 
-async function attachAnalyser(audio: HTMLAudioElement, signal?: AbortSignal): Promise<boolean> {
+async function attachAnalyser(
+  audio: SpeakAudio,
+  signal: AbortSignal | undefined,
+  audioCtx: {
+    state: string;
+    resume: () => Promise<void>;
+    createMediaElementSource: (audio: SpeakAudio) => { connect: (node: unknown) => void; disconnect: () => void };
+  },
+): Promise<boolean> {
   if (signal?.aborted) return false;
   try {
-    const audioCtx = ensureContext();
-    if (audioCtx.state === "suspended") await audioCtx.resume();
+    if (audioCtx.state === "suspended") {
+      await Promise.race([
+        audioCtx.resume().catch(() => {}),
+        new Promise<void>((resolve) => setTimeout(resolve, AUDIO_RESUME_TIMEOUT_MS)),
+      ]);
+    }
     if (signal?.aborted || audioCtx.state !== "running" || !analyser) return false;
     const source = audioCtx.createMediaElementSource(audio);
-    source.connect(analyser);
+    try {
+      source.connect(analyser);
+    } catch (err) {
+      try {
+        source.disconnect();
+      } catch {
+        /* ignore */
+      }
+      throw err;
+    }
+    elementSource = source;
     return true;
   } catch {
     return false;
@@ -304,8 +363,8 @@ export async function speak(
   hooks?: SpeakHooks,
 ): Promise<"played" | "silent"> {
   stopVoice();
-  const key = getStoredElevenKey();
-  const voiceId = getStoredVoiceId();
+  const key = hooks?.env && "key" in hooks.env ? hooks.env.key : getStoredElevenKey();
+  const voiceId = hooks?.env && "voiceId" in hooks.env ? hooks.env.voiceId : getStoredVoiceId();
   if (!elevenTtsPlan(text, key, voiceId)) {
     onAmp(0);
     return "silent";
@@ -313,7 +372,13 @@ export async function speak(
 
   let heard = false;
   try {
-    const res = await requestElevenSpeech({ text, key, voiceId, signal });
+    const res = await requestElevenSpeech({
+      text,
+      key,
+      voiceId,
+      signal,
+      fetchImpl: hooks?.env?.fetchImpl,
+    });
     if (!res?.ok) {
       onAmp(0);
       return "silent";
@@ -321,10 +386,12 @@ export async function speak(
 
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
+    const AudioCtor = hooks?.env?.Audio ?? Audio;
+    const audio = new AudioCtor(url) as SpeakAudio;
     audio.crossOrigin = "anonymous";
     current = audio;
-    const analyserOk = await attachAnalyser(audio, signal);
+    const audioCtx = hooks?.env?.context ? hooks.env.context() : ensureContext();
+    const analyserOk = await attachAnalyser(audio, signal, audioCtx as Parameters<typeof attachAnalyser>[2]);
 
     let smooth = 0;
     let live = false;
@@ -347,6 +414,7 @@ export async function speak(
         live = false;
         if (raf) cancelAnimationFrame(raf);
         raf = 0;
+        releaseElementSource();
         onAmp(0);
         URL.revokeObjectURL(url);
         if (current === audio) current = null;
@@ -378,6 +446,10 @@ export async function speak(
         },
         { once: true },
       );
+      if (signal?.aborted) {
+        finish();
+        return;
+      }
       void audio.play().then(
         () => {
           /* Mouth and samples start on `playing`, not when play() resolves. */
