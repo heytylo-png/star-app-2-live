@@ -7,10 +7,13 @@ import { fileURLToPath } from "node:url";
 import { inflateSync } from "node:zlib";
 import {
   idleBlinkFrameUrls,
+  BRIDGE_FILE_VERSION,
   PRE_CUT_ALPHA_FILES,
   PRE_CUT_ALPHA_VERSION,
   SPRITES,
+  smugClipUrls,
   spriteNeedsWhitePunch,
+  waveClipUrls,
 } from "./rai.ts";
 import { punchedSpriteUrl } from "./punch-white.ts";
 
@@ -103,7 +106,7 @@ const POSE_SHEET_SHA256: Record<string, string> = {
   "rai/three_quarter_right.png": "528a5439e93271a7e8abc3e7324bcbc3ffdae2ff6a86bd680a0c22bbe6bf244e",
   // Smug hold (paste-15): 1085 frame 48 (2.000 s), the last frame of the intro clip.
   "rai/smug1085_hold.webp": "45cd6eea6c438b340e1d33c8aaeb6003828b6dfb7cc40ed9ed49359643c75cbf",
-  "rai/wave1110_hold.webp": "4f0ea2dc8416c9c35b6fc411fceb380fee3926b8665927e1a70cb86eff8d04ea",
+  "rai/wave1110_hold.webp": "972e82bbc2ed29befc0a9e7b3b3a7396d958ff6f93b519fa244eb26e0f42fb6d",
   // TyLo's 2026-10-06 wave still: white-matte cut, uniform x1.4 to the 1008x1792 idle canvas, no re-tone.
   "rai/wave_official.png": "1c1a888074b64729c9937c9dbc407eebec82f6b6c4699a1ec30a02c2574cddb9",
 };
@@ -112,8 +115,8 @@ const POSE_SHEET_SHA256: Record<string, string> = {
 const SMUG_CLIP_SHA256: Record<string, string> = {
   "rai/smug1085_in.avif": "0c2c6a4bb9ab5b995720b2026f8919dfe71632a3d19902fa3ac905c870ec5351",
   "rai/smug1084_out.avif": "c44e3af0a6233c9979747710cab1c731e5d96691dc3816628978f227f9ff1b50",
-  "rai/wave1110_in.avif": "d4e6caf971c211baea78981a9a59516e127c994ac77a344ceeaaed79e9e0ff45",
-  "rai/wave1114_out.avif": "eae714e7538f43038db017c29f0b786b5f2a24069f3b976d9927486610d035c2",
+  "rai/wave1110_in.avif": "4f100189121976968255a158b04afe650a043f4bdb1ba7674b87999b6f58ada1",
+  "rai/wave1114_out.avif": "844a8f4e09e8a505233c7709e5f12cefddbfc256f5cf4a0d7a16593045b98201",
 };
 
 describe("smug clips (1085 in / 1084 out)", () => {
@@ -124,6 +127,24 @@ describe("smug clips (1085 in / 1084 out)", () => {
     assert.deepEqual(rai.filter((f) => /^smug/.test(f)).sort(), ["smug1084_out.avif", "smug1085_hold.webp", "smug1085_in.avif"]);
     assert.deepEqual(rai.filter((f) => /^wave111/.test(f)).sort(), ["wave1110_hold.webp", "wave1110_in.avif", "wave1114_out.avif"]);
     assert.equal(rai.some((f) => /9(56|60|62|68|70|71|73)/.test(f)), false);
+  });
+});
+
+describe("bridge file cache keys (wave w2)", () => {
+  it("versions only the re-cut wave files; smug and idle URLs stay as they were", () => {
+    assert.deepEqual(BRIDGE_FILE_VERSION, {
+      "rai/wave1110_in.avif": "w2",
+      "rai/wave1114_out.avif": "w2",
+      "rai/wave1110_hold.webp": "w2",
+    });
+    assert.match(SPRITES.poses.wave, /rai\/wave1110_hold\.webp\?v=w2$/);
+    assert.equal(spriteNeedsWhitePunch(SPRITES.poses.wave), false);
+    const [win, wout] = waveClipUrls();
+    assert.match(win!, /rai\/wave1110_in\.avif\?v=w2$/);
+    assert.match(wout!, /rai\/wave1114_out\.avif\?v=w2$/);
+    assert.match(SPRITES.poses.smug, new RegExp(`smug1085_hold\\.webp\\?v=${PRE_CUT_ALPHA_VERSION}$`));
+    assert.match(SPRITES.poses.idle, new RegExp(`idle\\.png\\?v=${PRE_CUT_ALPHA_VERSION}$`));
+    for (const u of smugClipUrls()) assert.equal(u.includes("?"), false, u);
   });
 });
 

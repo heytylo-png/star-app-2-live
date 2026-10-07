@@ -659,11 +659,26 @@ export function spriteNeedsWhitePunch(src: string): boolean {
  * kiss is unmapped. Do not point wave/hold at front_wave / front_hold.
  * See POSING.md.
  */
+/**
+ * Per-file cache keys for re-cut bridge assets, so one file can be re-fetched without moving the
+ * smug / idle URLs (those keep PRE_CUT_ALPHA_VERSION or the bare URL). The service worker is
+ * cache-first, so a new URL is what makes a returning phone fetch the new bytes.
+ *   w2 (2026-10-07): ring/little-finger gap cleaned (alpha only) on the 1110 2.000 s frame,
+ *   the hold, and 1114 frames 0-2.
+ */
+export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
+  "rai/wave1110_in.avif": "w2",
+  "rai/wave1114_out.avif": "w2",
+  "rai/wave1110_hold.webp": "w2",
+};
+
 const ASSET = (path: string) => {
   const env = (import.meta as ImportMeta & { env?: { BASE_URL?: string } }).env;
   const base = env?.BASE_URL || "/";
   const prefix = base.endsWith("/") ? base : `${base}/`;
   const file = path.replace(/^\//, "");
+  const fileVersion = BRIDGE_FILE_VERSION[file];
+  if (fileVersion) return `${prefix}${file}?v=${fileVersion}`;
   const preCut = (PRE_CUT_ALPHA_FILES as readonly string[]).includes(file);
   return preCut ? `${prefix}${file}?v=${PRE_CUT_ALPHA_VERSION}` : `${prefix}${file}`;
 };
