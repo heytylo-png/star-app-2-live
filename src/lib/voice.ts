@@ -3,8 +3,18 @@ import { getStoredElevenKey, getStoredVoiceId } from "./settings-keys.ts";
 let ctx: AudioContext | null = null;
 let analyser: AnalyserNode | null = null;
 let bins: Uint8Array<ArrayBuffer> | null = null;
+let timeBins: Uint8Array<ArrayBuffer> | null = null;
 let current: HTMLAudioElement | null = null;
 let raf = 0;
+
+export type SpeakHooks = {
+  /** Fires on the audio element's `playing` event. */
+  onPlaying?: (info: { analyserOk: boolean }) => void;
+  /** One RMS sample per animation frame while the element is playing. */
+  onSample?: (sample: { rms: number; analyserOk: boolean }) => void;
+  /** ended, pause, error, or abort. Mouth and speaking stop here. */
+  onStop?: () => void;
+};
 
 const ELEVEN_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech/";
 
@@ -170,6 +180,7 @@ function ensureContext() {
     analyser.smoothingTimeConstant = 0.72;
     analyser.connect(ctx.destination);
     bins = new Uint8Array(analyser.frequencyBinCount) as Uint8Array<ArrayBuffer>;
+    timeBins = new Uint8Array(analyser.fftSize) as Uint8Array<ArrayBuffer>;
   }
   return ctx;
 }
@@ -200,6 +211,33 @@ function sampleAmplitude() {
   const n = Math.min(bins.length, 40);
   for (let i = 0; i < n; i++) sum += bins[i]!;
   return Math.min(1, (sum / n / 255) * 1.65);
+}
+
+/** Time-domain RMS, 0..1. Unsmoothed so a syllable can move the mouth inside a frame. */
+function sampleRms() {
+  if (!analyser || !timeBins) return 0;
+  analyser.getByteTimeDomainData(timeBins);
+  let sum = 0;
+  const n = timeBins.length;
+  for (let i = 0; i < n; i++) {
+    const x = (timeBins[i]! - 128) / 128;
+    sum += x * x;
+  }
+  return Math.min(1, Math.sqrt(sum / n));
+}
+
+async function attachAnalyser(audio: HTMLAudioElement, signal?: AbortSignal): Promise<boolean> {
+  if (signal?.aborted) return false;
+  try {
+    const audioCtx = ensureContext();
+    if (audioCtx.state === "suspended") await audioCtx.resume();
+    if (signal?.aborted || audioCtx.state !== "running" || !analyser) return false;
+    const source = audioCtx.createMediaElementSource(audio);
+    source.connect(analyser);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -263,21 +301,22 @@ export async function speak(
   text: string,
   onAmp: (value: number) => void,
   signal?: AbortSignal,
-): Promise<void> {
+  hooks?: SpeakHooks,
+): Promise<"played" | "silent"> {
   stopVoice();
   const key = getStoredElevenKey();
   const voiceId = getStoredVoiceId();
   if (!elevenTtsPlan(text, key, voiceId)) {
     onAmp(0);
-    return;
+    return "silent";
   }
 
+  let heard = false;
   try {
-    const audioCtx = ensureContext();
     const res = await requestElevenSpeech({ text, key, voiceId, signal });
     if (!res?.ok) {
       onAmp(0);
-      return;
+      return "silent";
     }
 
     const blob = await res.blob();
@@ -285,29 +324,52 @@ export async function speak(
     const audio = new Audio(url);
     audio.crossOrigin = "anonymous";
     current = audio;
-
-    const source = audioCtx.createMediaElementSource(audio);
-    if (analyser) source.connect(analyser);
+    const analyserOk = await attachAnalyser(audio, signal);
 
     let smooth = 0;
+    let live = false;
     const tick = () => {
+      if (!live) return;
+      const rms = sampleRms();
+      hooks?.onSample?.({ rms, analyserOk: true });
       const raw = sampleAmplitude();
       smooth = smooth * 0.7 + raw * 0.3;
       onAmp(smooth);
+      if (!live) return;
       raf = requestAnimationFrame(tick);
     };
 
     await new Promise<void>((resolve) => {
+      let settled = false;
       const finish = () => {
+        if (settled) return;
+        settled = true;
+        live = false;
         if (raf) cancelAnimationFrame(raf);
         raf = 0;
         onAmp(0);
         URL.revokeObjectURL(url);
         if (current === audio) current = null;
+        hooks?.onStop?.();
         resolve();
       };
-      audio.onended = finish;
-      audio.onerror = finish;
+      audio.addEventListener(
+        "playing",
+        () => {
+          if (settled) return;
+          heard = true;
+          live = true;
+          hooks?.onPlaying?.({ analyserOk });
+          if (analyserOk) raf = requestAnimationFrame(tick);
+        },
+        { once: true },
+      );
+      audio.addEventListener("ended", finish);
+      audio.addEventListener("pause", () => {
+        if (!heard) return;
+        finish();
+      });
+      audio.addEventListener("error", finish);
       signal?.addEventListener(
         "abort",
         () => {
@@ -318,13 +380,15 @@ export async function speak(
       );
       void audio.play().then(
         () => {
-          raf = requestAnimationFrame(tick);
+          /* Mouth and samples start on `playing`, not when play() resolves. */
         },
         () => finish(),
       );
     });
   } catch (err) {
-    if (isAbort(err)) return;
+    if (isAbort(err)) return heard ? "played" : "silent";
     onAmp(0);
+    return "silent";
   }
+  return heard ? "played" : "silent";
 }

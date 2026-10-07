@@ -4,6 +4,7 @@ import { Puppet } from "@/components/puppet";
 import { SpineStage } from "@/components/spine-stage";
 import { isSpineDemoEngine, parseRaiEngine, type RaiEngineId } from "@/lib/rai-engine";
 import type { EmotionId, PoseId } from "@/lib/rai";
+import type { IdleMouthFrame } from "@/lib/rai-motion";
 import type { StageSource } from "@/lib/stage-source";
 
 type PresenceStageProps = {
@@ -13,6 +14,8 @@ type PresenceStageProps = {
   amplitude: number;
   /** Line she is saying. PNG puppet reads it for the hype (05 wide) mouth only. */
   spokenLine?: string;
+  /** Loudness frame while TTS audio is playing. Omitted for the timed chew. */
+  audioMouth?: IdleMouthFrame | null;
   className?: string;
   /** Life desk clip. PNG (or omitted) keeps the official puppet. */
   desk?: StageSource;
@@ -33,6 +36,7 @@ export function PresenceStage({
   onDeskFail,
   className,
   spokenLine,
+  audioMouth = null,
   ...props
 }: PresenceStageProps) {
   const [engine, setEngine] = useState<RaiEngineId>(readEngine);
@@ -46,7 +50,7 @@ export function PresenceStage({
   const body = isSpineDemoEngine(engine) ? (
     <SpineStage {...props} className={className} target={engine} />
   ) : (
-    <Puppet {...props} spokenLine={spokenLine} className={className} />
+    <Puppet {...props} spokenLine={spokenLine} audioMouth={audioMouth} className={className} />
   );
 
   return (
