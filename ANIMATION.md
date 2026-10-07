@@ -70,6 +70,7 @@ Same player path as 1085/1084: muted animated AVIF, WebCodecs ImageDecoder in a 
 - Hold: `public/rai/wave1110_hold.webp` = the exact 2.000 s frame, until the next send (same `SmugReleaseGate` / `requestSmugRelease`).
 - Exit (1114): `public/rai/wave1114_out.avif`, all 145 frames forward → idle → next pose (#122 timing kept).
 - Registration: identity vs `idle.png` (soles already match). Allowlist: idle sheets + the two clips + hold. Smug 1085/1084 unchanged.
+- 2026-10-07 (w2): the white spot in the ring/little-finger gap is cleared, alpha only, on 1110 f48, the hold (only its ALPH chunk was rewritten; VP8 colour bytes identical) and 1114 f0–2. The clips were re-encoded with the same settings (libaom crf 26, 49/145 frames, 24 fps) and have identical colour streams. URLs carry `?v=w2` (`BRIDGE_FILE_VERSION`); smug/idle URLs unchanged.
 
 
 ### Talk / mouth
