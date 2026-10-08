@@ -1883,7 +1883,7 @@ function RaiReady() {
           {showHint ? (
             <p
               data-empty-chat-hint=""
-              className="mx-auto mb-1.5 w-full max-w-lg truncate text-center text-sm text-muted"
+              className="mx-auto mb-1.5 w-full max-w-lg truncate text-center text-sm text-[#3f3b36] [text-shadow:0_0_6px_var(--color-bg)]"
             >
               Say hey — or tap the phone to call her.
             </p>
@@ -1898,7 +1898,7 @@ function RaiReady() {
                   key={s.label}
                   type="button"
                   onClick={() => void send(s.prompt)}
-                  className="h-9 shrink-0 rounded-full bg-elevated px-3 text-sm text-muted shadow-[var(--shadow-border)] transition-colors duration-150 hover:text-fg"
+                  className="h-11 min-h-11 shrink-0 rounded-full bg-elevated px-3 text-sm text-muted shadow-[var(--shadow-border)] transition-colors duration-150 hover:text-fg"
                 >
                   {s.label}
                 </button>
