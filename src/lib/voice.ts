@@ -266,14 +266,13 @@ function sampleRms() {
 async function attachAnalyser(
   audio: SpeakAudio,
   signal: AbortSignal | undefined,
-  audioCtx: {
-    state: string;
-    resume: () => Promise<void>;
-    createMediaElementSource: (audio: SpeakAudio) => { connect: (node: unknown) => void; disconnect: () => void };
-  },
+  context: SpeakEnv["context"],
 ): Promise<boolean> {
   if (signal?.aborted) return false;
   try {
+    const audioCtx = (context ? context() : ensureContext()) as NonNullable<
+      ReturnType<NonNullable<SpeakEnv["context"]>>
+    >;
     if (audioCtx.state === "suspended") {
       await Promise.race([
         audioCtx.resume().catch(() => {}),
@@ -390,8 +389,7 @@ export async function speak(
     const audio = new AudioCtor(url) as SpeakAudio;
     audio.crossOrigin = "anonymous";
     current = audio;
-    const audioCtx = hooks?.env?.context ? hooks.env.context() : ensureContext();
-    const analyserOk = await attachAnalyser(audio, signal, audioCtx as Parameters<typeof attachAnalyser>[2]);
+    const analyserOk = await attachAnalyser(audio, signal, hooks?.env?.context);
 
     let smooth = 0;
     let live = false;

@@ -11,8 +11,14 @@ export type MouthPhase = "idle" | "playing" | "ended" | "paused" | "error";
 
 export type MouthDrive = "rest" | "rms" | "chew";
 
-/** 0 rest, 1 closed, 2 half-open (Maker 02), 3 open (Maker 03). */
-export type MouthSyncFrame = 0 | 1 | 2 | 3;
+/**
+ * 0 and 1 are the rest sheet. 2–5 are Maker's talking list
+ * (`idleMouthFrameUrls`: small, open, oo, wide). 6 is not a talk frame.
+ */
+export type MouthSyncFrame = 0 | 1 | 2 | 3 | 4 | 5;
+
+/** Talking sheets the audio mouth may use. Rest (0/1) is separate. */
+export const AUDIO_MOUTH_TALK_FRAMES = [2, 3, 4, 5] as const;
 
 export type MouthAudioEvent =
   | { type: "playing"; analyserOk?: boolean; t?: number }
@@ -51,7 +57,13 @@ function clampRms(rms: number): number {
   return rms > 1 ? 1 : rms;
 }
 
-function frameFromRms(rms: number, prev: number): 1 | 2 | 3 {
+function asTalkOrRest(frame: number): MouthSyncFrame {
+  if (frame === 0 || frame === 1) return frame;
+  if (frame === 2 || frame === 3 || frame === 4 || frame === 5) return frame;
+  return 0;
+}
+
+function frameFromRms(rms: number, prev: number): 1 | 2 | 3 | 4 | 5 {
   const loud = clampRms(rms);
   if (prev >= 3) {
     if (loud >= MOUTH_RMS_OPEN_OFF) return 3;
@@ -88,7 +100,7 @@ export function mouthFrameFromPlayback(input: {
   if (input.rms === undefined) {
     return { phase, frame: 0, open: false, drive: "rms" };
   }
-  const frame = frameFromRms(input.rms, input.prev);
+  const frame = asTalkOrRest(frameFromRms(input.rms, input.prev));
   return { phase, frame, open: frame >= 2, drive: "rms" };
 }
 
@@ -174,7 +186,7 @@ export function stepMouthPlayback(state: MouthPlaybackState, event: MouthAudioEv
     analyserOk: true,
   });
   // A true gap should close, not sit on half-open while the smoother drains.
-  let target = mapped.frame;
+  let target = asTalkOrRest(mapped.frame);
   if (sample < MOUTH_RMS_HALF_OFF && smooth < MOUTH_RMS_OPEN_OFF) target = 1;
   if (target === state.frame) {
     return { ...state, smooth, open: state.frame >= 2, drive: "rms" };

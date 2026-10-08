@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  AUDIO_MOUTH_TALK_FRAMES,
   MOUTH_FRAME_HOLD_MS,
   MOUTH_RMS_HALF_OFF,
   MOUTH_RMS_HALF_ON,
@@ -13,6 +14,7 @@ import {
   type MouthAudioEvent,
   type MouthPlaybackState,
 } from "./mouth-sync.ts";
+import { idleMouthFrameSrc, idleMouthFrameUrls } from "./rai.ts";
 
 describe("mouth sync from playback", () => {
   it("stays on the rest frame before playing and after the last sample", () => {
@@ -172,6 +174,43 @@ describe("mouth sync from playback", () => {
     assert.ok(closedAfter && closedAfter.t - 520 <= 100, `silence→closed in ${closedAfter ? closedAfter.t - 520 : "never"} ms`);
     assert.equal(state.frame, 0);
     assert.equal(shown.at(-1)!.t, 700);
+  });
+
+  it("maps playback only onto Maker's talking frames 02–05, plus rest", () => {
+    const urls = idleMouthFrameUrls();
+    assert.deepEqual(
+      urls,
+      [2, 3, 4, 5].map((frame) => idleMouthFrameSrc(frame)),
+    );
+    assert.deepEqual([...AUDIO_MOUTH_TALK_FRAMES], [2, 3, 4, 5]);
+    for (const src of urls) assert.doesNotMatch(src, /idle_mouth_06_smirk/);
+
+    const talk = new Set<number>(AUDIO_MOUTH_TALK_FRAMES);
+    const rmses = [0, 0.01, 0.03, 0.05, 0.08, 0.12, 0.4, 1, Number.NaN];
+    let state = stepMouthPlayback(initialMouthPlayback(0), { type: "playing", t: 0 });
+    let t = 0;
+    for (let round = 0; round < 8; round++) {
+      for (const rms of rmses) {
+        t += 80;
+        state = stepMouthPlayback(state, { type: "rms", rms, t });
+        assert.ok(state.frame >= 0 && state.frame <= 5, `frame ${state.frame}`);
+        assert.notEqual(state.frame, 6);
+        if (state.frame >= 2) assert.ok(talk.has(state.frame));
+      }
+    }
+    for (const prev of [0, 1, 2, 3, 4, 5, 6]) {
+      for (const rms of rmses) {
+        const snap = mouthFrameFromPlayback({
+          phase: "playing",
+          rms,
+          prev,
+          analyserOk: true,
+        });
+        assert.ok(snap.frame <= 5);
+        assert.notEqual(snap.frame, 6);
+        if (snap.frame >= 2) assert.ok(talk.has(snap.frame));
+      }
+    }
   });
 
   it("falls back to the timed chew only while playing when the analyser cannot attach", () => {

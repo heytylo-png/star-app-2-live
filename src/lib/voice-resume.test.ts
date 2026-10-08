@@ -64,6 +64,40 @@ async function say(env: SpeakEnv) {
   return { result, analyserOk, elapsed: Date.now() - started };
 }
 
+function throwingContextEnv(plays: { n: number }): SpeakEnv {
+  return {
+    key: "sk-test-5678",
+    voiceId: "voice-test-abcd",
+    fetchImpl: async () => new Response(new Blob([Uint8Array.from([0, 1, 2])], { type: "audio/wav" }), { status: 200 }),
+    Audio: class extends FakeAudio {
+      play() {
+        plays.n += 1;
+        return super.play();
+      }
+    },
+    context: () => {
+      throw new Error("AudioContext blocked");
+    },
+  };
+}
+
+describe("throwing AudioContext", () => {
+  it("plays the clip outside the graph and does not wait on resume", async () => {
+    const plays = { n: 0 };
+    const first = await say(throwingContextEnv(plays));
+    assert.equal(first.result, "played");
+    assert.equal(first.analyserOk, false);
+    assert.equal(plays.n, 1);
+    assert.ok(first.elapsed < 150, `first send took ${first.elapsed} ms`);
+
+    const second = await say(throwingContextEnv(plays));
+    assert.equal(second.result, "played");
+    assert.equal(second.analyserOk, false);
+    assert.equal(plays.n, 2);
+    assert.ok(second.elapsed < 150, `second send took ${second.elapsed} ms`);
+  });
+});
+
 describe("hung audio resume", () => {
   it("settles within the timeout, falls back, and a second voiced send still plays", async () => {
     const sources = { n: 0 };

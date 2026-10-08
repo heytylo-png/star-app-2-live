@@ -260,7 +260,7 @@ function RaiReady() {
   /** This turn will use ElevenLabs. Text chew stays off until TTS fails. */
   const [audioTurn, setAudioTurn] = useState(false);
   /** Loudness frame while TTS is playing. Null uses the timed chew. */
-  const [audioMouth, setAudioMouth] = useState<0 | 1 | 2 | 3 | null>(null);
+  const [audioMouth, setAudioMouth] = useState<0 | 1 | 2 | 3 | 4 | 5 | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
   const recRef = useRef<Rec | null>(null);
