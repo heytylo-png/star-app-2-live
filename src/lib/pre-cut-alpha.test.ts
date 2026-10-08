@@ -69,7 +69,7 @@ const POSE_SHEET_SIZE: Record<string, [number, number]> = {
   "rai/three_quarter_right.png": [768, 1168],
   // Smug hold (paste-15): the 2.000 s frame of 1085 (RGBA WebP). The clips are AVIF video, not sheets.
   "rai/smug1085_hold.webp": [720, 1280],
-  "rai/wave1110_hold.webp": [720, 1280],
+  "rai/wave1126_hold.webp": [720, 1280],
 };
 
 /** Minimal WebP read: VP8X canvas size + alpha flag (the bridge frames ship as RGBA WebP). */
@@ -106,7 +106,8 @@ const POSE_SHEET_SHA256: Record<string, string> = {
   "rai/three_quarter_right.png": "528a5439e93271a7e8abc3e7324bcbc3ffdae2ff6a86bd680a0c22bbe6bf244e",
   // Smug hold (paste-15): 1085 frame 48 (2.000 s), the last frame of the intro clip.
   "rai/smug1085_hold.webp": "45cd6eea6c438b340e1d33c8aaeb6003828b6dfb7cc40ed9ed49359643c75cbf",
-  "rai/wave1110_hold.webp": "972e82bbc2ed29befc0a9e7b3b3a7396d958ff6f93b519fa244eb26e0f42fb6d",
+  // Wave hold (2026-10-08): 1126 frame 96 (4.000 s), registered to idle, skin retoned to idle, finger gaps alpha-cleaned.
+  "rai/wave1126_hold.webp": "1aaf9651b2c13745be74620da74e15573758429279079ebf7882c97e3d4a1ff3",
   // TyLo's 2026-10-06 wave still: white-matte cut, uniform x1.4 to the 1008x1792 idle canvas, no re-tone.
   "rai/wave_official.png": "1c1a888074b64729c9937c9dbc407eebec82f6b6c4699a1ec30a02c2574cddb9",
 };
@@ -115,8 +116,8 @@ const POSE_SHEET_SHA256: Record<string, string> = {
 const SMUG_CLIP_SHA256: Record<string, string> = {
   "rai/smug1085_in.avif": "0c2c6a4bb9ab5b995720b2026f8919dfe71632a3d19902fa3ac905c870ec5351",
   "rai/smug1084_out.avif": "c44e3af0a6233c9979747710cab1c731e5d96691dc3816628978f227f9ff1b50",
-  "rai/wave1110_in.avif": "4f100189121976968255a158b04afe650a043f4bdb1ba7674b87999b6f58ada1",
-  "rai/wave1114_out.avif": "844a8f4e09e8a505233c7709e5f12cefddbfc256f5cf4a0d7a16593045b98201",
+  "rai/wave1126_in.avif": "16904d61026d0aa5a2f574e87ca0174fca80466f8eface66abc67a28e50838c6",
+  "rai/wave1140_out.avif": "f31c918ef34af5071365a4a8d2af69da4487c1e2533eaa55971ba6c5b8b518a5",
 };
 
 describe("smug clips (1085 in / 1084 out)", () => {
@@ -125,23 +126,24 @@ describe("smug clips (1085 in / 1084 out)", () => {
     for (const [file, pinned] of Object.entries(SMUG_CLIP_SHA256)) assert.equal(sha(file), pinned, file);
     const rai = readdirSync(join(root, "public/rai"));
     assert.deepEqual(rai.filter((f) => /^smug/.test(f)).sort(), ["smug1084_out.avif", "smug1085_hold.webp", "smug1085_in.avif"]);
-    assert.deepEqual(rai.filter((f) => /^wave111/.test(f)).sort(), ["wave1110_hold.webp", "wave1110_in.avif", "wave1114_out.avif"]);
+    assert.deepEqual(rai.filter((f) => /^wave1\d{3}/.test(f)).sort(), ["wave1126_hold.webp", "wave1126_in.avif", "wave1140_out.avif"]);
+    assert.equal(rai.some((f) => /wave111[04]/.test(f)), false, "1110 / 1114 removed");
     assert.equal(rai.some((f) => /9(56|60|62|68|70|71|73)/.test(f)), false);
   });
 });
 
-describe("bridge file cache keys (wave w2)", () => {
+describe("bridge file cache keys (wave w3)", () => {
   it("versions only the re-cut wave files; smug and idle URLs stay as they were", () => {
     assert.deepEqual(BRIDGE_FILE_VERSION, {
-      "rai/wave1110_in.avif": "w2",
-      "rai/wave1114_out.avif": "w2",
-      "rai/wave1110_hold.webp": "w2",
+      "rai/wave1126_in.avif": "w3",
+      "rai/wave1140_out.avif": "w3",
+      "rai/wave1126_hold.webp": "w3",
     });
-    assert.match(SPRITES.poses.wave, /rai\/wave1110_hold\.webp\?v=w2$/);
+    assert.match(SPRITES.poses.wave, /rai\/wave1126_hold\.webp\?v=w3$/);
     assert.equal(spriteNeedsWhitePunch(SPRITES.poses.wave), false);
     const [win, wout] = waveClipUrls();
-    assert.match(win!, /rai\/wave1110_in\.avif\?v=w2$/);
-    assert.match(wout!, /rai\/wave1114_out\.avif\?v=w2$/);
+    assert.match(win!, /rai\/wave1126_in\.avif\?v=w3$/);
+    assert.match(wout!, /rai\/wave1140_out\.avif\?v=w3$/);
     assert.match(SPRITES.poses.smug, new RegExp(`smug1085_hold\\.webp\\?v=${PRE_CUT_ALPHA_VERSION}$`));
     assert.match(SPRITES.poses.idle, new RegExp(`idle\\.png\\?v=${PRE_CUT_ALPHA_VERSION}$`));
     for (const u of smugClipUrls()) assert.equal(u.includes("?"), false, u);

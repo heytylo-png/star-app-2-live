@@ -79,7 +79,7 @@ describe("hip clip data", () => {
     const order = stagePreloadOrder({ clip: true });
     assert.deepEqual(order.beat.map((u) => u.split("?")[0]!.replace(/^.*\/rai\//, "rai/")), [
       "rai/smug1085_hold.webp",
-      "rai/wave1110_hold.webp",
+      "rai/wave1126_hold.webp",
     ]);
     assert.ok(!order.beat.some((u) => /\/hip\//.test(u)));
     for (const skip of [true, false]) {

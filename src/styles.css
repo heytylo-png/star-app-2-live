@@ -540,7 +540,7 @@
   padding: 0.3rem 0.65rem;
 }
 
-/* Bridge clips (smug 1085/1084 + wave 1110/1114): one canvas per clip, painted by the clip
+/* Bridge clips (smug 1085/1084 + wave 1126/1140): one canvas per clip, painted by the clip
    worker. Hidden unless their clip is on stage; while one is, it is the only visible image.
    The puppet flips data-rai-bridge-on ("in"/"out" for smug, "win"/"wout" for wave). */
 .rai-rig > .rai-layer[data-rai-role="bridge"] {
