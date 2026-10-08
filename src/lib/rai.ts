@@ -669,11 +669,13 @@ export function spriteNeedsWhitePunch(src: string): boolean {
  *   1126 4.000 s hold; 1110/1114 are gone.
  *   w4 (2026-10-08): skin of both clips matched to idle.png per frame (face, arms, legs LAB
  *   means; skin only), so the raised-arm frames and the 1140 start are no longer lighter.
+ *   w5 (2026-10-08 13:30): the 1126 intro runs f0..f98 and the hold is f98, the first frame whose
+ *   smile curves (the 4.000 s frame's mouth is flat). 1140 is unchanged and stays w4.
  */
 export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
-  "rai/wave1126_in.avif": "w4",
+  "rai/wave1126_in.avif": "w5",
   "rai/wave1140_out.avif": "w4",
-  "rai/wave1126_hold.webp": "w4",
+  "rai/wave1126_hold.webp": "w5",
 };
 
 const ASSET = (path: string) => {
@@ -709,7 +711,7 @@ export const LIVE_POSE_FILES = {
   pout: "rai/pout_official.png",
   tired: "rai/tired_official.png",
   smug: SMUG_HOLD_FILE,
-  /** Wave hold: exact 4.000 s frame of 1126 (wave palm up, other hand on hip, smile set). */
+  /** Wave hold: 1126 frame 98 (4.083 s; wave palm up, other hand on hip, first curved smile). */
   wave: WAVE_HOLD_FILE,
   hold: "rai/hold_official.png",
   embarrassed: "rai/embarrassed_official.png",
@@ -929,7 +931,7 @@ export function waveBeatSheetUrls(): string[] {
   return [SPRITES.poses.wave];
 }
 
-/** The two clips of the idle <-> wave beat: 1126 intro (0-4 s), 1140 rest. */
+/** The two clips of the idle <-> wave beat: 1126 intro (f0-f98, 0-4.083 s), 1140 rest. */
 export function waveClipUrls(): string[] {
   return [ASSET(WAVE_IN_CLIP.file), ASSET(WAVE_OUT_CLIP.file)];
 }

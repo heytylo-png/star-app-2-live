@@ -114,7 +114,7 @@ function rig(opts: { rand?: () => number; clipClock?: boolean } = {}) {
 }
 
 describe("pose bridge pair table (paste-15: 1085 / 1084 video)", () => {
-  it("is idle<->smug and idle<->wave: 49 / 97-frame intros + 145-frame rests", () => {
+  it("is idle<->smug and idle<->wave: 49 / 99-frame intros + 145-frame rests", () => {
     assert.deepEqual(Object.keys(POSE_BRIDGE_PAIRS).sort(), ["idle>smug", "idle>wave", "smug>idle", "wave>idle"]);
     assert.equal(SMUG_IN_CLIP.file, "rai/smug1085_in.avif");
     assert.equal(SMUG_OUT_CLIP.file, "rai/smug1084_out.avif");
@@ -130,17 +130,18 @@ describe("pose bridge pair table (paste-15: 1085 / 1084 video)", () => {
     assert.equal(SMUG_HOLD_FILE, "rai/smug1085_hold.webp");
   });
 
-  it("wave is 1126 0.000-4.000 s (97 frames, nothing past 4 s) + 1140 full (145 frames)", () => {
+  it("wave is 1126 f0..f98 (99 frames, nothing past the first curved-smile frame) + 1140 full (145 frames)", () => {
     assert.equal(WAVE_IN_CLIP.file, "rai/wave1126_in.avif");
     assert.equal(WAVE_OUT_CLIP.file, "rai/wave1140_out.avif");
-    assert.equal(WAVE_IN_FILES.length, 97);
+    assert.equal(WAVE_IN_FILES.length, 99);
     assert.equal(WAVE_OUT_FILES.length, 145);
     assert.deepEqual(bridgeFilesFor("idle", "wave"), WAVE_IN_FILES);
     assert.deepEqual(bridgeFilesFor("wave", "idle"), WAVE_OUT_FILES);
-    // 96 frames after frame 0 at 24 fps = exactly 4.000 s: the clip ends on the hold frame.
-    assert.equal((WAVE_IN_FILES.length - 1) * SMUG_CLIP_FRAME_MS, 4000);
-    assert.equal(parseClipFrame("rai/wave1126_in.avif#097"), null, "no frame 97");
-    assert.deepEqual(parseClipFrame("rai/wave1126_in.avif#096"), { clip: WAVE_IN_CLIP, index: 96 });
+    // 98 frames after frame 0 at 24 fps = 4.083 s: the clip ends on the hold frame (f98, first curved smile).
+    assert.equal(WAVE_IN_FILES.length - 1, 98);
+    assert.equal(Math.round((WAVE_IN_FILES.length - 1) * SMUG_CLIP_FRAME_MS), 4083);
+    assert.equal(parseClipFrame("rai/wave1126_in.avif#099"), null, "no frame 99");
+    assert.deepEqual(parseClipFrame("rai/wave1126_in.avif#098"), { clip: WAVE_IN_CLIP, index: 98 });
     assert.equal(WAVE_HOLD_FILE, "rai/wave1126_hold.webp");
     for (const c of bridgeClips()) assert.doesNotMatch(c.file, /111[04]/);
   });
@@ -223,7 +224,7 @@ describe("pose bridge timing", () => {
     for (const d of bridgeDwellsFor("smug", "idle")!) assert.equal(d, 1000 / 24);
     assert.equal(bridgeDwellsFor("idle", "smug")!.length, 49);
     assert.equal(bridgeDwellsFor("smug", "idle")!.length, 145);
-    assert.equal(bridgeDwellsFor("idle", "wave")!.length, 97);
+    assert.equal(bridgeDwellsFor("idle", "wave")!.length, 99);
     assert.equal(bridgeDwellsFor("wave", "idle")!.length, 145);
     for (const d of bridgeDwellsFor("idle", "wave")!) assert.equal(d, 1000 / 24);
   });
