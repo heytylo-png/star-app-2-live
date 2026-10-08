@@ -105,6 +105,7 @@ import {
   setStoredElevenKey,
   setStoredVoiceId,
 } from "@/lib/settings-keys";
+import { initialMouthPlayback, stepMouthPlayback } from "@/lib/mouth-sync";
 import { speak, stopVoice, unlockVoice } from "@/lib/voice";
 import { speakable } from "@/lib/companion";
 import {
@@ -256,6 +257,10 @@ function RaiReady() {
   const [callStarting, setCallStarting] = useState(false);
   const [callNotice, setCallNotice] = useState<CallMicNotice | null>(null);
   const [amp, setAmp] = useState(0);
+  /** This turn will use ElevenLabs. Text chew stays off until TTS fails. */
+  const [audioTurn, setAudioTurn] = useState(false);
+  /** Loudness frame while TTS is playing. Null uses the timed chew. */
+  const [audioMouth, setAudioMouth] = useState<0 | 1 | 2 | 3 | 4 | 5 | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
   const recRef = useRef<Rec | null>(null);
@@ -265,6 +270,8 @@ function RaiReady() {
   const sendingRef = useRef(false);
   const talkingRef = useRef(false);
   const chewStartRef = useRef(0);
+  const audioTurnRef = useRef(false);
+  const mouthPlayRef = useRef(initialMouthPlayback());
   const chewTimerRef = useRef(0);
   const listenAfterSpeakRef = useRef(false);
   const hangUpRef = useRef<() => void>(() => {});
@@ -783,6 +790,10 @@ function RaiReady() {
     setVoiceOn(next);
     if (!next) {
       stopVoice();
+      audioTurnRef.current = false;
+      setAudioTurn(false);
+      mouthPlayRef.current = initialMouthPlayback();
+      setAudioMouth(null);
       setTalking(false);
       setAmp(0);
     }
@@ -977,6 +988,8 @@ function RaiReady() {
   }
 
   function armTextChew(line: string) {
+    // A voiced turn waits for the audio element. Text chew is the no-audio path.
+    if (audioTurnRef.current) return;
     // Stage still behind 1084: chew the line once the next pose is on (full length).
     if (readSmugReleasePending()) {
       releaseDeferRef.current = { line };
@@ -1019,6 +1032,11 @@ function RaiReady() {
     namedTurnRef.current = namedThisTurn;
     replyPoseRef.current = null;
     lineVoicedRef.current = false;
+    const wantAudio = voiceOnRef.current && hasCallVoice();
+    audioTurnRef.current = wantAudio;
+    setAudioTurn(wantAudio);
+    mouthPlayRef.current = initialMouthPlayback();
+    setAudioMouth(null);
     speechEndedAt.current = 0;
     lineLandedAt.current = 0;
     // A new spoken line re-resolves — leftover think / pout / tired must not
@@ -1247,32 +1265,89 @@ function RaiReady() {
         if (spoken) {
           // Pause / stop recognition while she talks so her voice + room noise
           // are not transcribed as the next user turn. Tap still interrupts.
+          // Header stays "thinking" until the audio element's playing event.
           listenPausedForTtsRef.current = !CALL_LISTEN_DURING_TTS;
-          talkingRef.current = true;
-          setTalking(true);
-          voiced = true;
-          lineVoicedRef.current = true;
           callListenGenRef.current += 1;
           stopRec();
+          clearTextChew();
+          let played = false;
           let lastAmp = 0;
           try {
-            await speak(
+            const result = await speak(
               spoken,
               (v) => {
                 lastAmp = lastAmp * 0.62 + v * 0.38;
                 setAmp(lastAmp);
               },
               controller.signal,
+              {
+                onPlaying: ({ analyserOk }) => {
+                  played = true;
+                  voiced = true;
+                  lineVoicedRef.current = true;
+                  talkingRef.current = true;
+                  setTalking(true);
+                  const now = performance.now();
+                  mouthPlayRef.current = stepMouthPlayback(initialMouthPlayback(now), {
+                    type: "playing",
+                    analyserOk,
+                    t: now,
+                  });
+                  setAudioMouth(analyserOk ? mouthPlayRef.current.frame : null);
+                },
+                onSample: ({ rms, analyserOk }) => {
+                  if (!analyserOk) return;
+                  const next = stepMouthPlayback(mouthPlayRef.current, {
+                    type: "rms",
+                    rms,
+                    t: performance.now(),
+                  });
+                  mouthPlayRef.current = next;
+                  setAudioMouth((cur) => (cur === next.frame ? cur : next.frame));
+                },
+                onStop: () => {
+                  mouthPlayRef.current = stepMouthPlayback(mouthPlayRef.current, {
+                    type: "stop",
+                    t: performance.now(),
+                  });
+                  setAudioMouth(null);
+                  talkingRef.current = false;
+                  setTalking(false);
+                  setAmp(0);
+                  if (played) {
+                    sendingRef.current = false;
+                    setSending(false);
+                  }
+                },
+              },
             );
+            if (result !== "played" && !controller.signal.aborted) {
+              audioTurnRef.current = false;
+              setAudioTurn(false);
+              armTextChew(line);
+            }
           } catch {
-            // TTS fail → bubble already showing the line.
+            // TTS fail → bubble already showing the line. Chew it as text.
+            if (!controller.signal.aborted) {
+              audioTurnRef.current = false;
+              setAudioTurn(false);
+              armTextChew(line);
+            }
           }
           speakFinishedClean = !controller.signal.aborted;
         } else {
           speakFinishedClean = true;
+          audioTurnRef.current = false;
+          setAudioTurn(false);
+          if (line !== "…") armTextChew(line);
         }
       } else {
         speakFinishedClean = true;
+        if (audioTurnRef.current) {
+          audioTurnRef.current = false;
+          setAudioTurn(false);
+          if (line !== "…") armTextChew(line);
+        }
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
@@ -1294,6 +1369,10 @@ function RaiReady() {
       talkingRef.current = false;
       listenPausedForTtsRef.current = false;
       if (voiced) speechEndedAt.current = Date.now();
+      audioTurnRef.current = false;
+      setAudioTurn(false);
+      mouthPlayRef.current = initialMouthPlayback();
+      setAudioMouth(null);
       setSending(false);
       setTalking(false);
       setAmp(0);
@@ -1363,6 +1442,10 @@ function RaiReady() {
     abortRef.current?.abort();
     stopVoice();
     stopRec();
+    audioTurnRef.current = false;
+    setAudioTurn(false);
+    mouthPlayRef.current = initialMouthPlayback();
+    setAudioMouth(null);
     setTalking(false);
     setSending(false);
     setHolding(false);
@@ -1398,6 +1481,10 @@ function RaiReady() {
     listenPausedForTtsRef.current = false;
     talkingRef.current = false;
     sendingRef.current = false;
+    audioTurnRef.current = false;
+    setAudioTurn(false);
+    mouthPlayRef.current = initialMouthPlayback();
+    setAudioMouth(null);
     stopVoice();
     abortRef.current?.abort();
     setTalking(false);
@@ -1597,11 +1684,12 @@ function RaiReady() {
         emotion={emotion}
         talking={idleMouthLineLive({
           caption,
-          sending,
+          sending: audioTurn ? false : sending,
           talking,
           now: Date.now(),
-          chewUntil,
+          chewUntil: audioTurn ? 0 : chewUntil,
         })}
+        audioMouth={audioMouth}
         amplitude={amp}
         spokenLine={caption}
         className="absolute inset-0"
