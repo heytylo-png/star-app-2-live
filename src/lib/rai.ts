@@ -667,11 +667,13 @@ export function spriteNeedsWhitePunch(src: string): boolean {
  *   the hold, and 1114 frames 0-2.
  *   w3 (2026-10-08): the wave pair is TyLo's 1126 (intro 0-4 s) + 1140 (rest) videos with the
  *   1126 4.000 s hold; 1110/1114 are gone.
+ *   w4 (2026-10-08): skin of both clips matched to idle.png per frame (face, arms, legs LAB
+ *   means; skin only), so the raised-arm frames and the 1140 start are no longer lighter.
  */
 export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
-  "rai/wave1126_in.avif": "w3",
-  "rai/wave1140_out.avif": "w3",
-  "rai/wave1126_hold.webp": "w3",
+  "rai/wave1126_in.avif": "w4",
+  "rai/wave1140_out.avif": "w4",
+  "rai/wave1126_hold.webp": "w4",
 };
 
 const ASSET = (path: string) => {
