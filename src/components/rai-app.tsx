@@ -87,7 +87,8 @@ import { HEADER_STATUS_LEAD, headerLiveState } from "@/lib/header-status";
 import { chatOpenForTab, DEFAULT_SHELL_TAB, lastDiaryEntry, type ShellTab } from "@/lib/shell";
 import { stagePlace, stageSourceFor, type StagePlace } from "@/lib/stage-source";
 import { usePrefersReducedMotion } from "@/lib/use-reduced-motion";
-import { newId, type ChatMessage } from "@/lib/helix";
+import { newId, STARTERS, type ChatMessage } from "@/lib/helix";
+import { chatHasHistory, showEmptyChatHint, showStarterChips } from "@/lib/starter-chips";
 import { streamChat } from "@/lib/stream-chat";
 import {
   getStoredXaiKey,
@@ -136,13 +137,6 @@ import {
   type CallMicNotice,
 } from "@/lib/call";
 import { cn } from "@/lib/utils";
-
-const STARTERS = [
-  { label: "Hey", prompt: "Hey. Just got here." },
-  { label: "I bumped you", prompt: "Sorry — I wasn't watching where I was going." },
-  { label: "Who are you?", prompt: "Who are you supposed to be?" },
-  { label: "Remember this", prompt: "Remember that I like talking to you at night." },
-];
 
 type Rec = {
   lang: string;
@@ -202,6 +196,7 @@ function RaiReady() {
   const defaultModel = useChatStore((s) => s.defaultModel);
   const voiceOn = useChatStore((s) => s.voiceOn);
   const setVoiceOn = useChatStore((s) => s.setVoiceOn);
+  const starterChipsDone = useChatStore((s) => s.starterChipsDone);
   const memories = useMemoryStore((s) => s.items);
   const slots = useMemoryStore((s) => s.slots);
   const chartHydrated = useChartStore((s) => s.hydrated);
@@ -239,6 +234,7 @@ function RaiReady() {
   const [voiceIdDraft, setVoiceIdDraft] = useState(() => getStoredVoiceId() ?? "");
   const [keyJustSaved, setKeyJustSaved] = useState(false);
   const [caption, setCaption] = useState("");
+  const [hasSent, setHasSent] = useState(false);
   const [emotion, setEmotion] = useState<EmotionId>(DEFAULT_EMOTION);
   const [pose, setPose] = useState<PoseId>("idle");
   /**
@@ -348,11 +344,36 @@ function RaiReady() {
     [threads, activeId],
   );
   const empty = !thread || thread.messages.length === 0;
+  const hasHistory = chatHasHistory(threads);
   const showSetup = birthdayCardVisible({
     hydrated: chartHydrated,
     setup: chartSetup,
     hasBirthDate: Boolean(slots.user_birth_date),
   });
+  const chromeReady = chatHydrated && chartHydrated;
+  const showHint =
+    chromeReady &&
+    showEmptyChatHint({
+      empty,
+      birthdayCard: showSetup,
+      callActive: callActive || callStarting,
+    }) &&
+    !caption.trim();
+  const showChips =
+    chromeReady &&
+    !callActive &&
+    !callStarting &&
+    showStarterChips({
+      hasSent,
+      hasHistory,
+      starterChipsDone,
+      birthdayCard: showSetup,
+    });
+
+  useEffect(() => {
+    if (!chatHydrated || starterChipsDone || !hasHistory) return;
+    useChatStore.getState().markStarterChipsDone();
+  }, [chatHydrated, starterChipsDone, hasHistory]);
 
   useEffect(() => {
     draftRef.current = draft;
@@ -1389,6 +1410,8 @@ function RaiReady() {
   async function send(text: string) {
     const content = text.trim();
     if (!content || sendingRef.current) return;
+    setHasSent(true);
+    useChatStore.getState().markStarterChipsDone();
     unlockVoice();
     listenAfterSpeakRef.current = callActiveRef.current;
 
@@ -1771,7 +1794,6 @@ function RaiReady() {
             callActive={callActive}
             talking={talking}
             listening={holding || callListening}
-            showSetup={showSetup}
             herName={callActive ? callTranscriptSpeaker() : undefined}
             listenLabel={callActive ? callListenLabel() : "Listening…"}
           />
@@ -1858,14 +1880,25 @@ function RaiReady() {
               }}
             />
           ) : null}
-          {empty && !callActive && !callStarting && !showSetup ? (
-            <div className="mx-auto mb-3 flex max-w-lg flex-wrap justify-center gap-1.5">
+          {showHint ? (
+            <p
+              data-empty-chat-hint=""
+              className="mx-auto mb-1.5 w-full max-w-lg truncate text-center text-sm text-[#3f3b36] [text-shadow:0_0_6px_var(--color-bg)]"
+            >
+              Say hey — or tap the phone to call her.
+            </p>
+          ) : null}
+          {showChips ? (
+            <div
+              data-starter-chips=""
+              className="mx-auto mb-1.5 flex w-full max-w-lg flex-nowrap gap-1.5 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
               {STARTERS.map((s) => (
                 <button
                   key={s.label}
                   type="button"
                   onClick={() => void send(s.prompt)}
-                  className="h-9 rounded-full bg-elevated px-3 text-sm text-muted shadow-[var(--shadow-border)] transition-colors duration-150 hover:text-fg"
+                  className="h-11 min-h-11 shrink-0 rounded-full bg-elevated px-3 text-sm text-muted shadow-[var(--shadow-border)] transition-colors duration-150 hover:text-fg"
                 >
                   {s.label}
                 </button>

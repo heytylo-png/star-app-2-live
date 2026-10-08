@@ -17,7 +17,6 @@ type ChatThreadProps = {
   callActive: boolean;
   talking: boolean;
   listening: boolean;
-  showSetup: boolean;
   /** Her display name on Call transcript bubbles. Omitted off-call. */
   herName?: string;
   /** Listen line. Call passes her display name; hold-to-talk stays generic. */
@@ -44,7 +43,6 @@ export function ChatThread({
   callActive,
   talking,
   listening,
-  showSetup,
   herName,
   listenLabel = "Listening…",
 }: ChatThreadProps) {
@@ -87,14 +85,6 @@ export function ChatThread({
     );
     setAtRest(true);
   }, [messages, captionText, showListening, windowPx]);
-
-  if (empty && !captionText && !callActive && !showSetup) {
-    return (
-      <p className="mx-auto mb-2 max-w-sm text-center text-sm text-muted">
-        Say hey — or tap the phone to call her.
-      </p>
-    );
-  }
 
   if (empty && !captionText && !showListening) return null;
 
