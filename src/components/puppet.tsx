@@ -107,6 +107,11 @@ type PuppetProps = {
   amplitude: number;
   /** Line she is saying. Only read for the hype (05 wide) mouth gate. */
   spokenLine?: string;
+  /**
+   * Frame from real TTS loudness. `null` keeps the timed chew.
+   * A number (including 0, the rest frame) replaces the timer.
+   */
+  audioMouth?: IdleMouthFrame | null;
   className?: string;
 };
 
@@ -244,7 +249,15 @@ function frameTimers(): BridgeTimers {
 /** Evaluated once in the browser: can this page play the hip clip at all? */
 const clipSupported = hipClipSupported();
 
-export function Puppet({ pose, emotion, talking, amplitude, spokenLine, className }: PuppetProps) {
+export function Puppet({
+  pose,
+  emotion,
+  talking,
+  amplitude,
+  spokenLine,
+  audioMouth = null,
+  className,
+}: PuppetProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const pointerTarget = useRef(0);
   const lookSmooth = useRef(0);
@@ -755,9 +768,16 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
   // drops back to 01 and the blink timer starts again from open lids.
   const talkingIdle = canIdleMouth({ pose, emotion, talking, reducedMotion });
   const mouthReady = idleMouthFrameUrls().every((src) => sheets[src] != null);
+  const audioLocked = audioMouth != null;
+  useEffect(() => {
+    if (!audioLocked) return;
+    const frame = audioMouth ?? 0;
+    mouthRef.current = frame;
+    setMouth(frame);
+  }, [audioLocked, audioMouth]);
   useEffect(() => {
     if (!IDLE_MOUTH_ENABLED) return;
-    if (!talkingIdle || !mouthReady) return;
+    if (!talkingIdle || !mouthReady || audioLocked) return;
 
     let cancelled = false;
     let timer = 0;
@@ -786,7 +806,7 @@ export function Puppet({ pose, emotion, talking, amplitude, spokenLine, classNam
       mouthRef.current = 0;
       setMouth(0);
     };
-  }, [talkingIdle, mouthReady]);
+  }, [talkingIdle, mouthReady, audioLocked]);
 
   // Pointer → look target (normalized -1..1), deadzone kills micro-jitter.
   useEffect(() => {

@@ -3,8 +3,44 @@ import { getStoredElevenKey, getStoredVoiceId } from "./settings-keys.ts";
 let ctx: AudioContext | null = null;
 let analyser: AnalyserNode | null = null;
 let bins: Uint8Array<ArrayBuffer> | null = null;
-let current: HTMLAudioElement | null = null;
+let timeBins: Uint8Array<ArrayBuffer> | null = null;
+type SpeakAudio = {
+  crossOrigin: string;
+  src: string;
+  pause: () => void;
+  play: () => Promise<void>;
+  addEventListener: (type: string, listener: () => void, options?: { once?: boolean }) => void;
+};
+
+let current: SpeakAudio | null = null;
 let raf = 0;
+let elementSource: { disconnect: () => void } | null = null;
+
+/** A suspended context must not stall the line. Past this, play outside the graph. */
+export const AUDIO_RESUME_TIMEOUT_MS = 250;
+
+export type SpeakEnv = {
+  key?: string | null;
+  voiceId?: string | null;
+  fetchImpl?: typeof fetch;
+  context?: () => {
+    state: string;
+    resume: () => Promise<void>;
+    createMediaElementSource: (audio: SpeakAudio) => { connect: (node: unknown) => void; disconnect: () => void };
+  };
+  Audio?: new (src?: string) => SpeakAudio;
+};
+
+export type SpeakHooks = {
+  /** Fires on the audio element's `playing` event. */
+  onPlaying?: (info: { analyserOk: boolean }) => void;
+  /** One RMS sample per animation frame while the element is playing. */
+  onSample?: (sample: { rms: number; analyserOk: boolean }) => void;
+  /** ended, pause, error, or abort. Mouth and speaking stop here. */
+  onStop?: () => void;
+  /** Tests only. Production callers leave this unset. */
+  env?: SpeakEnv;
+};
 
 const ELEVEN_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech/";
 
@@ -170,6 +206,7 @@ function ensureContext() {
     analyser.smoothingTimeConstant = 0.72;
     analyser.connect(ctx.destination);
     bins = new Uint8Array(analyser.frequencyBinCount) as Uint8Array<ArrayBuffer>;
+    timeBins = new Uint8Array(analyser.fftSize) as Uint8Array<ArrayBuffer>;
   }
   return ctx;
 }
@@ -183,14 +220,25 @@ export function unlockVoice() {
   }
 }
 
+function releaseElementSource() {
+  const source = elementSource;
+  elementSource = null;
+  try {
+    source?.disconnect();
+  } catch {
+    /* already torn down */
+  }
+}
+
 export function stopVoice() {
   if (raf) cancelAnimationFrame(raf);
   raf = 0;
-  if (current) {
-    current.pause();
-    current.src = "";
-    current = null;
-  }
+  releaseElementSource();
+  const audio = current;
+  if (!audio) return;
+  audio.pause();
+  audio.src = "";
+  if (current === audio) current = null;
 }
 
 function sampleAmplitude() {
@@ -200,6 +248,54 @@ function sampleAmplitude() {
   const n = Math.min(bins.length, 40);
   for (let i = 0; i < n; i++) sum += bins[i]!;
   return Math.min(1, (sum / n / 255) * 1.65);
+}
+
+/** Time-domain RMS, 0..1. Unsmoothed so a syllable can move the mouth inside a frame. */
+function sampleRms() {
+  if (!analyser || !timeBins) return 0;
+  analyser.getByteTimeDomainData(timeBins);
+  let sum = 0;
+  const n = timeBins.length;
+  for (let i = 0; i < n; i++) {
+    const x = (timeBins[i]! - 128) / 128;
+    sum += x * x;
+  }
+  return Math.min(1, Math.sqrt(sum / n));
+}
+
+async function attachAnalyser(
+  audio: SpeakAudio,
+  signal: AbortSignal | undefined,
+  context: SpeakEnv["context"],
+): Promise<boolean> {
+  if (signal?.aborted) return false;
+  try {
+    const audioCtx = (context ? context() : ensureContext()) as NonNullable<
+      ReturnType<NonNullable<SpeakEnv["context"]>>
+    >;
+    if (audioCtx.state === "suspended") {
+      await Promise.race([
+        audioCtx.resume().catch(() => {}),
+        new Promise<void>((resolve) => setTimeout(resolve, AUDIO_RESUME_TIMEOUT_MS)),
+      ]);
+    }
+    if (signal?.aborted || audioCtx.state !== "running" || !analyser) return false;
+    const source = audioCtx.createMediaElementSource(audio);
+    try {
+      source.connect(analyser);
+    } catch (err) {
+      try {
+        source.disconnect();
+      } catch {
+        /* ignore */
+      }
+      throw err;
+    }
+    elementSource = source;
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -263,51 +359,83 @@ export async function speak(
   text: string,
   onAmp: (value: number) => void,
   signal?: AbortSignal,
-): Promise<void> {
+  hooks?: SpeakHooks,
+): Promise<"played" | "silent"> {
   stopVoice();
-  const key = getStoredElevenKey();
-  const voiceId = getStoredVoiceId();
+  const key = hooks?.env && "key" in hooks.env ? hooks.env.key : getStoredElevenKey();
+  const voiceId = hooks?.env && "voiceId" in hooks.env ? hooks.env.voiceId : getStoredVoiceId();
   if (!elevenTtsPlan(text, key, voiceId)) {
     onAmp(0);
-    return;
+    return "silent";
   }
 
+  let heard = false;
   try {
-    const audioCtx = ensureContext();
-    const res = await requestElevenSpeech({ text, key, voiceId, signal });
+    const res = await requestElevenSpeech({
+      text,
+      key,
+      voiceId,
+      signal,
+      fetchImpl: hooks?.env?.fetchImpl,
+    });
     if (!res?.ok) {
       onAmp(0);
-      return;
+      return "silent";
     }
 
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
+    const AudioCtor = hooks?.env?.Audio ?? Audio;
+    const audio = new AudioCtor(url) as SpeakAudio;
     audio.crossOrigin = "anonymous";
     current = audio;
-
-    const source = audioCtx.createMediaElementSource(audio);
-    if (analyser) source.connect(analyser);
+    const analyserOk = await attachAnalyser(audio, signal, hooks?.env?.context);
 
     let smooth = 0;
+    let live = false;
     const tick = () => {
+      if (!live) return;
+      const rms = sampleRms();
+      hooks?.onSample?.({ rms, analyserOk: true });
       const raw = sampleAmplitude();
       smooth = smooth * 0.7 + raw * 0.3;
       onAmp(smooth);
+      if (!live) return;
       raf = requestAnimationFrame(tick);
     };
 
     await new Promise<void>((resolve) => {
+      let settled = false;
       const finish = () => {
+        if (settled) return;
+        settled = true;
+        live = false;
         if (raf) cancelAnimationFrame(raf);
         raf = 0;
+        releaseElementSource();
         onAmp(0);
         URL.revokeObjectURL(url);
         if (current === audio) current = null;
+        hooks?.onStop?.();
         resolve();
       };
-      audio.onended = finish;
-      audio.onerror = finish;
+      audio.addEventListener(
+        "playing",
+        () => {
+          if (settled) return;
+          heard = true;
+          live = true;
+          hooks?.onPlaying?.({ analyserOk });
+          if (analyserOk) raf = requestAnimationFrame(tick);
+        },
+        { once: true },
+      );
+      audio.addEventListener("ended", finish);
+      audio.addEventListener("pause", () => {
+        if (!heard) return;
+        finish();
+      });
+      audio.addEventListener("error", finish);
       signal?.addEventListener(
         "abort",
         () => {
@@ -316,15 +444,21 @@ export async function speak(
         },
         { once: true },
       );
+      if (signal?.aborted) {
+        finish();
+        return;
+      }
       void audio.play().then(
         () => {
-          raf = requestAnimationFrame(tick);
+          /* Mouth and samples start on `playing`, not when play() resolves. */
         },
         () => finish(),
       );
     });
   } catch (err) {
-    if (isAbort(err)) return;
+    if (isAbort(err)) return heard ? "played" : "silent";
     onAmp(0);
+    return "silent";
   }
+  return heard ? "played" : "silent";
 }
