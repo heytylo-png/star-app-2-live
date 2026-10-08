@@ -378,15 +378,15 @@ export function isSmugPathSheetSrc(src: string): boolean {
 }
 
 /**
- * Sheets allowed on the idle↔wave beat: idle sheets, the 1110 intro clip, wave1110_hold,
- * the 1114 rest clip. Anything else must not paint during a Wave send.
+ * Sheets allowed on the idle↔wave beat: idle sheets, the 1126 intro clip, wave1126_hold,
+ * the 1140 rest clip. Anything else must not paint during a Wave send.
  */
 export function isWavePathSheetSrc(src: string): boolean {
   const path = src.split(/[?#]/)[0] ?? src;
   const name = path.slice(path.lastIndexOf("/") + 1);
-  if (name === "wave1110_hold.webp") return true;
-  if (name === "wave1110_in.avif") return true;
-  if (name === "wave1114_out.avif") return true;
+  if (name === "wave1126_hold.webp") return true;
+  if (name === "wave1126_in.avif") return true;
+  if (name === "wave1140_out.avif") return true;
   if (name === "idle.png") return true;
   if (/^idle_blink_/.test(name)) return true;
   if (/^idle_mouth_/.test(name)) return true;
@@ -611,7 +611,7 @@ export const PRE_CUT_ALPHA_FILES = [
   "rai/laugh_official.png",
   "rai/surprise_official.png",
   "rai/smug1085_hold.webp",
-  "rai/wave1110_hold.webp",
+  "rai/wave1126_hold.webp",
   "rai/content_official.png",
   "rai/sad_official.png",
   "rai/heart_official.png",
@@ -624,7 +624,7 @@ export const PRE_CUT_ALPHA_FILES = [
   "rai/scold_official.png",
   "rai/tired_official.png",
   // TyLo's 2026-10-06 wave still (white-matte cut, x1.4 onto the idle canvas). Not on the Wave key:
-  // that key is the 1110/1114 bridge + wave1110_hold.webp.
+  // that key is the 1126/1140 bridge + wave1126_hold.webp.
   "rai/wave_official.png",
   "rai/peace.png",
   "rai/side_profile.png",
@@ -665,11 +665,13 @@ export function spriteNeedsWhitePunch(src: string): boolean {
  * cache-first, so a new URL is what makes a returning phone fetch the new bytes.
  *   w2 (2026-10-07): ring/little-finger gap cleaned (alpha only) on the 1110 2.000 s frame,
  *   the hold, and 1114 frames 0-2.
+ *   w3 (2026-10-08): the wave pair is TyLo's 1126 (intro 0-4 s) + 1140 (rest) videos with the
+ *   1126 4.000 s hold; 1110/1114 are gone.
  */
 export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
-  "rai/wave1110_in.avif": "w2",
-  "rai/wave1114_out.avif": "w2",
-  "rai/wave1110_hold.webp": "w2",
+  "rai/wave1126_in.avif": "w3",
+  "rai/wave1140_out.avif": "w3",
+  "rai/wave1126_hold.webp": "w3",
 };
 
 const ASSET = (path: string) => {
@@ -705,7 +707,7 @@ export const LIVE_POSE_FILES = {
   pout: "rai/pout_official.png",
   tired: "rai/tired_official.png",
   smug: SMUG_HOLD_FILE,
-  /** Wave hold: exact 2.000 s frame of 1110 (wave hand up, other hand on hip, smile). */
+  /** Wave hold: exact 4.000 s frame of 1126 (wave palm up, other hand on hip, smile set). */
   wave: WAVE_HOLD_FILE,
   hold: "rai/hold_official.png",
   embarrassed: "rai/embarrassed_official.png",
@@ -920,12 +922,12 @@ export function smugClipUrls(): string[] {
   return [ASSET(SMUG_IN_CLIP.file), ASSET(SMUG_OUT_CLIP.file)];
 }
 
-/** The sheet of the idle <-> wave beat: wave1110_hold. */
+/** The sheet of the idle <-> wave beat: wave1126_hold. */
 export function waveBeatSheetUrls(): string[] {
   return [SPRITES.poses.wave];
 }
 
-/** The two clips of the idle <-> wave beat: 1110 intro, 1114 rest. */
+/** The two clips of the idle <-> wave beat: 1126 intro (0-4 s), 1140 rest. */
 export function waveClipUrls(): string[] {
   return [ASSET(WAVE_IN_CLIP.file), ASSET(WAVE_OUT_CLIP.file)];
 }

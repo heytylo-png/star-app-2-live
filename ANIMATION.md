@@ -62,16 +62,18 @@ TyLo paste-15 replaces the 968/973 stills (and every earlier smug asset) with tw
 - Reduced motion, or a browser without `ImageDecoder` / `OffscreenCanvas` workers: hard cut onto the hold, hard cut back to idle.
 - Debug: `data-rai-hold-sheet=smug1085_hold` while holding; each clip canvas has `data-rai-clip` and `data-rai-sheet` = `in-NNN` / `out-NNN` (last frame reported); `window.__raiBridgeLog` = `[t, clip, frame]` per painted frame (stage clock), `window.__raiBridgeDone` = `[t, clip, stalls, reanchors]` per play.
 
-### 1110 / 1114 video (idle ↔ wave, 2026-10-06)
+### 1126 / 1140 video (idle ↔ wave, 2026-10-08; replaces 1110 / 1114)
 
-Same player path as 1085/1084: muted animated AVIF, WebCodecs ImageDecoder in a worker, OffscreenCanvas at 24 fps, every frame in order, no skips. Own canvases (`win`/`wout`).
+Same player path as 1085/1084: muted animated AVIF (no audio track), WebCodecs ImageDecoder in a worker, OffscreenCanvas at 24 fps, every frame in order, no skips. Own canvases (`win`/`wout`) and its own band, `WAVE_CLIP_BOX` = x 0..672 of the 720×1280 sheet space (the smug band x 112..560 clipped the raised elbow/hand).
 
-- Entry (1110): `public/rai/wave1110_in.avif`, frames 0..48 = 0.000–2.000 s only. Arms-down glare → wave hand up → other hand on hip + smile.
-- Hold: `public/rai/wave1110_hold.webp` = the exact 2.000 s frame, until the next send (same `SmugReleaseGate` / `requestSmugRelease`).
-- Exit (1114): `public/rai/wave1114_out.avif`, all 145 frames forward → idle → next pose (#122 timing kept).
-- Registration: identity vs `idle.png` (soles already match). Allowlist: idle sheets + the two clips + hold. Smug 1085/1084 unchanged.
-- 2026-10-07 (w2): the white spot in the ring/little-finger gap is cleared, alpha only, on 1110 f48, the hold (only its ALPH chunk was rewritten; VP8 colour bytes identical) and 1114 f0–2. The clips were re-encoded with the same settings (libaom crf 26, 49/145 frames, 24 fps) and have identical colour streams. URLs carry `?v=w2` (`BRIDGE_FILE_VERSION`); smug/idle URLs unchanged.
-
+- Entry (1126, TyLo's 720×1280 video): `public/rai/wave1126_in.avif`, frames 0..96 = 0.000–4.000 s only. Arms-down glare → wave arm out (1 s) → palm up, other hand on hip (2 s, still the glare) → smile set (4 s). Nothing past 4 s is in the file.
+- Hold: `public/rai/wave1126_hold.webp` = the exact 4.000 s frame (TyLo's `04-smile` still, byte-identical source frame), until the next send (same `SmugReleaseGate` / `requestSmugRelease`). Never the 2 s frame.
+- Exit (1140, TyLo's 784×1168 video): `public/rai/wave1140_out.avif`, all 145 frames forward → idle → next pose. No idle.png swap inside it; idle only after its last frame.
+- Matte / registration: white-matte cut (f807 sweep engine) after a uniform registration onto idle in the 720×1280 sheet space: 1126 ×1.040, 1140 ×1.118, each anchored on idle's soles and feet centre. Joins (alpha ≥ 200, 720 space): idle→1126 f0 sole 0, ahoge −1, body height −2 px; 1126 f96→1140 f0 sole +2, crown −4, scale ×1.005 (1140 starts with a wider stance than the 1126 hold: the legs differ in the source); 1140 f144→idle sole −1, ahoge +2, body height −2 px.
+- Wave hand: the raised hand sits above the shoulder line, so the hair un-mix zone starts right of it per frame (light finger skin is never softened); enclosed white between the fingers is background, and light neutral matte left in the finger gaps is alpha-cleaned (RGB untouched).
+- Skin: 1126 skin was lighter than the official dark Rai (idle.png; ΔE ≈ 7–9 on face/arms/legs). Its skin only (hue/saturation mask, clothes/hair/eyes untouched) is retoned in CIE LAB (mean/std match to idle) on all 97 frames and the hold. 1140 already matches idle (ΔE ≈ 1 at f144) and is unchanged.
+- Edges: `src/lib/wave-clip-edges.json` (decoded alpha of every shipped frame, pinned to the AVIF sha256) + `wave-clip-edges.test.ts`: no frame has alpha on the band's left/right/bottom edge, ≥ 8 px margin.
+- Encode: libaom crf 26, 97 / 145 frames, 24 fps, 672×1280 + alpha. URLs carry `?v=w3` (`BRIDGE_FILE_VERSION`); smug/idle URLs unchanged. Allowlist: idle sheets + the two clips + hold.
 
 ### Talk / mouth
 

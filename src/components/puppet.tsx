@@ -74,6 +74,7 @@ import {
   bridgeWantsFrames,
   parseClipFrame,
   SMUG_CLIP_BOX,
+  WAVE_CLIP_BOX,
   SMUG_CLIP_SHEET,
   SMUG_IN_CLIP,
   SMUG_OUT_CLIP,
@@ -286,7 +287,7 @@ export function Puppet({
   const [display, setDisplay] = useState<DisplayLayer[]>([]);
   const [sheets, setSheets] = useState<Record<string, string>>({});
   const crossfade = useRef<PoseCrossfadePool | null>(null);
-  /** Pose bridge: clip on stage ("in"/"out" = smug 1085/1084, "win"/"wout" = wave 1110/1114). */
+  /** Pose bridge: clip on stage ("in"/"out" = smug 1085/1084, "win"/"wout" = wave 1126/1140). */
   const [bridgeClip, setBridgeClip] = useState<"in" | "out" | "win" | "wout" | null>(null);
   const bridgeClipRef = useRef<"in" | "out" | "win" | "wout" | null>(null);
   const bridgeCanvasInRef = useRef<HTMLCanvasElement>(null);
@@ -295,7 +296,7 @@ export function Puppet({
   const bridgeCanvasWaveOutRef = useRef<HTMLCanvasElement>(null);
   /** Smug clips player (1085/1084). */
   const clipPlayerRef = useRef<SmugClipPlayer | null>(null);
-  /** Wave clips player (1110/1114). */
+  /** Wave clips player (1126/1140). */
   const wavePlayerRef = useRef<SmugClipPlayer | null>(null);
   /** Either pair can never play in this browser (read in the crossfade effect). */
   const clipsUnsupportedRef = useRef(false);
@@ -350,7 +351,7 @@ export function Puppet({
    */
   const decodedFrames = useRef<HTMLImageElement[]>([]);
 
-  // Idle <-> smug (1085/1084) and idle <-> wave (1110/1114): each pair has its own worker
+  // Idle <-> smug (1085/1084) and idle <-> wave (1126/1140): each pair has its own worker
   // and canvases. Loaded and primed with their hold sheets at startup.
   useEffect(() => {
     const cin = bridgeCanvasInRef.current;
@@ -410,7 +411,7 @@ export function Puppet({
         canvases: { in: win, out: wout },
         urls: { in: winUrl!, out: woutUrl! },
         frames: { in: WAVE_IN_CLIP.frames, out: WAVE_OUT_CLIP.frames },
-        box: SMUG_CLIP_BOX,
+        box: WAVE_CLIP_BOX,
         keyOf: (file) => {
           const f = parseClipFrame(file);
           return f?.clip.pair === "wave" ? f.clip.key : null;
@@ -1407,7 +1408,7 @@ export function Puppet({
       data-rai-clip-frame={clipOnStage ? String(clipView.index).padStart(2, "0") : "off"}
       data-rai-clip-time={clipOnStage ? String(hipClipTimeMs(clipView.index)) : "off"}
       data-rai-clip-dir={clipOnStage ? clipView.dir : "off"}
-      data-rai-hold-sheet={phase === "hold" ? (plateKey === "wave" ? "wave1110_hold" : "smug1085_hold") : "off"}
+      data-rai-hold-sheet={phase === "hold" ? (plateKey === "wave" ? "wave1126_hold" : "smug1085_hold") : "off"}
       data-rai-smug-release={smugGate.current?.exiting() ? "exit" : "off"}
       data-rai-build={buildId()}
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}

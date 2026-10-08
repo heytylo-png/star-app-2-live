@@ -51,7 +51,7 @@ const sheet = (name: string): SpriteLayer => ({
   role: "body",
 });
 const IDLE = sheet("idle");
-const WAVE: SpriteLayer = { id: "body:wave1110_hold", src: "/rai/wave1110_hold.webp", opacity: 1, role: "body" };
+const WAVE: SpriteLayer = { id: "body:wave1126_hold", src: "/rai/wave1126_hold.webp", opacity: 1, role: "body" };
 const SHY = sheet("shy_official");
 const TALK = sheet("talk_official");
 

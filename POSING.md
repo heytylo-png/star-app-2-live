@@ -17,7 +17,7 @@ public/
     pout_official.png
     tired_official.png
     smug1085_hold.webp      # smug hold (1085 at 2.000 s); bridge clips: smug1085_in.avif (0-2 s), smug1084_out.avif (full)
-    wave1110_hold.webp      # wave hold (1110 at 2.000 s); bridge clips: wave1110_in.avif (0-2 s), wave1114_out.avif (full)
+    wave1126_hold.webp      # wave hold (1126 at 4.000 s); bridge clips: wave1126_in.avif (0-4 s), wave1140_out.avif (full)
     wave_official.png       # TyLo's 2026-10-06 wave still (1008×1792 RGBA, white-matte cut, no re-tone). Not on the Wave key. Not poses/wave.png / front_wave.png
     hold_official.png       # NOT front_hold.png
     embarrassed_official.png
@@ -56,7 +56,7 @@ Live chat keys use the **morning official pack** under `public/rai/`. Do not poi
 | `pout` | `rai/pout_official.png` |
 | `tired` | `rai/tired_official.png` |
 | `smug` | `rai/smug1085_hold.webp` |
-| `wave` | `rai/wave1110_hold.webp` via the idle↔wave 1110/1114 video bridge (1110 0–2.0 s, hold, 1114 out). `rai/wave_official.png` is TyLo's 2026-10-06 still (right hand up waving, left hand on hip, glare, sailor uniform): white-matte cut, uniform ×1.4 onto the 1008×1792 idle canvas, feet line = idle, pixels as supplied (no re-tone). It replaces the old retoned dark sheet and is not painted by the live Wave key. Not `star-rai/poses/wave.png` (Helix 1152×1728 3/4) and not `rai/front_wave.png` (Expo alt). |
+| `wave` | `rai/wave1126_hold.webp` via the idle↔wave 1126/1140 video bridge (1126 0–4.0 s, hold on the 4.0 s smile frame, 1140 out; TyLo 2026-10-08, replaces 1110/1114). `rai/wave_official.png` is TyLo's 2026-10-06 still (right hand up waving, left hand on hip, glare, sailor uniform): white-matte cut, uniform ×1.4 onto the 1008×1792 idle canvas, feet line = idle, pixels as supplied (no re-tone). It replaces the old retoned dark sheet and is not painted by the live Wave key. Not `star-rai/poses/wave.png` (Helix 1152×1728 3/4) and not `rai/front_wave.png` (Expo alt). |
 | `hold` | `rai/hold_official.png` |
 | `embarrassed` | `rai/embarrassed_official.png` |
 | `scold` | `rai/scold_official.png` |

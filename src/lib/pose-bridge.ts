@@ -1,12 +1,13 @@
 /**
  * Helix pose bridge: in-between motion played when the shown sheet changes between a
- * paired set of poses. Pairs: idle <-> smug (1085/1084) and idle <-> wave (1110/1114).
+ * paired set of poses. Pairs: idle <-> smug (1085/1084) and idle <-> wave (1126/1140).
  *
  * Both pairs are two real videos played as video, every source frame in order at their
- * native 24 fps. The intro runs 0.000 → 2.000 s only (frames 0..48) and lands on a hold
- * WebP (= the exact 2.000 s frame) until the next send. The rest runs its full 145 frames
- * forward onto the live idle sheet. No reverse, no audio (the clips are AVIF image
- * sequences). Smug and wave each have their own canvases / hold sheet.
+ * native 24 fps. The intro runs from 0.000 s to its hold frame only (smug 1085: 2.000 s,
+ * frames 0..48; wave 1126: 4.000 s, frames 0..96) and lands on a hold WebP (= that exact
+ * frame) until the next send. The rest runs its full 145 frames forward onto the live idle
+ * sheet. No reverse, no audio (the clips are AVIF image sequences). Smug and wave each have
+ * their own canvases / hold sheet.
  *
  * This module is pure (no DOM, no React). The puppet owns the one canvas the frames are
  * drawn on; the sequencer only says which frame is up. Timers are injected so the order
@@ -42,14 +43,15 @@ export const SMUG_OUT_CLIP: SmugClip = { pair: "smug", key: "out", file: "rai/sm
 export const SMUG_HOLD_FILE = "rai/smug1085_hold.webp";
 
 /**
- * Wave intro: 1110 from 0.000 s to 2.000 s inclusive (49 frames). Arms-down glare → wave hand
- * up → other hand on hip + smile. File ends on the 2.000 s frame.
+ * Wave intro (TyLo 2026-10-08): 1126 from 0.000 s to 4.000 s inclusive (97 frames). Arms-down
+ * glare → wave arm out (1 s) → palm up, other hand on hip (2 s) → smile set (4 s). The file
+ * ends on the 4.000 s frame; nothing past 4 s is in it (the 2 s frame is still the glare).
  */
-export const WAVE_IN_CLIP: SmugClip = { pair: "wave", key: "in", file: "rai/wave1110_in.avif", frames: 49 };
-/** Wave rest: 1114 full length (145 frames, 6.04 s). Wave pose → both arms down → idle glare. */
-export const WAVE_OUT_CLIP: SmugClip = { pair: "wave", key: "out", file: "rai/wave1114_out.avif", frames: 145 };
-/** Wave hold sheet: the exact 2.000 s frame of 1110 (frame 48), 720×1280 RGBA WebP. */
-export const WAVE_HOLD_FILE = "rai/wave1110_hold.webp";
+export const WAVE_IN_CLIP: SmugClip = { pair: "wave", key: "in", file: "rai/wave1126_in.avif", frames: 97 };
+/** Wave rest: 1140 full length (145 frames, 6.04 s). Wave hand comes down → both arms down → idle glare. */
+export const WAVE_OUT_CLIP: SmugClip = { pair: "wave", key: "out", file: "rai/wave1140_out.avif", frames: 145 };
+/** Wave hold sheet: the exact 4.000 s frame of 1126 (frame 96), 720×1280 RGBA WebP. */
+export const WAVE_HOLD_FILE = "rai/wave1126_hold.webp";
 
 /**
  * Both clips are white-matte cuts registered to idle.png in the 720×1280 sheet space
@@ -59,6 +61,15 @@ export const WAVE_HOLD_FILE = "rai/wave1110_hold.webp";
  */
 export const SMUG_CLIP_SHEET = { w: 720, h: 1280 } as const;
 export const SMUG_CLIP_BOX = { x: 112, y: 0, w: 448, h: 1280 } as const;
+/**
+ * Wave clips (1126 720×1280 and 1140 784×1168) are white-matte cuts registered to idle.png in the
+ * same 720×1280 sheet space: 1126 uniform ×1.040, 1140 uniform ×1.118, each anchored on the soles
+ * and feet centre of idle (feet, scale and head land on idle and on each other at the joins).
+ * The raised wave arm reaches far wider than the smug band, so wave has its own band: x 0..672.
+ * Every frame of both clips has a fully transparent margin at the band's left and right edges
+ * (pinned by wave-clip-edges.json + its test), so no elbow or hand is clipped at the edge.
+ */
+export const WAVE_CLIP_BOX = { x: 0, y: 0, w: 672, h: 1280 } as const;
 
 /** Bridge frame id for frame `index` of a clip: `<file>#NNN`. */
 export function clipFrameFile(clip: SmugClip, index: number): string {
@@ -177,7 +188,7 @@ export function bridgeKeyOfSrc(src: string): string | null {
   const name = path.slice(path.lastIndexOf("/") + 1);
   if (name === "idle.png" || /^idle_(blink|mouth)_\d\d_/.test(name)) return "idle";
   if (name === "smug1085_hold.webp") return "smug";
-  if (name === "wave1110_hold.webp") return "wave";
+  if (name === "wave1126_hold.webp") return "wave";
   return null;
 }
 
@@ -608,7 +619,7 @@ export function bridgeGate(opts: {
  */
 export type SmugGateStep = "wanted" | "keep-shown" | "exit-to-idle";
 
-/** Hold poses that stay on their 2.0 s frame until the next send (smug 1085, wave 1110). */
+/** Hold poses that stay on their hold frame until the next send (smug 1085 at 2.0 s, wave 1126 at 4.0 s). */
 export const BRIDGE_HOLD_KEYS = new Set<string>(["smug", "wave"]);
 
 export class SmugReleaseGate {
