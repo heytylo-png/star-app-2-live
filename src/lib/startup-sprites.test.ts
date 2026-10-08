@@ -28,7 +28,7 @@ function pathOf(url: string): string {
 }
 
 describe("startup sprite lists", () => {
-  it("loads idle.png, then blink 01 through 04, then mouth 02 through 06, in that order", () => {
+  it("loads idle.png, then blink 01 through 04, then mouth 02 through 05 (never 06), in that order", () => {
     assert.deepEqual(startupSpriteUrls().map(pathOf), [
       "rai/idle.png",
       "rai/idle_blink_01_open.png",
@@ -39,7 +39,6 @@ describe("startup sprite lists", () => {
       "rai/idle_mouth_03_open.png",
       "rai/idle_mouth_04_oo.png",
       "rai/idle_mouth_05_wide.png",
-      "rai/idle_mouth_06_smirk.png",
     ]);
     assert.deepEqual(startupSpriteUrls().slice(1, 5), idleBlinkFrameUrls());
     assert.deepEqual(startupSpriteUrls().slice(5), idleMouthFrameUrls());

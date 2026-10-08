@@ -74,16 +74,17 @@ export function idleBlinkSchedule(): IdleBlinkStep[] {
  * one rest <img>, hard cuts only. Runs only while she is speaking on the idle
  * pose (IDLE_MOUTH_ENABLED in rai.ts). At rest she sits on 01.
  *
- * Default syllable is 01 → 02 → 03 → 02 → 01. 04 (oo) and 06 (smirk) are
- * occasional spice. 05 (wide) only on hype lines (exclamation-heavy text).
+ * Default syllable is 01 → 02 → 03 → 02 → 01. 04 (oo) is occasional spice.
+ * 05 (wide) only on hype lines (exclamation-heavy text). 06 (smirk, tongue
+ * out) is never in the talking sequence (TyLo, 2026-10-08).
  * talk_official.png is never a viseme.
  */
 export const IDLE_MOUTH_STEP_MIN_MS = 90;
 export const IDLE_MOUTH_STEP_MAX_MS = 120;
 /** Share of syllables whose peak is 04 oo instead of 03 open. */
 export const IDLE_MOUTH_OO_CHANCE = 0.12;
-/** Share of syllables that are a short 06 smirk beat instead of a flap. */
-export const IDLE_MOUTH_SMIRK_CHANCE = 0.07;
+/** 06 smirk (tongue out) is removed from talk: always 0, every syllable is a flap. */
+export const IDLE_MOUTH_SMIRK_CHANCE = 0;
 /** On a hype line, share of peaks that open to 05 wide. Never on other lines. */
 export const IDLE_MOUTH_WIDE_HYPE_CHANCE = 0.4;
 /** Real TTS amplitude below this (once audio has been heard) holds 01 closed. */
@@ -151,16 +152,9 @@ export function idleMouthSyllable(
     }
   }
   const roll = rand();
-  if (roll < IDLE_MOUTH_SMIRK_CHANCE) {
-    // A beat of smirk, held two cuts, then closed.
-    return [
-      { mouth: 6, ms: step() + step() },
-      { mouth: 1, ms: step() },
-    ];
-  }
   let peak: IdleMouthFrame = 3;
   if (opts.hype && rand() < IDLE_MOUTH_WIDE_HYPE_CHANCE) peak = 5;
-  else if (roll < IDLE_MOUTH_SMIRK_CHANCE + IDLE_MOUTH_OO_CHANCE) peak = 4;
+  else if (roll < IDLE_MOUTH_OO_CHANCE) peak = 4;
   return [
     { mouth: 2, ms: step() },
     { mouth: peak, ms: step() },
