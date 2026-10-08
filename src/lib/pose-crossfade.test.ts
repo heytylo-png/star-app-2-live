@@ -185,7 +185,7 @@ describe("pose change mid-chew", () => {
   const closeRest = (layer: CrossfadeLayer): CrossfadeLayer =>
     layer.id === REST_ID && layer.src !== CLOSED.src ? { ...layer, src: CLOSED.src } : layer;
 
-  for (const mouth of ["idle_mouth_02_small", "idle_mouth_03_open", "idle_mouth_04_oo", "idle_mouth_05_wide", "idle_mouth_06_smirk"]) {
+  for (const mouth of ["idle_mouth_02_small", "idle_mouth_03_open", "idle_mouth_04_oo", "idle_mouth_05_wide"]) {
     it(`fades out the closed 01 frame, not ${mouth}`, () => {
       const h = harness();
       h.pool.update([CLOSED], { ...opts(), outgoing: closeRest });

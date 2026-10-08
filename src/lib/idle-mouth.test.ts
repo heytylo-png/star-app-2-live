@@ -33,6 +33,7 @@ import {
   type TextChewArm,
 } from "./rai.ts";
 import {
+  IDLE_MOUTH_SMIRK_CHANCE,
   IDLE_MOUTH_STEP_MAX_MS,
   IDLE_MOUTH_STEP_MIN_MS,
   idleMouthStepMs,
@@ -83,7 +84,8 @@ describe("idle mouth sheets", () => {
 
   it("skips the runtime white punch and carries the pre-cut ?v= like idle/blink", () => {
     const urls = idleMouthFrameUrls();
-    assert.equal(urls.length, 5);
+    assert.equal(urls.length, 4);
+    for (const src of urls) assert.doesNotMatch(src, /idle_mouth_06_smirk/);
     for (const file of Object.keys(MOUTH_SHA256)) {
       assert.ok((PRE_CUT_ALPHA_FILES as readonly string[]).includes(file), file);
     }
@@ -328,7 +330,8 @@ describe("idle mouth on the one rest image", () => {
       3: new RegExp(`idle_mouth_03_open\\.png\\?v=${v}$`),
       4: new RegExp(`idle_mouth_04_oo\\.png\\?v=${v}$`),
       5: new RegExp(`idle_mouth_05_wide\\.png\\?v=${v}$`),
-      6: new RegExp(`idle_mouth_06_smirk\\.png\\?v=${v}$`),
+      // 06 smirk (tongue out) is out of talk; a stray 6 falls back to 02 small.
+      6: new RegExp(`idle_mouth_02_small\\.png\\?v=${v}$`),
     };
     for (const mouth of [1, 2, 3, 4, 5, 6] as const) {
       const layers = layersFor({ ...talkingIdle, mouth, blink: 4 });
@@ -375,29 +378,44 @@ describe("idle mouth timing", () => {
     for (const s of steps) assert.ok(s.ms >= 90 && s.ms <= 120);
   });
 
-  it("uses 04 oo and 06 smirk as occasional spice", () => {
+  it("uses 04 oo as occasional spice and never shows 06 smirk (tongue out)", () => {
+    assert.equal(IDLE_MOUTH_SMIRK_CHANCE, 0);
     assert.deepEqual(
       idleMouthSyllable({ rand: seq([0.1, 0.5]) }).map((s) => s.mouth),
       [2, 4, 2, 1],
     );
-    const smirk = idleMouthSyllable({ rand: seq([0.01, 0.5]) });
+    // The rolls that used to be a smirk beat are now plain flaps.
+    for (const roll of [0, 0.01, 0.05, 0.069]) {
+      assert.deepEqual(
+        idleMouthSyllable({ rand: seq([roll, 0.5]) }).map((s) => s.mouth),
+        [2, 4, 2, 1],
+        `roll ${roll}`,
+      );
+    }
     assert.deepEqual(
-      smirk.map((s) => s.mouth),
-      [6, 1],
+      idleMouthSyllable({ rand: seq([0.5, 0.5]) }).map((s) => s.mouth),
+      [2, 3, 2, 1],
     );
-    assert.ok(smirk[0]!.ms >= 180 && smirk[0]!.ms <= 240);
+    // Seeded LCG: many rolls, plain and hype lines, never a 6.
+    let state = 12345;
+    const lcg = () => {
+      state = (Math.imul(state, 1103515245) + 12345) >>> 0;
+      return state / 2 ** 32;
+    };
     let oo = 0;
-    let sm = 0;
     let n = 0;
-    for (let i = 0; i < 4000; i++) {
-      for (const s of idleMouthSyllable()) {
+    for (let i = 0; i < 20000; i++) {
+      const steps = idleMouthSyllable({ rand: lcg, hype: i % 3 === 0 });
+      for (const s of steps) {
+        assert.notEqual(s.mouth, 6, `syllable ${i}`);
         if (s.mouth === 4) oo += 1;
-        if (s.mouth === 6) sm += 1;
       }
       n += 1;
     }
+    for (let i = 0; i < 4000; i++) {
+      for (const s of idleMouthSyllable()) assert.notEqual(s.mouth, 6);
+    }
     assert.ok(oo / n > 0.05 && oo / n < 0.25, `oo ${oo / n}`);
-    assert.ok(sm / n > 0.02 && sm / n < 0.15, `smirk ${sm / n}`);
   });
 
   it("opens to 05 wide only on hype lines", () => {

@@ -868,20 +868,22 @@ export function idleBlinkFrameSrc(blink: number): string {
 
 /**
  * Full frame for one idle-mouth step. 0 and 1 are 01 closed (the rest sheet).
- * 2 small, 3 open, 4 oo, 5 wide, 6 smirk. Hard cut only.
+ * 2 small, 3 open, 4 oo, 5 wide. 6 (smirk, tongue out) is never chewed and
+ * maps to 02 small as a safety net. Hard cut only.
  */
 export function idleMouthFrameSrc(mouth: number): string {
   if (mouth === 2) return SPRITES.idleMouth.small;
   if (mouth === 3) return SPRITES.idleMouth.open;
   if (mouth === 4) return SPRITES.idleMouth.oo;
   if (mouth === 5) return SPRITES.idleMouth.wide;
-  if (mouth === 6) return SPRITES.idleMouth.smirk;
+  // 06 smirk (tongue out) is out of the talking sequence; safety net to 02 small.
+  if (mouth === 6) return SPRITES.idleMouth.small;
   return idleRestSrc();
 }
 
-/** The five mouth sheets that are not the rest sheet (02 → 06). */
+/** The four talking mouth sheets that are not the rest sheet (02 → 05). 06 is not loaded. */
 export function idleMouthFrameUrls(): string[] {
-  return [2, 3, 4, 5, 6].map((frame) => idleMouthFrameSrc(frame));
+  return [2, 3, 4, 5].map((frame) => idleMouthFrameSrc(frame));
 }
 
 /** Rest body. 01 open (byte copy of idle.png) while blink is on. */
@@ -1083,7 +1085,7 @@ export type PuppetState = {
   blink?: IdleBlinkFrame;
   /**
    * Idle talking mouth frame (IDLE_MOUTH_ENABLED). Used only while talking on
-   * the idle pose. 0/1 = 01 closed, 2 small, 3 open, 4 oo, 5 wide, 6 smirk.
+   * the idle pose. 0/1 = 01 closed, 2 small, 3 open, 4 oo, 5 wide (6 maps to 02).
    * Same stable layer id as rest; only the full-frame src swaps.
    */
   mouth?: IdleMouthFrame;
