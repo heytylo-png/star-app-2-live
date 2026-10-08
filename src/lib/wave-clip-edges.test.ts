@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
-import { SMUG_CLIP_BOX, SMUG_CLIP_SHEET, WAVE_CLIP_BOX, WAVE_IN_CLIP, WAVE_OUT_CLIP } from "./pose-bridge.ts";
+import { SMUG_CLIP_BOX, SMUG_CLIP_SHEET, WAVE_CLIP_BOX, WAVE_HOLD_FILE, WAVE_IN_CLIP, WAVE_OUT_CLIP } from "./pose-bridge.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -13,6 +13,7 @@ type Manifest = {
   box: { x: number; y: number; w: number; h: number };
   strip_px: number;
   clips: Record<string, { sha256: string; frames: number; width: number; height: number; frame_edges: FrameEdge[] }>;
+  hold: { file: string; sha256: string; bbox: [number, number, number, number]; outside_band_alpha_max: number; alpha_mean_abs_diff_vs_intro_last: number };
 };
 /** Decoded alpha of every frame of the shipped wave clips (f807/bridge/w1126/edges/gen_edges.py). */
 const manifest = JSON.parse(readFileSync(join(root, "src/lib/wave-clip-edges.json"), "utf8")) as Manifest;
@@ -61,4 +62,17 @@ describe("wave clip band (1126 / 1140)", () => {
       }
     });
   }
+
+  it("the hold is the intro's last frame (1126 f98, first curved smile): nothing past it exists", () => {
+    const h = manifest.hold;
+    assert.equal(h.file, WAVE_HOLD_FILE);
+    const sha = createHash("sha256").update(readFileSync(join(root, "public", h.file))).digest("hex");
+    assert.equal(h.sha256, sha, "manifest was generated from the shipped hold");
+    assert.equal(WAVE_IN_CLIP.frames, 99, "intro is f0..f98");
+    const last = manifest.clips[WAVE_IN_CLIP.file]!.frame_edges[WAVE_IN_CLIP.frames - 1]!;
+    assert.equal(last.i, 98);
+    for (let k = 0; k < 4; k++) assert.ok(Math.abs(h.bbox[k]! - last.bbox[k]!) <= 1, `hold bbox ${h.bbox} vs f98 ${last.bbox}`);
+    assert.ok(h.alpha_mean_abs_diff_vs_intro_last < 1, `hold alpha vs decoded f98: ${h.alpha_mean_abs_diff_vs_intro_last}`);
+    assert.equal(h.outside_band_alpha_max, 0, "hold has nothing outside the wave band");
+  });
 });

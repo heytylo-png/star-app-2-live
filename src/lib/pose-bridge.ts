@@ -4,7 +4,7 @@
  *
  * Both pairs are two real videos played as video, every source frame in order at their
  * native 24 fps. The intro runs from 0.000 s to its hold frame only (smug 1085: 2.000 s,
- * frames 0..48; wave 1126: 4.000 s, frames 0..96) and lands on a hold WebP (= that exact
+ * frames 0..48; wave 1126: 4.083 s, frames 0..98) and lands on a hold WebP (= that exact
  * frame) until the next send. The rest runs its full 145 frames forward onto the live idle
  * sheet. No reverse, no audio (the clips are AVIF image sequences). Smug and wave each have
  * their own canvases / hold sheet.
@@ -43,14 +43,16 @@ export const SMUG_OUT_CLIP: SmugClip = { pair: "smug", key: "out", file: "rai/sm
 export const SMUG_HOLD_FILE = "rai/smug1085_hold.webp";
 
 /**
- * Wave intro (TyLo 2026-10-08): 1126 from 0.000 s to 4.000 s inclusive (97 frames). Arms-down
- * glare → wave arm out (1 s) → palm up, other hand on hip (2 s) → smile set (4 s). The file
- * ends on the 4.000 s frame; nothing past 4 s is in it (the 2 s frame is still the glare).
+ * Wave intro (TyLo 2026-10-08): 1126 from 0.000 s to frame 98 (4.083 s) inclusive (99 frames).
+ * Arms-down glare → wave arm out (1 s) → palm up, other hand on hip (2 s) → smile. The 4.000 s
+ * frame's mouth is still flat; f98 is the first frame where the smile curves (w5, TyLo 13:30:
+ * "hold the first frame where it actually curves... Do not play past that frame"). Nothing past
+ * f98 is in the file (the 2 s frame is still the glare).
  */
-export const WAVE_IN_CLIP: SmugClip = { pair: "wave", key: "in", file: "rai/wave1126_in.avif", frames: 97 };
+export const WAVE_IN_CLIP: SmugClip = { pair: "wave", key: "in", file: "rai/wave1126_in.avif", frames: 99 };
 /** Wave rest: 1140 full length (145 frames, 6.04 s). Wave hand comes down → both arms down → idle glare. */
 export const WAVE_OUT_CLIP: SmugClip = { pair: "wave", key: "out", file: "rai/wave1140_out.avif", frames: 145 };
-/** Wave hold sheet: the exact 4.000 s frame of 1126 (frame 96), 720×1280 RGBA WebP. */
+/** Wave hold sheet: 1126 frame 98 (4.083 s, first curved smile) = the intro's last frame, 720×1280 RGBA WebP. */
 export const WAVE_HOLD_FILE = "rai/wave1126_hold.webp";
 
 /**

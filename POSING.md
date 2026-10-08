@@ -17,7 +17,7 @@ public/
     pout_official.png
     tired_official.png
     smug1085_hold.webp      # smug hold (1085 at 2.000 s); bridge clips: smug1085_in.avif (0-2 s), smug1084_out.avif (full)
-    wave1126_hold.webp      # wave hold (1126 at 4.000 s); bridge clips: wave1126_in.avif (0-4 s), wave1140_out.avif (full)
+    wave1126_hold.webp      # wave hold (1126 f98, 4.083 s, first curved smile); bridge clips: wave1126_in.avif (f0-f98), wave1140_out.avif (full)
     wave_official.png       # TyLo's 2026-10-06 wave still (1008×1792 RGBA, white-matte cut, no re-tone). Not on the Wave key. Not poses/wave.png / front_wave.png
     hold_official.png       # NOT front_hold.png
     embarrassed_official.png
