@@ -10,6 +10,7 @@ import {
   newId,
   titleFromPrompt,
 } from "./helix";
+import { persistedStarterChipsDone } from "./starter-chips";
 
 /** Persist key stable across deploys — bump docs, not the key, when schema changes. */
 export const CHAT_STORE_KEY = "star-rai-chat";
@@ -21,12 +22,15 @@ type ChatState = {
   defaultPersonality: PersonalityId;
   reasoning: ReasoningLevel;
   voiceOn: boolean;
+  /** Set after the first send, or when a saved thread already has messages. */
+  starterChipsDone: boolean;
   hydrated: boolean;
   setHydrated: (value: boolean) => void;
   setDefaultModel: (model: string) => void;
   setDefaultPersonality: (id: PersonalityId) => void;
   setReasoning: (level: ReasoningLevel) => void;
   setVoiceOn: (value: boolean) => void;
+  markStarterChipsDone: () => void;
   selectThread: (id: string | null) => void;
   createThread: (seed?: { prompt?: string; model?: string; personality?: PersonalityId }) => Thread;
   renameThread: (id: string, title: string) => void;
@@ -51,12 +55,17 @@ export const useChatStore = create<ChatState>()(
       defaultPersonality: "default",
       reasoning: "low",
       voiceOn: true,
+      starterChipsDone: false,
       hydrated: false,
       setHydrated: (value) => set({ hydrated: value }),
       setDefaultModel: (model) => set({ defaultModel: model }),
       setDefaultPersonality: (id) => set({ defaultPersonality: id }),
       setReasoning: (level) => set({ reasoning: level }),
       setVoiceOn: (value) => set({ voiceOn: value }),
+      markStarterChipsDone: () => {
+        if (get().starterChipsDone) return;
+        set({ starterChipsDone: true });
+      },
       selectThread: (id) => set({ activeId: id }),
       createThread: (seed) => {
         const now = Date.now();
@@ -144,6 +153,11 @@ export const useChatStore = create<ChatState>()(
       skipHydration: true,
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<ChatState>;
+        const threads = Array.isArray(p.threads)
+          ? (p.threads as Thread[]).map((th) =>
+              th?.model?.startsWith("grok-") ? { ...th, model: DEFAULT_MODEL } : th,
+            )
+          : current.threads;
         return {
           ...current,
           ...p,
@@ -154,11 +168,8 @@ export const useChatStore = create<ChatState>()(
           reasoning: isReasoningLevel(p.reasoning) ? p.reasoning : current.reasoning,
           voiceOn: typeof p.voiceOn === "boolean" ? p.voiceOn : current.voiceOn,
           hydrated: false,
-          threads: Array.isArray(p.threads)
-            ? (p.threads as Thread[]).map((th) =>
-                th?.model?.startsWith("grok-") ? { ...th, model: DEFAULT_MODEL } : th,
-              )
-            : current.threads,
+          threads,
+          starterChipsDone: persistedStarterChipsDone(p.starterChipsDone, threads),
         };
       },
       partialize: (state) => ({
@@ -168,6 +179,7 @@ export const useChatStore = create<ChatState>()(
         defaultPersonality: state.defaultPersonality,
         reasoning: state.reasoning,
         voiceOn: state.voiceOn,
+        starterChipsDone: state.starterChipsDone,
       }),
     },
   ),
