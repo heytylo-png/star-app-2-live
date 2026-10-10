@@ -6,6 +6,9 @@ import {
   WAVE_HOLD_FILE,
   WAVE_IN_CLIP,
   WAVE_OUT_CLIP,
+  POUT_HOLD_FILE,
+  POUT_IN_CLIP,
+  POUT_OUT_CLIP,
 } from "./pose-bridge.ts";
 
 export { POSE_CROSSFADE_MS, type IdleBlinkFrame, type IdleMouthFrame };
@@ -290,6 +293,11 @@ export function holdsWaveBeat(pose: PoseId, _emotion?: EmotionId): boolean {
   return pose === "wave";
 }
 
+/** Named Pout pose: the idle↔pout beat (1158 / crossed-arms hold / 1162) is on stage. */
+export function holdsPoutBeat(pose: PoseId, _emotion?: EmotionId): boolean {
+  return pose === "pout";
+}
+
 /**
  * Reading floor for a fully landed smug line (45 ms/char, never under
  * POSE_HOLD_MIN_MS). Anchored to landing / stream-complete — never send or
@@ -387,6 +395,22 @@ export function isWavePathSheetSrc(src: string): boolean {
   if (name === "wave1126_hold.webp") return true;
   if (name === "wave1126_in.avif") return true;
   if (name === "wave1140_out.avif") return true;
+  if (name === "idle.png") return true;
+  if (/^idle_blink_/.test(name)) return true;
+  if (/^idle_mouth_/.test(name)) return true;
+  return false;
+}
+
+/**
+ * Sheets allowed on the idle↔pout beat: idle sheets, the 1158 intro clip, pout1158_hold,
+ * the 1162 rest clip. Anything else (pout_official.png included) must not paint during a Pout send.
+ */
+export function isPoutPathSheetSrc(src: string): boolean {
+  const path = src.split(/[?#]/)[0] ?? src;
+  const name = path.slice(path.lastIndexOf("/") + 1);
+  if (name === "pout1158_hold.webp") return true;
+  if (name === "pout1158_in.avif") return true;
+  if (name === "pout1162_out.avif") return true;
   if (name === "idle.png") return true;
   if (/^idle_blink_/.test(name)) return true;
   if (/^idle_mouth_/.test(name)) return true;
@@ -495,8 +519,9 @@ export function lineEndedRestPose(opts: {
 }): { pose: PoseId; emotion: EmotionId } | null {
   const onSmug = opts.pose === "smug" || (opts.pose === "idle" && opts.emotion === "smug");
   const onWave = opts.pose === "wave";
+  const onPout = opts.pose === "pout";
   const onWink = opts.pose === "wink";
-  if (!onSmug && !onWave && !onWink) return null;
+  if (!onSmug && !onWave && !onPout && !onWink) return null;
   return { pose: settledRestPose(), emotion: DEFAULT_EMOTION };
 }
 
@@ -612,6 +637,7 @@ export const PRE_CUT_ALPHA_FILES = [
   "rai/surprise_official.png",
   "rai/smug1085_hold.webp",
   "rai/wave1126_hold.webp",
+  "rai/pout1158_hold.webp",
   "rai/content_official.png",
   "rai/sad_official.png",
   "rai/heart_official.png",
@@ -711,7 +737,8 @@ export const LIVE_POSE_FILES = {
   wink: "rai/wink_official.png",
   laugh: "rai/laugh_official.png",
   think: "rai/think_official.png",
-  pout: "rai/pout_official.png",
+  /** Pout hold: 1158 frame 48 (2.000 s; crossed-arms frown). Not pout_official.png. */
+  pout: POUT_HOLD_FILE,
   tired: "rai/tired_official.png",
   smug: SMUG_HOLD_FILE,
   /** Wave hold: 1126 frame 98 (4.083 s; wave palm up, other hand on hip, first curved smile). */
@@ -934,6 +961,16 @@ export function waveBeatSheetUrls(): string[] {
   return [SPRITES.poses.wave];
 }
 
+/** The sheet of the idle <-> pout beat: pout1158_hold. */
+export function poutBeatSheetUrls(): string[] {
+  return [SPRITES.poses.pout];
+}
+
+/** The two clips of the idle <-> pout beat: 1158 intro (f0-f48, 0-2.000 s), 1162 rest. */
+export function poutClipUrls(): string[] {
+  return [ASSET(POUT_IN_CLIP.file), ASSET(POUT_OUT_CLIP.file)];
+}
+
 /** The two clips of the idle <-> wave beat: 1126 intro (f0-f98, 0-4.083 s), 1140 rest. */
 export function waveClipUrls(): string[] {
   return [ASSET(WAVE_IN_CLIP.file), ASSET(WAVE_OUT_CLIP.file)];
@@ -957,7 +994,7 @@ export function stagePreloadOrder(_opts?: { clip?: boolean }): {
   const first = startup[0]!;
   const blinks = idleBlinkFrameUrls();
   const next = blinks.slice(0, 1).filter((u) => u !== first);
-  const beat = [...smugBeatSheetUrls(), ...waveBeatSheetUrls()].filter(
+  const beat = [...smugBeatSheetUrls(), ...waveBeatSheetUrls(), ...poutBeatSheetUrls()].filter(
     (u) => u !== first && !next.includes(u),
   );
   return {

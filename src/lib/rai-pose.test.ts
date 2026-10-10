@@ -238,7 +238,7 @@ describe("live key → file map", () => {
     wink: "rai/wink_official.png",
     laugh: "rai/laugh_official.png",
     think: "rai/think_official.png",
-    pout: "rai/pout_official.png",
+    pout: "rai/pout1158_hold.webp",
     tired: "rai/tired_official.png",
     smug: "rai/smug1085_hold.webp",
     wave: "rai/wave1126_hold.webp",
@@ -558,11 +558,11 @@ describe("layersFor talking vs pose hold", () => {
       assert.doesNotMatch(source, /IDLE_BLINK_DEST_RECT|idleBlinkPatchSrc|copyEyeRect|planIdleCanvasDraws|drawEyeRect/);
       assert.doesNotMatch(source, /790-open-brow|788-open|791-half|789-closed/);
     }
-    // Blink never paints through a canvas. The only canvases on the stage are the four bridge clip
-    // canvases (paste-15), handed to the clip worker: the puppet itself never draws on them.
+    // Blink never paints through a canvas. The only canvases on the stage are the six bridge clip
+    // canvases (smug / wave / pout in + out), handed to the clip worker: the puppet never draws on them.
     assert.doesNotMatch(puppetSrc, /drawImage|getContext/);
     const canvases = puppetSrc.match(/<canvas[\s\S]*?\/>/g) ?? [];
-    assert.equal(canvases.length, 4);
+    assert.equal(canvases.length, 6);
     for (const c of canvases) assert.match(c, /data-rai-role="bridge"/);
     assert.match(puppetSrc, /restOnly/);
     assert.match(puppetSrc, /transition: "none"/);
@@ -724,7 +724,8 @@ describe("layersFor talking vs pose hold", () => {
     const pout = layersFor({ ...base, pose: "pout", talking: false })[0]!.src;
     assert.match(scold, /scold_official/);
     assert.match(shy, /shy_official/);
-    assert.match(pout, /pout_official/);
+    assert.match(pout, /pout1158_hold/);
+    assert.doesNotMatch(pout, /pout_official/);
     assert.notEqual(scold, shy);
     assert.notEqual(scold, pout);
     assert.notEqual(shy, pout);

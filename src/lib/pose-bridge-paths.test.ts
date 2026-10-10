@@ -376,7 +376,7 @@ describe("idle <-> smug bridge on the real resolution paths", () => {
     s.commit({ pose: "pout", emotion: "bratty" });
     s.wait(600);
     assert.equal(s.log.includes("o01") && s.log.lastIndexOf("o01") > s.log.indexOf("smug"), false);
-    assert.equal(s.log.at(-1), "pout_official");
+    assert.match(s.log.at(-1)!, /^pout1158_hold\.webp/);
   });
 
   it("(h) smug sent twice in a row: the second turn's smug->idle->smug carries on, no hard cut", () => {
