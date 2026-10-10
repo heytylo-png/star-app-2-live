@@ -80,8 +80,9 @@ describe("hip clip data", () => {
     assert.deepEqual(order.beat.map((u) => u.split("?")[0]!.replace(/^.*\/rai\//, "rai/")), [
       "rai/smug1085_hold.webp",
       "rai/wave1126_hold.webp",
-      "rai/pout1158_hold.webp",
     ]);
+    // Pout's hold is lazy: after the first stage image and the smug / wave preloads.
+    assert.deepEqual(order.lazy.map((u) => u.split("?")[0]!.replace(/^.*\/rai\//, "rai/")), ["rai/pout1158_hold.webp"]);
     assert.ok(!order.beat.some((u) => /\/hip\//.test(u)));
     for (const skip of [true, false]) {
       const deferred = deferredSpriteUrls({ skipBridge: skip });
@@ -427,6 +428,6 @@ describe("puppet wiring", () => {
   it("waits for the clip (bounded, loud) and never expires into the arms-down sheet", () => {
     assert.match(puppet, /console\.warn\("\[rai\] hip clip did not decode in time/);
     assert.match(puppet, /reducedMotion: clipMode \? false : bridgeCut/);
-    assert.match(puppet, /const bridgeWaitExpired = !clipMode &&/);
+    assert.match(puppet, /const expiredFor = \(pair: ClipPair \| null, wantedKey\?: string \| null\): boolean =>\s*!clipMode &&/);
   });
 });

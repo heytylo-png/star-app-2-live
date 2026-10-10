@@ -705,6 +705,10 @@ export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
   "rai/wave1126_in.avif": "w6",
   "rai/wave1140_out.avif": "w6",
   "rai/wave1126_hold.webp": "w6",
+  // Pout (1158 in / hold f48 / 1162 out): p1 = face skin re-matched to idle (2026-10-10).
+  "rai/pout1158_in.avif": "p1",
+  "rai/pout1162_out.avif": "p1",
+  "rai/pout1158_hold.webp": "p1",
 };
 
 const ASSET = (path: string) => {
@@ -989,19 +993,21 @@ export function stagePreloadOrder(_opts?: { clip?: boolean }): {
   next: string[];
   beat: string[];
   rest: string[];
+  /** After everything above (pout hold): lazy, so it never delays first paint or the smug / wave beat. */
+  lazy: string[];
 } {
   const startup = startupSpriteUrls();
   const first = startup[0]!;
   const blinks = idleBlinkFrameUrls();
   const next = blinks.slice(0, 1).filter((u) => u !== first);
-  const beat = [...smugBeatSheetUrls(), ...waveBeatSheetUrls(), ...poutBeatSheetUrls()].filter(
-    (u) => u !== first && !next.includes(u),
-  );
+  const beat = [...smugBeatSheetUrls(), ...waveBeatSheetUrls()].filter((u) => u !== first && !next.includes(u));
+  const rest = startup.slice(1).filter((u) => !beat.includes(u) && !next.includes(u));
   return {
     first,
     next,
     beat,
-    rest: startup.slice(1).filter((u) => !beat.includes(u) && !next.includes(u)),
+    rest,
+    lazy: poutBeatSheetUrls().filter((u) => u !== first && !next.includes(u) && !beat.includes(u) && !rest.includes(u)),
   };
 }
 

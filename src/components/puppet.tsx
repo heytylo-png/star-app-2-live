@@ -336,7 +336,14 @@ export function Puppet({
     pout: false,
     unsupported: false,
   });
-  const loadClips = useRef<() => Promise<boolean>>(async () => false);
+  /**
+   * Load (and prime) one pair's clips; without a pair, the startup pairs (smug + wave).
+   * Pout is lazy: its worker and files only start after the startup preloads, or when a
+   * Pout is wanted first. Each pair's readiness is its own.
+   */
+  const loadClips = useRef<(pair?: ClipPair) => Promise<boolean>>(async () => false);
+  /** Starts the pout player (worker + 1158 / 1162 fetch) once; later calls are no-ops. */
+  const startPoutClips = useRef<() => void>(() => {});
   const bridge = useRef<PoseBridge | null>(null);
   const bridgeDriver = useRef<BridgeDriver | null>(null);
   // Smug hold release (paste-14): the hold has no timer. The user's next send (or any
@@ -364,7 +371,8 @@ export function Puppet({
   const clipMode = clipSupported && !clipGaveUp;
   /** Waiting for bridge frames to decode before an idle <-> smug change (bounded). */
   /** The bounded wait ran out: the change cut, loudly. */
-  const [bridgeWaitExpiredRaw, setBridgeWaitExpired] = useState(false);
+  /** The pair whose bounded wait ran out (its change cut, loudly); null while none has. */
+  const [bridgeWaitExpiredRaw, setBridgeWaitExpired] = useState<ClipPair | null>(null);
   const sheetsRef = useRef<Record<string, string>>({});
   const [blinkMode, setBlinkMode] = useState<BlinkFadeMode>("off");
   const blinkRef = useRef<IdleBlinkFrame>(0);
@@ -430,7 +438,6 @@ export function Puppet({
     const [pinUrl, poutUrl] = poutClipUrls();
     let smugPlayer: SmugClipPlayer;
     let wavePlayer: SmugClipPlayer;
-    let poutPlayer: SmugClipPlayer;
     try {
       smugPlayer = SmugClipPlayer.for({
         canvases: { in: cin, out: cout },
@@ -460,20 +467,6 @@ export function Puppet({
           publish();
         },
       });
-      poutPlayer = SmugClipPlayer.for({
-        canvases: { in: pin, out: pout },
-        urls: { in: pinUrl!, out: poutUrl! },
-        frames: { in: POUT_IN_CLIP.frames, out: POUT_OUT_CLIP.frames },
-        box: POUT_CLIP_BOX,
-        keyOf: (file) => {
-          const f = parseClipFrame(file);
-          return f?.clip.pair === "pout" ? f.clip.key : null;
-        },
-        onState: (st) => {
-          poutSt = st;
-          publish();
-        },
-      });
     } catch (err) {
       console.warn("[rai] bridge clip player did not start; pairs cut", err);
       smugSt = { in: false, out: false, unsupported: true };
@@ -484,14 +477,50 @@ export function Puppet({
     }
     clipPlayerRef.current = smugPlayer;
     wavePlayerRef.current = wavePlayer;
-    poutPlayerRef.current = poutPlayer;
-    loadClips.current = () =>
-      Promise.all([smugPlayer.load(), wavePlayer.load(), poutPlayer.load()]).then((ok) => ok.every(Boolean));
+    // Pout (1158 / 1162) is created lazily: its worker fetches on init, so creating it here
+    // would put 2.3 MB on the wire next to idle.png and the smug / wave clips on a cold phone.
+    let poutPlayer: SmugClipPlayer | null = null;
+    const ensurePout = (): SmugClipPlayer | null => {
+      if (poutPlayer) return poutPlayer;
+      try {
+        poutPlayer = SmugClipPlayer.for({
+          canvases: { in: pin, out: pout },
+          urls: { in: pinUrl!, out: poutUrl! },
+          frames: { in: POUT_IN_CLIP.frames, out: POUT_OUT_CLIP.frames },
+          box: POUT_CLIP_BOX,
+          keyOf: (file) => {
+            const f = parseClipFrame(file);
+            return f?.clip.pair === "pout" ? f.clip.key : null;
+          },
+          onState: (st) => {
+            poutSt = st;
+            publish();
+          },
+        });
+      } catch (err) {
+        console.warn("[rai] pout clip player did not start; idle <-> pout cuts", err);
+        poutSt = { in: false, out: false, unsupported: true };
+        publish();
+        return null;
+      }
+      poutPlayerRef.current = poutPlayer;
+      return poutPlayer;
+    };
+    startPoutClips.current = () => {
+      ensurePout();
+    };
+    loadClips.current = (pair) => {
+      if (pair === "pout") return ensurePout()?.load() ?? Promise.resolve(false);
+      if (pair === "smug") return smugPlayer.load();
+      if (pair === "wave") return wavePlayer.load();
+      return Promise.all([smugPlayer.load(), wavePlayer.load()]).then((ok) => ok.every(Boolean));
+    };
     return () => {
       if (clipPlayerRef.current === smugPlayer) clipPlayerRef.current = null;
       if (wavePlayerRef.current === wavePlayer) wavePlayerRef.current = null;
-      if (poutPlayerRef.current === poutPlayer) poutPlayerRef.current = null;
+      if (poutPlayer && poutPlayerRef.current === poutPlayer) poutPlayerRef.current = null;
       loadClips.current = async () => false;
+      startPoutClips.current = () => {};
     };
   }, []);
 
@@ -660,6 +689,15 @@ export function Puppet({
       for (let i = 0; i < order.rest.length; i++) {
         if (cancelled) return;
         await punchOne(order.rest[i]!, false);
+      }
+      if (cancelled) return;
+      // Pout (1158 / 1162 + its hold) is lazy: only now, after the first stage image and the
+      // smug / wave preloads, so it never competes with them on a cold phone. A Pout sent
+      // earlier starts it on its own (the bridge wait effect asks for the pout pair).
+      startPoutClips.current();
+      for (const src of order.lazy) {
+        if (cancelled) return;
+        await punchOne(src, false);
       }
       if (cancelled) return;
       const deferred = deferredSpriteUrls({ skipBridge: clipSupported });
@@ -1055,12 +1093,28 @@ export function Puppet({
   const smugClipsReady = clipsState.in && clipsState.out;
   const waveClipsReady = clipsState.win && clipsState.wout;
   const poutClipsReady = clipsState.pin && clipsState.pout;
-  const bridgeFramesReady = clipMode ? clipReady : smugClipsReady && waveClipsReady && poutClipsReady;
+  // Each pair waits only for its own clips: smug / wave never wait on the lazy pout files,
+  // pout never waits on smug / wave.
+  const pairClipsReady: Record<ClipPair, boolean> = { smug: smugClipsReady, wave: waveClipsReady, pout: poutClipsReady };
+  const pairOf = (wantedKey: string | null, shownKey: string | null): ClipPair | null => {
+    for (const k of [wantedKey, shownKey]) if (k === "smug" || k === "wave" || k === "pout") return k;
+    return null;
+  };
+  // Pout is lazy, so it only waits for the clip it is about to play: idle -> pout needs 1158,
+  // pout -> idle needs 1162 (a hold released before 1162 is in stays on the hold until it is).
+  const framesReadyFor = (pair: ClipPair | null, wantedKey?: string | null): boolean => {
+    if (clipMode) return clipReady;
+    if (!pair) return true;
+    if (pair === "pout" && wantedKey !== undefined) return wantedKey === "pout" ? clipsState.pin : clipsState.pout;
+    return pairClipsReady[pair];
+  };
   // No way to decode the clips in this browser: the pair hard-cuts, like reduced motion.
   const bridgeCut = reducedMotion || clipsState.unsupported;
   // Once the frames are in, an old expiry no longer applies. The clip never expires into the
   // arms-down smug sheet: after its bound the PNG bridge takes over instead (clipGaveUp).
-  const bridgeWaitExpired = !clipMode && bridgeWaitExpiredRaw && !bridgeFramesReady;
+  const expiredFor = (pair: ClipPair | null, wantedKey?: string | null): boolean =>
+    !clipMode && pair != null && bridgeWaitExpiredRaw === pair && !framesReadyFor(pair, wantedKey);
+  const bridgeWaitExpired = expiredFor(bridgeWaitExpiredRaw);
   const shownPlates = useRef<SpriteLayer[]>([]);
   const plates = useMemo(() => {
     // exitTick: idle landed after 1084, the wanted pose may go on (re-run only).
@@ -1082,14 +1136,15 @@ export function Puppet({
     else if (step === "exit-to-idle") next = smugExitRestPlates(reducedMotion);
     // A paired idle <-> smug change waits for its frames (bounded) instead of cutting.
     const wantedKey = bridgeKeyOfPlates(next);
+    const gatePair = pairOf(wantedKey, shownKey);
     const gate = bridgeGate({
       wantedKey,
       shownKey,
-      framesReady: bridgeFramesReady,
+      framesReady: framesReadyFor(gatePair, wantedKey),
       // Reduced motion hard-cuts but still lands on the hip picture, so with the clip it
       // waits for it like everyone else (the plain idle stays up meanwhile).
       reducedMotion: clipMode ? false : bridgeCut,
-      waitExpired: bridgeWaitExpired,
+      waitExpired: expiredFor(gatePair, wantedKey),
     });
     const ready = next.length > 0 && next.every((layer) => sheets[layer.src] != null) && gate === "go";
     // Unready pose: keep the last punched plates (idle, or the frame already up).
@@ -1107,7 +1162,8 @@ export function Puppet({
     if (same) return prev;
     shownPlates.current = chosen;
     return chosen;
-  }, [desired, sheets, reducedMotion, bridgeCut, bridgeWaitExpired, bridgeFramesReady, clipMode, smugRelease, exitTick, bridgeClip]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- framesReadyFor / expiredFor read clipsState, clipReady and bridgeWaitExpiredRaw
+  }, [desired, sheets, reducedMotion, bridgeCut, clipsState, clipReady, bridgeWaitExpiredRaw, clipMode, smugRelease, exitTick, bridgeClip]);
 
   // 1084 done (bridge off) or no bridge to run (reduced motion / cut): let idle paint and
   // sit a moment, then hand the stage to the wanted pose. Never while hidden (rAF waits).
@@ -1191,9 +1247,11 @@ export function Puppet({
   // (offline, 404): it is never reached on a working device, and when it is, the change
   // cuts and says so (console + stage attribute), so a missing frame is never silent.
   useEffect(() => {
-    if (bridgeFramesReady || (bridgeCut && !clipMode) || bridgeWaitExpired) return;
     const wantKey = smugGate.current?.exiting() ? "idle" : bridgeKeyOfPlates(desired);
-    if (!bridgeWantsFrames(wantKey, bridgeKeyOfPlates(shownPlates.current))) return;
+    const shownKey = bridgeKeyOfPlates(shownPlates.current);
+    const pair = pairOf(wantKey, shownKey);
+    if (framesReadyFor(pair, wantKey) || (bridgeCut && !clipMode) || expiredFor(pair, wantKey)) return;
+    if (!bridgeWantsFrames(wantKey, shownKey)) return;
     if (clipMode) {
       // Hip clip still decoding: keep asking (a failed picture is retried), show the plain
       // idle meanwhile, and after a generous bound say so loudly and fall back to the PNG
@@ -1210,7 +1268,7 @@ export function Puppet({
       };
     }
     const ask = () => {
-      void loadClips.current();
+      void loadClips.current(pair ?? undefined);
     };
     ask();
     const retry = window.setInterval(ask, BRIDGE_WAIT_RETRY_MS);
@@ -1220,14 +1278,15 @@ export function Puppet({
       return () => window.clearInterval(retry);
     }
     const giveUp = window.setTimeout(() => {
-      console.warn("[rai] smug clips did not load in time; idle <-> smug cuts");
-      setBridgeWaitExpired(true);
+      console.warn(`[rai] ${pair ?? "bridge"} clips did not load in time; idle <-> ${pair ?? "pose"} cuts`);
+      setBridgeWaitExpired(pair);
     }, BRIDGE_WAIT_MAX_MS);
     return () => {
       window.clearInterval(retry);
       window.clearTimeout(giveUp);
     };
-  }, [desired, sheets, bridgeFramesReady, bridgeCut, bridgeWaitExpired, clipMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- framesReadyFor / expiredFor read clipsState, clipReady and bridgeWaitExpiredRaw
+  }, [desired, sheets, clipsState, clipReady, bridgeCut, bridgeWaitExpiredRaw, clipMode]);
 
   // Background tab: timers are throttled or frozen, so the bridge holds its frame and
   // carries on at normal pace when the page is visible again (see PoseBridge.setPaused).

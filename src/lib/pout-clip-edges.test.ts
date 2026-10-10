@@ -83,3 +83,23 @@ describe("pout clip band (1158 / 1162)", () => {
     assert.equal(h.outside_band_alpha_max, 0, "hold has nothing outside the pout band");
   });
 });
+
+describe("pout clip loading (cold-load regression, 2026-10-10)", () => {
+  const puppet = readFileSync(join(root, "src/components/puppet.tsx"), "utf8");
+  it("each pair's readiness is its own: smug / wave never wait on pout, pout never on smug / wave", () => {
+    assert.doesNotMatch(puppet, /smugClipsReady && waveClipsReady/);
+    assert.doesNotMatch(puppet, /poutClipsReady &&|&& poutClipsReady/);
+    assert.match(puppet, /pairClipsReady: Record<ClipPair, boolean> = \{ smug: smugClipsReady, wave: waveClipsReady, pout: poutClipsReady \}/);
+    assert.match(puppet, /framesReady: framesReadyFor\(gatePair, wantedKey\)/);
+    assert.match(puppet, /wantedKey === "pout" \? clipsState\.pin : clipsState\.pout/);
+  });
+  it("the pout worker (which fetches on init) is created lazily, never at mount next to idle.png", () => {
+    const mount = puppet.slice(puppet.indexOf("const ensurePout = "));
+    assert.ok(puppet.indexOf("poutPlayer = SmugClipPlayer.for(") > puppet.indexOf("const ensurePout = "));
+    assert.match(mount, /return Promise\.all\(\[smugPlayer\.load\(\), wavePlayer\.load\(\)\]\)/);
+    // started after the startup preloads (first image, smug / wave beat, blink, mouth)
+    const queue = puppet.slice(puppet.indexOf("const order = stagePreloadOrder("));
+    assert.ok(queue.indexOf("startPoutClips.current()") > queue.indexOf("order.rest"));
+    assert.ok(queue.indexOf("startPoutClips.current()") < queue.indexOf("deferredSpriteUrls("));
+  });
+});

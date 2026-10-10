@@ -9,7 +9,7 @@
 "strip_px": 2,
 "clips": {
 "rai/pout1158_in.avif": {
-"sha256": "49aeac343c51ecf6cb06c29d305685ba5d47a3ea80dd39727bb08c36476fc18d",
+"sha256": "31d498222e42a972ba8f99e7440eb10580479ae9e5cd2739bae4ac2e102d4082",
 "frames": 49,
 "width": 480,
 "height": 1280,
@@ -605,7 +605,7 @@
 ]
 },
 "rai/pout1162_out.avif": {
-"sha256": "36513c44135d9bfe4ca4776ee727ffb99e0d8fac299177dbba8ce75d52b4224a",
+"sha256": "c331ab5eaf0bf19d3e1a1d053621e5dcb6fec243206b7cda3473b4adf108bcc0",
 "frames": 145,
 "width": 480,
 "height": 1280,
@@ -2355,7 +2355,7 @@
 },
 "hold": {
 "file": "rai/pout1158_hold.webp",
-"sha256": "bf0f42580fefd4969c5688ef840df2541e2e5d9398ceecd05bbe398bf70481d1",
+"sha256": "45a42db76d26f4f2a0093ca55dcafaa7964e4de164cc82ab723750c38a1fb7b5",
 "bbox": [
 213,
 9,
