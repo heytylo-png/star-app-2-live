@@ -36,6 +36,7 @@ import {
   settledRestPose,
   holdsSmugBeat,
   holdsWaveBeat,
+  holdsPoutBeat,
   lineEndedRestPose,
   smugWinkTextRestDelayMs,
   composerShowsStop,
@@ -682,7 +683,7 @@ function RaiReady() {
       // through reading, speech end, cancel and error alike. The user's next send
       // releases it on the stage (requestSmugRelease): 1084 forward, idle lands,
       // then the next pose. Mid-exit unpaired keys: exitInFlight (#116).
-      if (holdsSmugBeat(pose, emotion) || holdsWaveBeat(pose, emotion)) {
+      if (holdsSmugBeat(pose, emotion) || holdsWaveBeat(pose, emotion) || holdsPoutBeat(pose, emotion)) {
         // Cancel / abort / error before the line landed: anchor it so the turn
         // state is settled; the hold itself still waits for the next send.
         anchorUnlandedLine();

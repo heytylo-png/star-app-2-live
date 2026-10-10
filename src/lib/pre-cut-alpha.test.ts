@@ -70,6 +70,7 @@ const POSE_SHEET_SIZE: Record<string, [number, number]> = {
   // Smug hold (paste-15): the 2.000 s frame of 1085 (RGBA WebP). The clips are AVIF video, not sheets.
   "rai/smug1085_hold.webp": [720, 1280],
   "rai/wave1126_hold.webp": [720, 1280],
+  "rai/pout1158_hold.webp": [720, 1280],
 };
 
 /** Minimal WebP read: VP8X canvas size + alpha flag (the bridge frames ship as RGBA WebP). */
@@ -108,6 +109,8 @@ const POSE_SHEET_SHA256: Record<string, string> = {
   "rai/smug1085_hold.webp": "45cd6eea6c438b340e1d33c8aaeb6003828b6dfb7cc40ed9ed49359643c75cbf",
   // Wave hold (2026-10-10 w6): the decoded w6 intro f98 (4.083 s, first curved smile), alpha identical to the clip frame, colour WebP q95.
   "rai/wave1126_hold.webp": "bc8895a7ef6818756d90b39a0e5a9129c7c928b566b1651d64f93cb2b8a0a699",
+  // Pout hold (2026-10-10): the decoded 1158 intro f48 (2.000 s, crossed-arms frown), alpha identical to the clip frame. Not pout_official.png.
+  "rai/pout1158_hold.webp": "bf0f42580fefd4969c5688ef840df2541e2e5d9398ceecd05bbe398bf70481d1",
   // TyLo's 2026-10-06 wave still: white-matte cut, uniform x1.4 to the 1008x1792 idle canvas, no re-tone.
   "rai/wave_official.png": "1c1a888074b64729c9937c9dbc407eebec82f6b6c4699a1ec30a02c2574cddb9",
 };
@@ -118,6 +121,8 @@ const SMUG_CLIP_SHA256: Record<string, string> = {
   "rai/smug1084_out.avif": "c44e3af0a6233c9979747710cab1c731e5d96691dc3816628978f227f9ff1b50",
   "rai/wave1126_in.avif": "265b541c8333150d334628db096234507160a328451eb54f8a16c081dac3c9a5",
   "rai/wave1140_out.avif": "58cf99bbaedb26006e5aa6e653eb24851751e1efb245292ff6053afa7b9fa3e5",
+  "rai/pout1158_in.avif": "49aeac343c51ecf6cb06c29d305685ba5d47a3ea80dd39727bb08c36476fc18d",
+  "rai/pout1162_out.avif": "36513c44135d9bfe4ca4776ee727ffb99e0d8fac299177dbba8ce75d52b4224a",
 };
 
 describe("smug clips (1085 in / 1084 out)", () => {
@@ -127,6 +132,7 @@ describe("smug clips (1085 in / 1084 out)", () => {
     const rai = readdirSync(join(root, "public/rai"));
     assert.deepEqual(rai.filter((f) => /^smug/.test(f)).sort(), ["smug1084_out.avif", "smug1085_hold.webp", "smug1085_in.avif"]);
     assert.deepEqual(rai.filter((f) => /^wave1\d{3}/.test(f)).sort(), ["wave1126_hold.webp", "wave1126_in.avif", "wave1140_out.avif"]);
+    assert.deepEqual(rai.filter((f) => /^pout1\d{3}/.test(f)).sort(), ["pout1158_hold.webp", "pout1158_in.avif", "pout1162_out.avif"]);
     assert.equal(rai.some((f) => /wave111[04]/.test(f)), false, "1110 / 1114 removed");
     assert.equal(rai.some((f) => /9(56|60|62|68|70|71|73)/.test(f)), false);
   });

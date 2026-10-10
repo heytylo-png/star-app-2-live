@@ -80,6 +80,7 @@ describe("hip clip data", () => {
     assert.deepEqual(order.beat.map((u) => u.split("?")[0]!.replace(/^.*\/rai\//, "rai/")), [
       "rai/smug1085_hold.webp",
       "rai/wave1126_hold.webp",
+      "rai/pout1158_hold.webp",
     ]);
     assert.ok(!order.beat.some((u) => /\/hip\//.test(u)));
     for (const skip of [true, false]) {

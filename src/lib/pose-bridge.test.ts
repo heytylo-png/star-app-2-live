@@ -10,6 +10,11 @@ import {
   WAVE_IN_FILES,
   WAVE_OUT_FILES,
   WAVE_HOLD_FILE,
+  POUT_IN_CLIP,
+  POUT_OUT_CLIP,
+  POUT_IN_FILES,
+  POUT_OUT_FILES,
+  POUT_HOLD_FILE,
   bridgeClips,
   SMUG_HOLD_FILE,
   SMUG_CLIP_BOX,
@@ -114,8 +119,8 @@ function rig(opts: { rand?: () => number; clipClock?: boolean } = {}) {
 }
 
 describe("pose bridge pair table (paste-15: 1085 / 1084 video)", () => {
-  it("is idle<->smug and idle<->wave: 49 / 99-frame intros + 145-frame rests", () => {
-    assert.deepEqual(Object.keys(POSE_BRIDGE_PAIRS).sort(), ["idle>smug", "idle>wave", "smug>idle", "wave>idle"]);
+  it("is idle<->smug, idle<->wave and idle<->pout: 49 / 99 / 49-frame intros + 145-frame rests", () => {
+    assert.deepEqual(Object.keys(POSE_BRIDGE_PAIRS).sort(), ["idle>pout", "idle>smug", "idle>wave", "pout>idle", "smug>idle", "wave>idle"]);
     assert.equal(SMUG_IN_CLIP.file, "rai/smug1085_in.avif");
     assert.equal(SMUG_OUT_CLIP.file, "rai/smug1084_out.avif");
     assert.equal(SMUG_IN_FILES.length, 49);
@@ -146,10 +151,26 @@ describe("pose bridge pair table (paste-15: 1085 / 1084 video)", () => {
     for (const c of bridgeClips()) assert.doesNotMatch(c.file, /111[04]/);
   });
 
+  it("pout is 1158 f0..f48 (0-2.000 s, nothing past 2 s) + 1162 full (145 frames); the hold is not pout_official", () => {
+    assert.equal(POUT_IN_CLIP.file, "rai/pout1158_in.avif");
+    assert.equal(POUT_OUT_CLIP.file, "rai/pout1162_out.avif");
+    assert.equal(POUT_IN_FILES.length, 49);
+    assert.equal(POUT_OUT_FILES.length, 145);
+    assert.deepEqual(bridgeFilesFor("idle", "pout"), POUT_IN_FILES);
+    assert.deepEqual(bridgeFilesFor("pout", "idle"), POUT_OUT_FILES);
+    assert.equal((POUT_IN_FILES.length - 1) * SMUG_CLIP_FRAME_MS, 2000);
+    assert.equal(parseClipFrame("rai/pout1158_in.avif#049"), null, "no frame 49");
+    assert.deepEqual(parseClipFrame("rai/pout1162_out.avif#144"), { clip: POUT_OUT_CLIP, index: 144 });
+    assert.equal(POUT_HOLD_FILE, "rai/pout1158_hold.webp");
+    assert.match(SPRITES.poses.pout, /rai\/pout1158_hold\.webp/);
+    assert.doesNotMatch(SPRITES.poses.pout, /pout_official/);
+  });
+
   it("has no bridge for any other pair, same-pose, or missing key", () => {
     for (const [from, to] of [
       ["smug", "wave"],
-      ["idle", "pout"],
+      ["pout", "smug"],
+      ["wave", "pout"],
       ["idle", "talk"],
       ["talk", "smug"],
       ["idle", "idle"],
@@ -162,7 +183,14 @@ describe("pose bridge pair table (paste-15: 1085 / 1084 video)", () => {
   });
 
   it("lists each frame once; frame ids point into the clip files", () => {
-    assert.deepEqual(bridgeFiles(), [...SMUG_IN_FILES, ...SMUG_OUT_FILES, ...WAVE_IN_FILES, ...WAVE_OUT_FILES]);
+    assert.deepEqual(bridgeFiles(), [
+      ...SMUG_IN_FILES,
+      ...SMUG_OUT_FILES,
+      ...WAVE_IN_FILES,
+      ...WAVE_OUT_FILES,
+      ...POUT_IN_FILES,
+      ...POUT_OUT_FILES,
+    ]);
     for (const f of SMUG_IN_FILES) assert.match(f, /^rai\/smug1085_in\.avif#0[0-4]\d$/);
     for (const f of SMUG_OUT_FILES) assert.match(f, /^rai\/smug1084_out\.avif#\d{3}$/);
     assert.deepEqual(parseClipFrame(bridgeFrameSrc("rai/smug1084_out.avif#144")), { clip: SMUG_OUT_CLIP, index: 144 });
@@ -195,7 +223,8 @@ describe("pose bridge keys", () => {
     }
     assert.equal(bridgeKeyOfSrc(SPRITES.poses.smug), "smug");
     assert.equal(bridgeKeyOfSrc(SPRITES.poses.wave), "wave");
-    for (const key of ["pout", "talk", "wink", "peace", "shy", "tired", "think"] as const) {
+    assert.equal(bridgeKeyOfSrc(SPRITES.poses.pout), "pout");
+    for (const key of ["talk", "wink", "peace", "shy", "tired", "think"] as const) {
       assert.equal(bridgeKeyOfSrc(SPRITES.poses[key]), null, key);
     }
     // a clip frame is never mistaken for a resting pose
@@ -317,7 +346,7 @@ describe("pose bridge sequencing (clock-paced, 24 fps)", () => {
   it("non-paired poses and reduced motion hard-cut: no frame is ever shown", () => {
     const { clock, req, shown } = rig({ clipClock: true });
     for (const [from, to] of [
-      ["idle", "pout"],
+      ["idle", "wink"],
       ["pout", "smug"],
       ["smug", "talk"],
       [null, "smug"],

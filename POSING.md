@@ -19,6 +19,7 @@ public/
     smug1085_hold.webp      # smug hold (1085 at 2.000 s); bridge clips: smug1085_in.avif (0-2 s), smug1084_out.avif (full)
     wave1126_hold.webp      # wave hold (1126 f98, 4.083 s, first curved smile); bridge clips: wave1126_in.avif (f0-f98), wave1140_out.avif (full)
     wave_official.png       # TyLo's 2026-10-06 wave still (1008×1792 RGBA, white-matte cut, no re-tone). Not on the Wave key. Not poses/wave.png / front_wave.png
+    pout1158_hold.webp      # pout hold (1158 f48, 2.000 s, crossed-arms frown); bridge clips: pout1158_in.avif (0-2 s), pout1162_out.avif (full)
     hold_official.png       # NOT front_hold.png
     embarrassed_official.png
     scold_official.png      # live scold key — scold-front.png stays on disk unused
@@ -53,7 +54,7 @@ Live chat keys use the **morning official pack** under `public/rai/`. Do not poi
 | `wink` | `rai/wink_official.png` |
 | `laugh` | `rai/laugh_official.png` |
 | `think` | `rai/think_official.png` |
-| `pout` | `rai/pout_official.png` |
+| `pout` | `rai/pout1158_hold.webp` (1158 f48 hold; 1158 in / 1162 out clips) |
 | `tired` | `rai/tired_official.png` |
 | `smug` | `rai/smug1085_hold.webp` |
 | `wave` | `rai/wave1126_hold.webp` via the idle↔wave 1126/1140 video bridge (1126 0–4.0 s, hold on the 4.0 s smile frame, 1140 out; TyLo 2026-10-08, replaces 1110/1114). `rai/wave_official.png` is TyLo's 2026-10-06 still (right hand up waving, left hand on hip, glare, sailor uniform): white-matte cut, uniform ×1.4 onto the 1008×1792 idle canvas, feet line = idle, pixels as supplied (no re-tone). It replaces the old retoned dark sheet and is not painted by the live Wave key. Not `star-rai/poses/wave.png` (Helix 1152×1728 3/4) and not `rai/front_wave.png` (Expo alt). |

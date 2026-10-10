@@ -1,12 +1,13 @@
 /**
  * Helix pose bridge: in-between motion played when the shown sheet changes between a
- * paired set of poses. Pairs: idle <-> smug (1085/1084) and idle <-> wave (1126/1140).
+ * paired set of poses. Pairs: idle <-> smug (1085/1084), idle <-> wave (1126/1140) and
+ * idle <-> pout (1158/1162).
  *
  * Both pairs are two real videos played as video, every source frame in order at their
  * native 24 fps. The intro runs from 0.000 s to its hold frame only (smug 1085: 2.000 s,
- * frames 0..48; wave 1126: 4.083 s, frames 0..98) and lands on a hold WebP (= that exact
+ * frames 0..48; wave 1126: 4.083 s, frames 0..98; pout 1158: 2.000 s, frames 0..48) and lands on a hold WebP (= that exact
  * frame) until the next send. The rest runs its full 145 frames forward onto the live idle
- * sheet. No reverse, no audio (the clips are AVIF image sequences). Smug and wave each have
+ * sheet. No reverse, no audio (the clips are AVIF image sequences). Smug, wave and pout each have
  * their own canvases / hold sheet.
  *
  * This module is pure (no DOM, no React). The puppet owns the one canvas the frames are
@@ -19,7 +20,7 @@ export const SMUG_CLIP_FPS = 24;
 /** One clip frame on stage: 41.67 ms. */
 export const SMUG_CLIP_FRAME_MS = 1000 / SMUG_CLIP_FPS;
 
-export type ClipPair = "smug" | "wave";
+export type ClipPair = "smug" | "wave" | "pout";
 export type SmugClip = {
   /** Which hold pose this clip belongs to. */
   readonly pair: ClipPair;
@@ -56,6 +57,16 @@ export const WAVE_OUT_CLIP: SmugClip = { pair: "wave", key: "out", file: "rai/wa
 export const WAVE_HOLD_FILE = "rai/wave1126_hold.webp";
 
 /**
+ * Pout intro (TyLo 2026-10-10): 1158 from 0.000 s to 2.000 s inclusive (49 frames). Arms-down
+ * glare → both arms crossed (by ~0.4-1 s) → crossed-arms frown. Nothing past 2.000 s is in the file.
+ */
+export const POUT_IN_CLIP: SmugClip = { pair: "pout", key: "in", file: "rai/pout1158_in.avif", frames: 49 };
+/** Pout rest: 1162 full length (145 frames, 6.04 s). Crossed arms → both arms down (~1 s) → idle glare. */
+export const POUT_OUT_CLIP: SmugClip = { pair: "pout", key: "out", file: "rai/pout1162_out.avif", frames: 145 };
+/** Pout hold sheet: 1158 frame 48 (2.000 s, crossed-arms frown) = the intro's last frame, 720×1280 RGBA WebP. Not pout_official.png. */
+export const POUT_HOLD_FILE = "rai/pout1158_hold.webp";
+
+/**
  * Both clips are white-matte cuts registered to idle.png in the 720×1280 sheet space
  * (1085 shifted 0,−3 px; 1084 uniform ×1.005 + −2,−10 px; no visible pixel leaves the
  * canvas). The bitstream holds only the x 112..560 band (the rest is transparent margin
@@ -72,6 +83,14 @@ export const SMUG_CLIP_BOX = { x: 112, y: 0, w: 448, h: 1280 } as const;
  * (pinned by wave-clip-edges.json + its test), so no elbow or hand is clipped at the edge.
  */
 export const WAVE_CLIP_BOX = { x: 0, y: 0, w: 672, h: 1280 } as const;
+/**
+ * Pout clips (1158 and 1162, both 784×1168, same framing) are white-matte cuts registered to
+ * idle.png in the 720×1280 sheet space with one transform for both: uniform ×1.33, +(−162, −152)
+ * (joint silhouette fit of 1158 f0 and 1162 f144 on idle), so there is no size jump at any join.
+ * Every frame's alpha sits inside x 142..592, so pout has its own band x 128..608; its edge strips
+ * are transparent in every frame (pout-clip-edges.json + test): no elbow or hand clipped.
+ */
+export const POUT_CLIP_BOX = { x: 128, y: 0, w: 480, h: 1280 } as const;
 
 /** Bridge frame id for frame `index` of a clip: `<file>#NNN`. */
 export function clipFrameFile(clip: SmugClip, index: number): string {
@@ -87,7 +106,7 @@ export function clipFrameFiles(clip: SmugClip): string[] {
 export function parseClipFrame(src: string): { clip: SmugClip; index: number } | null {
   const m = /([^/?#]+\.avif)(?:\?[^#]*)?#(\d{3})$/.exec(src);
   if (!m) return null;
-  const clip = [SMUG_IN_CLIP, SMUG_OUT_CLIP, WAVE_IN_CLIP, WAVE_OUT_CLIP].find(
+  const clip = [SMUG_IN_CLIP, SMUG_OUT_CLIP, WAVE_IN_CLIP, WAVE_OUT_CLIP, POUT_IN_CLIP, POUT_OUT_CLIP].find(
     (c) => c.file.endsWith(`/${m[1]}`) || c.file === m[1],
   );
   if (!clip) return null;
@@ -102,11 +121,13 @@ export const SMUG_OUT_FILES: readonly string[] = clipFrameFiles(SMUG_OUT_CLIP);
 
 /** The clips any pair plays. */
 export function bridgeClips(): SmugClip[] {
-  return [SMUG_IN_CLIP, SMUG_OUT_CLIP, WAVE_IN_CLIP, WAVE_OUT_CLIP];
+  return [SMUG_IN_CLIP, SMUG_OUT_CLIP, WAVE_IN_CLIP, WAVE_OUT_CLIP, POUT_IN_CLIP, POUT_OUT_CLIP];
 }
 
 export const WAVE_IN_FILES: readonly string[] = clipFrameFiles(WAVE_IN_CLIP);
 export const WAVE_OUT_FILES: readonly string[] = clipFrameFiles(WAVE_OUT_CLIP);
+export const POUT_IN_FILES: readonly string[] = clipFrameFiles(POUT_IN_CLIP);
+export const POUT_OUT_FILES: readonly string[] = clipFrameFiles(POUT_OUT_CLIP);
 
 /**
  * Pair table: "<from>><to>" -> frames to play, in order. Keys are the shown
@@ -118,6 +139,8 @@ export const POSE_BRIDGE_PAIRS: Readonly<Record<string, readonly string[]>> = {
   "smug>idle": SMUG_OUT_FILES,
   "idle>wave": WAVE_IN_FILES,
   "wave>idle": WAVE_OUT_FILES,
+  "idle>pout": POUT_IN_FILES,
+  "pout>idle": POUT_OUT_FILES,
 };
 
 /** Every frame any pair plays, in first-seen order, no repeats. */
@@ -151,6 +174,8 @@ export const SMUG_IN_DWELL_MS: readonly number[] = SMUG_IN_FILES.map(() => SMUG_
 export const SMUG_OUT_DWELL_MS: readonly number[] = SMUG_OUT_FILES.map(() => SMUG_CLIP_FRAME_MS);
 export const WAVE_IN_DWELL_MS: readonly number[] = WAVE_IN_FILES.map(() => SMUG_CLIP_FRAME_MS);
 export const WAVE_OUT_DWELL_MS: readonly number[] = WAVE_OUT_FILES.map(() => SMUG_CLIP_FRAME_MS);
+export const POUT_IN_DWELL_MS: readonly number[] = POUT_IN_FILES.map(() => SMUG_CLIP_FRAME_MS);
+export const POUT_OUT_DWELL_MS: readonly number[] = POUT_OUT_FILES.map(() => SMUG_CLIP_FRAME_MS);
 /** A frame always stays up at least this long after its paint, whatever the clock says (0 = the next animation frame). */
 export const BRIDGE_MIN_AFTER_PAINT_MS = 0;
 /**
@@ -168,6 +193,8 @@ export function bridgeDwellsFor(from: string | null, to: string | null): readonl
   if (from === "smug" && to === "idle") return SMUG_OUT_DWELL_MS;
   if (from === "idle" && to === "wave") return WAVE_IN_DWELL_MS;
   if (from === "wave" && to === "idle") return WAVE_OUT_DWELL_MS;
+  if (from === "idle" && to === "pout") return POUT_IN_DWELL_MS;
+  if (from === "pout" && to === "idle") return POUT_OUT_DWELL_MS;
   return null;
 }
 
@@ -191,6 +218,7 @@ export function bridgeKeyOfSrc(src: string): string | null {
   if (name === "idle.png" || /^idle_(blink|mouth)_\d\d_/.test(name)) return "idle";
   if (name === "smug1085_hold.webp") return "smug";
   if (name === "wave1126_hold.webp") return "wave";
+  if (name === "pout1158_hold.webp") return "pout";
   return null;
 }
 
@@ -584,8 +612,8 @@ export function bridgeWantsFrames(
   wantedKey: string | null,
   shownKey: string | null = null,
 ): boolean {
-  if (wantedKey === "smug" || wantedKey === "wave") return true;
-  if ((shownKey === "smug" || shownKey === "wave") && wantedKey === "idle") return true;
+  if (wantedKey === "smug" || wantedKey === "wave" || wantedKey === "pout") return true;
+  if ((shownKey === "smug" || shownKey === "wave" || shownKey === "pout") && wantedKey === "idle") return true;
   return false;
 }
 
@@ -621,8 +649,8 @@ export function bridgeGate(opts: {
  */
 export type SmugGateStep = "wanted" | "keep-shown" | "exit-to-idle";
 
-/** Hold poses that stay on their hold frame until the next send (smug 1085 at 2.0 s, wave 1126 at 4.0 s). */
-export const BRIDGE_HOLD_KEYS = new Set<string>(["smug", "wave"]);
+/** Hold poses that stay on their hold frame until the next send (smug 1085 at 2.0 s, wave 1126 at 4.083 s, pout 1158 at 2.0 s). */
+export const BRIDGE_HOLD_KEYS = new Set<string>(["smug", "wave", "pout"]);
 
 export class SmugReleaseGate {
   private seen: number;

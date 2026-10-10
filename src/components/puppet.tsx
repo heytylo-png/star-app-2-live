@@ -30,8 +30,10 @@ import {
   SPRITES,
   holdsSmugBeat,
   holdsWaveBeat,
+  holdsPoutBeat,
   isSmugPathSheetSrc,
   isWavePathSheetSrc,
+  isPoutPathSheetSrc,
   openRestFallback,
   POSE_CROSSFADE_MS,
   priorityPoseSrc,
@@ -39,6 +41,7 @@ import {
   smugBeatSheetUrls,
   smugClipUrls,
   waveClipUrls,
+  poutClipUrls,
   type PosePhase,
   USE_EXPO_TALK_BUST,
   type EmotionId,
@@ -75,12 +78,16 @@ import {
   parseClipFrame,
   SMUG_CLIP_BOX,
   WAVE_CLIP_BOX,
+  POUT_CLIP_BOX,
   SMUG_CLIP_SHEET,
   SMUG_IN_CLIP,
   SMUG_OUT_CLIP,
   WAVE_IN_CLIP,
   WAVE_OUT_CLIP,
+  POUT_IN_CLIP,
+  POUT_OUT_CLIP,
   type BridgeTimers,
+  type ClipPair,
 } from "@/lib/pose-bridge";
 import { SmugClipPlayer, smugClipPlayerSupported } from "@/lib/smug-clip-player";
 import type { BridgeClipPlayer } from "@/lib/pose-bridge";
@@ -99,6 +106,19 @@ import {
   subscribeSmugRelease,
 } from "@/lib/pose-phase";
 import { cn } from "@/lib/utils";
+
+/** Bridge canvases on the stage: smug in/out, wave win/wout, pout pin/pout. */
+type BridgeStageKey = "in" | "out" | "win" | "wout" | "pin" | "pout";
+/** Each clip pair's [intro, rest] canvases. */
+const BRIDGE_STAGE_KEYS: Record<ClipPair, readonly [BridgeStageKey, BridgeStageKey]> = {
+  smug: ["in", "out"],
+  wave: ["win", "wout"],
+  pout: ["pin", "pout"],
+};
+/** An intro canvas is on stage (1085 / 1126 / 1158 still coming in). */
+function isIntroStageKey(key: BridgeStageKey | null): boolean {
+  return key === "in" || key === "win" || key === "pin";
+}
 
 type PuppetProps = {
   pose: PoseId;
@@ -287,17 +307,24 @@ export function Puppet({
   const [display, setDisplay] = useState<DisplayLayer[]>([]);
   const [sheets, setSheets] = useState<Record<string, string>>({});
   const crossfade = useRef<PoseCrossfadePool | null>(null);
-  /** Pose bridge: clip on stage ("in"/"out" = smug 1085/1084, "win"/"wout" = wave 1126/1140). */
-  const [bridgeClip, setBridgeClip] = useState<"in" | "out" | "win" | "wout" | null>(null);
-  const bridgeClipRef = useRef<"in" | "out" | "win" | "wout" | null>(null);
+  /** Pose bridge: clip on stage ("in"/"out" = smug 1085/1084, "win"/"wout" = wave 1126/1140, "pin"/"pout" = pout 1158/1162). */
+  const [bridgeClip, setBridgeClip] = useState<BridgeStageKey | null>(null);
+  const bridgeClipRef = useRef<BridgeStageKey | null>(null);
   const bridgeCanvasInRef = useRef<HTMLCanvasElement>(null);
   const bridgeCanvasOutRef = useRef<HTMLCanvasElement>(null);
   const bridgeCanvasWaveInRef = useRef<HTMLCanvasElement>(null);
   const bridgeCanvasWaveOutRef = useRef<HTMLCanvasElement>(null);
+  const bridgeCanvasPoutInRef = useRef<HTMLCanvasElement>(null);
+  const bridgeCanvasPoutOutRef = useRef<HTMLCanvasElement>(null);
   /** Smug clips player (1085/1084). */
   const clipPlayerRef = useRef<SmugClipPlayer | null>(null);
   /** Wave clips player (1126/1140). */
   const wavePlayerRef = useRef<SmugClipPlayer | null>(null);
+  /** Pout clips player (1158/1162). */
+  const poutPlayerRef = useRef<SmugClipPlayer | null>(null);
+  /** The clip player of a pair (refs only, so it is safe in any effect). */
+  const playerFor = (pair: ClipPair | undefined): SmugClipPlayer | null =>
+    pair === "wave" ? wavePlayerRef.current : pair === "pout" ? poutPlayerRef.current : clipPlayerRef.current;
   /** Either pair can never play in this browser (read in the crossfade effect). */
   const clipsUnsupportedRef = useRef(false);
   const [clipsState, setClipsState] = useState({
@@ -305,6 +332,8 @@ export function Puppet({
     out: false,
     win: false,
     wout: false,
+    pin: false,
+    pout: false,
     unsupported: false,
   });
   const loadClips = useRef<() => Promise<boolean>>(async () => false);
@@ -358,11 +387,14 @@ export function Puppet({
     const cout = bridgeCanvasOutRef.current;
     const win = bridgeCanvasWaveInRef.current;
     const wout = bridgeCanvasWaveOutRef.current;
+    const pin = bridgeCanvasPoutInRef.current;
+    const pout = bridgeCanvasPoutOutRef.current;
     type St = { in: boolean; out: boolean; unsupported: boolean };
     let smugSt: St = { in: false, out: false, unsupported: false };
     let waveSt: St = { in: false, out: false, unsupported: false };
+    let poutSt: St = { in: false, out: false, unsupported: false };
     const publish = () => {
-      const unsupported = smugSt.unsupported || waveSt.unsupported;
+      const unsupported = smugSt.unsupported || waveSt.unsupported || poutSt.unsupported;
       clipsUnsupportedRef.current = unsupported;
       setClipsState((prev) => {
         const next = {
@@ -370,28 +402,35 @@ export function Puppet({
           out: smugSt.out,
           win: waveSt.in,
           wout: waveSt.out,
+          pin: poutSt.in,
+          pout: poutSt.out,
           unsupported,
         };
         return prev.in === next.in &&
           prev.out === next.out &&
           prev.win === next.win &&
           prev.wout === next.wout &&
+          prev.pin === next.pin &&
+          prev.pout === next.pout &&
           prev.unsupported === next.unsupported
           ? prev
           : next;
       });
     };
-    if (!cin || !cout || !win || !wout || !smugClipPlayerSupported()) {
+    if (!cin || !cout || !win || !wout || !pin || !pout || !smugClipPlayerSupported()) {
       console.warn("[rai] bridge clips cannot play here (no OffscreenCanvas worker); pairs cut");
       smugSt = { in: false, out: false, unsupported: true };
       waveSt = { in: false, out: false, unsupported: true };
+      poutSt = { in: false, out: false, unsupported: true };
       publish();
       return;
     }
     const [inUrl, outUrl] = smugClipUrls();
     const [winUrl, woutUrl] = waveClipUrls();
+    const [pinUrl, poutUrl] = poutClipUrls();
     let smugPlayer: SmugClipPlayer;
     let wavePlayer: SmugClipPlayer;
+    let poutPlayer: SmugClipPlayer;
     try {
       smugPlayer = SmugClipPlayer.for({
         canvases: { in: cin, out: cout },
@@ -421,20 +460,37 @@ export function Puppet({
           publish();
         },
       });
+      poutPlayer = SmugClipPlayer.for({
+        canvases: { in: pin, out: pout },
+        urls: { in: pinUrl!, out: poutUrl! },
+        frames: { in: POUT_IN_CLIP.frames, out: POUT_OUT_CLIP.frames },
+        box: POUT_CLIP_BOX,
+        keyOf: (file) => {
+          const f = parseClipFrame(file);
+          return f?.clip.pair === "pout" ? f.clip.key : null;
+        },
+        onState: (st) => {
+          poutSt = st;
+          publish();
+        },
+      });
     } catch (err) {
       console.warn("[rai] bridge clip player did not start; pairs cut", err);
       smugSt = { in: false, out: false, unsupported: true };
       waveSt = { in: false, out: false, unsupported: true };
+      poutSt = { in: false, out: false, unsupported: true };
       publish();
       return;
     }
     clipPlayerRef.current = smugPlayer;
     wavePlayerRef.current = wavePlayer;
+    poutPlayerRef.current = poutPlayer;
     loadClips.current = () =>
-      Promise.all([smugPlayer.load(), wavePlayer.load()]).then((ok) => ok.every(Boolean));
+      Promise.all([smugPlayer.load(), wavePlayer.load(), poutPlayer.load()]).then((ok) => ok.every(Boolean));
     return () => {
       if (clipPlayerRef.current === smugPlayer) clipPlayerRef.current = null;
       if (wavePlayerRef.current === wavePlayer) wavePlayerRef.current = null;
+      if (poutPlayerRef.current === poutPlayer) poutPlayerRef.current = null;
       loadClips.current = async () => false;
     };
   }, []);
@@ -987,12 +1043,19 @@ export function Puppet({
         isWavePathSheetSrc(layer.src) ? layer : { ...layer, src: fallback },
       );
     }
+    if (holdsPoutBeat(pose, emotion)) {
+      const fallback = idleRestSrc();
+      return raw.map((layer) =>
+        isPoutPathSheetSrc(layer.src) ? layer : { ...layer, src: fallback },
+      );
+    }
     return raw;
   }, [pose, emotion, talking, ampLive, blinkShown, mouthShown, reducedMotion]);
   // Both smug clips loaded and primed (their first frames decoded): a change may play.
   const smugClipsReady = clipsState.in && clipsState.out;
   const waveClipsReady = clipsState.win && clipsState.wout;
-  const bridgeFramesReady = clipMode ? clipReady : smugClipsReady && waveClipsReady;
+  const poutClipsReady = clipsState.pin && clipsState.pout;
+  const bridgeFramesReady = clipMode ? clipReady : smugClipsReady && waveClipsReady && poutClipsReady;
   // No way to decode the clips in this browser: the pair hard-cuts, like reduced motion.
   const bridgeCut = reducedMotion || clipsState.unsupported;
   // Once the frames are in, an old expiry no longer applies. The clip never expires into the
@@ -1012,7 +1075,7 @@ export function Puppet({
       shownKey,
       wantedKey: bridgeKeyOfPlates(next),
       release: smugRelease,
-      entering: bridgeClipRef.current === "in" || bridgeClipRef.current === "win",
+      entering: isIntroStageKey(bridgeClipRef.current),
     });
     smugGateStep.current = step;
     if (step === "keep-shown") next = shownPlates.current;
@@ -1073,6 +1136,8 @@ export function Puppet({
         out: bridgeCanvasOutRef.current,
         win: bridgeCanvasWaveInRef.current,
         wout: bridgeCanvasWaveOutRef.current,
+        pin: bridgeCanvasPoutInRef.current,
+        pout: bridgeCanvasPoutOutRef.current,
       };
       if (src === null) {
         bridgeClipRef.current = null;
@@ -1084,13 +1149,8 @@ export function Puppet({
       }
       const f = parseClipFrame(src);
       if (!f) return;
-      const stageKey = (f.clip.pair === "wave" ? (f.clip.key === "in" ? "win" : "wout") : f.clip.key) as
-        | "in"
-        | "out"
-        | "win"
-        | "wout";
-      const pairKeys =
-        f.clip.pair === "wave" ? (["win", "wout"] as const) : (["in", "out"] as const);
+      const pairKeys = BRIDGE_STAGE_KEYS[f.clip.pair];
+      const stageKey = f.clip.key === "in" ? pairKeys[0] : pairKeys[1];
       const other = stageKey === pairKeys[0] ? pairKeys[1] : pairKeys[0];
       const canvas = canvases[stageKey];
       if (canvas) canvas.dataset.raiSheet = `${stageKey}-${String(f.index).padStart(3, "0")}`;
@@ -1210,17 +1270,19 @@ export function Puppet({
     if (!bridge.current) {
       const pick = (file: string | undefined) => {
         const f = file ? parseClipFrame(file) : null;
-        return f?.clip.pair === "wave" ? wavePlayerRef.current : clipPlayerRef.current;
+        return playerFor(f?.clip.pair);
       };
       const player: BridgeClipPlayer = {
         play: (files, start, events) => pick(files[0])?.play(files, start, events) ?? false,
         stop: () => {
           clipPlayerRef.current?.stop();
           wavePlayerRef.current?.stop();
+          poutPlayerRef.current?.stop();
         },
         setPaused: (paused) => {
           clipPlayerRef.current?.setPaused(paused);
           wavePlayerRef.current?.setPaused(paused);
+          poutPlayerRef.current?.setPaused(paused);
         },
       };
       bridge.current = new PoseBridge(
@@ -1269,7 +1331,7 @@ export function Puppet({
           srcFor: bridgeFrameSrc,
           isReady: (src) => {
             const f = parseClipFrame(src);
-            const pl = f?.clip.pair === "wave" ? wavePlayerRef.current : clipPlayerRef.current;
+            const pl = playerFor(f?.clip.pair);
             return Boolean(f && f.index === 0 && pl?.ready(f.clip.key));
           },
         });
@@ -1285,7 +1347,7 @@ export function Puppet({
         // A clip starts on its frame 0, already painted on its hidden canvas (armed).
         isReady: (src) => {
           const f = parseClipFrame(src);
-          const pl = f?.clip.pair === "wave" ? wavePlayerRef.current : clipPlayerRef.current;
+          const pl = playerFor(f?.clip.pair);
           return Boolean(f && f.index === 0 && pl?.ready(f.clip.key));
         },
       });
@@ -1341,7 +1403,7 @@ export function Puppet({
   const plateKey = bridgeKeyOfPlates(plates);
   const clipOnStage = clipMode && clipView.visible;
   // Hold is the live smug/wave hold sheet. Entry/exit are bridge canvases.
-  const onHoldPose = plateKey === "smug" || plateKey === "wave";
+  const onHoldPose = plateKey === "smug" || plateKey === "wave" || plateKey === "pout";
   const phase: PosePhase = clipMode
     ? bridgeClip
       ? "bridge-out"
@@ -1351,7 +1413,7 @@ export function Puppet({
           ? "hold"
           : "idle"
     : bridgeClip
-      ? bridgeClip === "in" || bridgeClip === "win"
+      ? isIntroStageKey(bridgeClip)
         ? "bridge-in"
         : "bridge-out"
       : onHoldPose
@@ -1408,7 +1470,15 @@ export function Puppet({
       data-rai-clip-frame={clipOnStage ? String(clipView.index).padStart(2, "0") : "off"}
       data-rai-clip-time={clipOnStage ? String(hipClipTimeMs(clipView.index)) : "off"}
       data-rai-clip-dir={clipOnStage ? clipView.dir : "off"}
-      data-rai-hold-sheet={phase === "hold" ? (plateKey === "wave" ? "wave1126_hold" : "smug1085_hold") : "off"}
+      data-rai-hold-sheet={
+        phase === "hold"
+          ? plateKey === "wave"
+            ? "wave1126_hold"
+            : plateKey === "pout"
+              ? "pout1158_hold"
+              : "smug1085_hold"
+          : "off"
+      }
       data-rai-smug-release={smugGate.current?.exiting() ? "exit" : "off"}
       data-rai-build={buildId()}
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
@@ -1455,7 +1525,7 @@ export function Puppet({
           );
         })}
         {clipSupported ? <HipClipLayer ref={canvasRef} visible={clipOnStage} /> : null}
-        {/* Bridge clips (smug in/out, wave win/wout): painted at 24 fps by the clip workers.
+        {/* Bridge clips (smug in/out, wave win/wout, pout pin/pout): painted at 24 fps by the clip workers.
             Visible only while data-rai-bridge-on matches (styles.css). */}
         <canvas
           key="pose-bridge-in"
@@ -1502,6 +1572,30 @@ export function Puppet({
           className="rai-layer"
           data-rai-role="bridge"
           data-rai-clip="wout"
+          data-rai-sheet="off"
+          style={{ opacity: 1, zIndex: 60, transition: "none" }}
+        />
+        <canvas
+          key="pose-bridge-pin"
+          ref={bridgeCanvasPoutInRef}
+          width={SMUG_CLIP_SHEET.w}
+          height={SMUG_CLIP_SHEET.h}
+          aria-hidden="true"
+          className="rai-layer"
+          data-rai-role="bridge"
+          data-rai-clip="pin"
+          data-rai-sheet="off"
+          style={{ opacity: 1, zIndex: 60, transition: "none" }}
+        />
+        <canvas
+          key="pose-bridge-pout"
+          ref={bridgeCanvasPoutOutRef}
+          width={SMUG_CLIP_SHEET.w}
+          height={SMUG_CLIP_SHEET.h}
+          aria-hidden="true"
+          className="rai-layer"
+          data-rai-role="bridge"
+          data-rai-clip="pout"
           data-rai-sheet="off"
           style={{ opacity: 1, zIndex: 60, transition: "none" }}
         />

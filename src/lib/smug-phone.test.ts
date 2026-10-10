@@ -23,6 +23,7 @@ import {
   smugBeatEndAt,
   smugBeatSheetUrls,
   waveBeatSheetUrls,
+  poutBeatSheetUrls,
   smugClipUrls,
   smugReleaseWaitMs,
   stagePreloadOrder,
@@ -38,12 +39,12 @@ describe("smug beat on a cold slow phone", () => {
     const { first, next, beat, rest } = stagePreloadOrder();
     assert.equal(first, SPRITES.poses.idle);
     assert.deepEqual(next, [idleBlinkFrameUrls()[0]]);
-    assert.deepEqual(beat, [SPRITES.poses.smug, SPRITES.poses.wave]);
+    assert.deepEqual(beat, [SPRITES.poses.smug, SPRITES.poses.wave, SPRITES.poses.pout]);
     assert.equal(smugClipUrls().length, 2);
     assert.deepEqual(rest, [...idleBlinkFrameUrls().slice(1), ...idleMouthFrameUrls()]);
     assert.deepEqual(
       new Set([first, ...next, ...beat, ...rest]),
-      new Set([...startupSpriteUrls(), ...smugBeatSheetUrls(), ...waveBeatSheetUrls()]),
+      new Set([...startupSpriteUrls(), ...smugBeatSheetUrls(), ...waveBeatSheetUrls(), ...poutBeatSheetUrls()]),
     );
     assert.equal(new Set([first, ...next, ...beat, ...rest]).size, 1 + next.length + beat.length + rest.length);
   });
@@ -262,7 +263,7 @@ describe("smug cancel / error before the line lands never holds forever", () => 
   it("the rest effect anchors an unlanded smug turn once sending/talking is over, then keeps the hold (no timer)", () => {
     const eff = appSrc.slice(appSrc.indexOf("if (sending || talking) return;"), appSrc.indexOf("if (delay == null) return;"));
     // Anchored, then held: no timer; the next send releases it (paste-14).
-    assert.match(eff, /if \(holdsSmugBeat\(pose, emotion\) \|\| holdsWaveBeat\(pose, emotion\)\) \{[\s\S]*?anchorUnlandedLine\(\);\s*return;\s*\}/);
+    assert.match(eff, /if \(holdsSmugBeat\(pose, emotion\) \|\| holdsWaveBeat\(pose, emotion\) \|\| holdsPoutBeat\(pose, emotion\)\) \{[\s\S]*?anchorUnlandedLine\(\);\s*return;\s*\}/);
   });
 
   it("cancel mid-stream: beat = cancel + reading floor of the partial text + 1.5 s", () => {
