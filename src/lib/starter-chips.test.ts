@@ -61,6 +61,9 @@ describe("starter chip visibility", () => {
     assert.match(app, /overflow-x-auto/);
     assert.match(app, /showStarterChips\(/);
     assert.match(app, /showEmptyChatHint\(/);
+    assert.match(app, /inline-block max-w-full truncate rounded-full bg-\[rgba\(239,236,230,0\.85\)\]/);
+    assert.match(app, /h-12 min-h-12 shrink-0 rounded-full/);
+    assert.doesNotMatch(app, /text-shadow/);
     assert.doesNotMatch(app, /flex-wrap justify-center/);
   });
 });
