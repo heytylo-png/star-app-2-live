@@ -39,11 +39,13 @@ describe("smug beat on a cold slow phone", () => {
     const { first, next, beat, rest } = stagePreloadOrder();
     assert.equal(first, SPRITES.poses.idle);
     assert.deepEqual(next, [idleBlinkFrameUrls()[0]]);
-    assert.deepEqual(beat, [SPRITES.poses.smug, SPRITES.poses.wave, SPRITES.poses.pout]);
+    assert.deepEqual(beat, [SPRITES.poses.smug, SPRITES.poses.wave]);
+    // Pout (hold + its lazy clip worker) only after everything here: never ahead of first paint.
+    assert.deepEqual(stagePreloadOrder().lazy, [SPRITES.poses.pout]);
     assert.equal(smugClipUrls().length, 2);
     assert.deepEqual(rest, [...idleBlinkFrameUrls().slice(1), ...idleMouthFrameUrls()]);
     assert.deepEqual(
-      new Set([first, ...next, ...beat, ...rest]),
+      new Set([first, ...next, ...beat, ...rest, ...stagePreloadOrder().lazy]),
       new Set([...startupSpriteUrls(), ...smugBeatSheetUrls(), ...waveBeatSheetUrls(), ...poutBeatSheetUrls()]),
     );
     assert.equal(new Set([first, ...next, ...beat, ...rest]).size, 1 + next.length + beat.length + rest.length);
