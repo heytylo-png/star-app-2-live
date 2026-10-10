@@ -106,8 +106,8 @@ const POSE_SHEET_SHA256: Record<string, string> = {
   "rai/three_quarter_right.png": "528a5439e93271a7e8abc3e7324bcbc3ffdae2ff6a86bd680a0c22bbe6bf244e",
   // Smug hold (paste-15): 1085 frame 48 (2.000 s), the last frame of the intro clip.
   "rai/smug1085_hold.webp": "45cd6eea6c438b340e1d33c8aaeb6003828b6dfb7cc40ed9ed49359643c75cbf",
-  // Wave hold (2026-10-08 w5): 1126 frame 98 (4.083 s, first curved smile), registered to idle, skin matched to idle, finger gaps alpha-cleaned.
-  "rai/wave1126_hold.webp": "88d8d2f481c5f108d001519603ada2af08490989d4f5048710d9a9e64fada760",
+  // Wave hold (2026-10-10 w6): the decoded w6 intro f98 (4.083 s, first curved smile), alpha identical to the clip frame, colour WebP q95.
+  "rai/wave1126_hold.webp": "bc8895a7ef6818756d90b39a0e5a9129c7c928b566b1651d64f93cb2b8a0a699",
   // TyLo's 2026-10-06 wave still: white-matte cut, uniform x1.4 to the 1008x1792 idle canvas, no re-tone.
   "rai/wave_official.png": "1c1a888074b64729c9937c9dbc407eebec82f6b6c4699a1ec30a02c2574cddb9",
 };
@@ -116,8 +116,8 @@ const POSE_SHEET_SHA256: Record<string, string> = {
 const SMUG_CLIP_SHA256: Record<string, string> = {
   "rai/smug1085_in.avif": "0c2c6a4bb9ab5b995720b2026f8919dfe71632a3d19902fa3ac905c870ec5351",
   "rai/smug1084_out.avif": "c44e3af0a6233c9979747710cab1c731e5d96691dc3816628978f227f9ff1b50",
-  "rai/wave1126_in.avif": "292da087bff50ffa0baf13e4492ae6ede71964087470159f19da374e881c4569",
-  "rai/wave1140_out.avif": "47c8b1609edd72eb36bcc8a4719cdfe72ffc85eadcd208aed27ea9b4b0dc3a13",
+  "rai/wave1126_in.avif": "265b541c8333150d334628db096234507160a328451eb54f8a16c081dac3c9a5",
+  "rai/wave1140_out.avif": "58cf99bbaedb26006e5aa6e653eb24851751e1efb245292ff6053afa7b9fa3e5",
 };
 
 describe("smug clips (1085 in / 1084 out)", () => {
@@ -132,18 +132,18 @@ describe("smug clips (1085 in / 1084 out)", () => {
   });
 });
 
-describe("bridge file cache keys (wave intro/hold w5, rest w4)", () => {
+describe("bridge file cache keys (wave intro/hold/rest w6)", () => {
   it("versions only the re-cut wave files; smug and idle URLs stay as they were", () => {
     assert.deepEqual(BRIDGE_FILE_VERSION, {
-      "rai/wave1126_in.avif": "w5",
-      "rai/wave1140_out.avif": "w4",
-      "rai/wave1126_hold.webp": "w5",
+      "rai/wave1126_in.avif": "w6",
+      "rai/wave1140_out.avif": "w6",
+      "rai/wave1126_hold.webp": "w6",
     });
-    assert.match(SPRITES.poses.wave, /rai\/wave1126_hold\.webp\?v=w5$/);
+    assert.match(SPRITES.poses.wave, /rai\/wave1126_hold\.webp\?v=w6$/);
     assert.equal(spriteNeedsWhitePunch(SPRITES.poses.wave), false);
     const [win, wout] = waveClipUrls();
-    assert.match(win!, /rai\/wave1126_in\.avif\?v=w5$/);
-    assert.match(wout!, /rai\/wave1140_out\.avif\?v=w4$/);
+    assert.match(win!, /rai\/wave1126_in\.avif\?v=w6$/);
+    assert.match(wout!, /rai\/wave1140_out\.avif\?v=w6$/);
     assert.match(SPRITES.poses.smug, new RegExp(`smug1085_hold\\.webp\\?v=${PRE_CUT_ALPHA_VERSION}$`));
     assert.match(SPRITES.poses.idle, new RegExp(`idle\\.png\\?v=${PRE_CUT_ALPHA_VERSION}$`));
     for (const u of smugClipUrls()) assert.equal(u.includes("?"), false, u);

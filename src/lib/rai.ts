@@ -671,11 +671,14 @@ export function spriteNeedsWhitePunch(src: string): boolean {
  *   means; skin only), so the raised-arm frames and the 1140 start are no longer lighter.
  *   w5 (2026-10-08 13:30): the 1126 intro runs f0..f98 and the hold is f98, the first frame whose
  *   smile curves (the 4.000 s frame's mouth is flat). 1140 is unchanged and stays w4.
+ *   w6 (2026-10-10): CoS fa14ed7 fixes. 1126 f0-30: the opaque white thigh-gap patch is alpha 0
+ *   (alpha only), f41-45 finger-gap matte cleared. 1140 f0-f7: the hold's smile morphs into 1140's
+ *   own mouth (mouth patch only), so there is no one-frame snap. The hold is re-exported from the decoded f98 (alpha identical).
  */
 export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
-  "rai/wave1126_in.avif": "w5",
-  "rai/wave1140_out.avif": "w4",
-  "rai/wave1126_hold.webp": "w5",
+  "rai/wave1126_in.avif": "w6",
+  "rai/wave1140_out.avif": "w6",
+  "rai/wave1126_hold.webp": "w6",
 };
 
 const ASSET = (path: string) => {
