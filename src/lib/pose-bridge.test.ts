@@ -15,6 +15,13 @@ import {
   POUT_IN_FILES,
   POUT_OUT_FILES,
   POUT_HOLD_FILE,
+  TALK_IN_CLIP,
+  TALK_OUT_CLIP,
+  TALK_IN_FILES,
+  TALK_OUT_FILES,
+  TALK_HOLD_FILE,
+  TALK_CLIP_BOX,
+  BRIDGE_HOLD_KEYS,
   bridgeClips,
   SMUG_HOLD_FILE,
   SMUG_CLIP_BOX,
@@ -119,8 +126,17 @@ function rig(opts: { rand?: () => number; clipClock?: boolean } = {}) {
 }
 
 describe("pose bridge pair table (paste-15: 1085 / 1084 video)", () => {
-  it("is idle<->smug, idle<->wave and idle<->pout: 49 / 99 / 49-frame intros + 145-frame rests", () => {
-    assert.deepEqual(Object.keys(POSE_BRIDGE_PAIRS).sort(), ["idle>pout", "idle>smug", "idle>wave", "pout>idle", "smug>idle", "wave>idle"]);
+  it("is idle<->smug, idle<->wave, idle<->pout and idle<->talk: 49 / 99 / 49 / 145-frame intros + 145-frame rests", () => {
+    assert.deepEqual(Object.keys(POSE_BRIDGE_PAIRS).sort(), [
+      "idle>pout",
+      "idle>smug",
+      "idle>talk",
+      "idle>wave",
+      "pout>idle",
+      "smug>idle",
+      "talk>idle",
+      "wave>idle",
+    ]);
     assert.equal(SMUG_IN_CLIP.file, "rai/smug1085_in.avif");
     assert.equal(SMUG_OUT_CLIP.file, "rai/smug1084_out.avif");
     assert.equal(SMUG_IN_FILES.length, 49);
@@ -166,13 +182,33 @@ describe("pose bridge pair table (paste-15: 1085 / 1084 video)", () => {
     assert.doesNotMatch(SPRITES.poses.pout, /pout_official/);
   });
 
+  it("talk is 1257 full (145 frames, forward) + 1261 full (145 frames); the hold is 1257 f144, not talk_official", () => {
+    assert.equal(TALK_IN_CLIP.file, "rai/talk1257_in.avif");
+    assert.equal(TALK_OUT_CLIP.file, "rai/talk1261_out.avif");
+    assert.equal(TALK_IN_FILES.length, 145);
+    assert.equal(TALK_OUT_FILES.length, 145);
+    assert.deepEqual(bridgeFilesFor("idle", "talk"), TALK_IN_FILES);
+    assert.deepEqual(bridgeFilesFor("talk", "idle"), TALK_OUT_FILES);
+    assert.deepEqual(TALK_IN_FILES.map((f) => label(f)), seqOf("i", 0, 144));
+    assert.deepEqual(TALK_OUT_FILES.map((f) => label(f)), seqOf("o", 0, 144));
+    assert.equal(parseClipFrame("rai/talk1257_in.avif#145"), null, "no frame 145");
+    assert.deepEqual(parseClipFrame("rai/talk1257_in.avif#144"), { clip: TALK_IN_CLIP, index: 144 });
+    assert.deepEqual(parseClipFrame("rai/talk1261_out.avif#144"), { clip: TALK_OUT_CLIP, index: 144 });
+    assert.equal(TALK_HOLD_FILE, "rai/talk1257_hold.webp");
+    assert.match(SPRITES.poses.talk, /rai\/talk1257_hold\.webp\?v=t1$/);
+    assert.doesNotMatch(SPRITES.poses.talk, /talk_official/);
+    assert.ok(BRIDGE_HOLD_KEYS.has("talk"));
+    assert.deepEqual(TALK_CLIP_BOX, { x: 128, y: 0, w: 480, h: 1280 });
+  });
+
   it("has no bridge for any other pair, same-pose, or missing key", () => {
     for (const [from, to] of [
       ["smug", "wave"],
       ["pout", "smug"],
       ["wave", "pout"],
-      ["idle", "talk"],
       ["talk", "smug"],
+      ["talk", "pout"],
+      ["wave", "talk"],
       ["idle", "idle"],
       ["smug", "smug"],
       [null, "smug"],
@@ -190,6 +226,8 @@ describe("pose bridge pair table (paste-15: 1085 / 1084 video)", () => {
       ...WAVE_OUT_FILES,
       ...POUT_IN_FILES,
       ...POUT_OUT_FILES,
+      ...TALK_IN_FILES,
+      ...TALK_OUT_FILES,
     ]);
     for (const f of SMUG_IN_FILES) assert.match(f, /^rai\/smug1085_in\.avif#0[0-4]\d$/);
     for (const f of SMUG_OUT_FILES) assert.match(f, /^rai\/smug1084_out\.avif#\d{3}$/);
@@ -224,7 +262,9 @@ describe("pose bridge keys", () => {
     assert.equal(bridgeKeyOfSrc(SPRITES.poses.smug), "smug");
     assert.equal(bridgeKeyOfSrc(SPRITES.poses.wave), "wave");
     assert.equal(bridgeKeyOfSrc(SPRITES.poses.pout), "pout");
-    for (const key of ["talk", "wink", "peace", "shy", "tired", "think"] as const) {
+    assert.equal(bridgeKeyOfSrc(SPRITES.poses.talk), "talk");
+    assert.equal(bridgeKeyOfSrc("/rai/talk_official.png"), null);
+    for (const key of ["wink", "peace", "shy", "tired", "think"] as const) {
       assert.equal(bridgeKeyOfSrc(SPRITES.poses[key]), null, key);
     }
     // a clip frame is never mistaken for a resting pose

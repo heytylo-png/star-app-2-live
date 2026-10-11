@@ -89,7 +89,7 @@ describe("pout clip loading (cold-load regression, 2026-10-10)", () => {
   it("each pair's readiness is its own: smug / wave never wait on pout, pout never on smug / wave", () => {
     assert.doesNotMatch(puppet, /smugClipsReady && waveClipsReady/);
     assert.doesNotMatch(puppet, /poutClipsReady &&|&& poutClipsReady/);
-    assert.match(puppet, /pairClipsReady: Record<ClipPair, boolean> = \{ smug: smugClipsReady, wave: waveClipsReady, pout: poutClipsReady \}/);
+    assert.match(puppet, /pairClipsReady: Record<ClipPair, boolean> = \{\s*smug: smugClipsReady,\s*wave: waveClipsReady,\s*pout: poutClipsReady,/);
     assert.match(puppet, /framesReady: framesReadyFor\(gatePair, wantedKey\)/);
     assert.match(puppet, /wantedKey === "pout" \? clipsState\.pin : clipsState\.pout/);
   });

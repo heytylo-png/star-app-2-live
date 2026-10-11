@@ -81,8 +81,11 @@ describe("hip clip data", () => {
       "rai/smug1085_hold.webp",
       "rai/wave1126_hold.webp",
     ]);
-    // Pout's hold is lazy: after the first stage image and the smug / wave preloads.
-    assert.deepEqual(order.lazy.map((u) => u.split("?")[0]!.replace(/^.*\/rai\//, "rai/")), ["rai/pout1158_hold.webp"]);
+    // Pout's and talk's holds are lazy: after the first stage image and the smug / wave preloads.
+    assert.deepEqual(order.lazy.map((u) => u.split("?")[0]!.replace(/^.*\/rai\//, "rai/")), [
+      "rai/pout1158_hold.webp",
+      "rai/talk1257_hold.webp",
+    ]);
     assert.ok(!order.beat.some((u) => /\/hip\//.test(u)));
     for (const skip of [true, false]) {
       const deferred = deferredSpriteUrls({ skipBridge: skip });
