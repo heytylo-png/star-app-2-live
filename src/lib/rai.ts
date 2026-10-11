@@ -705,10 +705,11 @@ export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
   "rai/wave1126_in.avif": "w6",
   "rai/wave1140_out.avif": "w6",
   "rai/wave1126_hold.webp": "w6",
-  // Pout (1158 in / hold f48 / 1162 out): p1 = face skin re-matched to idle (2026-10-10).
-  "rai/pout1158_in.avif": "p1",
-  "rai/pout1162_out.avif": "p1",
-  "rai/pout1158_hold.webp": "p1",
+  // Pout (1158 in / hold f48 / 1162 out): p1 = face skin re-matched to idle; p2 = face above the jaw only
+  // (neck / under-chin shadow, jaw line, mouth line + lips keep their 49aa88b pixels), 2026-10-10.
+  "rai/pout1158_in.avif": "p2",
+  "rai/pout1162_out.avif": "p2",
+  "rai/pout1158_hold.webp": "p2",
 };
 
 const ASSET = (path: string) => {
