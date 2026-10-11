@@ -8,8 +8,10 @@
  *
  * So the app asks for the live index.html when it comes back to the foreground (and on a slow
  * timer while open), reads its `<meta name="star-rai-build">` stamp, and if it differs from the
- * running build, reloads onto the new build at a safe moment: page visible, no turn in flight,
- * no call. The composer draft rides across the reload in sessionStorage.
+ * running build, shows a one-line Reload notice. The reload itself waits for a tap, and for a
+ * safe moment: page visible, no turn in flight, no call. One tap activates a waiting service
+ * worker and reloads once onto `?v=<live>`. The composer draft rides across in sessionStorage.
+ * A held smug / wave / pout does not: the reload marks itself so boot snaps back to idle.
  *
  * Caching: the check is `cache: "no-store"`, so the browser HTTP cache is never used, and the
  * service worker leaves `?build-check=` to the network. GitHub Pages' CDN ignores the query
@@ -25,6 +27,10 @@ export const APP_BASE = "/star-app-2-live/";
 /** Query flag the service worker leaves to the network (never cached). */
 export const BUILD_CHECK_PARAM = "build-check";
 export const UPDATE_DRAFT_KEY = "star-rai-update-draft";
+/** Set just before an update reload. Boot reads it and drops any held pose. */
+export const UPDATE_IDLE_KEY = "star-rai-update-idle";
+/** Posted to a waiting worker so it activates before the one reload. */
+export const SKIP_WAITING_MESSAGE = "SKIP_WAITING";
 const UPDATE_TRIED_KEY = "star-rai-update-tried";
 /** Foreground resumes closer together than this share one check. */
 export const BUILD_CHECK_MIN_GAP_MS = 5_000;
@@ -126,13 +132,131 @@ export function noteUpdateTry(live: string, store: Pick<Storage, "getItem" | "se
   return n;
 }
 
+export function markUpdateIdle(store: Pick<Storage, "setItem"> | null = safeSession()): void {
+  try {
+    store?.setItem(UPDATE_IDLE_KEY, "1");
+  } catch {
+    /* private mode */
+  }
+}
+
+/** True when this load is the update reload (`r` on the URL, or the session flag). */
+export function updateReloadClearsPose(href: string, flagged: boolean): boolean {
+  if (flagged) return true;
+  try {
+    return new URL(href, "https://star.invalid").searchParams.has(RELOAD_PARAM);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Read and clear the idle flag. True once, when this navigation is an update reload,
+ * so boot can ignore a restored pout / smug hold.
+ */
+export function takeUpdateIdle(
+  store: Pick<Storage, "getItem" | "removeItem"> | null = safeSession(),
+  href: string = typeof location !== "undefined" ? location.href : "",
+): boolean {
+  let flagged = false;
+  try {
+    flagged = store?.getItem(UPDATE_IDLE_KEY) === "1";
+  } catch {
+    flagged = false;
+  }
+  try {
+    store?.removeItem(UPDATE_IDLE_KEY);
+  } catch {
+    /* private mode */
+  }
+  return updateReloadClearsPose(href, flagged);
+}
+
+export type WaitingWorker = { postMessage: (data: string) => void };
+export type UpdateServiceWorker = {
+  getRegistration: () => Promise<{ waiting?: WaitingWorker | null } | undefined>;
+  addEventListener: (type: "controllerchange", fn: () => void, opts?: { once?: boolean }) => void;
+};
+
+/** Activate a waiting worker (skipWaiting). False when there is nothing waiting. */
+export async function activateWaitingWorker(sw?: UpdateServiceWorker | null, timeoutMs = 800): Promise<boolean> {
+  const target =
+    sw === undefined
+      ? typeof navigator !== "undefined" && "serviceWorker" in navigator
+        ? (navigator.serviceWorker as unknown as UpdateServiceWorker)
+        : null
+      : sw;
+  if (!target?.getRegistration) return false;
+  let waiting: WaitingWorker | null | undefined;
+  try {
+    waiting = (await target.getRegistration())?.waiting;
+  } catch {
+    return false;
+  }
+  if (!waiting) return false;
+  await new Promise<void>((resolve) => {
+    const timer = setTimeout(resolve, timeoutMs);
+    const done = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+    try {
+      target.addEventListener("controllerchange", done, { once: true });
+    } catch {
+      done();
+      return;
+    }
+    try {
+      waiting.postMessage(SKIP_WAITING_MESSAGE);
+    } catch {
+      done();
+    }
+  });
+  return true;
+}
+
+/**
+ * One reload onto the live build. The address becomes `?v=<live>&r=…` (cache bypass),
+ * a waiting worker is asked to take over, then `location.reload()` runs once.
+ */
 export function applyUpdate(live: string, draft: string, attempt = 1): void {
   try {
     if (draft) sessionStorage.setItem(UPDATE_DRAFT_KEY, draft);
   } catch {
     /* private mode: reload anyway */
   }
-  location.replace(updateUrl(live, attempt));
+  markUpdateIdle();
+  try {
+    history.replaceState(history.state, "", updateUrl(live, attempt));
+  } catch {
+    /* the reload below still uses the current URL */
+  }
+  const go = () => {
+    try {
+      location.reload();
+    } catch {
+      /* non-browser */
+    }
+  };
+  void activateWaitingWorker().then(go, go);
+}
+
+/**
+ * The one-line notice. It waits out a reply, speech, or call (the line is hidden),
+ * and it never stacks on the birthday card. Dev never shows it.
+ */
+export function staleNoticeVisible(input: {
+  pending: string | null;
+  running: string;
+  busy: UpdateBusy;
+  visibility: DocumentVisibilityState | string;
+  mayTry: boolean;
+  birthdayCard?: boolean;
+}): boolean {
+  if (input.birthdayCard) return false;
+  if (!input.mayTry) return false;
+  if (!isNewerBuild(input.running, input.pending)) return false;
+  return updateSafeLive(input.busy, input.visibility);
 }
 
 function safeSession(): Storage | null {
@@ -180,6 +304,8 @@ export type StaleBuildGuardDeps = {
   reload?: (live: string, draft: string, attempt: number) => void;
   /** Timer for the in-window re-check (tests pass a fake). */
   setTimer?: (fn: () => void, ms: number) => unknown;
+  /** The pending live stamp changed (the notice reads it). */
+  onPending?: (live: string | null) => void;
 };
 
 /** While a resume window is open and a turn is still finishing, re-check this often. */
@@ -188,14 +314,17 @@ export const UPDATE_SETTLE_POLL_MS = 500;
 /**
  * The stale-build guard's decisions, kept out of React so every check reads live state.
  * onVisibility() on every visibilitychange / persisted pageshow; poll() on the slow timer;
- * settle() whenever a turn or call ends.
+ * settle() whenever a turn or call ends. A newer build only reloads after requestReload()
+ * (the one Reload tap). A tap during a reply waits for settle, inside the resume window.
  */
 export class StaleBuildGuard {
   private live: string | null = null;
   private lastCheck = Number.NEGATIVE_INFINITY;
   private resumeAt = Number.NEGATIVE_INFINITY;
   private pollArmed = false;
-  private readonly d: Required<StaleBuildGuardDeps>;
+  /** The Reload line was tapped. Nothing reloads without this. */
+  private tapArmed = false;
+  private readonly d: Required<Omit<StaleBuildGuardDeps, "onPending">> & Pick<StaleBuildGuardDeps, "onPending">;
   constructor(deps: StaleBuildGuardDeps) {
     this.d = {
       now: () => performance.now(),
@@ -206,8 +335,15 @@ export class StaleBuildGuard {
       ...deps,
     };
   }
+  /** Live stamp waiting on the notice, or null. */
+  noticeLive(): string | null {
+    return this.live;
+  }
   pending(): string | null {
     return this.live;
+  }
+  private emit(): void {
+    this.d.onPending?.(this.live);
   }
   private async check(): Promise<void> {
     this.lastCheck = this.d.now();
@@ -220,26 +356,48 @@ export class StaleBuildGuard {
     // 500 / offline / no stamp: keep what we knew, never reload on it.
     if (live && isNewerBuild(this.d.running(), live)) this.live = live;
     else if (live) this.live = null;
+    this.emit();
   }
   /**
-   * Try to apply now. Returns true when a reload was started. Called on resume, and by every
-   * path that clears a busy ref (reply finally, TTS stop, cancel, barge-in, hang-up, call start
-   * failure). As a backstop, while the window is open and only "busy" holds it back, it re-checks
-   * itself every UPDATE_SETTLE_POLL_MS until the window closes.
+   * The one Reload tap. Applies immediately when the page is safe; otherwise the tap
+   * waits until the reply / speech / call ends (settle, inside the resume window).
+   */
+  requestReload(): boolean {
+    if (!this.live) return false;
+    this.tapArmed = true;
+    this.resumeAt = this.d.now();
+    const applied = this.applyArmed(true);
+    if (!applied && this.tapArmed) this.armPoll();
+    return applied;
+  }
+  /**
+   * A busy ref was just cleared. Reloads only if Reload was already tapped.
+   * Returns true when a reload was started.
    */
   settle(): boolean {
+    return this.applyArmed(false);
+  }
+  private applyArmed(fromTap: boolean): boolean {
     const live = this.live;
-    if (!live) return false;
-    if (this.d.now() - this.resumeAt > UPDATE_RESUME_WINDOW_MS) return false;
+    if (!this.tapArmed || !live) return false;
+    if (!fromTap && this.d.now() - this.resumeAt > UPDATE_RESUME_WINDOW_MS) {
+      this.tapArmed = false;
+      return false;
+    }
     if (this.d.visibility() !== "visible") return false;
-    if (!mayTryUpdate(live, this.d.store(), this.d.wallNow())) return false;
+    if (!mayTryUpdate(live, this.d.store(), this.d.wallNow())) {
+      this.tapArmed = false;
+      return false;
+    }
     if (!updateSafeLive(this.d.busy(), this.d.visibility())) {
       this.armPoll();
       return false;
     }
     this.live = null;
+    this.tapArmed = false;
     const attempt = noteUpdateTry(live, this.d.store(), this.d.wallNow());
     this.d.reload(live, this.d.draft(), attempt);
+    this.emit();
     return true;
   }
   private armPoll(): void {
@@ -254,7 +412,8 @@ export class StaleBuildGuard {
     if (this.d.visibility() !== "visible") return false;
     this.resumeAt = this.d.now();
     if (this.d.now() - this.lastCheck >= BUILD_CHECK_MIN_GAP_MS) await this.check();
-    return this.settle();
+    else this.emit();
+    return this.applyArmed(false);
   }
   async poll(): Promise<void> {
     if (this.d.visibility() === "visible") await this.check();

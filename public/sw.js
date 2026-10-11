@@ -25,6 +25,11 @@ self.addEventListener("install", (event) => {
   );
 });
 
+self.addEventListener("message", (event) => {
+  const data = event.data;
+  if (data === "SKIP_WAITING" || (data && data.type === "SKIP_WAITING")) self.skipWaiting();
+});
+
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches

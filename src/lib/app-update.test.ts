@@ -4,20 +4,27 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
+  activateWaitingWorker,
   BUILD_CHECK_PARAM,
   buildStampFromHtml,
   isNewerBuild,
+  markUpdateIdle,
   mayTryUpdate,
   noteUpdateTry,
+  SKIP_WAITING_MESSAGE,
+  staleNoticeVisible,
   StaleBuildGuard,
+  takeUpdateIdle,
   UPDATE_MAX_TRIES,
   UPDATE_RETRY_AFTER_MS,
   UPDATE_SETTLE_POLL_MS,
+  updateReloadClearsPose,
   updateSafeLive,
   updateUrl,
   withoutReloadParam,
   type UpdateBusy,
 } from "./app-update.ts";
+import { readPosePhase, readSmugReleasePending, resetHeldPose, setPosePhase, setSmugReleasePending } from "./pose-phase.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
@@ -110,19 +117,25 @@ describe("stale-build guard reads live state at decision time (CoS, bc685e8)", (
     // stop() runs while hidden: refs go idle, no re-render reaches the guard.
     w.busy = idle();
     w.now += 30_000;
-    // First resume: the new version is found and applied at once, draft kept.
+    // First resume finds the new version and shows the notice. It does not reload
+    // until the one Reload tap. The draft is kept.
     w.vis = "visible";
-    assert.equal(await g.onVisibility(), true);
+    assert.equal(await g.onVisibility(), false);
+    assert.equal(g.noticeLive(), "new2222");
+    assert.deepEqual(w.reloads, []);
+    assert.equal(g.requestReload(), true);
     assert.deepEqual(w.reloads, [["new2222", "Pout for me"]]);
   });
 
-  it("a resume mid-turn waits; the turn ending inside the window applies it", async () => {
+  it("a resume mid-turn waits; the line shows when the turn ends, and one tap reloads", async () => {
     const w: World = { vis: "visible", busy: { ...idle(), talking: true }, live: "new2222", now: 1_000, reloads: [] };
     const g = mk(w);
     assert.equal(await g.onVisibility(), false);
+    assert.equal(g.requestReload(), false, "a tap during speech does not reload");
+    assert.deepEqual(w.reloads, []);
     w.busy = idle();
     w.now += 3_000;
-    assert.equal(g.settle(), true);
+    assert.equal(g.settle(), true, "the tap applies once the reply settles");
     assert.equal(w.reloads.length, 1);
   });
 
@@ -136,6 +149,7 @@ describe("stale-build guard reads live state at decision time (CoS, bc685e8)", (
         w.now += 10_000;
         w.vis = "visible";
         await g.onVisibility();
+        g.requestReload();
         g.settle();
       }
       assert.deepEqual(w.reloads, [], String(live));
@@ -151,6 +165,7 @@ describe("stale-build guard reads live state at decision time (CoS, bc685e8)", (
       w.now += 10_000;
       w.vis = "visible";
       await g.onVisibility();
+      g.requestReload();
     }
     // 400 s of resumes every 10 s: tries at 0, >=120 s, >=240 s, then capped.
     assert.equal(w.reloads.length, UPDATE_MAX_TRIES);
@@ -160,6 +175,7 @@ describe("stale-build guard reads live state at decision time (CoS, bc685e8)", (
     const w: World = { vis: "visible", busy: { ...idle(), sending: true, streaming: true, talking: true }, live: "new2222", now: 1_000, reloads: [] };
     const g = mk(w);
     assert.equal(await g.onVisibility(), false, "resume mid-speech waits");
+    assert.equal(g.requestReload(), false, "the tap waits out the reply");
     w.now += 14_900;
     // TTS onStop: talking / sending cleared, the reply's AbortController still set.
     w.busy = { ...idle(), streaming: true };
@@ -175,6 +191,7 @@ describe("stale-build guard reads live state at decision time (CoS, bc685e8)", (
     const w: World = { vis: "visible", busy: { ...idle(), streaming: true, talking: true }, live: "new2222", now: 1_000, reloads: [], timers: [] };
     const g = mk(w);
     assert.equal(await g.onVisibility(), false);
+    assert.equal(g.requestReload(), false, "tap while the reply is in flight");
     let ticks = 0;
     while (w.timers!.length && ticks < 60) {
       const fn = w.timers!.shift()!;
@@ -193,6 +210,7 @@ describe("stale-build guard reads live state at decision time (CoS, bc685e8)", (
     const w: World = { vis: "visible", busy: { ...idle(), talking: true }, live: "new2222", now: 1_000, reloads: [], timers: [] };
     const g = mk(w);
     await g.onVisibility();
+    assert.equal(g.requestReload(), false);
     let ticks = 0;
     while (w.timers!.length && ticks < 1000) {
       const fn = w.timers!.shift()!;
@@ -235,5 +253,100 @@ describe("update reload always reaches the network (CoS, f84389f)", () => {
     assert.match(app, /stripReloadParam\(\);/);
     const sw = readFileSync(join(root, "public/sw.js"), "utf8");
     assert.match(sw, /req\.mode === "navigate"[\s\S]{0,300}fetch\(new Request\(req, \{ cache: "no-cache" \}\)\)/);
+  });
+});
+
+describe("stale-build notice (one line, one tap, idle after reload)", () => {
+  const idle = (): UpdateBusy => ({ sending: false, streaming: false, talking: false, callActive: false, callStarting: false });
+
+  it("shows the notice only when a newer build is waiting and nothing is in flight", () => {
+    const base = { pending: "new2222", running: "old1111", busy: idle(), visibility: "visible", mayTry: true };
+    assert.equal(staleNoticeVisible(base), true);
+    assert.equal(staleNoticeVisible({ ...base, busy: { ...idle(), talking: true } }), false);
+    assert.equal(staleNoticeVisible({ ...base, busy: { ...idle(), sending: true } }), false);
+    assert.equal(staleNoticeVisible({ ...base, busy: { ...idle(), streaming: true } }), false);
+    assert.equal(staleNoticeVisible({ ...base, busy: { ...idle(), callActive: true } }), false);
+    assert.equal(staleNoticeVisible({ ...base, visibility: "hidden" }), false);
+    assert.equal(staleNoticeVisible({ ...base, birthdayCard: true }), false);
+    assert.equal(staleNoticeVisible({ ...base, mayTry: false }), false);
+    assert.equal(staleNoticeVisible({ ...base, pending: null }), false);
+    assert.equal(staleNoticeVisible({ ...base, running: "dev" }), false);
+    assert.equal(staleNoticeVisible({ ...base, pending: "old1111" }), false);
+  });
+
+  it("the notice is one paper-pill line above the input, and it takes the hint slot", () => {
+    const app = readFileSync(join(root, "src/components/rai-app.tsx"), "utf8");
+    const at = app.indexOf("data-stale-build-notice");
+    assert.ok(at > 0);
+    const notice = app.slice(at, at + 1400);
+    assert.match(notice, /New build ready/);
+    assert.match(notice, /data-stale-reload/);
+    assert.match(notice, />\s*Reload\s*</);
+    assert.match(notice, /min-h-11/);
+    assert.match(notice, /bg-\[rgba\(239,236,230,0\.85\)\]/);
+    assert.match(notice, /text-\[#3f3b36\]/);
+    assert.match(notice, /bg-\[#3f3b36\]/);
+    assert.match(notice, /text-\[#efece6\]/);
+    assert.match(notice, /font-semibold/);
+    assert.match(notice, /group-active:bg-\[#2a2724\]/);
+    assert.match(notice, /whitespace-nowrap/);
+    assert.doesNotMatch(notice, /text-shadow/);
+    assert.doesNotMatch(notice, /role="dialog"/);
+    assert.match(app, /!showNotice/);
+    const hintAt = app.indexOf("data-empty-chat-hint");
+    const chipsAt = app.indexOf("data-starter-chips");
+    const formAt = app.indexOf("<form");
+    assert.ok(at < hintAt && hintAt < chipsAt && chipsAt < formAt);
+    assert.match(app, /requestReload\(\)/);
+  });
+
+  it("one tap activates a waiting worker, then reloads once onto ?v=", async () => {
+    let posted: string | null = null;
+    let onController: (() => void) | null = null;
+    const sw = {
+      getRegistration: async () => ({
+        waiting: {
+          postMessage: (data: string) => {
+            posted = data;
+            onController?.();
+          },
+        },
+      }),
+      addEventListener: (_type: "controllerchange", fn: () => void) => {
+        onController = fn;
+      },
+    };
+    assert.equal(await activateWaitingWorker(sw, 50), true);
+    assert.equal(posted, SKIP_WAITING_MESSAGE);
+    assert.equal(await activateWaitingWorker({ getRegistration: async () => ({}), addEventListener: () => {} }, 20), false);
+    const swFile = readFileSync(join(root, "public/sw.js"), "utf8");
+    assert.match(swFile, /SKIP_WAITING/);
+    assert.match(swFile, /self\.skipWaiting\(\)/);
+    assert.match(readFileSync(join(root, "src/lib/app-update.ts"), "utf8"), /location\.reload\(\)/);
+    assert.match(updateUrl("abc1234", 1, 1_000), /\?v=abc1234&r=1-/);
+  });
+
+  it("an update reload clears a held pose and does not restore it", () => {
+    setPosePhase("hold", 5_000);
+    setSmugReleasePending(true);
+    assert.equal(readPosePhase().phase, "hold");
+    assert.equal(readSmugReleasePending(), true);
+    const mem = new Map<string, string>();
+    const store = {
+      getItem: (k: string) => mem.get(k) ?? null,
+      setItem: (k: string, v: string) => void mem.set(k, v),
+      removeItem: (k: string) => void mem.delete(k),
+    };
+    markUpdateIdle(store);
+    assert.equal(takeUpdateIdle(store, "https://x.io/star-app-2-live/?v=abc1234"), true);
+    assert.equal(takeUpdateIdle(store, "https://x.io/star-app-2-live/?v=abc1234"), false);
+    assert.equal(updateReloadClearsPose("https://x.io/star-app-2-live/?v=abc1234&r=1-zz", false), true);
+    assert.equal(updateReloadClearsPose("https://x.io/star-app-2-live/?v=abc1234", false), false);
+    resetHeldPose();
+    assert.equal(readPosePhase().phase, "idle");
+    assert.equal(readPosePhase().holdSince, 0);
+    assert.equal(readSmugReleasePending(), false);
+    assert.match(readFileSync(join(root, "src/components/rai-app.tsx"), "utf8"), /takeUpdateIdle\(\)/);
+    assert.match(readFileSync(join(root, "src/components/rai-app.tsx"), "utf8"), /resetHeldPose\(\)/);
   });
 });

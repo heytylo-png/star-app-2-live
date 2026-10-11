@@ -77,6 +77,16 @@ export function readSmugReleasePending(): boolean {
   return releasePending;
 }
 
+/**
+ * An update reload must not come back on a held smug, wave, or pout.
+ * Clears the in-memory hold / bridge release without starting the rest clip.
+ */
+export function resetHeldPose(): void {
+  phase = "idle";
+  holdSince = 0;
+  releasePending = false;
+}
+
 export function subscribeSmugReleaseLanded(fn: () => void): () => void {
   landedListeners.add(fn);
   return () => {

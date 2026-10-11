@@ -55,6 +55,7 @@ import {
 import {
   readSmugReleasePending,
   requestSmugRelease,
+  resetHeldPose,
   subscribeSmugReleaseLanded,
 } from "@/lib/pose-phase";
 import { useMemoryStore } from "@/lib/memory-store";
@@ -92,12 +93,16 @@ import { usePrefersReducedMotion } from "@/lib/use-reduced-motion";
 import { newId, STARTERS, type ChatMessage } from "@/lib/helix";
 import { chatHasHistory, showEmptyChatHint, showStarterChips } from "@/lib/starter-chips";
 import {
+  applyUpdate,
   BUILD_CHECK_EVERY_MS,
   fetchLiveBuild,
+  mayTryUpdate,
   runningBuild,
+  staleNoticeVisible,
   StaleBuildGuard,
   stripReloadParam,
   takeUpdateDraft,
+  takeUpdateIdle,
 } from "@/lib/app-update";
 import { streamChat } from "@/lib/stream-chat";
 import {
@@ -227,6 +232,7 @@ function RaiReady() {
   const reducedMotion = usePrefersReducedMotion();
   const onDeskFail = useCallback(() => setDeskPlaybackFailed(true), []);
   const [draft, setDraft] = useState(takeUpdateDraft);
+  const [updateTick, setUpdateTick] = useState(0);
   const [sending, setSending] = useState(false);
   const [memoryOpen, setMemoryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -361,6 +367,67 @@ function RaiReady() {
     hasBirthDate: Boolean(slots.user_birth_date),
   });
   const chromeReady = chatHydrated && chartHydrated;
+  // Stale-build guard lives up here so the notice can read it during render.
+  const updateDraftRef = useRef(draft);
+  updateDraftRef.current = draft;
+  const dropHeldPoseRef = useRef<() => void>(() => {});
+  dropHeldPoseRef.current = () => {
+    resetHeldPose();
+    releaseDeferRef.current = null;
+    namedTurnRef.current = null;
+    replyPoseRef.current = null;
+    actDeferredRef.current = false;
+    setPose("idle");
+    poseRef.current = "idle";
+    setEmotion(DEFAULT_EMOTION);
+    setCaption("");
+    setBubbleLifeKind("none");
+  };
+  const updateGuardRef = useRef<StaleBuildGuard | null>(null);
+  if (!updateGuardRef.current) {
+    updateGuardRef.current = new StaleBuildGuard({
+      running: runningBuild,
+      fetchLive: () => fetchLiveBuild(),
+      busy: () => ({
+        sending: sendingRef.current,
+        streaming: abortRef.current != null,
+        talking: talkingRef.current,
+        callActive: callActiveRef.current,
+        callStarting: callStartingRef.current,
+      }),
+      visibility: () => document.visibilityState,
+      draft: () => updateDraftRef.current,
+      onPending: () => setUpdateTick((n) => n + 1),
+      reload: (live, draftText, attempt) => {
+        dropHeldPoseRef.current();
+        applyUpdate(live, draftText, attempt);
+      },
+    });
+  }
+  void updateTick;
+  const pendingBuild = updateGuardRef.current?.noticeLive() ?? null;
+  let updateStore: Storage | null = null;
+  try {
+    updateStore = sessionStorage;
+  } catch {
+    updateStore = null;
+  }
+  const showNotice =
+    chromeReady &&
+    staleNoticeVisible({
+      pending: pendingBuild,
+      running: runningBuild(),
+      busy: {
+        sending,
+        streaming: sending,
+        talking,
+        callActive,
+        callStarting,
+      },
+      visibility: typeof document === "undefined" ? "visible" : document.visibilityState,
+      mayTry: pendingBuild ? mayTryUpdate(pendingBuild, updateStore) : false,
+      birthdayCard: showSetup,
+    });
   const showHint =
     chromeReady &&
     showEmptyChatHint({
@@ -368,7 +435,8 @@ function RaiReady() {
       birthdayCard: showSetup,
       callActive: callActive || callStarting,
     }) &&
-    !caption.trim();
+    !caption.trim() &&
+    !showNotice;
   const showChips =
     chromeReady &&
     !callActive &&
@@ -378,7 +446,8 @@ function RaiReady() {
       hasHistory,
       starterChipsDone,
       birthdayCard: showSetup,
-    });
+    }) &&
+    !showNotice;
 
   useEffect(() => {
     if (!chatHydrated || starterChipsDone || !hasHistory) return;
@@ -648,35 +717,20 @@ function RaiReady() {
   // open), read the live build stamp; if it is newer, reload onto it once nothing is in flight.
   // "In flight" is read from the live refs at decision time, never from a value saved at render
   // (a stop() while hidden re-renders nothing after the page comes back).
-  const updateDraftRef = useRef(draft);
-  updateDraftRef.current = draft;
-  const updateGuardRef = useRef<StaleBuildGuard | null>(null);
-  if (!updateGuardRef.current) {
-    updateGuardRef.current = new StaleBuildGuard({
-      running: runningBuild,
-      fetchLive: () => fetchLiveBuild(),
-      busy: () => ({
-        sending: sendingRef.current,
-        streaming: abortRef.current != null,
-        talking: talkingRef.current,
-        callActive: callActiveRef.current,
-        callStarting: callStartingRef.current,
-      }),
-      visibility: () => document.visibilityState,
-      draft: () => updateDraftRef.current,
-    });
-  }
-  /** A busy ref was just cleared (turn / speech / call over): let a pending update apply. */
+  // A newer build shows the Reload line; it does not reload by itself.
+  /** A busy ref was just cleared (turn / speech / call over): a tapped Reload may apply. */
   const settleUpdate = () => {
     updateGuardRef.current?.settle();
   };
   useEffect(() => {
+    if (takeUpdateIdle()) dropHeldPoseRef.current();
     stripReloadParam();
     const guard = updateGuardRef.current!;
     const onResume = () => {
       void guard.onVisibility();
     };
     const onShow = (e: PageTransitionEvent) => {
+      if (e.persisted && takeUpdateIdle()) dropHeldPoseRef.current();
       if (e.persisted) onResume();
     };
     const timer = window.setInterval(() => {
@@ -1953,6 +2007,26 @@ function RaiReady() {
                 }
               }}
             />
+          ) : null}
+          {showNotice ? (
+            <p className="mb-1.5 text-center">
+              <span
+                data-stale-build-notice=""
+                className="inline-flex max-w-full items-center gap-1 whitespace-nowrap rounded-full bg-[rgba(239,236,230,0.85)] py-0.5 pl-2 pr-0.5 text-sm text-[#3f3b36]"
+              >
+                <span className="min-w-0 truncate">New build ready</span>
+                <button
+                  type="button"
+                  data-stale-reload=""
+                  className="group inline-flex h-11 min-h-11 min-w-11 shrink-0 items-center justify-center"
+                  onClick={() => updateGuardRef.current?.requestReload()}
+                >
+                  <span className="inline-flex items-center rounded-full bg-[#3f3b36] px-3 py-1.5 text-sm font-semibold leading-none text-[#efece6] group-active:bg-[#2a2724]">
+                    Reload
+                  </span>
+                </button>
+              </span>
+            </p>
           ) : null}
           {showHint ? (
             <p className="mb-1.5 text-center">
