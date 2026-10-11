@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -40,12 +40,12 @@ type Manifest = {
   clips: Record<string, { sha256: string; frames: number; width: number; height: number; frame_edges: FrameEdge[] }>;
   hold: { file: string; sha256: string; bbox: [number, number, number, number]; outside_band_alpha_max: number; alpha_mean_abs_diff_vs_intro_last: number };
 };
-/** Decoded alpha of every frame of the shipped talk clips (f807/bridge/t1257/edges/gen_edges.py). */
+/** Decoded alpha of every frame of the shipped talk clips (f807/bridge/t1276/edges/gen_edges.py). */
 const manifest = JSON.parse(readFileSync(join(root, "src/lib/talk-clip-edges.json"), "utf8")) as Manifest;
 const MIN_MARGIN_PX = 8;
 const puppet = readFileSync(join(root, "src/components/puppet.tsx"), "utf8");
 
-describe("talk clip band (1257 / 1261, TyLo 2026-10-11)", () => {
+describe("talk clip band (1257 / 1276, TyLo 2026-10-11)", () => {
   it("draws 1:1 inside the 720x1280 sheet", () => {
     assert.ok(TALK_CLIP_BOX.x >= 0 && TALK_CLIP_BOX.x + TALK_CLIP_BOX.w <= SMUG_CLIP_SHEET.w);
     assert.equal(TALK_CLIP_BOX.y, 0);
@@ -94,12 +94,28 @@ describe("talk clip band (1257 / 1261, TyLo 2026-10-11)", () => {
     assert.match(SPRITES.poses.talk, /rai\/talk1257_hold\.webp\?v=t1$/);
     const [tin, tout] = talkClipUrls();
     assert.match(tin!, /rai\/talk1257_in\.avif\?v=t1$/);
-    assert.match(tout!, /rai\/talk1261_out\.avif\?v=t1$/);
+    assert.match(tout!, /rai\/talk1276_out\.avif\?v=t2$/);
+  });
+});
+
+describe("talk rest swap (TyLo 2026-10-11 18:06): 1276 replaces 1261", () => {
+  it("1261 is gone from the site and the code; 1257 and the hold keep their t1 bytes", () => {
+    const rai = readdirSync(join(root, "public/rai"));
+    assert.equal(rai.some((f) => /1261/.test(f)), false, "no 1261 file is shipped");
+    for (const f of ["src/lib/rai.ts", "src/lib/pose-bridge.ts", "src/components/puppet.tsx"]) {
+      assert.doesNotMatch(readFileSync(join(root, f), "utf8"), /talk1261/, f);
+    }
+    assert.deepEqual(Object.keys(manifest.clips).sort(), ["rai/talk1257_in.avif", "rai/talk1276_out.avif"]);
+    const sha = (f: string) => createHash("sha256").update(readFileSync(join(root, "public", f))).digest("hex");
+    assert.equal(sha("rai/talk1257_in.avif"), "f39f63eebfd068e37f50d2ebe11a5511f88e9ab2892c9c55d92cedf7b4400c5a");
+    assert.equal(sha(TALK_HOLD_FILE), "6da9cf8c5f0ae5977d400fab71185e0c8e478bfe3fa7b8a9bb5ad3c308ce84f1");
+    assert.equal(TALK_OUT_CLIP.file, "rai/talk1276_out.avif");
+    assert.equal(TALK_OUT_CLIP.frames, 145);
   });
 });
 
 describe("talk bridge trigger: only where the talk pose is chosen", () => {
-  it("a user-named talk command picks the talk key; the pair is idle -> 1257 -> hold -> 1261 -> idle", () => {
+  it("a user-named talk command picks the talk key; the pair is idle -> 1257 -> hold -> 1276 -> idle", () => {
     for (const text of ["talk", "talk pose", "do talk", "show talk", "pose talk"]) {
       assert.equal(namedPoseFromText(text), "talk", text);
     }

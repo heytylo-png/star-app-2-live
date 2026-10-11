@@ -182,9 +182,9 @@ describe("pose bridge pair table (paste-15: 1085 / 1084 video)", () => {
     assert.doesNotMatch(SPRITES.poses.pout, /pout_official/);
   });
 
-  it("talk is 1257 full (145 frames, forward) + 1261 full (145 frames); the hold is 1257 f144, not talk_official", () => {
+  it("talk is 1257 full (145 frames, forward) + 1276 full (145 frames); the hold is 1257 f144, not talk_official", () => {
     assert.equal(TALK_IN_CLIP.file, "rai/talk1257_in.avif");
-    assert.equal(TALK_OUT_CLIP.file, "rai/talk1261_out.avif");
+    assert.equal(TALK_OUT_CLIP.file, "rai/talk1276_out.avif");
     assert.equal(TALK_IN_FILES.length, 145);
     assert.equal(TALK_OUT_FILES.length, 145);
     assert.deepEqual(bridgeFilesFor("idle", "talk"), TALK_IN_FILES);
@@ -193,7 +193,7 @@ describe("pose bridge pair table (paste-15: 1085 / 1084 video)", () => {
     assert.deepEqual(TALK_OUT_FILES.map((f) => label(f)), seqOf("o", 0, 144));
     assert.equal(parseClipFrame("rai/talk1257_in.avif#145"), null, "no frame 145");
     assert.deepEqual(parseClipFrame("rai/talk1257_in.avif#144"), { clip: TALK_IN_CLIP, index: 144 });
-    assert.deepEqual(parseClipFrame("rai/talk1261_out.avif#144"), { clip: TALK_OUT_CLIP, index: 144 });
+    assert.deepEqual(parseClipFrame("rai/talk1276_out.avif#144"), { clip: TALK_OUT_CLIP, index: 144 });
     assert.equal(TALK_HOLD_FILE, "rai/talk1257_hold.webp");
     assert.match(SPRITES.poses.talk, /rai\/talk1257_hold\.webp\?v=t1$/);
     assert.doesNotMatch(SPRITES.poses.talk, /talk_official/);

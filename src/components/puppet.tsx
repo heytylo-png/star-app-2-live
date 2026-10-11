@@ -331,7 +331,7 @@ export function Puppet({
   const wavePlayerRef = useRef<SmugClipPlayer | null>(null);
   /** Pout clips player (1158/1162). */
   const poutPlayerRef = useRef<SmugClipPlayer | null>(null);
-  /** Talk clips player (1257/1261). */
+  /** Talk clips player (1257/1276). */
   const talkPlayerRef = useRef<SmugClipPlayer | null>(null);
   /** The clip player of a pair (refs only, so it is safe in any effect). */
   const playerFor = (pair: ClipPair | undefined): SmugClipPlayer | null =>
@@ -363,7 +363,7 @@ export function Puppet({
   const loadClips = useRef<(pair?: ClipPair) => Promise<boolean>>(async () => false);
   /** Starts the pout player (worker + 1158 / 1162 fetch) once; later calls are no-ops. */
   const startPoutClips = useRef<() => void>(() => {});
-  /** Starts the talk player (worker + 1257 / 1261 fetch) once; later calls are no-ops. */
+  /** Starts the talk player (worker + 1257 / 1276 fetch) once; later calls are no-ops. */
   const startTalkClips = useRef<() => void>(() => {});
   const bridge = useRef<PoseBridge | null>(null);
   const bridgeDriver = useRef<BridgeDriver | null>(null);
@@ -542,7 +542,7 @@ export function Puppet({
     startPoutClips.current = () => {
       ensurePout();
     };
-    // Talk (1257 / 1261, 3.2 MB) is lazy the same way, and starts after pout (see the preload queue).
+    // Talk (1257 / 1276, 3.2 MB) is lazy the same way, and starts after pout (see the preload queue).
     let talkPlayer: SmugClipPlayer | null = null;
     const ensureTalk = (): SmugClipPlayer | null => {
       if (talkPlayer) return talkPlayer;
@@ -762,7 +762,7 @@ export function Puppet({
       // smug / wave preloads, so it never competes with them on a cold phone. A Pout sent
       // earlier starts it on its own (the bridge wait effect asks for the pout pair).
       startPoutClips.current();
-      // Talk (1257 / 1261 + its hold) comes after pout's clips are in (or 20 s), so it never
+      // Talk (1257 / 1276 + its hold) comes after pout's clips are in (or 20 s), so it never
       // competes with smug / wave / pout. A Talk sent earlier starts it on its own (bridge wait).
       void Promise.race([
         loadClips.current("pout"),
@@ -874,7 +874,7 @@ export function Puppet({
   // Blink is on, approved by TyLo on 2026-09-26 (807-referenced painted lids,
   // pass 4b). The flag gate stays: a false flag returns before any timeout.
   // One body, hard-swapped lids, no second PNG.
-  // Talk beat (1257 / neutral hold / 1261) owns the stage while it runs or holds: no idle blink and
+  // Talk beat (1257 / neutral hold / 1276) owns the stage while it runs or holds: no idle blink and
   // no idle mouth chew underneath it, whatever voice playback does. Everywhere else both are unchanged.
   // oxlint-disable-next-line react/refs -- painted key from the last plates; read-only gate
   const talkStageOn =
@@ -1198,7 +1198,7 @@ export function Puppet({
     if (clipMode) return clipReady;
     if (!pair) return true;
     if (pair === "pout" && wantedKey !== undefined) return wantedKey === "pout" ? clipsState.pin : clipsState.pout;
-    // Talk is lazy the same way: idle -> talk needs 1257, talk -> idle needs 1261.
+    // Talk is lazy the same way: idle -> talk needs 1257, talk -> idle needs 1276.
     if (pair === "talk" && wantedKey !== undefined) return wantedKey === "talk" ? clipsState.tin : clipsState.tout;
     return pairClipsReady[pair];
   };
@@ -1379,7 +1379,7 @@ export function Puppet({
       return () => window.clearInterval(retry);
     }
     // Talk never cuts, either way (TyLo 2026-10-11: "Do not cut"): a slow 1257 keeps idle up until
-    // its frame 0 is decoded; a slow 1261 keeps the neutral hold up until its frame 0 is.
+    // its frame 0 is decoded; a slow 1276 keeps the neutral hold up until its frame 0 is.
     if (pair === "talk") {
       return () => window.clearInterval(retry);
     }

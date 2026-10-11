@@ -302,7 +302,7 @@ export function holdsPoutBeat(pose: PoseId, _emotion?: EmotionId): boolean {
 }
 
 /**
- * Talk pose: the idle↔talk beat (1257 / neutral hold / 1261) is on stage. The stage only gets the
+ * Talk pose: the idle↔talk beat (1257 / neutral hold / 1276) is on stage. The stage only gets the
  * `talk` key from a user-named talk command (namedPoseFromText: "talk", "talk pose", "do talk", …);
  * every automatic spoken route lands on idle (routeSpokenTalk), so plain replies never use it.
  */
@@ -431,7 +431,7 @@ export function isPoutPathSheetSrc(src: string): boolean {
 
 /**
  * Sheets allowed on the idle↔talk beat: idle.png (only while 1257 f0 is still decoding), the 1257
- * intro clip, talk1257_hold, the 1261 rest clip. No idle mouth or blink sheet, no talk_official.png,
+ * intro clip, talk1257_hold, the 1276 rest clip. No idle mouth or blink sheet, no talk_official.png,
  * no other pose sheet: while the talk bridge runs or holds, nothing else paints.
  */
 export function isTalkPathSheetSrc(src: string): boolean {
@@ -439,7 +439,7 @@ export function isTalkPathSheetSrc(src: string): boolean {
   const name = path.slice(path.lastIndexOf("/") + 1);
   if (name === "talk1257_hold.webp") return true;
   if (name === "talk1257_in.avif") return true;
-  if (name === "talk1261_out.avif") return true;
+  if (name === "talk1276_out.avif") return true;
   if (name === "idle.png") return true;
   return false;
 }
@@ -739,10 +739,11 @@ export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
   "rai/pout1158_in.avif": "p2",
   "rai/pout1162_out.avif": "p2",
   "rai/pout1158_hold.webp": "p2",
-  // Talk (1257 in / hold f144 / 1261 out), 2026-10-11: per-frame pout fit (camera push), white matte cut,
+  // Talk (1257 in / hold f144 / 1276 out), 2026-10-11: per-frame pout fit (camera push), white matte cut,
   // per-zone skin match + face above the jaw (pout p2), alpha-only post. Muted (no audio track).
+  // t2: the rest clip is 1276 (TyLo 18:06 "Talk rest swap"); 1257 and the hold stay byte-identical at t1.
   "rai/talk1257_in.avif": "t1",
-  "rai/talk1261_out.avif": "t1",
+  "rai/talk1276_out.avif": "t2",
   "rai/talk1257_hold.webp": "t1",
 };
 
@@ -1011,7 +1012,7 @@ export function talkBeatSheetUrls(): string[] {
   return [SPRITES.poses.talk];
 }
 
-/** The two clips of the idle <-> talk beat: 1257 intro (all 145 frames), 1261 rest (all 145). */
+/** The two clips of the idle <-> talk beat: 1257 intro (all 145 frames), 1276 rest (all 145). */
 export function talkClipUrls(): string[] {
   return [ASSET(TALK_IN_CLIP.file), ASSET(TALK_OUT_CLIP.file)];
 }
