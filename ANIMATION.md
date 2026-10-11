@@ -177,3 +177,9 @@ plus `document.visibilityState` at the moment of the decision (`StaleBuildGuard`
 so a `stop()` while hidden could leave it stale and only the second resume applied the update. A reload that lands
 on a stale CDN copy is retried after 2 min, at most 3 times. The CDN ignores query strings (max-age=600); see
 the app-update.ts header for the possible lag of up to ~10 min.
+Follow-up 2 (CoS on f84389f): every path that clears a busy ref re-triggers `settle()` after the clear. These are the reply
+`finally` (after `abortRef = null`), TTS `onStop`, `stop()`, `hangUp()`, barge-in and call-start failure. While the
+resume window is open and only "busy" blocks it, the guard also re-checks every 500 ms. Update reloads go to
+`?v=<live>&r=<attempt>-<time>`, which is unique per attempt so the browser cache can never answer, and the SW fetches
+navigations with `cache: "no-cache"`. `r` is removed with `history.replaceState` after load.
+

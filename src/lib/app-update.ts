@@ -43,9 +43,34 @@ export function isNewerBuild(running: string, live: string | null): boolean {
   return live !== running;
 }
 
-/** The URL the reload goes to: a fresh `?v=` so no HTTP or CDN cache can hand back the old index. */
-export function updateUrl(live: string): string {
-  return `${APP_BASE}?v=${encodeURIComponent(live)}`;
+/** Reload-only query param: unique per attempt, so the browser HTTP cache can never answer it. */
+export const RELOAD_PARAM = "r";
+
+/**
+ * The URL the reload goes to: `?v=<live>&r=<attempt>-<time>`. `v` names the build (as the manifest
+ * start_url does); `r` makes every attempt a new URL, so a retry is never served from the
+ * browser cache (max-age=600) and always reaches the network. `r` is dropped after load.
+ */
+export function updateUrl(live: string, attempt = 1, nowMs: number = Date.now()): string {
+  return `${APP_BASE}?v=${encodeURIComponent(live)}&${RELOAD_PARAM}=${attempt}-${nowMs.toString(36)}`;
+}
+
+/** The address bar without the reload param (other params and the hash kept), or null if none. */
+export function withoutReloadParam(href: string): string | null {
+  const u = new URL(href);
+  if (!u.searchParams.has(RELOAD_PARAM)) return null;
+  u.searchParams.delete(RELOAD_PARAM);
+  return `${u.pathname}${u.search}${u.hash}`;
+}
+
+/** After an update reload: drop `r` from the address bar so a later reload / share is the plain URL. */
+export function stripReloadParam(): void {
+  try {
+    const clean = withoutReloadParam(location.href);
+    if (clean != null) history.replaceState(history.state, "", clean);
+  } catch {
+    /* no history API */
+  }
 }
 
 export async function fetchLiveBuild(fetchImpl: typeof fetch = fetch): Promise<string | null> {
@@ -90,23 +115,24 @@ export function mayTryUpdate(live: string, store: Pick<Storage, "getItem"> | nul
 }
 
 /** Record a reload attempt onto `live` (count grows per attempt on the same target). */
-export function noteUpdateTry(live: string, store: Pick<Storage, "getItem" | "setItem"> | null, nowMs: number = Date.now()): void {
+export function noteUpdateTry(live: string, store: Pick<Storage, "getItem" | "setItem"> | null, nowMs: number = Date.now()): number {
+  const t = readTried(store);
+  const n = t && t.build === live ? t.n + 1 : 1;
   try {
-    const t = readTried(store);
-    const n = t && t.build === live ? t.n + 1 : 1;
     store?.setItem(UPDATE_TRIED_KEY, JSON.stringify({ build: live, at: nowMs, n }));
   } catch {
     /* private mode */
   }
+  return n;
 }
 
-export function applyUpdate(live: string, draft: string): void {
+export function applyUpdate(live: string, draft: string, attempt = 1): void {
   try {
     if (draft) sessionStorage.setItem(UPDATE_DRAFT_KEY, draft);
   } catch {
     /* private mode: reload anyway */
   }
-  location.replace(updateUrl(live));
+  location.replace(updateUrl(live, attempt));
 }
 
 function safeSession(): Storage | null {
@@ -151,8 +177,13 @@ export type StaleBuildGuardDeps = {
   now?: () => number;
   wallNow?: () => number;
   store?: () => Pick<Storage, "getItem" | "setItem"> | null;
-  reload?: (live: string, draft: string) => void;
+  reload?: (live: string, draft: string, attempt: number) => void;
+  /** Timer for the in-window re-check (tests pass a fake). */
+  setTimer?: (fn: () => void, ms: number) => unknown;
 };
+
+/** While a resume window is open and a turn is still finishing, re-check this often. */
+export const UPDATE_SETTLE_POLL_MS = 500;
 
 /**
  * The stale-build guard's decisions, kept out of React so every check reads live state.
@@ -163,6 +194,7 @@ export class StaleBuildGuard {
   private live: string | null = null;
   private lastCheck = Number.NEGATIVE_INFINITY;
   private resumeAt = Number.NEGATIVE_INFINITY;
+  private pollArmed = false;
   private readonly d: Required<StaleBuildGuardDeps>;
   constructor(deps: StaleBuildGuardDeps) {
     this.d = {
@@ -170,6 +202,7 @@ export class StaleBuildGuard {
       wallNow: () => Date.now(),
       store: safeSession,
       reload: applyUpdate,
+      setTimer: (fn, ms) => setTimeout(fn, ms),
       ...deps,
     };
   }
@@ -188,17 +221,34 @@ export class StaleBuildGuard {
     if (live && isNewerBuild(this.d.running(), live)) this.live = live;
     else if (live) this.live = null;
   }
-  /** Try to apply now. Returns true when a reload was started. */
+  /**
+   * Try to apply now. Returns true when a reload was started. Called on resume, and by every
+   * path that clears a busy ref (reply finally, TTS stop, cancel, barge-in, hang-up, call start
+   * failure). As a backstop, while the window is open and only "busy" holds it back, it re-checks
+   * itself every UPDATE_SETTLE_POLL_MS until the window closes.
+   */
   settle(): boolean {
     const live = this.live;
     if (!live) return false;
     if (this.d.now() - this.resumeAt > UPDATE_RESUME_WINDOW_MS) return false;
-    if (!updateSafeLive(this.d.busy(), this.d.visibility())) return false;
+    if (this.d.visibility() !== "visible") return false;
     if (!mayTryUpdate(live, this.d.store(), this.d.wallNow())) return false;
+    if (!updateSafeLive(this.d.busy(), this.d.visibility())) {
+      this.armPoll();
+      return false;
+    }
     this.live = null;
-    noteUpdateTry(live, this.d.store(), this.d.wallNow());
-    this.d.reload(live, this.d.draft());
+    const attempt = noteUpdateTry(live, this.d.store(), this.d.wallNow());
+    this.d.reload(live, this.d.draft(), attempt);
     return true;
+  }
+  private armPoll(): void {
+    if (this.pollArmed) return;
+    this.pollArmed = true;
+    this.d.setTimer(() => {
+      this.pollArmed = false;
+      this.settle();
+    }, UPDATE_SETTLE_POLL_MS);
   }
   async onVisibility(): Promise<boolean> {
     if (this.d.visibility() !== "visible") return false;
