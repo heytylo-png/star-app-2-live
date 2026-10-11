@@ -232,7 +232,7 @@ describe("poseResetDelayMs", () => {
 describe("live key → file map", () => {
   const expected: Record<string, string> = {
     idle: "rai/idle.png",
-    talk: "rai/talk_official.png",
+    talk: "rai/talk1257_hold.webp",
     peace: "rai/peace.png",
     middle_finger: "rai/middle_finger.png",
     wink: "rai/wink_official.png",
@@ -393,7 +393,7 @@ describe("layersFor talking vs pose hold", () => {
     assert.ok(!layers.some((l) => l.role === "talk"));
   });
 
-  it("talks on the idle sheet (mouth frames) on idle, and holds talk_official on the talk key", () => {
+  it("talks on the idle sheet (mouth frames) on idle, and holds the 1257 neutral (talk bridge) on the talk key", () => {
     assert.equal(IDLE_MOUTH_ENABLED, true);
     const idle = layersFor({ ...base, pose: "idle", emotion: "bratty", talking: true });
     assert.equal(idle.length, 1);
@@ -404,15 +404,16 @@ describe("layersFor talking vs pose hold", () => {
 
     const talk = layersFor({ ...base, pose: "talk", emotion: "bratty", talking: true });
     assert.equal(talk.length, 1);
-    assert.match(talk[0]!.src, /talk_official/);
+    assert.match(talk[0]!.src, /talk1257_hold/);
+    assert.doesNotMatch(talk[0]!.src, /talk_official|idle_mouth/);
     assert.doesNotMatch(talk.map((l) => l.src).join(" "), /rai\/idle\.png/);
     assert.ok(!talk.some((l) => l.role === "talk"));
   });
 
-  it("holds talk_official after speech on the talk key", () => {
+  it("holds the 1257 neutral after speech on the talk key", () => {
     const layers = layersFor({ ...base, pose: "talk", talking: false });
     assert.equal(layers.length, 1);
-    assert.match(layers[0]!.src, /talk_official/);
+    assert.match(layers[0]!.src, /talk1257_hold/);
     assert.ok(!layers.some((l) => l.role === "talk"));
   });
 
@@ -512,7 +513,7 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(layersFor({ ...rest, talking: true })[0]!.id, IDLE_REST_LAYER_ID);
     assert.match(layersFor({ ...rest, pose: "wave" })[0]!.src, /wave1126_hold/);
     assert.match(layersFor({ ...rest, pose: "scold" })[0]!.src, /scold_official/);
-    assert.match(layersFor({ ...rest, pose: "talk" })[0]!.src, /talk_official/);
+    assert.match(layersFor({ ...rest, pose: "talk" })[0]!.src, /talk1257_hold/);
     assert.match(layersFor({ ...rest, pose: "smug" })[0]!.src, /smug1085_hold/);
     assert.match(layersFor({ ...rest, emotion: "smug" })[0]!.src, /smug1085_hold/);
     assert.match(layersFor({ ...rest, emotion: "shy" })[0]!.src, /shy_official/);
@@ -558,11 +559,11 @@ describe("layersFor talking vs pose hold", () => {
       assert.doesNotMatch(source, /IDLE_BLINK_DEST_RECT|idleBlinkPatchSrc|copyEyeRect|planIdleCanvasDraws|drawEyeRect/);
       assert.doesNotMatch(source, /790-open-brow|788-open|791-half|789-closed/);
     }
-    // Blink never paints through a canvas. The only canvases on the stage are the six bridge clip
-    // canvases (smug / wave / pout in + out), handed to the clip worker: the puppet never draws on them.
+    // Blink never paints through a canvas. The only canvases on the stage are the eight bridge clip
+    // canvases (smug / wave / pout / talk in + out), handed to the clip worker: the puppet never draws on them.
     assert.doesNotMatch(puppetSrc, /drawImage|getContext/);
     const canvases = puppetSrc.match(/<canvas[\s\S]*?\/>/g) ?? [];
-    assert.equal(canvases.length, 6);
+    assert.equal(canvases.length, 8);
     for (const c of canvases) assert.match(c, /data-rai-role="bridge"/);
     assert.match(puppetSrc, /restOnly/);
     assert.match(puppetSrc, /transition: "none"/);
@@ -737,7 +738,7 @@ describe("layersFor talking vs pose hold", () => {
     assert.doesNotMatch(layers[0]!.src, /talk_official/);
     const talk = layersFor({ ...base, pose: "talk", emotion: "bratty", talking: true });
     assert.ok(!talk.some((l) => /kiss/i.test(l.src)));
-    assert.match(talk[0]!.src, /talk_official/);
+    assert.match(talk[0]!.src, /talk1257_hold/);
   });
 });
 
@@ -1643,7 +1644,7 @@ describe("greeting lines stay on idle and chew", () => {
         amplitude: 0,
         angle: 0,
       })[0]!.src,
-      /talk_official/,
+      /talk1257_hold/,
     );
   });
 
