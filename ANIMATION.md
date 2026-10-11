@@ -162,3 +162,13 @@ Stub only: [public/rive/README.md](./public/rive/README.md). After Spine/cutout 
 - Advance Lab mesh identity
 - Add a heavy animation engine (Pixi, spine-ts, Rive) to the **default** bundle just for idle life
 - Entry is paint-paced (2026-10-03, after #103 still cut on TyLo's device). On idle → smug `PoseBridge` starts each frame's 80–120 ms dwell when the frame has been painted (`afterPaint`, the puppet passes a requestAnimationFrame with a 500 ms backstop), not when it was set. Before, a main-thread stall (sheets punching, a stream of renders, a busy phone) let a frame's timer run out before the screen ever drew it, so 01..05 flashed by in 0–2 ms and the hip appeared at once. Frame order and durations are the same on a quiet device; the exit (smug → idle) is not paced and unchanged.
+
+### Pout send on a long-lived phone PWA (2026-10-11)
+
+A phone recording of "Pout for me" showed idle → `pout_official.png` crossfade, no 1158. Live d0a74e8 never
+paints `pout_official.png` (it is not in the pose map); the PWA page had been resumed for hours on a pre-49aa88b
+bundle. Resuming an installed PWA does not navigate, so neither the network-first navigation nor the SW update ran.
+`src/lib/app-update.ts`: on every return to the foreground (and every 10 min while open) the app reads the live
+`star-rai-build` stamp (`?build-check=`, never cached by the SW) and, if it is a different deploy, reloads onto
+`?v=<build>` once nothing is in flight (no send, reply, speech or call), carrying the composer draft across.
+Also: the 30 s bridge valve no longer cuts idle → pout to the hold; Pout waits on idle until 1158 f0 is decoded.

@@ -53,6 +53,9 @@ self.addEventListener("fetch", (event) => {
   // diary-loop.mp4 (and any later clip) stays on the network so range requests work.
   if (bypassMedia(url)) return;
 
+  // The in-app build check (?build-check=…) must see the live index, never a cached one.
+  if (url.searchParams.has("build-check")) return;
+
   // Never cache API probes / future backends
   if (url.pathname.includes("/api/")) return;
 

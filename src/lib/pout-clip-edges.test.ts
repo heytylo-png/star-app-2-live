@@ -103,3 +103,17 @@ describe("pout clip loading (cold-load regression, 2026-10-10)", () => {
     assert.ok(queue.indexOf("startPoutClips.current()") < queue.indexOf("deferredSpriteUrls("));
   });
 });
+
+describe("pout send always opens on 1158 f0 (phone recording, 2026-10-11)", () => {
+  const puppet = readFileSync(join(root, "src/components/puppet.tsx"), "utf8");
+  it("the 30 s bridge valve never cuts idle -> pout to the hold: idle stays up until 1158 f0 is decoded", () => {
+    const i = puppet.indexOf('if (pair === "pout" && wantKey === "pout")');
+    assert.ok(i > 0);
+    const giveUp = puppet.indexOf("setBridgeWaitExpired(pair)");
+    assert.ok(i < giveUp, "the pout-intro early return sits before the valve timer");
+    assert.match(puppet.slice(i, i + 200), /return \(\) => window\.clearInterval\(retry\);/);
+  });
+  it("idle -> pout is gated on the intro clip only (frame 0 primed), never on the hold sheet alone", () => {
+    assert.match(puppet, /wantedKey === "pout" \? clipsState\.pin : clipsState\.pout/);
+  });
+});
