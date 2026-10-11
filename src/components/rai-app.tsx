@@ -91,15 +91,11 @@ import { usePrefersReducedMotion } from "@/lib/use-reduced-motion";
 import { newId, STARTERS, type ChatMessage } from "@/lib/helix";
 import { chatHasHistory, showEmptyChatHint, showStarterChips } from "@/lib/starter-chips";
 import {
-  applyUpdate,
   BUILD_CHECK_EVERY_MS,
-  BUILD_CHECK_MIN_GAP_MS,
   fetchLiveBuild,
-  isNewerBuild,
-  mayTryUpdate,
   runningBuild,
+  StaleBuildGuard,
   takeUpdateDraft,
-  updateSafeNow,
 } from "@/lib/app-update";
 import { streamChat } from "@/lib/stream-chat";
 import {
@@ -648,63 +644,48 @@ function RaiReady() {
   // Stale-build guard: a resumed PWA keeps running the build it first loaded (no navigation),
   // so new deploys never reach it. On each return to the foreground (and every 10 min while
   // open), read the live build stamp; if it is newer, reload onto it once nothing is in flight.
-  // Found while open: applied on the next return to the foreground, never mid-view.
-  const updateSafeRef = useRef(false);
-  updateSafeRef.current = updateSafeNow({
-    visible: typeof document === "undefined" || document.visibilityState === "visible",
-    sending,
-    talking,
-    callActive,
-  });
+  // "In flight" is read from the live refs at decision time, never from a value saved at render
+  // (a stop() while hidden re-renders nothing after the page comes back).
   const updateDraftRef = useRef(draft);
   updateDraftRef.current = draft;
-  const updateLiveRef = useRef<string | null>(null);
-  const updateResumeAtRef = useRef(0);
-  const tryApplyUpdate = useRef(() => {});
-  tryApplyUpdate.current = () => {
-    const live = updateLiveRef.current;
-    if (!live || document.visibilityState !== "visible") return;
-    // A resume opens a short window; a turn that starts in it applies when it is done.
-    if (performance.now() - updateResumeAtRef.current > 20_000) return;
-    if (!updateSafeRef.current) return;
-    if (!mayTryUpdate(live, sessionStorage)) return;
-    applyUpdate(live, updateDraftRef.current);
-  };
+  const updateGuardRef = useRef<StaleBuildGuard | null>(null);
+  if (!updateGuardRef.current) {
+    updateGuardRef.current = new StaleBuildGuard({
+      running: runningBuild,
+      fetchLive: () => fetchLiveBuild(),
+      busy: () => ({
+        sending: sendingRef.current,
+        streaming: abortRef.current != null,
+        talking: talkingRef.current,
+        callActive: callActiveRef.current,
+        callStarting: callStartingRef.current,
+      }),
+      visibility: () => document.visibilityState,
+      draft: () => updateDraftRef.current,
+    });
+  }
   useEffect(() => {
-    let lastCheck = Number.NEGATIVE_INFINITY;
-    let gone = false;
-    const check = async () => {
-      lastCheck = performance.now();
-      const live = await fetchLiveBuild();
-      if (gone) return;
-      if (isNewerBuild(runningBuild(), live)) updateLiveRef.current = live;
-    };
+    const guard = updateGuardRef.current!;
     const onResume = () => {
-      if (document.visibilityState !== "visible") return;
-      updateResumeAtRef.current = performance.now();
-      if (performance.now() - lastCheck < BUILD_CHECK_MIN_GAP_MS) {
-        tryApplyUpdate.current();
-        return;
-      }
-      void check().then(() => tryApplyUpdate.current());
+      void guard.onVisibility();
     };
     const onShow = (e: PageTransitionEvent) => {
       if (e.persisted) onResume();
     };
     const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") void check();
+      void guard.poll();
     }, BUILD_CHECK_EVERY_MS);
     document.addEventListener("visibilitychange", onResume);
     window.addEventListener("pageshow", onShow);
     return () => {
-      gone = true;
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", onResume);
       window.removeEventListener("pageshow", onShow);
     };
   }, []);
+  // A turn or call that was still finishing when she came back: apply once it ends.
   useEffect(() => {
-    tryApplyUpdate.current();
+    updateGuardRef.current?.settle();
   }, [sending, talking, callActive]);
 
   const chewBlocksReturn = chewHoldsIdleReturn({
