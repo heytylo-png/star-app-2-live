@@ -2018,10 +2018,12 @@ function RaiReady() {
                 <button
                   type="button"
                   data-stale-reload=""
-                  className="inline-flex h-11 min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full px-3 text-sm text-[#3f3b36]"
+                  className="group inline-flex h-11 min-h-11 min-w-11 shrink-0 items-center justify-center"
                   onClick={() => updateGuardRef.current?.requestReload()}
                 >
-                  Reload
+                  <span className="inline-flex items-center rounded-full bg-[#3f3b36] px-3 py-1.5 text-sm font-semibold leading-none text-[#efece6] group-active:bg-[#2a2724]">
+                    Reload
+                  </span>
                 </button>
               </span>
             </p>

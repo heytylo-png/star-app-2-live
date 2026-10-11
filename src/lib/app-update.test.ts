@@ -278,13 +278,17 @@ describe("stale-build notice (one line, one tap, idle after reload)", () => {
     const app = readFileSync(join(root, "src/components/rai-app.tsx"), "utf8");
     const at = app.indexOf("data-stale-build-notice");
     assert.ok(at > 0);
-    const notice = app.slice(at, at + 800);
+    const notice = app.slice(at, at + 1400);
     assert.match(notice, /New build ready/);
     assert.match(notice, /data-stale-reload/);
     assert.match(notice, />\s*Reload\s*</);
     assert.match(notice, /min-h-11/);
     assert.match(notice, /bg-\[rgba\(239,236,230,0\.85\)\]/);
     assert.match(notice, /text-\[#3f3b36\]/);
+    assert.match(notice, /bg-\[#3f3b36\]/);
+    assert.match(notice, /text-\[#efece6\]/);
+    assert.match(notice, /font-semibold/);
+    assert.match(notice, /group-active:bg-\[#2a2724\]/);
     assert.match(notice, /whitespace-nowrap/);
     assert.doesNotMatch(notice, /text-shadow/);
     assert.doesNotMatch(notice, /role="dialog"/);
