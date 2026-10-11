@@ -1,7 +1,7 @@
 /* Star Rai — minimal app-shell service worker.
  * Caches same-origin static assets for offline shell.
  * Does not intercept cross-origin (Grok / fonts) or mutate localStorage. */
-const CACHE = "star-rai-shell-d0a74e8";
+const CACHE = "star-rai-shell-bc685e8";
 const BASE = "/star-app-2-live/";
 const PRECACHE = [
   BASE,
@@ -52,6 +52,9 @@ self.addEventListener("fetch", (event) => {
 
   // diary-loop.mp4 (and any later clip) stays on the network so range requests work.
   if (bypassMedia(url)) return;
+
+  // The in-app build check (?build-check=…) must see the live index, never a cached one.
+  if (url.searchParams.has("build-check")) return;
 
   // Never cache API probes / future backends
   if (url.pathname.includes("/api/")) return;
