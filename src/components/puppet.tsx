@@ -1277,6 +1277,12 @@ export function Puppet({
     if (!desired.every((layer) => sheets[layer.src] != null)) {
       return () => window.clearInterval(retry);
     }
+    // Pout's way in never cuts: a slow 1158 keeps idle up (and keeps asking) until frame 0 is
+    // decoded, so a Pout send can never open on the hold. Only a player that cannot decode
+    // at all (clipsState.unsupported, handled as bridgeCut above) lands on the hold directly.
+    if (pair === "pout" && wantKey === "pout") {
+      return () => window.clearInterval(retry);
+    }
     const giveUp = window.setTimeout(() => {
       console.warn(`[rai] ${pair ?? "bridge"} clips did not load in time; idle <-> ${pair ?? "pose"} cuts`);
       setBridgeWaitExpired(pair);
