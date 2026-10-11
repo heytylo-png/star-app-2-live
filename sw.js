@@ -1,7 +1,7 @@
 /* Star Rai — minimal app-shell service worker.
  * Caches same-origin static assets for offline shell.
  * Does not intercept cross-origin (Grok / fonts) or mutate localStorage. */
-const CACHE = "star-rai-shell-f84389f";
+const CACHE = "star-rai-shell-ac96b1a";
 const BASE = "/star-app-2-live/";
 const PRECACHE = [
   BASE,
@@ -61,8 +61,10 @@ self.addEventListener("fetch", (event) => {
 
   // App navigations → network-first, offline shell fallback
   if (req.mode === "navigate") {
+    // Always revalidate the page itself (an update reload must reach the network, never the
+    // browser's max-age=600 copy). The cached index stays the offline fallback.
     event.respondWith(
-      fetch(req)
+      fetch(new Request(req, { cache: "no-cache" }))
         .then((res) => {
           const copy = res.clone();
           void caches.open(CACHE).then((c) => c.put(BASE + "index.html", copy));
