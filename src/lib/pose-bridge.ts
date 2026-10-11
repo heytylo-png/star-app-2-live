@@ -1,7 +1,7 @@
 /**
  * Helix pose bridge: in-between motion played when the shown sheet changes between a
  * paired set of poses. Pairs: idle <-> smug (1085/1084), idle <-> wave (1126/1140),
- * idle <-> pout (1158/1162) and idle <-> talk (1257/1261).
+ * idle <-> pout (1158/1162) and idle <-> talk (1257/1276).
  *
  * Both pairs are two real videos played as video, every source frame in order at their
  * native 24 fps. The intro runs from 0.000 s to its hold frame only (smug 1085: 2.000 s,
@@ -72,8 +72,11 @@ export const POUT_HOLD_FILE = "rai/pout1158_hold.webp";
  * (145 frames, 6.04 s). Idle glare → neutral face. Muted: the AVIF holds no audio track.
  */
 export const TALK_IN_CLIP: SmugClip = { pair: "talk", key: "in", file: "rai/talk1257_in.avif", frames: 145 };
-/** Talk rest: 1261 full length, forward (145 frames, 6.04 s). Neutral → idle glare. Muted. */
-export const TALK_OUT_CLIP: SmugClip = { pair: "talk", key: "out", file: "rai/talk1261_out.avif", frames: 145 };
+/**
+ * Talk rest (TyLo 2026-10-11 18:06, "Talk rest swap"): 1276 full length, forward (145 frames, 6.04 s).
+ * Neutral → idle glare. Muted. Replaces 1261, which is gone from the app and the site.
+ */
+export const TALK_OUT_CLIP: SmugClip = { pair: "talk", key: "out", file: "rai/talk1276_out.avif", frames: 145 };
 /** Talk hold sheet: 1257 frame 144 (the neutral) = the intro's last frame, 720×1280 RGBA WebP. Not talk_official.png. */
 export const TALK_HOLD_FILE = "rai/talk1257_hold.webp";
 
@@ -103,10 +106,10 @@ export const WAVE_CLIP_BOX = { x: 0, y: 0, w: 672, h: 1280 } as const;
  */
 export const POUT_CLIP_BOX = { x: 128, y: 0, w: 480, h: 1280 } as const;
 /**
- * Talk clips (1257 and 1261, both 784×1168) carry a slow camera push (the figure grows from 825 to
- * 897 / 943 px tall), so each frame gets the pout fit on its own: s = 0.98547 × 1247 / h, soles to
+ * Talk clips (1257 and 1276, both 784×1168) carry a slow camera push (the figure grows from 825 to
+ * 897 px in 1257 and from 890 to 1067 px in 1276), so each frame gets the pout fit on its own: s = 0.98547 × 1247 / h, soles to
  * y 1259.1, feet centre to x 362.7 (h / soles / feet time-smoothed per clip). She stays at idle size
- * at every join. Every frame's alpha sits inside x 193..520, so talk uses the pout band x 128..608;
+ * at every join. Every frame's alpha sits inside x 191..522, so talk uses the pout band x 128..608;
  * its edge strips are transparent in every frame (talk-clip-edges.json + test).
  */
 export const TALK_CLIP_BOX = { x: 128, y: 0, w: 480, h: 1280 } as const;

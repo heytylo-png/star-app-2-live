@@ -137,7 +137,7 @@ describe("smug clips (1085 in / 1084 out)", () => {
     assert.deepEqual(rai.filter((f) => /^smug/.test(f)).sort(), ["smug1084_out.avif", "smug1085_hold.webp", "smug1085_in.avif"]);
     assert.deepEqual(rai.filter((f) => /^wave1\d{3}/.test(f)).sort(), ["wave1126_hold.webp", "wave1126_in.avif", "wave1140_out.avif"]);
     assert.deepEqual(rai.filter((f) => /^pout1\d{3}/.test(f)).sort(), ["pout1158_hold.webp", "pout1158_in.avif", "pout1162_out.avif"]);
-    assert.deepEqual(rai.filter((f) => /^talk1\d{3}/.test(f)).sort(), ["talk1257_hold.webp", "talk1257_in.avif", "talk1261_out.avif"]);
+    assert.deepEqual(rai.filter((f) => /^talk1\d{3}/.test(f)).sort(), ["talk1257_hold.webp", "talk1257_in.avif", "talk1276_out.avif"]);
     assert.equal(rai.some((f) => /wave111[04]/.test(f)), false, "1110 / 1114 removed");
     assert.equal(rai.some((f) => /9(56|60|62|68|70|71|73)/.test(f)), false);
   });
@@ -153,13 +153,13 @@ describe("bridge file cache keys (wave w6, pout p2, talk t1)", () => {
       "rai/pout1162_out.avif": "p2",
       "rai/pout1158_hold.webp": "p2",
       "rai/talk1257_in.avif": "t1",
-      "rai/talk1261_out.avif": "t1",
+      "rai/talk1276_out.avif": "t2",
       "rai/talk1257_hold.webp": "t1",
     });
     assert.match(SPRITES.poses.talk, /rai\/talk1257_hold\.webp\?v=t1$/);
     const [tin, tout] = talkClipUrls();
     assert.match(tin!, /rai\/talk1257_in\.avif\?v=t1$/);
-    assert.match(tout!, /rai\/talk1261_out\.avif\?v=t1$/);
+    assert.match(tout!, /rai\/talk1276_out\.avif\?v=t2$/);
     assert.match(SPRITES.poses.pout, /rai\/pout1158_hold\.webp\?v=p2$/);
     const [pin, pout] = poutClipUrls();
     assert.match(pin!, /rai\/pout1158_in\.avif\?v=p2$/);
