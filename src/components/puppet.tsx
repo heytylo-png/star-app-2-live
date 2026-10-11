@@ -31,9 +31,11 @@ import {
   holdsSmugBeat,
   holdsWaveBeat,
   holdsPoutBeat,
+  holdsTalkBeat,
   isSmugPathSheetSrc,
   isWavePathSheetSrc,
   isPoutPathSheetSrc,
+  isTalkPathSheetSrc,
   openRestFallback,
   POSE_CROSSFADE_MS,
   priorityPoseSrc,
@@ -42,6 +44,7 @@ import {
   smugClipUrls,
   waveClipUrls,
   poutClipUrls,
+  talkClipUrls,
   type PosePhase,
   USE_EXPO_TALK_BUST,
   type EmotionId,
@@ -79,6 +82,7 @@ import {
   SMUG_CLIP_BOX,
   WAVE_CLIP_BOX,
   POUT_CLIP_BOX,
+  TALK_CLIP_BOX,
   SMUG_CLIP_SHEET,
   SMUG_IN_CLIP,
   SMUG_OUT_CLIP,
@@ -86,6 +90,8 @@ import {
   WAVE_OUT_CLIP,
   POUT_IN_CLIP,
   POUT_OUT_CLIP,
+  TALK_IN_CLIP,
+  TALK_OUT_CLIP,
   type BridgeTimers,
   type ClipPair,
 } from "@/lib/pose-bridge";
@@ -107,17 +113,18 @@ import {
 } from "@/lib/pose-phase";
 import { cn } from "@/lib/utils";
 
-/** Bridge canvases on the stage: smug in/out, wave win/wout, pout pin/pout. */
-type BridgeStageKey = "in" | "out" | "win" | "wout" | "pin" | "pout";
+/** Bridge canvases on the stage: smug in/out, wave win/wout, pout pin/pout, talk tin/tout. */
+type BridgeStageKey = "in" | "out" | "win" | "wout" | "pin" | "pout" | "tin" | "tout";
 /** Each clip pair's [intro, rest] canvases. */
 const BRIDGE_STAGE_KEYS: Record<ClipPair, readonly [BridgeStageKey, BridgeStageKey]> = {
   smug: ["in", "out"],
   wave: ["win", "wout"],
   pout: ["pin", "pout"],
+  talk: ["tin", "tout"],
 };
-/** An intro canvas is on stage (1085 / 1126 / 1158 still coming in). */
+/** An intro canvas is on stage (1085 / 1126 / 1158 / 1257 still coming in). */
 function isIntroStageKey(key: BridgeStageKey | null): boolean {
-  return key === "in" || key === "win" || key === "pin";
+  return key === "in" || key === "win" || key === "pin" || key === "tin";
 }
 
 type PuppetProps = {
@@ -316,15 +323,25 @@ export function Puppet({
   const bridgeCanvasWaveOutRef = useRef<HTMLCanvasElement>(null);
   const bridgeCanvasPoutInRef = useRef<HTMLCanvasElement>(null);
   const bridgeCanvasPoutOutRef = useRef<HTMLCanvasElement>(null);
+  const bridgeCanvasTalkInRef = useRef<HTMLCanvasElement>(null);
+  const bridgeCanvasTalkOutRef = useRef<HTMLCanvasElement>(null);
   /** Smug clips player (1085/1084). */
   const clipPlayerRef = useRef<SmugClipPlayer | null>(null);
   /** Wave clips player (1126/1140). */
   const wavePlayerRef = useRef<SmugClipPlayer | null>(null);
   /** Pout clips player (1158/1162). */
   const poutPlayerRef = useRef<SmugClipPlayer | null>(null);
+  /** Talk clips player (1257/1261). */
+  const talkPlayerRef = useRef<SmugClipPlayer | null>(null);
   /** The clip player of a pair (refs only, so it is safe in any effect). */
   const playerFor = (pair: ClipPair | undefined): SmugClipPlayer | null =>
-    pair === "wave" ? wavePlayerRef.current : pair === "pout" ? poutPlayerRef.current : clipPlayerRef.current;
+    pair === "wave"
+      ? wavePlayerRef.current
+      : pair === "pout"
+        ? poutPlayerRef.current
+        : pair === "talk"
+          ? talkPlayerRef.current
+          : clipPlayerRef.current;
   /** Either pair can never play in this browser (read in the crossfade effect). */
   const clipsUnsupportedRef = useRef(false);
   const [clipsState, setClipsState] = useState({
@@ -334,6 +351,8 @@ export function Puppet({
     wout: false,
     pin: false,
     pout: false,
+    tin: false,
+    tout: false,
     unsupported: false,
   });
   /**
@@ -344,6 +363,8 @@ export function Puppet({
   const loadClips = useRef<(pair?: ClipPair) => Promise<boolean>>(async () => false);
   /** Starts the pout player (worker + 1158 / 1162 fetch) once; later calls are no-ops. */
   const startPoutClips = useRef<() => void>(() => {});
+  /** Starts the talk player (worker + 1257 / 1261 fetch) once; later calls are no-ops. */
+  const startTalkClips = useRef<() => void>(() => {});
   const bridge = useRef<PoseBridge | null>(null);
   const bridgeDriver = useRef<BridgeDriver | null>(null);
   // Smug hold release (paste-14): the hold has no timer. The user's next send (or any
@@ -355,6 +376,8 @@ export function Puppet({
   const smugGateStep = useRef<SmugGateStep>("wanted");
   if (!smugGate.current) smugGate.current = new SmugReleaseGate(smugRelease);
   const exitReleasePending = useRef(false);
+  /** Plates last put on stage (the painted key; read by the gates below). */
+  const shownPlates = useRef<SpriteLayer[]>([]);
   const [exitTick, setExitTick] = useState(0);
   // Hip clip (hip-clip.ts): the idle <-> smug travel and the hold, painted on one canvas.
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -397,12 +420,15 @@ export function Puppet({
     const wout = bridgeCanvasWaveOutRef.current;
     const pin = bridgeCanvasPoutInRef.current;
     const pout = bridgeCanvasPoutOutRef.current;
+    const tin = bridgeCanvasTalkInRef.current;
+    const tout = bridgeCanvasTalkOutRef.current;
     type St = { in: boolean; out: boolean; unsupported: boolean };
     let smugSt: St = { in: false, out: false, unsupported: false };
     let waveSt: St = { in: false, out: false, unsupported: false };
     let poutSt: St = { in: false, out: false, unsupported: false };
+    let talkSt: St = { in: false, out: false, unsupported: false };
     const publish = () => {
-      const unsupported = smugSt.unsupported || waveSt.unsupported || poutSt.unsupported;
+      const unsupported = smugSt.unsupported || waveSt.unsupported || poutSt.unsupported || talkSt.unsupported;
       clipsUnsupportedRef.current = unsupported;
       setClipsState((prev) => {
         const next = {
@@ -412,6 +438,8 @@ export function Puppet({
           wout: waveSt.out,
           pin: poutSt.in,
           pout: poutSt.out,
+          tin: talkSt.in,
+          tout: talkSt.out,
           unsupported,
         };
         return prev.in === next.in &&
@@ -420,22 +448,26 @@ export function Puppet({
           prev.wout === next.wout &&
           prev.pin === next.pin &&
           prev.pout === next.pout &&
+          prev.tin === next.tin &&
+          prev.tout === next.tout &&
           prev.unsupported === next.unsupported
           ? prev
           : next;
       });
     };
-    if (!cin || !cout || !win || !wout || !pin || !pout || !smugClipPlayerSupported()) {
+    if (!cin || !cout || !win || !wout || !pin || !pout || !tin || !tout || !smugClipPlayerSupported()) {
       console.warn("[rai] bridge clips cannot play here (no OffscreenCanvas worker); pairs cut");
       smugSt = { in: false, out: false, unsupported: true };
       waveSt = { in: false, out: false, unsupported: true };
       poutSt = { in: false, out: false, unsupported: true };
+      talkSt = { in: false, out: false, unsupported: true };
       publish();
       return;
     }
     const [inUrl, outUrl] = smugClipUrls();
     const [winUrl, woutUrl] = waveClipUrls();
     const [pinUrl, poutUrl] = poutClipUrls();
+    const [tinUrl, toutUrl] = talkClipUrls();
     let smugPlayer: SmugClipPlayer;
     let wavePlayer: SmugClipPlayer;
     try {
@@ -472,6 +504,7 @@ export function Puppet({
       smugSt = { in: false, out: false, unsupported: true };
       waveSt = { in: false, out: false, unsupported: true };
       poutSt = { in: false, out: false, unsupported: true };
+      talkSt = { in: false, out: false, unsupported: true };
       publish();
       return;
     }
@@ -509,7 +542,39 @@ export function Puppet({
     startPoutClips.current = () => {
       ensurePout();
     };
+    // Talk (1257 / 1261, 3.2 MB) is lazy the same way, and starts after pout (see the preload queue).
+    let talkPlayer: SmugClipPlayer | null = null;
+    const ensureTalk = (): SmugClipPlayer | null => {
+      if (talkPlayer) return talkPlayer;
+      try {
+        talkPlayer = SmugClipPlayer.for({
+          canvases: { in: tin, out: tout },
+          urls: { in: tinUrl!, out: toutUrl! },
+          frames: { in: TALK_IN_CLIP.frames, out: TALK_OUT_CLIP.frames },
+          box: TALK_CLIP_BOX,
+          keyOf: (file) => {
+            const f = parseClipFrame(file);
+            return f?.clip.pair === "talk" ? f.clip.key : null;
+          },
+          onState: (st) => {
+            talkSt = st;
+            publish();
+          },
+        });
+      } catch (err) {
+        console.warn("[rai] talk clip player did not start; idle <-> talk cuts", err);
+        talkSt = { in: false, out: false, unsupported: true };
+        publish();
+        return null;
+      }
+      talkPlayerRef.current = talkPlayer;
+      return talkPlayer;
+    };
+    startTalkClips.current = () => {
+      ensureTalk();
+    };
     loadClips.current = (pair) => {
+      if (pair === "talk") return ensureTalk()?.load() ?? Promise.resolve(false);
       if (pair === "pout") return ensurePout()?.load() ?? Promise.resolve(false);
       if (pair === "smug") return smugPlayer.load();
       if (pair === "wave") return wavePlayer.load();
@@ -519,8 +584,10 @@ export function Puppet({
       if (clipPlayerRef.current === smugPlayer) clipPlayerRef.current = null;
       if (wavePlayerRef.current === wavePlayer) wavePlayerRef.current = null;
       if (poutPlayer && poutPlayerRef.current === poutPlayer) poutPlayerRef.current = null;
+      if (talkPlayer && talkPlayerRef.current === talkPlayer) talkPlayerRef.current = null;
       loadClips.current = async () => false;
       startPoutClips.current = () => {};
+      startTalkClips.current = () => {};
     };
   }, []);
 
@@ -695,6 +762,14 @@ export function Puppet({
       // smug / wave preloads, so it never competes with them on a cold phone. A Pout sent
       // earlier starts it on its own (the bridge wait effect asks for the pout pair).
       startPoutClips.current();
+      // Talk (1257 / 1261 + its hold) comes after pout's clips are in (or 20 s), so it never
+      // competes with smug / wave / pout. A Talk sent earlier starts it on its own (bridge wait).
+      void Promise.race([
+        loadClips.current("pout"),
+        new Promise<void>((resolve) => window.setTimeout(resolve, 20_000)),
+      ]).then(() => {
+        if (!cancelled) startTalkClips.current();
+      });
       for (const src of order.lazy) {
         if (cancelled) return;
         await punchOne(src, false);
@@ -799,7 +874,12 @@ export function Puppet({
   // Blink is on, approved by TyLo on 2026-09-26 (807-referenced painted lids,
   // pass 4b). The flag gate stays: a false flag returns before any timeout.
   // One body, hard-swapped lids, no second PNG.
-  const restingBlink = canIdleBlink({ pose, emotion, talking, reducedMotion });
+  // Talk beat (1257 / neutral hold / 1261) owns the stage while it runs or holds: no idle blink and
+  // no idle mouth chew underneath it, whatever voice playback does. Everywhere else both are unchanged.
+  // oxlint-disable-next-line react/refs -- painted key from the last plates; read-only gate
+  const talkStageOn =
+    bridgeClip === "tin" || bridgeClip === "tout" || holdsTalkBeat(pose) || bridgeKeyOfPlates(shownPlates.current) === "talk";
+  const restingBlink = canIdleBlink({ pose, emotion, talking, reducedMotion }) && !talkStageOn;
   const framesReady = idleBlinkFrameUrls().every((src) => sheets[src] != null);
   useEffect(() => {
     if (!IDLE_BLINK_ENABLED) return;
@@ -860,7 +940,7 @@ export function Puppet({
   // → 01, ~90–120ms a cut, with 04/06 spice and 05 on hype lines. Blink is
   // paused for the line (canIdleBlink is false while talking); on exit this
   // drops back to 01 and the blink timer starts again from open lids.
-  const talkingIdle = canIdleMouth({ pose, emotion, talking, reducedMotion });
+  const talkingIdle = canIdleMouth({ pose, emotion, talking, reducedMotion }) && !talkStageOn;
   const mouthReady = idleMouthFrameUrls().every((src) => sheets[src] != null);
   const audioLocked = audioMouth != null;
   useEffect(() => {
@@ -1087,17 +1167,29 @@ export function Puppet({
         isPoutPathSheetSrc(layer.src) ? layer : { ...layer, src: fallback },
       );
     }
+    if (holdsTalkBeat(pose, emotion)) {
+      const fallback = idleRestSrc();
+      return raw.map((layer) =>
+        isTalkPathSheetSrc(layer.src) ? layer : { ...layer, src: fallback },
+      );
+    }
     return raw;
   }, [pose, emotion, talking, ampLive, blinkShown, mouthShown, reducedMotion]);
   // Both smug clips loaded and primed (their first frames decoded): a change may play.
   const smugClipsReady = clipsState.in && clipsState.out;
   const waveClipsReady = clipsState.win && clipsState.wout;
   const poutClipsReady = clipsState.pin && clipsState.pout;
-  // Each pair waits only for its own clips: smug / wave never wait on the lazy pout files,
-  // pout never waits on smug / wave.
-  const pairClipsReady: Record<ClipPair, boolean> = { smug: smugClipsReady, wave: waveClipsReady, pout: poutClipsReady };
+  const talkClipsReady = clipsState.tin && clipsState.tout;
+  // Each pair waits only for its own clips: smug / wave never wait on the lazy pout / talk files,
+  // pout / talk never wait on smug / wave or on each other.
+  const pairClipsReady: Record<ClipPair, boolean> = {
+    smug: smugClipsReady,
+    wave: waveClipsReady,
+    pout: poutClipsReady,
+    talk: talkClipsReady,
+  };
   const pairOf = (wantedKey: string | null, shownKey: string | null): ClipPair | null => {
-    for (const k of [wantedKey, shownKey]) if (k === "smug" || k === "wave" || k === "pout") return k;
+    for (const k of [wantedKey, shownKey]) if (k === "smug" || k === "wave" || k === "pout" || k === "talk") return k;
     return null;
   };
   // Pout is lazy, so it only waits for the clip it is about to play: idle -> pout needs 1158,
@@ -1106,6 +1198,8 @@ export function Puppet({
     if (clipMode) return clipReady;
     if (!pair) return true;
     if (pair === "pout" && wantedKey !== undefined) return wantedKey === "pout" ? clipsState.pin : clipsState.pout;
+    // Talk is lazy the same way: idle -> talk needs 1257, talk -> idle needs 1261.
+    if (pair === "talk" && wantedKey !== undefined) return wantedKey === "talk" ? clipsState.tin : clipsState.tout;
     return pairClipsReady[pair];
   };
   // No way to decode the clips in this browser: the pair hard-cuts, like reduced motion.
@@ -1115,7 +1209,6 @@ export function Puppet({
   const expiredFor = (pair: ClipPair | null, wantedKey?: string | null): boolean =>
     !clipMode && pair != null && bridgeWaitExpiredRaw === pair && !framesReadyFor(pair, wantedKey);
   const bridgeWaitExpired = expiredFor(bridgeWaitExpiredRaw);
-  const shownPlates = useRef<SpriteLayer[]>([]);
   const plates = useMemo(() => {
     // exitTick: idle landed after 1084, the wanted pose may go on (re-run only).
     void exitTick;
@@ -1194,6 +1287,8 @@ export function Puppet({
         wout: bridgeCanvasWaveOutRef.current,
         pin: bridgeCanvasPoutInRef.current,
         pout: bridgeCanvasPoutOutRef.current,
+        tin: bridgeCanvasTalkInRef.current,
+        tout: bridgeCanvasTalkOutRef.current,
       };
       if (src === null) {
         bridgeClipRef.current = null;
@@ -1283,6 +1378,11 @@ export function Puppet({
     if (pair === "pout" && wantKey === "pout") {
       return () => window.clearInterval(retry);
     }
+    // Talk never cuts, either way (TyLo 2026-10-11: "Do not cut"): a slow 1257 keeps idle up until
+    // its frame 0 is decoded; a slow 1261 keeps the neutral hold up until its frame 0 is.
+    if (pair === "talk") {
+      return () => window.clearInterval(retry);
+    }
     const giveUp = window.setTimeout(() => {
       console.warn(`[rai] ${pair ?? "bridge"} clips did not load in time; idle <-> ${pair ?? "pose"} cuts`);
       setBridgeWaitExpired(pair);
@@ -1343,11 +1443,13 @@ export function Puppet({
           clipPlayerRef.current?.stop();
           wavePlayerRef.current?.stop();
           poutPlayerRef.current?.stop();
+          talkPlayerRef.current?.stop();
         },
         setPaused: (paused) => {
           clipPlayerRef.current?.setPaused(paused);
           wavePlayerRef.current?.setPaused(paused);
           poutPlayerRef.current?.setPaused(paused);
+          talkPlayerRef.current?.setPaused(paused);
         },
       };
       bridge.current = new PoseBridge(
@@ -1468,7 +1570,7 @@ export function Puppet({
   const plateKey = bridgeKeyOfPlates(plates);
   const clipOnStage = clipMode && clipView.visible;
   // Hold is the live smug/wave hold sheet. Entry/exit are bridge canvases.
-  const onHoldPose = plateKey === "smug" || plateKey === "wave" || plateKey === "pout";
+  const onHoldPose = plateKey === "smug" || plateKey === "wave" || plateKey === "pout" || plateKey === "talk";
   const phase: PosePhase = clipMode
     ? bridgeClip
       ? "bridge-out"
@@ -1541,7 +1643,9 @@ export function Puppet({
             ? "wave1126_hold"
             : plateKey === "pout"
               ? "pout1158_hold"
-              : "smug1085_hold"
+              : plateKey === "talk"
+                ? "talk1257_hold"
+                : "smug1085_hold"
           : "off"
       }
       data-rai-smug-release={smugGate.current?.exiting() ? "exit" : "off"}
@@ -1590,7 +1694,7 @@ export function Puppet({
           );
         })}
         {clipSupported ? <HipClipLayer ref={canvasRef} visible={clipOnStage} /> : null}
-        {/* Bridge clips (smug in/out, wave win/wout, pout pin/pout): painted at 24 fps by the clip workers.
+        {/* Bridge clips (smug in/out, wave win/wout, pout pin/pout, talk tin/tout): painted at 24 fps by the clip workers.
             Visible only while data-rai-bridge-on matches (styles.css). */}
         <canvas
           key="pose-bridge-in"
@@ -1661,6 +1765,30 @@ export function Puppet({
           className="rai-layer"
           data-rai-role="bridge"
           data-rai-clip="pout"
+          data-rai-sheet="off"
+          style={{ opacity: 1, zIndex: 60, transition: "none" }}
+        />
+        <canvas
+          key="pose-bridge-tin"
+          ref={bridgeCanvasTalkInRef}
+          width={SMUG_CLIP_SHEET.w}
+          height={SMUG_CLIP_SHEET.h}
+          aria-hidden="true"
+          className="rai-layer"
+          data-rai-role="bridge"
+          data-rai-clip="tin"
+          data-rai-sheet="off"
+          style={{ opacity: 1, zIndex: 60, transition: "none" }}
+        />
+        <canvas
+          key="pose-bridge-tout"
+          ref={bridgeCanvasTalkOutRef}
+          width={SMUG_CLIP_SHEET.w}
+          height={SMUG_CLIP_SHEET.h}
+          aria-hidden="true"
+          className="rai-layer"
+          data-rai-role="bridge"
+          data-rai-clip="tout"
           data-rai-sheet="off"
           style={{ opacity: 1, zIndex: 60, transition: "none" }}
         />

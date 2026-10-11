@@ -9,6 +9,9 @@ import {
   POUT_HOLD_FILE,
   POUT_IN_CLIP,
   POUT_OUT_CLIP,
+  TALK_HOLD_FILE,
+  TALK_IN_CLIP,
+  TALK_OUT_CLIP,
 } from "./pose-bridge.ts";
 
 export { POSE_CROSSFADE_MS, type IdleBlinkFrame, type IdleMouthFrame };
@@ -299,6 +302,15 @@ export function holdsPoutBeat(pose: PoseId, _emotion?: EmotionId): boolean {
 }
 
 /**
+ * Talk pose: the idle↔talk beat (1257 / neutral hold / 1261) is on stage. The stage only gets the
+ * `talk` key from a user-named talk command (namedPoseFromText: "talk", "talk pose", "do talk", …);
+ * every automatic spoken route lands on idle (routeSpokenTalk), so plain replies never use it.
+ */
+export function holdsTalkBeat(pose: PoseId, _emotion?: EmotionId): boolean {
+  return pose === "talk";
+}
+
+/**
  * Reading floor for a fully landed smug line (45 ms/char, never under
  * POSE_HOLD_MIN_MS). Anchored to landing / stream-complete — never send or
  * first token.
@@ -417,6 +429,21 @@ export function isPoutPathSheetSrc(src: string): boolean {
   return false;
 }
 
+/**
+ * Sheets allowed on the idle↔talk beat: idle.png (only while 1257 f0 is still decoding), the 1257
+ * intro clip, talk1257_hold, the 1261 rest clip. No idle mouth or blink sheet, no talk_official.png,
+ * no other pose sheet: while the talk bridge runs or holds, nothing else paints.
+ */
+export function isTalkPathSheetSrc(src: string): boolean {
+  const path = src.split(/[?#]/)[0] ?? src;
+  const name = path.slice(path.lastIndexOf("/") + 1);
+  if (name === "talk1257_hold.webp") return true;
+  if (name === "talk1257_in.avif") return true;
+  if (name === "talk1261_out.avif") return true;
+  if (name === "idle.png") return true;
+  return false;
+}
+
 /** What the stage is doing with the smug beat (puppet `data-rai-pose-phase`). */
 export type PosePhase = "idle" | "bridge-in" | "hold" | "bridge-out";
 
@@ -520,8 +547,9 @@ export function lineEndedRestPose(opts: {
   const onSmug = opts.pose === "smug" || (opts.pose === "idle" && opts.emotion === "smug");
   const onWave = opts.pose === "wave";
   const onPout = opts.pose === "pout";
+  const onTalk = opts.pose === "talk";
   const onWink = opts.pose === "wink";
-  if (!onSmug && !onWave && !onPout && !onWink) return null;
+  if (!onSmug && !onWave && !onPout && !onTalk && !onWink) return null;
   return { pose: settledRestPose(), emotion: DEFAULT_EMOTION };
 }
 
@@ -638,6 +666,7 @@ export const PRE_CUT_ALPHA_FILES = [
   "rai/smug1085_hold.webp",
   "rai/wave1126_hold.webp",
   "rai/pout1158_hold.webp",
+  "rai/talk1257_hold.webp",
   "rai/content_official.png",
   "rai/sad_official.png",
   "rai/heart_official.png",
@@ -710,6 +739,11 @@ export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
   "rai/pout1158_in.avif": "p2",
   "rai/pout1162_out.avif": "p2",
   "rai/pout1158_hold.webp": "p2",
+  // Talk (1257 in / hold f144 / 1261 out), 2026-10-11: per-frame pout fit (camera push), white matte cut,
+  // per-zone skin match + face above the jaw (pout p2), alpha-only post. Muted (no audio track).
+  "rai/talk1257_in.avif": "t1",
+  "rai/talk1261_out.avif": "t1",
+  "rai/talk1257_hold.webp": "t1",
 };
 
 const ASSET = (path: string) => {
@@ -736,7 +770,8 @@ export function hipClipSrc(file: string): string {
 /** Live key → file under the static tree the puppet already serves. */
 export const LIVE_POSE_FILES = {
   idle: "rai/idle.png",
-  talk: "rai/talk_official.png",
+  /** Talk hold: 1257 frame 144 (the neutral). Not talk_official.png. */
+  talk: TALK_HOLD_FILE,
   peace: "rai/peace.png",
   middle_finger: "rai/middle_finger.png",
   wink: "rai/wink_official.png",
@@ -971,6 +1006,16 @@ export function poutBeatSheetUrls(): string[] {
   return [SPRITES.poses.pout];
 }
 
+/** The sheet of the idle <-> talk beat: talk1257_hold. */
+export function talkBeatSheetUrls(): string[] {
+  return [SPRITES.poses.talk];
+}
+
+/** The two clips of the idle <-> talk beat: 1257 intro (all 145 frames), 1261 rest (all 145). */
+export function talkClipUrls(): string[] {
+  return [ASSET(TALK_IN_CLIP.file), ASSET(TALK_OUT_CLIP.file)];
+}
+
 /** The two clips of the idle <-> pout beat: 1158 intro (f0-f48, 0-2.000 s), 1162 rest. */
 export function poutClipUrls(): string[] {
   return [ASSET(POUT_IN_CLIP.file), ASSET(POUT_OUT_CLIP.file)];
@@ -994,7 +1039,7 @@ export function stagePreloadOrder(_opts?: { clip?: boolean }): {
   next: string[];
   beat: string[];
   rest: string[];
-  /** After everything above (pout hold): lazy, so it never delays first paint or the smug / wave beat. */
+  /** After everything above (pout hold, then talk hold): lazy, so it never delays first paint or the smug / wave beat. */
   lazy: string[];
 } {
   const startup = startupSpriteUrls();
@@ -1008,7 +1053,9 @@ export function stagePreloadOrder(_opts?: { clip?: boolean }): {
     next,
     beat,
     rest,
-    lazy: poutBeatSheetUrls().filter((u) => u !== first && !next.includes(u) && !beat.includes(u) && !rest.includes(u)),
+    lazy: [...poutBeatSheetUrls(), ...talkBeatSheetUrls()].filter(
+      (u) => u !== first && !next.includes(u) && !beat.includes(u) && !rest.includes(u),
+    ),
   };
 }
 

@@ -346,7 +346,8 @@ describe("idle mouth on the one rest image", () => {
 
   it("leaves every other pose and mood sheet untouched", () => {
     for (const mouth of [0, 3, 5] as const) {
-      assert.match(layersFor({ ...talkingIdle, pose: "talk", mouth })[0]!.src, /talk_official/);
+      // The talk key holds the 1257 neutral frame (talk bridge), never an idle mouth sheet.
+      assert.match(layersFor({ ...talkingIdle, pose: "talk", mouth })[0]!.src, /talk1257_hold/);
       assert.match(layersFor({ ...talkingIdle, pose: "wave", mouth })[0]!.src, /wave1126_hold/);
       assert.match(layersFor({ ...talkingIdle, emotion: "smug", mouth })[0]!.src, /smug1085_hold/);
       assert.match(layersFor({ ...talkingIdle, emotion: "hype", mouth })[0]!.src, /peace\.png/);

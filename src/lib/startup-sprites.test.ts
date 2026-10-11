@@ -58,7 +58,9 @@ describe("startup sprite lists", () => {
       Object.values(LIVE_POSE_FILES).filter((file) => file !== "rai/idle.png"),
     );
     // Pre-cut sheets carry ?v=, so compare the path.
-    assert.ok(deferred.map(pathOf).some((file) => file.endsWith("rai/talk_official.png")));
+    // The talk key is the 1257 neutral hold (talk bridge); talk_official.png is no live sheet.
+    assert.ok(deferred.map(pathOf).some((file) => file.endsWith("rai/talk1257_hold.webp")));
+    assert.ok(!deferred.map(pathOf).some((file) => file.endsWith("rai/talk_official.png")));
     assert.ok(deferred.some((src) => src.endsWith("rai/three_quarter.png")));
     assert.ok(deferred.some((src) => src.endsWith("star-rai/poses/turn-away.png")));
     assert.ok(deferred.some((src) => src.endsWith("star-rai/point-front.png")));

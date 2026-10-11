@@ -1,13 +1,14 @@
 /**
  * Helix pose bridge: in-between motion played when the shown sheet changes between a
- * paired set of poses. Pairs: idle <-> smug (1085/1084), idle <-> wave (1126/1140) and
- * idle <-> pout (1158/1162).
+ * paired set of poses. Pairs: idle <-> smug (1085/1084), idle <-> wave (1126/1140),
+ * idle <-> pout (1158/1162) and idle <-> talk (1257/1261).
  *
  * Both pairs are two real videos played as video, every source frame in order at their
  * native 24 fps. The intro runs from 0.000 s to its hold frame only (smug 1085: 2.000 s,
- * frames 0..48; wave 1126: 4.083 s, frames 0..98; pout 1158: 2.000 s, frames 0..48) and lands on a hold WebP (= that exact
+ * frames 0..48; wave 1126: 4.083 s, frames 0..98; pout 1158: 2.000 s, frames 0..48; talk 1257: its full
+ * 6.04 s, frames 0..144) and lands on a hold WebP (= that exact
  * frame) until the next send. The rest runs its full 145 frames forward onto the live idle
- * sheet. No reverse, no audio (the clips are AVIF image sequences). Smug, wave and pout each have
+ * sheet. No reverse, no audio (the clips are AVIF image sequences). Smug, wave, pout and talk each have
  * their own canvases / hold sheet.
  *
  * This module is pure (no DOM, no React). The puppet owns the one canvas the frames are
@@ -20,7 +21,7 @@ export const SMUG_CLIP_FPS = 24;
 /** One clip frame on stage: 41.67 ms. */
 export const SMUG_CLIP_FRAME_MS = 1000 / SMUG_CLIP_FPS;
 
-export type ClipPair = "smug" | "wave" | "pout";
+export type ClipPair = "smug" | "wave" | "pout" | "talk";
 export type SmugClip = {
   /** Which hold pose this clip belongs to. */
   readonly pair: ClipPair;
@@ -67,6 +68,16 @@ export const POUT_OUT_CLIP: SmugClip = { pair: "pout", key: "out", file: "rai/po
 export const POUT_HOLD_FILE = "rai/pout1158_hold.webp";
 
 /**
+ * Talk intro (TyLo 2026-10-11, "Talk bridge. Videos only."): 1257 full length, played forward
+ * (145 frames, 6.04 s). Idle glare → neutral face. Muted: the AVIF holds no audio track.
+ */
+export const TALK_IN_CLIP: SmugClip = { pair: "talk", key: "in", file: "rai/talk1257_in.avif", frames: 145 };
+/** Talk rest: 1261 full length, forward (145 frames, 6.04 s). Neutral → idle glare. Muted. */
+export const TALK_OUT_CLIP: SmugClip = { pair: "talk", key: "out", file: "rai/talk1261_out.avif", frames: 145 };
+/** Talk hold sheet: 1257 frame 144 (the neutral) = the intro's last frame, 720×1280 RGBA WebP. Not talk_official.png. */
+export const TALK_HOLD_FILE = "rai/talk1257_hold.webp";
+
+/**
  * Both clips are white-matte cuts registered to idle.png in the 720×1280 sheet space
  * (1085 shifted 0,−3 px; 1084 uniform ×1.005 + −2,−10 px; no visible pixel leaves the
  * canvas). The bitstream holds only the x 112..560 band (the rest is transparent margin
@@ -91,6 +102,14 @@ export const WAVE_CLIP_BOX = { x: 0, y: 0, w: 672, h: 1280 } as const;
  * are transparent in every frame (pout-clip-edges.json + test): no elbow or hand clipped.
  */
 export const POUT_CLIP_BOX = { x: 128, y: 0, w: 480, h: 1280 } as const;
+/**
+ * Talk clips (1257 and 1261, both 784×1168) carry a slow camera push (the figure grows from 825 to
+ * 897 / 943 px tall), so each frame gets the pout fit on its own: s = 0.98547 × 1247 / h, soles to
+ * y 1259.1, feet centre to x 362.7 (h / soles / feet time-smoothed per clip). She stays at idle size
+ * at every join. Every frame's alpha sits inside x 193..520, so talk uses the pout band x 128..608;
+ * its edge strips are transparent in every frame (talk-clip-edges.json + test).
+ */
+export const TALK_CLIP_BOX = { x: 128, y: 0, w: 480, h: 1280 } as const;
 
 /** Bridge frame id for frame `index` of a clip: `<file>#NNN`. */
 export function clipFrameFile(clip: SmugClip, index: number): string {
@@ -106,7 +125,7 @@ export function clipFrameFiles(clip: SmugClip): string[] {
 export function parseClipFrame(src: string): { clip: SmugClip; index: number } | null {
   const m = /([^/?#]+\.avif)(?:\?[^#]*)?#(\d{3})$/.exec(src);
   if (!m) return null;
-  const clip = [SMUG_IN_CLIP, SMUG_OUT_CLIP, WAVE_IN_CLIP, WAVE_OUT_CLIP, POUT_IN_CLIP, POUT_OUT_CLIP].find(
+  const clip = [SMUG_IN_CLIP, SMUG_OUT_CLIP, WAVE_IN_CLIP, WAVE_OUT_CLIP, POUT_IN_CLIP, POUT_OUT_CLIP, TALK_IN_CLIP, TALK_OUT_CLIP].find(
     (c) => c.file.endsWith(`/${m[1]}`) || c.file === m[1],
   );
   if (!clip) return null;
@@ -121,13 +140,15 @@ export const SMUG_OUT_FILES: readonly string[] = clipFrameFiles(SMUG_OUT_CLIP);
 
 /** The clips any pair plays. */
 export function bridgeClips(): SmugClip[] {
-  return [SMUG_IN_CLIP, SMUG_OUT_CLIP, WAVE_IN_CLIP, WAVE_OUT_CLIP, POUT_IN_CLIP, POUT_OUT_CLIP];
+  return [SMUG_IN_CLIP, SMUG_OUT_CLIP, WAVE_IN_CLIP, WAVE_OUT_CLIP, POUT_IN_CLIP, POUT_OUT_CLIP, TALK_IN_CLIP, TALK_OUT_CLIP];
 }
 
 export const WAVE_IN_FILES: readonly string[] = clipFrameFiles(WAVE_IN_CLIP);
 export const WAVE_OUT_FILES: readonly string[] = clipFrameFiles(WAVE_OUT_CLIP);
 export const POUT_IN_FILES: readonly string[] = clipFrameFiles(POUT_IN_CLIP);
 export const POUT_OUT_FILES: readonly string[] = clipFrameFiles(POUT_OUT_CLIP);
+export const TALK_IN_FILES: readonly string[] = clipFrameFiles(TALK_IN_CLIP);
+export const TALK_OUT_FILES: readonly string[] = clipFrameFiles(TALK_OUT_CLIP);
 
 /**
  * Pair table: "<from>><to>" -> frames to play, in order. Keys are the shown
@@ -141,6 +162,8 @@ export const POSE_BRIDGE_PAIRS: Readonly<Record<string, readonly string[]>> = {
   "wave>idle": WAVE_OUT_FILES,
   "idle>pout": POUT_IN_FILES,
   "pout>idle": POUT_OUT_FILES,
+  "idle>talk": TALK_IN_FILES,
+  "talk>idle": TALK_OUT_FILES,
 };
 
 /** Every frame any pair plays, in first-seen order, no repeats. */
@@ -176,6 +199,8 @@ export const WAVE_IN_DWELL_MS: readonly number[] = WAVE_IN_FILES.map(() => SMUG_
 export const WAVE_OUT_DWELL_MS: readonly number[] = WAVE_OUT_FILES.map(() => SMUG_CLIP_FRAME_MS);
 export const POUT_IN_DWELL_MS: readonly number[] = POUT_IN_FILES.map(() => SMUG_CLIP_FRAME_MS);
 export const POUT_OUT_DWELL_MS: readonly number[] = POUT_OUT_FILES.map(() => SMUG_CLIP_FRAME_MS);
+export const TALK_IN_DWELL_MS: readonly number[] = TALK_IN_FILES.map(() => SMUG_CLIP_FRAME_MS);
+export const TALK_OUT_DWELL_MS: readonly number[] = TALK_OUT_FILES.map(() => SMUG_CLIP_FRAME_MS);
 /** A frame always stays up at least this long after its paint, whatever the clock says (0 = the next animation frame). */
 export const BRIDGE_MIN_AFTER_PAINT_MS = 0;
 /**
@@ -195,6 +220,8 @@ export function bridgeDwellsFor(from: string | null, to: string | null): readonl
   if (from === "wave" && to === "idle") return WAVE_OUT_DWELL_MS;
   if (from === "idle" && to === "pout") return POUT_IN_DWELL_MS;
   if (from === "pout" && to === "idle") return POUT_OUT_DWELL_MS;
+  if (from === "idle" && to === "talk") return TALK_IN_DWELL_MS;
+  if (from === "talk" && to === "idle") return TALK_OUT_DWELL_MS;
   return null;
 }
 
@@ -219,6 +246,7 @@ export function bridgeKeyOfSrc(src: string): string | null {
   if (name === "smug1085_hold.webp") return "smug";
   if (name === "wave1126_hold.webp") return "wave";
   if (name === "pout1158_hold.webp") return "pout";
+  if (name === "talk1257_hold.webp") return "talk";
   return null;
 }
 
@@ -612,8 +640,8 @@ export function bridgeWantsFrames(
   wantedKey: string | null,
   shownKey: string | null = null,
 ): boolean {
-  if (wantedKey === "smug" || wantedKey === "wave" || wantedKey === "pout") return true;
-  if ((shownKey === "smug" || shownKey === "wave" || shownKey === "pout") && wantedKey === "idle") return true;
+  if (wantedKey === "smug" || wantedKey === "wave" || wantedKey === "pout" || wantedKey === "talk") return true;
+  if ((shownKey === "smug" || shownKey === "wave" || shownKey === "pout" || shownKey === "talk") && wantedKey === "idle") return true;
   return false;
 }
 
@@ -649,8 +677,8 @@ export function bridgeGate(opts: {
  */
 export type SmugGateStep = "wanted" | "keep-shown" | "exit-to-idle";
 
-/** Hold poses that stay on their hold frame until the next send (smug 1085 at 2.0 s, wave 1126 at 4.083 s, pout 1158 at 2.0 s). */
-export const BRIDGE_HOLD_KEYS = new Set<string>(["smug", "wave", "pout"]);
+/** Hold poses that stay on their hold frame until the next send (smug 1085 at 2.0 s, wave 1126 at 4.083 s, pout 1158 at 2.0 s, talk 1257 f144). */
+export const BRIDGE_HOLD_KEYS = new Set<string>(["smug", "wave", "pout", "talk"]);
 
 export class SmugReleaseGate {
   private seen: number;

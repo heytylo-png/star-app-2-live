@@ -15,6 +15,7 @@ import {
   spriteNeedsWhitePunch,
   waveClipUrls,
   poutClipUrls,
+  talkClipUrls,
 } from "./rai.ts";
 import { punchedSpriteUrl } from "./punch-white.ts";
 
@@ -72,6 +73,7 @@ const POSE_SHEET_SIZE: Record<string, [number, number]> = {
   "rai/smug1085_hold.webp": [720, 1280],
   "rai/wave1126_hold.webp": [720, 1280],
   "rai/pout1158_hold.webp": [720, 1280],
+  "rai/talk1257_hold.webp": [720, 1280],
 };
 
 /** Minimal WebP read: VP8X canvas size + alpha flag (the bridge frames ship as RGBA WebP). */
@@ -112,6 +114,7 @@ const POSE_SHEET_SHA256: Record<string, string> = {
   "rai/wave1126_hold.webp": "bc8895a7ef6818756d90b39a0e5a9129c7c928b566b1651d64f93cb2b8a0a699",
   // Pout hold (2026-10-10 p2): the decoded p2 1158 intro f48 (2.000 s, crossed-arms frown), alpha identical to the clip frame. Not pout_official.png.
   "rai/pout1158_hold.webp": "a049cafa80d198cb3673b0c1932176a13090dfa5558f999c8b87eb541c075aee",
+  "rai/talk1257_hold.webp": "6da9cf8c5f0ae5977d400fab71185e0c8e478bfe3fa7b8a9bb5ad3c308ce84f1",
   // TyLo's 2026-10-06 wave still: white-matte cut, uniform x1.4 to the 1008x1792 idle canvas, no re-tone.
   "rai/wave_official.png": "1c1a888074b64729c9937c9dbc407eebec82f6b6c4699a1ec30a02c2574cddb9",
 };
@@ -134,13 +137,14 @@ describe("smug clips (1085 in / 1084 out)", () => {
     assert.deepEqual(rai.filter((f) => /^smug/.test(f)).sort(), ["smug1084_out.avif", "smug1085_hold.webp", "smug1085_in.avif"]);
     assert.deepEqual(rai.filter((f) => /^wave1\d{3}/.test(f)).sort(), ["wave1126_hold.webp", "wave1126_in.avif", "wave1140_out.avif"]);
     assert.deepEqual(rai.filter((f) => /^pout1\d{3}/.test(f)).sort(), ["pout1158_hold.webp", "pout1158_in.avif", "pout1162_out.avif"]);
+    assert.deepEqual(rai.filter((f) => /^talk1\d{3}/.test(f)).sort(), ["talk1257_hold.webp", "talk1257_in.avif", "talk1261_out.avif"]);
     assert.equal(rai.some((f) => /wave111[04]/.test(f)), false, "1110 / 1114 removed");
     assert.equal(rai.some((f) => /9(56|60|62|68|70|71|73)/.test(f)), false);
   });
 });
 
-describe("bridge file cache keys (wave w6, pout p2)", () => {
-  it("versions only the re-cut wave (w6) and pout (p2) files; smug and idle URLs stay as they were", () => {
+describe("bridge file cache keys (wave w6, pout p2, talk t1)", () => {
+  it("versions only the re-cut wave (w6), pout (p2) and talk (t1) files; smug and idle URLs stay as they were", () => {
     assert.deepEqual(BRIDGE_FILE_VERSION, {
       "rai/wave1126_in.avif": "w6",
       "rai/wave1140_out.avif": "w6",
@@ -148,7 +152,14 @@ describe("bridge file cache keys (wave w6, pout p2)", () => {
       "rai/pout1158_in.avif": "p2",
       "rai/pout1162_out.avif": "p2",
       "rai/pout1158_hold.webp": "p2",
+      "rai/talk1257_in.avif": "t1",
+      "rai/talk1261_out.avif": "t1",
+      "rai/talk1257_hold.webp": "t1",
     });
+    assert.match(SPRITES.poses.talk, /rai\/talk1257_hold\.webp\?v=t1$/);
+    const [tin, tout] = talkClipUrls();
+    assert.match(tin!, /rai\/talk1257_in\.avif\?v=t1$/);
+    assert.match(tout!, /rai\/talk1261_out\.avif\?v=t1$/);
     assert.match(SPRITES.poses.pout, /rai\/pout1158_hold\.webp\?v=p2$/);
     const [pin, pout] = poutClipUrls();
     assert.match(pin!, /rai\/pout1158_in\.avif\?v=p2$/);
@@ -236,7 +247,7 @@ describe("pre-cut RGBA idle + blink sheets", () => {
     }
     assert.match(SPRITES.poses.smug, new RegExp(`smug1085_hold\\.webp\\?v=${PRE_CUT_ALPHA_VERSION}$`));
     assert.equal(spriteNeedsWhitePunch(SPRITES.poses.smug), false);
-    for (const key of ["talk", "peace", "profile", "three_quarter_left", "three_quarter_right"] as const) {
+    for (const key of ["peace", "profile", "three_quarter_left", "three_quarter_right"] as const) {
       assert.match(SPRITES.poses[key], new RegExp(`\\.png\\?v=${PRE_CUT_ALPHA_VERSION}$`), key);
       assert.equal(spriteNeedsWhitePunch(SPRITES.poses[key]), false, key);
     }
