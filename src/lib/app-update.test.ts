@@ -12,8 +12,10 @@ import {
   StaleBuildGuard,
   UPDATE_MAX_TRIES,
   UPDATE_RETRY_AFTER_MS,
+  UPDATE_SETTLE_POLL_MS,
   updateSafeLive,
   updateUrl,
+  withoutReloadParam,
   type UpdateBusy,
 } from "./app-update.ts";
 
@@ -70,7 +72,14 @@ describe("stale-build guard (a resumed PWA must not keep running an old deploy)"
 });
 
 describe("stale-build guard reads live state at decision time (CoS, bc685e8)", () => {
-  type World = { vis: string; busy: UpdateBusy; live: string | null | Error; now: number; reloads: [string, string][] };
+  type World = {
+    vis: string;
+    busy: UpdateBusy;
+    live: string | null | Error;
+    now: number;
+    reloads: [string, string][];
+    timers?: (() => void)[];
+  };
   const mk = (w: World) => {
     const m = new Map<string, string>();
     return new StaleBuildGuard({
@@ -86,6 +95,7 @@ describe("stale-build guard reads live state at decision time (CoS, bc685e8)", (
       wallNow: () => 1_700_000_000_000 + w.now,
       store: () => ({ getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v) }),
       reload: (live, draft) => void w.reloads.push([live, draft]),
+      setTimer: (fn) => void (w.timers ??= []).push(fn),
     });
   };
   const idle = (): UpdateBusy => ({ sending: false, streaming: false, talking: false, callActive: false, callStarting: false });
@@ -144,5 +154,86 @@ describe("stale-build guard reads live state at decision time (CoS, bc685e8)", (
     }
     // 400 s of resumes every 10 s: tries at 0, >=120 s, >=240 s, then capped.
     assert.equal(w.reloads.length, UPDATE_MAX_TRIES);
+  });
+
+  it("voiced reply ending inside the window reloads at speech end (onStop clears talk first, finally clears the stream)", async () => {
+    const w: World = { vis: "visible", busy: { ...idle(), sending: true, streaming: true, talking: true }, live: "new2222", now: 1_000, reloads: [] };
+    const g = mk(w);
+    assert.equal(await g.onVisibility(), false, "resume mid-speech waits");
+    w.now += 14_900;
+    // TTS onStop: talking / sending cleared, the reply's AbortController still set.
+    w.busy = { ...idle(), streaming: true };
+    assert.equal(g.settle(), false);
+    // complete() finally: abortRef = null, then settleUpdate().
+    w.busy = idle();
+    w.now += 5;
+    assert.equal(g.settle(), true);
+    assert.deepEqual(w.reloads, [["new2222", "Pout for me"]]);
+  });
+
+  it("backstop: with no explicit settle call, the in-window re-check applies it once the refs clear", async () => {
+    const w: World = { vis: "visible", busy: { ...idle(), streaming: true, talking: true }, live: "new2222", now: 1_000, reloads: [], timers: [] };
+    const g = mk(w);
+    assert.equal(await g.onVisibility(), false);
+    let ticks = 0;
+    while (w.timers!.length && ticks < 60) {
+      const fn = w.timers!.shift()!;
+      w.now += UPDATE_SETTLE_POLL_MS;
+      ticks++;
+      if (ticks === 10) w.busy = idle(); // speech ends 5 s after resume
+      fn();
+    }
+    assert.equal(w.reloads.length, 1);
+    assert.equal(ticks, 10, "applied on the first re-check after the refs cleared");
+    // window closed and nothing pending: no more timers
+    assert.equal(w.timers!.length, 0);
+  });
+
+  it("the backstop stops when the window closes (busy for the whole window: no reload, no endless timer)", async () => {
+    const w: World = { vis: "visible", busy: { ...idle(), talking: true }, live: "new2222", now: 1_000, reloads: [], timers: [] };
+    const g = mk(w);
+    await g.onVisibility();
+    let ticks = 0;
+    while (w.timers!.length && ticks < 1000) {
+      const fn = w.timers!.shift()!;
+      w.now += UPDATE_SETTLE_POLL_MS;
+      ticks++;
+      fn();
+    }
+    assert.equal(w.reloads.length, 0);
+    assert.ok(ticks <= 41, String(ticks));
+  });
+});
+
+describe("update reload always reaches the network (CoS, f84389f)", () => {
+  it("each attempt is a distinct URL; v is kept, r is unique and dropped after load", () => {
+    const a = updateUrl("abc1234", 1, 1_000);
+    const b = updateUrl("abc1234", 2, 121_000);
+    assert.notEqual(a, b);
+    assert.match(b, /[?&]v=abc1234&r=2-/);
+    assert.equal(withoutReloadParam("https://x.io/star-app-2-live/?v=abc1234&r=2-abc#t"), "/star-app-2-live/?v=abc1234#t");
+    assert.equal(withoutReloadParam("https://x.io/star-app-2-live/?v=abc1234"), null);
+  });
+
+  it("every busy-clearing path re-triggers settle after the ref is cleared; SW navigations revalidate", () => {
+    const app = readFileSync(join(root, "src/components/rai-app.tsx"), "utf8");
+    // complete() finally: after abortRef = null
+    const fin = app.indexOf("    } finally {\n      abortRef.current = null;");
+    assert.ok(fin > 0);
+    const finEnd = app.indexOf("\n  }\n", fin);
+    assert.ok(app.slice(fin, finEnd).includes("settleUpdate();"), "finally");
+    // TTS onStop
+    const onStop = app.indexOf("onStop: () => {");
+    assert.ok(app.slice(onStop, app.indexOf("},\n", app.indexOf("setSending(false);", onStop))).includes("settleUpdate();"), "onStop");
+    for (const fn of ["function stop()", "function hangUp()", "function bargeInTap()"]) {
+      const i = app.indexOf(fn);
+      const body = app.slice(i, app.indexOf("\n  }\n", i));
+      assert.ok(body.trimEnd().endsWith("settleUpdate();"), fn);
+    }
+    const fail = app.indexOf(".catch((err) => {\n        callStartingRef.current = false;");
+    assert.ok(app.slice(fail, fail + 200).includes("settleUpdate();"), "call start failure");
+    assert.match(app, /stripReloadParam\(\);/);
+    const sw = readFileSync(join(root, "public/sw.js"), "utf8");
+    assert.match(sw, /req\.mode === "navigate"[\s\S]{0,300}fetch\(new Request\(req, \{ cache: "no-cache" \}\)\)/);
   });
 });

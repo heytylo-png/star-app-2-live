@@ -95,6 +95,7 @@ import {
   fetchLiveBuild,
   runningBuild,
   StaleBuildGuard,
+  stripReloadParam,
   takeUpdateDraft,
 } from "@/lib/app-update";
 import { streamChat } from "@/lib/stream-chat";
@@ -664,7 +665,12 @@ function RaiReady() {
       draft: () => updateDraftRef.current,
     });
   }
+  /** A busy ref was just cleared (turn / speech / call over): let a pending update apply. */
+  const settleUpdate = () => {
+    updateGuardRef.current?.settle();
+  };
   useEffect(() => {
+    stripReloadParam();
     const guard = updateGuardRef.current!;
     const onResume = () => {
       void guard.onVisibility();
@@ -1394,6 +1400,7 @@ function RaiReady() {
                     sendingRef.current = false;
                     setSending(false);
                   }
+                  settleUpdate();
                 },
               },
             );
@@ -1459,6 +1466,8 @@ function RaiReady() {
         listenBackoffAttemptRef.current = 0;
         scheduleCallListenRestart(CALL_POST_TTS_COOLDOWN_MS);
       }
+      // The reply is fully over (abortRef cleared above): a pending update may apply now.
+      settleUpdate();
     }
   }
 
@@ -1530,6 +1539,7 @@ function RaiReady() {
     clearTextChew();
     setCallListening(false);
     setAmp(0);
+    settleUpdate();
   }
 
   function hangUp() {
@@ -1548,7 +1558,7 @@ function RaiReady() {
     stop();
     stopCallMic();
     // Thread / memory / sheet stay. Drop the listen placeholder so the last line shows.
-    setCaption((c) => (c === "Listening…" || c === callListenLabel() ? "" : c));
+    setCaption((c) => (c === "Listening…" || c === callListenLabel() ? "" : c));    settleUpdate();
   }
   hangUpRef.current = hangUp;
 
@@ -1572,6 +1582,7 @@ function RaiReady() {
     stopRec();
     listenBackoffAttemptRef.current = 0;
     scheduleCallListenRestart(CALL_POST_TTS_COOLDOWN_MS);
+    settleUpdate();
   }
 
   function toggleCall() {
@@ -1620,6 +1631,7 @@ function RaiReady() {
         setCallStarting(false);
         if (startId !== callStartGenRef.current) {
           stopMediaTracks(stream);
+          settleUpdate();
           return;
         }
         micStreamRef.current = stream;
@@ -1643,6 +1655,7 @@ function RaiReady() {
       .catch((err) => {
         callStartingRef.current = false;
         setCallStarting(false);
+        settleUpdate();
         if (startId !== callStartGenRef.current) return;
         stopCallMic();
         setCallNotice(callMicNotice(classifyGetUserMediaError(err)));

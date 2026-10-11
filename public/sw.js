@@ -61,8 +61,10 @@ self.addEventListener("fetch", (event) => {
 
   // App navigations → network-first, offline shell fallback
   if (req.mode === "navigate") {
+    // Always revalidate the page itself (an update reload must reach the network, never the
+    // browser's max-age=600 copy). The cached index stays the offline fallback.
     event.respondWith(
-      fetch(req)
+      fetch(new Request(req, { cache: "no-cache" }))
         .then((res) => {
           const copy = res.clone();
           void caches.open(CACHE).then((c) => c.put(BASE + "index.html", copy));
