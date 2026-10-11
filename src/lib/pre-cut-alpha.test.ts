@@ -110,8 +110,8 @@ const POSE_SHEET_SHA256: Record<string, string> = {
   "rai/smug1085_hold.webp": "45cd6eea6c438b340e1d33c8aaeb6003828b6dfb7cc40ed9ed49359643c75cbf",
   // Wave hold (2026-10-10 w6): the decoded w6 intro f98 (4.083 s, first curved smile), alpha identical to the clip frame, colour WebP q95.
   "rai/wave1126_hold.webp": "bc8895a7ef6818756d90b39a0e5a9129c7c928b566b1651d64f93cb2b8a0a699",
-  // Pout hold (2026-10-10 p1): the decoded p1 1158 intro f48 (2.000 s, crossed-arms frown), alpha identical to the clip frame. Not pout_official.png.
-  "rai/pout1158_hold.webp": "45a42db76d26f4f2a0093ca55dcafaa7964e4de164cc82ab723750c38a1fb7b5",
+  // Pout hold (2026-10-10 p2): the decoded p2 1158 intro f48 (2.000 s, crossed-arms frown), alpha identical to the clip frame. Not pout_official.png.
+  "rai/pout1158_hold.webp": "a049cafa80d198cb3673b0c1932176a13090dfa5558f999c8b87eb541c075aee",
   // TyLo's 2026-10-06 wave still: white-matte cut, uniform x1.4 to the 1008x1792 idle canvas, no re-tone.
   "rai/wave_official.png": "1c1a888074b64729c9937c9dbc407eebec82f6b6c4699a1ec30a02c2574cddb9",
 };
@@ -122,8 +122,8 @@ const SMUG_CLIP_SHA256: Record<string, string> = {
   "rai/smug1084_out.avif": "c44e3af0a6233c9979747710cab1c731e5d96691dc3816628978f227f9ff1b50",
   "rai/wave1126_in.avif": "265b541c8333150d334628db096234507160a328451eb54f8a16c081dac3c9a5",
   "rai/wave1140_out.avif": "58cf99bbaedb26006e5aa6e653eb24851751e1efb245292ff6053afa7b9fa3e5",
-  "rai/pout1158_in.avif": "31d498222e42a972ba8f99e7440eb10580479ae9e5cd2739bae4ac2e102d4082",
-  "rai/pout1162_out.avif": "c331ab5eaf0bf19d3e1a1d053621e5dcb6fec243206b7cda3473b4adf108bcc0",
+  "rai/pout1158_in.avif": "495b8d2ce309c6e3aae50f013182c0ef8159841fd4050f5c61c791a4da0eff1c",
+  "rai/pout1162_out.avif": "5278c12f28283eb2046c31943c49967857b2799496648e68dc63da03400112dc",
 };
 
 describe("smug clips (1085 in / 1084 out)", () => {
@@ -139,20 +139,20 @@ describe("smug clips (1085 in / 1084 out)", () => {
   });
 });
 
-describe("bridge file cache keys (wave w6, pout p1)", () => {
-  it("versions only the re-cut wave (w6) and pout (p1) files; smug and idle URLs stay as they were", () => {
+describe("bridge file cache keys (wave w6, pout p2)", () => {
+  it("versions only the re-cut wave (w6) and pout (p2) files; smug and idle URLs stay as they were", () => {
     assert.deepEqual(BRIDGE_FILE_VERSION, {
       "rai/wave1126_in.avif": "w6",
       "rai/wave1140_out.avif": "w6",
       "rai/wave1126_hold.webp": "w6",
-      "rai/pout1158_in.avif": "p1",
-      "rai/pout1162_out.avif": "p1",
-      "rai/pout1158_hold.webp": "p1",
+      "rai/pout1158_in.avif": "p2",
+      "rai/pout1162_out.avif": "p2",
+      "rai/pout1158_hold.webp": "p2",
     });
-    assert.match(SPRITES.poses.pout, /rai\/pout1158_hold\.webp\?v=p1$/);
+    assert.match(SPRITES.poses.pout, /rai\/pout1158_hold\.webp\?v=p2$/);
     const [pin, pout] = poutClipUrls();
-    assert.match(pin!, /rai\/pout1158_in\.avif\?v=p1$/);
-    assert.match(pout!, /rai\/pout1162_out\.avif\?v=p1$/);
+    assert.match(pin!, /rai\/pout1158_in\.avif\?v=p2$/);
+    assert.match(pout!, /rai\/pout1162_out\.avif\?v=p2$/);
     assert.match(SPRITES.poses.wave, /rai\/wave1126_hold\.webp\?v=w6$/);
     assert.equal(spriteNeedsWhitePunch(SPRITES.poses.wave), false);
     const [win, wout] = waveClipUrls();
