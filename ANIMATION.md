@@ -172,3 +172,8 @@ bundle. Resuming an installed PWA does not navigate, so neither the network-firs
 `star-rai-build` stamp (`?build-check=`, never cached by the SW) and, if it is a different deploy, reloads onto
 `?v=<build>` once nothing is in flight (no send, reply, speech or call), carrying the composer draft across.
 Also: the 30 s bridge valve no longer cuts idle → pout to the hold; Pout waits on idle until 1158 f0 is decoded.
+Follow-up (CoS on bc685e8): whether anything is in flight is now read from the live refs (send, stream, talk, call)
+plus `document.visibilityState` at the moment of the decision (`StaleBuildGuard`). Before, it came from a value saved at render,
+so a `stop()` while hidden could leave it stale and only the second resume applied the update. A reload that lands
+on a stale CDN copy is retried after 2 min, at most 3 times. The CDN ignores query strings (max-age=600); see
+the app-update.ts header for the possible lag of up to ~10 min.
