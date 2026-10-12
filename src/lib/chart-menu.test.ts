@@ -306,6 +306,15 @@ describe("Chart menu contents", () => {
     const panel = readFileSync(join(root, "src/components/chart-panel.tsx"), "utf8");
     assert.match(panel, /No diary yet/);
     assert.match(panel, /Last diary/);
+    const diaryAt = panel.indexOf("Last diary");
+    const diaryRow = panel.slice(diaryAt, panel.indexOf("{diaryLine}", diaryAt));
+    assert.match(diaryRow, /truncate/);
+    assert.match(diaryRow, /max-w-full/);
+    assert.doesNotMatch(diaryRow, /whitespace-pre-line/);
+    const readingAt = panel.indexOf("Daily astronomy reading");
+    const readingRow = panel.slice(readingAt, panel.indexOf("{reading}", readingAt));
+    assert.match(readingRow, /whitespace-pre-line/);
+    assert.doesNotMatch(readingRow, /truncate/);
   });
 });
 
