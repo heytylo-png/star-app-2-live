@@ -124,7 +124,7 @@ const SMUG_CLIP_SHA256: Record<string, string> = {
   "rai/smug1085_in.avif": "0c2c6a4bb9ab5b995720b2026f8919dfe71632a3d19902fa3ac905c870ec5351",
   "rai/smug1084_out.avif": "c44e3af0a6233c9979747710cab1c731e5d96691dc3816628978f227f9ff1b50",
   "rai/wave1292_in.avif": "6ebcb8d0ce943bbe908e848e5abde5eade4b3123cfd35de15e4a7bad6264dd18",
-  "rai/wave1140_out.avif": "74540144c09194281c81c25162b6051ca989bfb6f41e611db29417905c9a670f",
+  "rai/wave1140_out.avif": "b897a04f38a01cb4af78c1dd88d0e2e1fc1c0f27580dace2a86c7aefc7a7b683",
   "rai/pout1158_in.avif": "495b8d2ce309c6e3aae50f013182c0ef8159841fd4050f5c61c791a4da0eff1c",
   "rai/pout1162_out.avif": "5278c12f28283eb2046c31943c49967857b2799496648e68dc63da03400112dc",
 };
@@ -144,11 +144,11 @@ describe("smug clips (1085 in / 1084 out)", () => {
   });
 });
 
-describe("bridge file cache keys (wave w7, pout p2, talk t1)", () => {
+describe("bridge file cache keys (wave w7/w8, pout p2, talk t1)", () => {
   it("versions only the re-cut wave (w7), pout (p2) and talk (t1) files; smug and idle URLs stay as they were", () => {
     assert.deepEqual(BRIDGE_FILE_VERSION, {
       "rai/wave1292_in.avif": "w7",
-      "rai/wave1140_out.avif": "w7",
+      "rai/wave1140_out.avif": "w8",
       "rai/wave1292_hold.webp": "w7",
       "rai/pout1158_in.avif": "p2",
       "rai/pout1162_out.avif": "p2",
@@ -169,7 +169,7 @@ describe("bridge file cache keys (wave w7, pout p2, talk t1)", () => {
     assert.equal(spriteNeedsWhitePunch(SPRITES.poses.wave), false);
     const [win, wout] = waveClipUrls();
     assert.match(win!, /rai\/wave1292_in\.avif\?v=w7$/);
-    assert.match(wout!, /rai\/wave1140_out\.avif\?v=w7$/);
+    assert.match(wout!, /rai\/wave1140_out\.avif\?v=w8$/);
     assert.match(SPRITES.poses.smug, new RegExp(`smug1085_hold\\.webp\\?v=${PRE_CUT_ALPHA_VERSION}$`));
     assert.match(SPRITES.poses.idle, new RegExp(`idle\\.png\\?v=${PRE_CUT_ALPHA_VERSION}$`));
     for (const u of smugClipUrls()) assert.equal(u.includes("?"), false, u);

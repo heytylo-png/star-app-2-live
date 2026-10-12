@@ -731,10 +731,12 @@ export function spriteNeedsWhitePunch(src: string): boolean {
  *   own mouth (mouth patch only), so there is no one-frame snap. The hold is re-exported from the decoded f98 (alpha identical).
  *   w7 (TyLo 2026-10-12 10:19): 1126 is out. Intro = 1292, all 121 frames; hold = its decoded f120 (lossless).
  *   1140 f0-f7: the mouth ease now starts from the 1292 hold's flat mouth (was the 1126 smile); mouth patch only.
+ *   w8 (TyLo 2026-10-12 11:12): 1140 f0-f19 eased so face and legs slide from the 1292 hold (f0 = the hold's face
+ *   position and leg stance, cosine back to the untouched 1140 by f20). Only 1140 changes; the 1292 files stay w7.
  */
 export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
   "rai/wave1292_in.avif": "w7",
-  "rai/wave1140_out.avif": "w7",
+  "rai/wave1140_out.avif": "w8",
   "rai/wave1292_hold.webp": "w7",
   // Pout (1158 in / hold f48 / 1162 out): p1 = face skin re-matched to idle; p2 = face above the jaw only
   // (neck / under-chin shadow, jaw line, mouth line + lips keep their 49aa88b pixels), 2026-10-10.
