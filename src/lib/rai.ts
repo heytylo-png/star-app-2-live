@@ -742,8 +742,10 @@ export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
   // Talk (1257 in / hold f144 / 1276 out), 2026-10-11: per-frame pout fit (camera push), white matte cut,
   // per-zone skin match + face above the jaw (pout p2), alpha-only post. Muted (no audio track).
   // t2: the rest clip is 1276 (TyLo 18:06 "Talk rest swap"); 1257 and the hold stay byte-identical at t1.
+  // t3: 1276 f129-f144 ease into idle.png (TyLo 20:12): translate ease to idle's registration + head flow
+  // morph, so f144 lands on idle (face dL 23.4 -> 2.7, 0 px offset). f0-f128 keep their t2 coded frames.
   "rai/talk1257_in.avif": "t1",
-  "rai/talk1276_out.avif": "t2",
+  "rai/talk1276_out.avif": "t3",
   "rai/talk1257_hold.webp": "t1",
 };
 
