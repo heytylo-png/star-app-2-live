@@ -121,7 +121,9 @@ export function ChartMenu({ open, userSun, birthDate, onAsk, onClose, anchorRef 
 
       <div className="mt-1.5 border-t border-border pt-1.5">
         <p className="px-0.5 text-[0.65rem] tracking-wide text-subtle uppercase">Last diary</p>
-        <p className={`mt-1 px-0.5 text-sm leading-snug ${diaryEmpty ? "text-subtle" : "text-muted"}`}>
+        <p
+          className={`mt-1 min-w-0 max-w-full truncate px-0.5 text-sm leading-snug ${diaryEmpty ? "text-subtle" : "text-muted"}`}
+        >
           {diaryLine}
         </p>
       </div>
