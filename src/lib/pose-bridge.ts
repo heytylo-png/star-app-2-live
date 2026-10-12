@@ -1,11 +1,11 @@
 /**
  * Helix pose bridge: in-between motion played when the shown sheet changes between a
- * paired set of poses. Pairs: idle <-> smug (1085/1084), idle <-> wave (1126/1140),
+ * paired set of poses. Pairs: idle <-> smug (1085/1084), idle <-> wave (1292/1140),
  * idle <-> pout (1158/1162) and idle <-> talk (1257/1276).
  *
  * Both pairs are two real videos played as video, every source frame in order at their
  * native 24 fps. The intro runs from 0.000 s to its hold frame only (smug 1085: 2.000 s,
- * frames 0..48; wave 1126: 4.083 s, frames 0..98; pout 1158: 2.000 s, frames 0..48; talk 1257: its full
+ * frames 0..48; wave 1292: its full 5.04 s, frames 0..120; pout 1158: 2.000 s, frames 0..48; talk 1257: its full
  * 6.04 s, frames 0..144) and lands on a hold WebP (= that exact
  * frame) until the next send. The rest runs its full 145 frames forward onto the live idle
  * sheet. No reverse, no audio (the clips are AVIF image sequences). Smug, wave, pout and talk each have
@@ -45,17 +45,14 @@ export const SMUG_OUT_CLIP: SmugClip = { pair: "smug", key: "out", file: "rai/sm
 export const SMUG_HOLD_FILE = "rai/smug1085_hold.webp";
 
 /**
- * Wave intro (TyLo 2026-10-08): 1126 from 0.000 s to frame 98 (4.083 s) inclusive (99 frames).
- * Arms-down glare → wave arm out (1 s) → palm up, other hand on hip (2 s) → smile. The 4.000 s
- * frame's mouth is still flat; f98 is the first frame where the smile curves (w5, TyLo 13:30:
- * "hold the first frame where it actually curves... Do not play past that frame"). Nothing past
- * f98 is in the file (the 2 s frame is still the glare).
+ * Wave intro (TyLo 2026-10-12 10:19, w7): 1292, every frame f0..f120 (121 frames, 5.04 s) played forward.
+ * Arms-down glare → wave arm up → palm up, other hand on hip (glare, flat mouth). 1126 is out.
  */
-export const WAVE_IN_CLIP: SmugClip = { pair: "wave", key: "in", file: "rai/wave1126_in.avif", frames: 99 };
+export const WAVE_IN_CLIP: SmugClip = { pair: "wave", key: "in", file: "rai/wave1292_in.avif", frames: 121 };
 /** Wave rest: 1140 full length (145 frames, 6.04 s). Wave hand comes down → both arms down → idle glare. */
 export const WAVE_OUT_CLIP: SmugClip = { pair: "wave", key: "out", file: "rai/wave1140_out.avif", frames: 145 };
-/** Wave hold sheet: 1126 frame 98 (4.083 s, first curved smile) = the intro's last frame, 720×1280 RGBA WebP. */
-export const WAVE_HOLD_FILE = "rai/wave1126_hold.webp";
+/** Wave hold sheet: 1292 frame 120 = the intro's exact last frame (decoded, lossless), 720×1280 RGBA WebP. */
+export const WAVE_HOLD_FILE = "rai/wave1292_hold.webp";
 
 /**
  * Pout intro (TyLo 2026-10-10): 1158 from 0.000 s to 2.000 s inclusive (49 frames). Arms-down
@@ -89,8 +86,8 @@ export const TALK_HOLD_FILE = "rai/talk1257_hold.webp";
 export const SMUG_CLIP_SHEET = { w: 720, h: 1280 } as const;
 export const SMUG_CLIP_BOX = { x: 112, y: 0, w: 448, h: 1280 } as const;
 /**
- * Wave clips (1126 720×1280 and 1140 784×1168) are white-matte cuts registered to idle.png in the
- * same 720×1280 sheet space: 1126 uniform ×1.040, 1140 uniform ×1.118, each anchored on the soles
+ * Wave clips (1292 720×1280 and 1140 784×1168) are white-matte cuts registered to idle.png in the
+ * same 720×1280 sheet space: 1292 uniform ×1.284, 1140 uniform ×1.118, each anchored on the soles
  * and feet centre of idle (feet, scale and head land on idle and on each other at the joins).
  * The raised wave arm reaches far wider than the smug band, so wave has its own band: x 0..672.
  * Every frame of both clips has a fully transparent margin at the band's left and right edges
@@ -247,7 +244,7 @@ export function bridgeKeyOfSrc(src: string): string | null {
   const name = path.slice(path.lastIndexOf("/") + 1);
   if (name === "idle.png" || /^idle_(blink|mouth)_\d\d_/.test(name)) return "idle";
   if (name === "smug1085_hold.webp") return "smug";
-  if (name === "wave1126_hold.webp") return "wave";
+  if (name === "wave1292_hold.webp") return "wave";
   if (name === "pout1158_hold.webp") return "pout";
   if (name === "talk1257_hold.webp") return "talk";
   return null;
@@ -680,7 +677,7 @@ export function bridgeGate(opts: {
  */
 export type SmugGateStep = "wanted" | "keep-shown" | "exit-to-idle";
 
-/** Hold poses that stay on their hold frame until the next send (smug 1085 at 2.0 s, wave 1126 at 4.083 s, pout 1158 at 2.0 s, talk 1257 f144). */
+/** Hold poses that stay on their hold frame until the next send (smug 1085 at 2.0 s, wave 1292 f120, pout 1158 at 2.0 s, talk 1257 f144). */
 export const BRIDGE_HOLD_KEYS = new Set<string>(["smug", "wave", "pout", "talk"]);
 
 export class SmugReleaseGate {

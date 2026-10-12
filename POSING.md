@@ -17,7 +17,7 @@ public/
     pout_official.png
     tired_official.png
     smug1085_hold.webp      # smug hold (1085 at 2.000 s); bridge clips: smug1085_in.avif (0-2 s), smug1084_out.avif (full)
-    wave1126_hold.webp      # wave hold (1126 f98, 4.083 s, first curved smile); bridge clips: wave1126_in.avif (f0-f98), wave1140_out.avif (full)
+    wave1292_hold.webp      # wave hold (1292 f120, the intro's last frame); bridge clips: wave1292_in.avif (f0-f120, all frames), wave1140_out.avif (full)
     wave_official.png       # TyLo's 2026-10-06 wave still (1008×1792 RGBA, white-matte cut, no re-tone). Not on the Wave key. Not poses/wave.png / front_wave.png
     pout1158_hold.webp      # pout hold (1158 f48, 2.000 s, crossed-arms frown); bridge clips: pout1158_in.avif (0-2 s), pout1162_out.avif (full)
     hold_official.png       # NOT front_hold.png
@@ -57,7 +57,7 @@ Live chat keys use the **morning official pack** under `public/rai/`. Do not poi
 | `pout` | `rai/pout1158_hold.webp` (1158 f48 hold; 1158 in / 1162 out clips) |
 | `tired` | `rai/tired_official.png` |
 | `smug` | `rai/smug1085_hold.webp` |
-| `wave` | `rai/wave1126_hold.webp` via the idle↔wave 1126/1140 video bridge (1126 0–4.0 s, hold on the 4.0 s smile frame, 1140 out; TyLo 2026-10-08, replaces 1110/1114). `rai/wave_official.png` is TyLo's 2026-10-06 still (right hand up waving, left hand on hip, glare, sailor uniform): white-matte cut, uniform ×1.4 onto the 1008×1792 idle canvas, feet line = idle, pixels as supplied (no re-tone). It replaces the old retoned dark sheet and is not painted by the live Wave key. Not `star-rai/poses/wave.png` (Helix 1152×1728 3/4) and not `rai/front_wave.png` (Expo alt). |
+| `wave` | `rai/wave1292_hold.webp` via the idle↔wave 1292/1140 video bridge (1292 all 121 frames, hold on its last frame, 1140 out; TyLo 2026-10-12, replaces 1126). `rai/wave_official.png` is TyLo's 2026-10-06 still (right hand up waving, left hand on hip, glare, sailor uniform): white-matte cut, uniform ×1.4 onto the 1008×1792 idle canvas, feet line = idle, pixels as supplied (no re-tone). It replaces the old retoned dark sheet and is not painted by the live Wave key. Not `star-rai/poses/wave.png` (Helix 1152×1728 3/4) and not `rai/front_wave.png` (Expo alt). |
 | `hold` | `rai/hold_official.png` |
 | `embarrassed` | `rai/embarrassed_official.png` |
 | `scold` | `rai/scold_official.png` |
