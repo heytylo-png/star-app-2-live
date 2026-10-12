@@ -72,6 +72,8 @@ TyLo paste-15 replaces the 968/973 stills (and every earlier smug asset) with tw
 
 - w8 (TyLo 2026-10-12 11:12): 1140 f0–f19 eased from the 1292 hold (f807/bridge/w1292/e1140/ease.py, the 1276 landing-ease approach reversed): head slid by the hold face offset (+3,+4) and cross-faded except the mouth patch; raised arm slid rigidly; body flow-morphed; legs slid per leg and per row from the hold's stance (146 px) to 1140's (316 px), cosine weight to 0 by f20. f20+ input frames are byte-identical. `?v=w8` on 1140 only.
 
+- w9 (TyLo 2026-10-12 16:25): "Remove the slide. Darken the skin on 1292 so it matches the official Rai. Leave the start of 1140 as a quick snap." 1140 = the w7 bytes again (no slide). 1292 skin darkened per frame (f807/bridge/w1292/s9/dark.py; skin only, mouth/hair/eyes/uniform and alpha unchanged); hold = decoded new f120, lossless. `?v=w9` on all three wave files.
+
 The 1126 section below is history.
 
 ### 1126 / 1140 video (idle ↔ wave, 2026-10-08; replaces 1110 / 1114)

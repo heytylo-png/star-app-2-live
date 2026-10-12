@@ -733,11 +733,14 @@ export function spriteNeedsWhitePunch(src: string): boolean {
  *   1140 f0-f7: the mouth ease now starts from the 1292 hold's flat mouth (was the 1126 smile); mouth patch only.
  *   w8 (TyLo 2026-10-12 11:12): 1140 f0-f19 eased so face and legs slide from the 1292 hold (f0 = the hold's face
  *   position and leg stance, cosine back to the untouched 1140 by f20). Only 1140 changes; the 1292 files stay w7.
+ *   w9 (TyLo 2026-10-12 16:25): slide removed; 1140 is the w7 file again (byte-identical, 1292-based mouth re-ease on
+ *   f0-f7 only, quick snap at the join). 1292 skin darkened on every frame (wider skin mask incl. lit, yellower skin;
+ *   L = min(idle, 1140 f0) - 1.5 per face / arms / legs, tan a/b of 1140); hold rebuilt from the new f120 (lossless).
  */
 export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
-  "rai/wave1292_in.avif": "w7",
-  "rai/wave1140_out.avif": "w8",
-  "rai/wave1292_hold.webp": "w7",
+  "rai/wave1292_in.avif": "w9",
+  "rai/wave1140_out.avif": "w9",
+  "rai/wave1292_hold.webp": "w9",
   // Pout (1158 in / hold f48 / 1162 out): p1 = face skin re-matched to idle; p2 = face above the jaw only
   // (neck / under-chin shadow, jaw line, mouth line + lips keep their 49aa88b pixels), 2026-10-10.
   "rai/pout1158_in.avif": "p2",
