@@ -70,6 +70,8 @@ TyLo paste-15 replaces the 968/973 stills (and every earlier smug asset) with tw
 - Exit: `public/rai/wave1140_out.avif` unchanged except 1140 f0–f7's mouth ease, which now starts from the 1292 hold's flat mouth instead of the 1126 smile (same w6b morph, mouth patch only, alpha identical; f8+ inputs byte-identical, re-encoded at crf 26).
 - Pipeline (f807/bridge/w1292): uniform registration ×1.284 onto idle (soles + feet centre), white-matte cut (engine/sheets_1292.py, wave hand boxes + finger gaps), per-zone skin match to idle, face-above-jaw p2, alpha-only post (specks, leg fringe, thigh gap, finger gaps), libaom crf 26/22, 672×1280 band at x 0.
 
+- w8 (TyLo 2026-10-12 11:12): 1140 f0–f19 eased from the 1292 hold (f807/bridge/w1292/e1140/ease.py, the 1276 landing-ease approach reversed): head slid by the hold face offset (+3,+4) and cross-faded except the mouth patch; raised arm slid rigidly; body flow-morphed; legs slid per leg and per row from the hold's stance (146 px) to 1140's (316 px), cosine weight to 0 by f20. f20+ input frames are byte-identical. `?v=w8` on 1140 only.
+
 The 1126 section below is history.
 
 ### 1126 / 1140 video (idle ↔ wave, 2026-10-08; replaces 1110 / 1114)
