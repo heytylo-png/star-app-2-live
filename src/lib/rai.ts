@@ -398,14 +398,14 @@ export function isSmugPathSheetSrc(src: string): boolean {
 }
 
 /**
- * Sheets allowed on the idle↔wave beat: idle sheets, the 1126 intro clip, wave1126_hold,
+ * Sheets allowed on the idle↔wave beat: idle sheets, the 1292 intro clip, wave1292_hold,
  * the 1140 rest clip. Anything else must not paint during a Wave send.
  */
 export function isWavePathSheetSrc(src: string): boolean {
   const path = src.split(/[?#]/)[0] ?? src;
   const name = path.slice(path.lastIndexOf("/") + 1);
-  if (name === "wave1126_hold.webp") return true;
-  if (name === "wave1126_in.avif") return true;
+  if (name === "wave1292_hold.webp") return true;
+  if (name === "wave1292_in.avif") return true;
   if (name === "wave1140_out.avif") return true;
   if (name === "idle.png") return true;
   if (/^idle_blink_/.test(name)) return true;
@@ -664,7 +664,7 @@ export const PRE_CUT_ALPHA_FILES = [
   "rai/laugh_official.png",
   "rai/surprise_official.png",
   "rai/smug1085_hold.webp",
-  "rai/wave1126_hold.webp",
+  "rai/wave1292_hold.webp",
   "rai/pout1158_hold.webp",
   "rai/talk1257_hold.webp",
   "rai/content_official.png",
@@ -679,7 +679,7 @@ export const PRE_CUT_ALPHA_FILES = [
   "rai/scold_official.png",
   "rai/tired_official.png",
   // TyLo's 2026-10-06 wave still (white-matte cut, x1.4 onto the idle canvas). Not on the Wave key:
-  // that key is the 1126/1140 bridge + wave1126_hold.webp.
+  // that key is the 1292/1140 bridge + wave1292_hold.webp.
   "rai/wave_official.png",
   "rai/peace.png",
   "rai/side_profile.png",
@@ -729,11 +729,13 @@ export function spriteNeedsWhitePunch(src: string): boolean {
  *   w6 (2026-10-10): CoS fa14ed7 fixes. 1126 f0-30: the opaque white thigh-gap patch is alpha 0
  *   (alpha only), f41-45 finger-gap matte cleared. 1140 f0-f7: the hold's smile morphs into 1140's
  *   own mouth (mouth patch only), so there is no one-frame snap. The hold is re-exported from the decoded f98 (alpha identical).
+ *   w7 (TyLo 2026-10-12 10:19): 1126 is out. Intro = 1292, all 121 frames; hold = its decoded f120 (lossless).
+ *   1140 f0-f7: the mouth ease now starts from the 1292 hold's flat mouth (was the 1126 smile); mouth patch only.
  */
 export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
-  "rai/wave1126_in.avif": "w6",
-  "rai/wave1140_out.avif": "w6",
-  "rai/wave1126_hold.webp": "w6",
+  "rai/wave1292_in.avif": "w7",
+  "rai/wave1140_out.avif": "w7",
+  "rai/wave1292_hold.webp": "w7",
   // Pout (1158 in / hold f48 / 1162 out): p1 = face skin re-matched to idle; p2 = face above the jaw only
   // (neck / under-chin shadow, jaw line, mouth line + lips keep their 49aa88b pixels), 2026-10-10.
   "rai/pout1158_in.avif": "p2",
@@ -784,7 +786,7 @@ export const LIVE_POSE_FILES = {
   pout: POUT_HOLD_FILE,
   tired: "rai/tired_official.png",
   smug: SMUG_HOLD_FILE,
-  /** Wave hold: 1126 frame 98 (4.083 s; wave palm up, other hand on hip, first curved smile). */
+  /** Wave hold: 1292 frame 120 (wave palm up, other hand on hip, glare). */
   wave: WAVE_HOLD_FILE,
   hold: "rai/hold_official.png",
   embarrassed: "rai/embarrassed_official.png",
@@ -999,7 +1001,7 @@ export function smugClipUrls(): string[] {
   return [ASSET(SMUG_IN_CLIP.file), ASSET(SMUG_OUT_CLIP.file)];
 }
 
-/** The sheet of the idle <-> wave beat: wave1126_hold. */
+/** The sheet of the idle <-> wave beat: wave1292_hold. */
 export function waveBeatSheetUrls(): string[] {
   return [SPRITES.poses.wave];
 }
@@ -1024,7 +1026,7 @@ export function poutClipUrls(): string[] {
   return [ASSET(POUT_IN_CLIP.file), ASSET(POUT_OUT_CLIP.file)];
 }
 
-/** The two clips of the idle <-> wave beat: 1126 intro (f0-f98, 0-4.083 s), 1140 rest. */
+/** The two clips of the idle <-> wave beat: 1292 intro (f0-f120, all frames), 1140 rest. */
 export function waveClipUrls(): string[] {
   return [ASSET(WAVE_IN_CLIP.file), ASSET(WAVE_OUT_CLIP.file)];
 }

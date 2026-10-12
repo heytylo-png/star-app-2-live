@@ -241,7 +241,7 @@ describe("live key → file map", () => {
     pout: "rai/pout1158_hold.webp",
     tired: "rai/tired_official.png",
     smug: "rai/smug1085_hold.webp",
-    wave: "rai/wave1126_hold.webp",
+    wave: "rai/wave1292_hold.webp",
     hold: "rai/hold_official.png",
     embarrassed: "rai/embarrassed_official.png",
     scold: "rai/scold_official.png",
@@ -269,10 +269,10 @@ describe("live key → file map", () => {
     assert.doesNotMatch(SPRITES.poses.wave, /front_wave|star-rai\/poses\/wave/);
   });
 
-  it("wave pose is the 1126 hold WebP (720×1280, exact 4.0s frame)", () => {
-    assert.equal(LIVE_POSE_FILES.wave, "rai/wave1126_hold.webp");
-    assert.match(SPRITES.poses.wave, /rai\/wave1126_hold\.webp/);
-    const buf = readFileSync(join(publicRoot, "rai/wave1126_hold.webp"));
+  it("wave pose is the 1292 hold WebP (720×1280, the intro's exact last frame f120)", () => {
+    assert.equal(LIVE_POSE_FILES.wave, "rai/wave1292_hold.webp");
+    assert.match(SPRITES.poses.wave, /rai\/wave1292_hold\.webp/);
+    const buf = readFileSync(join(publicRoot, "rai/wave1292_hold.webp"));
     assert.equal(buf[0], 0x52);
     assert.equal(buf[1], 0x49);
     assert.equal(buf[2], 0x46);
@@ -511,7 +511,7 @@ describe("layersFor talking vs pose hold", () => {
     assert.equal(layersFor({ ...rest, talking: true }).length, 1);
     assert.equal(layersFor({ ...rest, talking: true })[0]!.src, idleRestSrc());
     assert.equal(layersFor({ ...rest, talking: true })[0]!.id, IDLE_REST_LAYER_ID);
-    assert.match(layersFor({ ...rest, pose: "wave" })[0]!.src, /wave1126_hold/);
+    assert.match(layersFor({ ...rest, pose: "wave" })[0]!.src, /wave1292_hold/);
     assert.match(layersFor({ ...rest, pose: "scold" })[0]!.src, /scold_official/);
     assert.match(layersFor({ ...rest, pose: "talk" })[0]!.src, /talk1257_hold/);
     assert.match(layersFor({ ...rest, pose: "smug" })[0]!.src, /smug1085_hold/);
@@ -713,7 +713,7 @@ describe("layersFor talking vs pose hold", () => {
 
   it("wave/hold/scold use official sheets", () => {
     const waveSrc = layersFor({ ...base, pose: "wave", talking: false })[0]!.src;
-    assert.match(waveSrc, /rai\/wave1126_hold\.webp/);
+    assert.match(waveSrc, /rai\/wave1292_hold\.webp/);
     assert.doesNotMatch(waveSrc, /front_wave|star-rai\/poses\/wave/);
     assert.match(layersFor({ ...base, pose: "hold", talking: false })[0]!.src, /hold_official/);
     assert.match(layersFor({ ...base, pose: "scold", talking: false })[0]!.src, /scold_official/);
@@ -1606,7 +1606,7 @@ describe("greeting lines stay on idle and chew", () => {
         angle: 0,
         mouth: 3,
       })[0]!.src,
-      /wave1126_hold/,
+      /wave1292_hold/,
     );
     assert.equal(canIdleMouth({ pose, emotion: "bratty", talking: true, lineLive: true }), false);
     assert.equal(

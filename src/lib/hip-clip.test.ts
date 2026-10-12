@@ -79,7 +79,7 @@ describe("hip clip data", () => {
     const order = stagePreloadOrder({ clip: true });
     assert.deepEqual(order.beat.map((u) => u.split("?")[0]!.replace(/^.*\/rai\//, "rai/")), [
       "rai/smug1085_hold.webp",
-      "rai/wave1126_hold.webp",
+      "rai/wave1292_hold.webp",
     ]);
     // Pout's and talk's holds are lazy: after the first stage image and the smug / wave preloads.
     assert.deepEqual(order.lazy.map((u) => u.split("?")[0]!.replace(/^.*\/rai\//, "rai/")), [

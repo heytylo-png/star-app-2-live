@@ -62,6 +62,16 @@ TyLo paste-15 replaces the 968/973 stills (and every earlier smug asset) with tw
 - Reduced motion, or a browser without `ImageDecoder` / `OffscreenCanvas` workers: hard cut onto the hold, hard cut back to idle.
 - Debug: `data-rai-hold-sheet=smug1085_hold` while holding; each clip canvas has `data-rai-clip` and `data-rai-sheet` = `in-NNN` / `out-NNN` (last frame reported); `window.__raiBridgeLog` = `[t, clip, frame]` per painted frame (stage clock), `window.__raiBridgeDone` = `[t, clip, stalls, reanchors]` per play.
 
+### 1292 / 1140 video (idle ↔ wave, w7, TyLo 2026-10-12 10:19; replaces 1126)
+
+- "Wave intro swap. Videos only. Mute both. Play 1292 forward. Hold the last frame of 1292 while the line is up. On the next send, play 1140 forward. Land on the idle glare. Do not cut to idle.png. 1126 is out."
+- Entry: `public/rai/wave1292_in.avif`, TyLo's 720×1280 24 fps video, every frame f0..f120 (121 frames, 5.04 s) forward. No audio track. 1126 files are deleted (404).
+- Hold: `public/rai/wave1292_hold.webp` = the decoded f120 of that AVIF, lossless WebP (RGBA identical), until the next send.
+- Exit: `public/rai/wave1140_out.avif` unchanged except 1140 f0–f7's mouth ease, which now starts from the 1292 hold's flat mouth instead of the 1126 smile (same w6b morph, mouth patch only, alpha identical; f8+ inputs byte-identical, re-encoded at crf 26).
+- Pipeline (f807/bridge/w1292): uniform registration ×1.284 onto idle (soles + feet centre), white-matte cut (engine/sheets_1292.py, wave hand boxes + finger gaps), per-zone skin match to idle, face-above-jaw p2, alpha-only post (specks, leg fringe, thigh gap, finger gaps), libaom crf 26/22, 672×1280 band at x 0.
+
+The 1126 section below is history.
+
 ### 1126 / 1140 video (idle ↔ wave, 2026-10-08; replaces 1110 / 1114)
 
 Same player path as 1085/1084: muted animated AVIF (no audio track), WebCodecs ImageDecoder in a worker, OffscreenCanvas at 24 fps, every frame in order, no skips. Own canvases (`win`/`wout`) and its own band, `WAVE_CLIP_BOX` = x 0..672 of the 720×1280 sheet space (the smug band x 112..560 clipped the raised elbow/hand).

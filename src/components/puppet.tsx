@@ -122,7 +122,7 @@ const BRIDGE_STAGE_KEYS: Record<ClipPair, readonly [BridgeStageKey, BridgeStageK
   pout: ["pin", "pout"],
   talk: ["tin", "tout"],
 };
-/** An intro canvas is on stage (1085 / 1126 / 1158 / 1257 still coming in). */
+/** An intro canvas is on stage (1085 / 1292 / 1158 / 1257 still coming in). */
 function isIntroStageKey(key: BridgeStageKey | null): boolean {
   return key === "in" || key === "win" || key === "pin" || key === "tin";
 }
@@ -314,7 +314,7 @@ export function Puppet({
   const [display, setDisplay] = useState<DisplayLayer[]>([]);
   const [sheets, setSheets] = useState<Record<string, string>>({});
   const crossfade = useRef<PoseCrossfadePool | null>(null);
-  /** Pose bridge: clip on stage ("in"/"out" = smug 1085/1084, "win"/"wout" = wave 1126/1140, "pin"/"pout" = pout 1158/1162). */
+  /** Pose bridge: clip on stage ("in"/"out" = smug 1085/1084, "win"/"wout" = wave 1292/1140, "pin"/"pout" = pout 1158/1162). */
   const [bridgeClip, setBridgeClip] = useState<BridgeStageKey | null>(null);
   const bridgeClipRef = useRef<BridgeStageKey | null>(null);
   const bridgeCanvasInRef = useRef<HTMLCanvasElement>(null);
@@ -327,7 +327,7 @@ export function Puppet({
   const bridgeCanvasTalkOutRef = useRef<HTMLCanvasElement>(null);
   /** Smug clips player (1085/1084). */
   const clipPlayerRef = useRef<SmugClipPlayer | null>(null);
-  /** Wave clips player (1126/1140). */
+  /** Wave clips player (1292/1140). */
   const wavePlayerRef = useRef<SmugClipPlayer | null>(null);
   /** Pout clips player (1158/1162). */
   const poutPlayerRef = useRef<SmugClipPlayer | null>(null);
@@ -411,7 +411,7 @@ export function Puppet({
    */
   const decodedFrames = useRef<HTMLImageElement[]>([]);
 
-  // Idle <-> smug (1085/1084) and idle <-> wave (1126/1140): each pair has its own worker
+  // Idle <-> smug (1085/1084) and idle <-> wave (1292/1140): each pair has its own worker
   // and canvases. Loaded and primed with their hold sheets at startup.
   useEffect(() => {
     const cin = bridgeCanvasInRef.current;
@@ -1640,7 +1640,7 @@ export function Puppet({
       data-rai-hold-sheet={
         phase === "hold"
           ? plateKey === "wave"
-            ? "wave1126_hold"
+            ? "wave1292_hold"
             : plateKey === "pout"
               ? "pout1158_hold"
               : plateKey === "talk"
