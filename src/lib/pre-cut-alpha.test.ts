@@ -153,13 +153,13 @@ describe("bridge file cache keys (wave w6, pout p2, talk t1)", () => {
       "rai/pout1162_out.avif": "p2",
       "rai/pout1158_hold.webp": "p2",
       "rai/talk1257_in.avif": "t1",
-      "rai/talk1276_out.avif": "t2",
+      "rai/talk1276_out.avif": "t3",
       "rai/talk1257_hold.webp": "t1",
     });
     assert.match(SPRITES.poses.talk, /rai\/talk1257_hold\.webp\?v=t1$/);
     const [tin, tout] = talkClipUrls();
     assert.match(tin!, /rai\/talk1257_in\.avif\?v=t1$/);
-    assert.match(tout!, /rai\/talk1276_out\.avif\?v=t2$/);
+    assert.match(tout!, /rai\/talk1276_out\.avif\?v=t3$/);
     assert.match(SPRITES.poses.pout, /rai\/pout1158_hold\.webp\?v=p2$/);
     const [pin, pout] = poutClipUrls();
     assert.match(pin!, /rai\/pout1158_in\.avif\?v=p2$/);

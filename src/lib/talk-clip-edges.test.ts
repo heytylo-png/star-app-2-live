@@ -94,7 +94,7 @@ describe("talk clip band (1257 / 1276, TyLo 2026-10-11)", () => {
     assert.match(SPRITES.poses.talk, /rai\/talk1257_hold\.webp\?v=t1$/);
     const [tin, tout] = talkClipUrls();
     assert.match(tin!, /rai\/talk1257_in\.avif\?v=t1$/);
-    assert.match(tout!, /rai\/talk1276_out\.avif\?v=t2$/);
+    assert.match(tout!, /rai\/talk1276_out\.avif\?v=t3$/);
   });
 });
 
