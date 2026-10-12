@@ -110,8 +110,8 @@ const POSE_SHEET_SHA256: Record<string, string> = {
   "rai/three_quarter_right.png": "528a5439e93271a7e8abc3e7324bcbc3ffdae2ff6a86bd680a0c22bbe6bf244e",
   // Smug hold (paste-15): 1085 frame 48 (2.000 s), the last frame of the intro clip.
   "rai/smug1085_hold.webp": "45cd6eea6c438b340e1d33c8aaeb6003828b6dfb7cc40ed9ed49359643c75cbf",
-  // Wave hold (2026-10-12 w9, skin darkened): the decoded 1292 intro f120 (its last frame), lossless WebP (RGBA identical to the decoded frame).
-  "rai/wave1292_hold.webp": "77cc3a817e78389f623f3b125405ef83d3980a1d871710fc4ff23652f586bfe0",
+  // Wave hold (2026-10-12 w10, skin matched to 1140 f0): the decoded 1292 intro f120 (its last frame), lossless WebP (RGBA identical to the decoded frame).
+  "rai/wave1292_hold.webp": "23964bddbd2b34184e399cc7f24c755d1b9c29eae526f3b1ca2903a0660af786",
   // Pout hold (2026-10-10 p2): the decoded p2 1158 intro f48 (2.000 s, crossed-arms frown), alpha identical to the clip frame. Not pout_official.png.
   "rai/pout1158_hold.webp": "a049cafa80d198cb3673b0c1932176a13090dfa5558f999c8b87eb541c075aee",
   "rai/talk1257_hold.webp": "6da9cf8c5f0ae5977d400fab71185e0c8e478bfe3fa7b8a9bb5ad3c308ce84f1",
@@ -123,7 +123,7 @@ const POSE_SHEET_SHA256: Record<string, string> = {
 const SMUG_CLIP_SHA256: Record<string, string> = {
   "rai/smug1085_in.avif": "0c2c6a4bb9ab5b995720b2026f8919dfe71632a3d19902fa3ac905c870ec5351",
   "rai/smug1084_out.avif": "c44e3af0a6233c9979747710cab1c731e5d96691dc3816628978f227f9ff1b50",
-  "rai/wave1292_in.avif": "3856b26e958cdf63c9f4ac8a3dd7be3fdbcbc9ec1f304c3ea666f31261c19834",
+  "rai/wave1292_in.avif": "14b8065e2bdb77c3b7a09a99afa4030bd68060ba0bdaeab7b715cdc7514cf24d",
   "rai/wave1140_out.avif": "74540144c09194281c81c25162b6051ca989bfb6f41e611db29417905c9a670f",
   "rai/pout1158_in.avif": "495b8d2ce309c6e3aae50f013182c0ef8159841fd4050f5c61c791a4da0eff1c",
   "rai/pout1162_out.avif": "5278c12f28283eb2046c31943c49967857b2799496648e68dc63da03400112dc",
@@ -144,12 +144,12 @@ describe("smug clips (1085 in / 1084 out)", () => {
   });
 });
 
-describe("bridge file cache keys (wave w9, pout p2, talk t1)", () => {
-  it("versions only the re-cut wave (w9), pout (p2) and talk (t1) files; smug and idle URLs stay as they were", () => {
+describe("bridge file cache keys (wave w10/w9, pout p2, talk t1)", () => {
+  it("versions only the re-cut wave (w10 1292 + hold, w9 1140), pout (p2) and talk (t1) files; smug and idle URLs stay as they were", () => {
     assert.deepEqual(BRIDGE_FILE_VERSION, {
-      "rai/wave1292_in.avif": "w9",
+      "rai/wave1292_in.avif": "w10",
       "rai/wave1140_out.avif": "w9",
-      "rai/wave1292_hold.webp": "w9",
+      "rai/wave1292_hold.webp": "w10",
       "rai/pout1158_in.avif": "p2",
       "rai/pout1162_out.avif": "p2",
       "rai/pout1158_hold.webp": "p2",
@@ -165,10 +165,10 @@ describe("bridge file cache keys (wave w9, pout p2, talk t1)", () => {
     const [pin, pout] = poutClipUrls();
     assert.match(pin!, /rai\/pout1158_in\.avif\?v=p2$/);
     assert.match(pout!, /rai\/pout1162_out\.avif\?v=p2$/);
-    assert.match(SPRITES.poses.wave, /rai\/wave1292_hold\.webp\?v=w9$/);
+    assert.match(SPRITES.poses.wave, /rai\/wave1292_hold\.webp\?v=w10$/);
     assert.equal(spriteNeedsWhitePunch(SPRITES.poses.wave), false);
     const [win, wout] = waveClipUrls();
-    assert.match(win!, /rai\/wave1292_in\.avif\?v=w9$/);
+    assert.match(win!, /rai\/wave1292_in\.avif\?v=w10$/);
     assert.match(wout!, /rai\/wave1140_out\.avif\?v=w9$/);
     assert.match(SPRITES.poses.smug, new RegExp(`smug1085_hold\\.webp\\?v=${PRE_CUT_ALPHA_VERSION}$`));
     assert.match(SPRITES.poses.idle, new RegExp(`idle\\.png\\?v=${PRE_CUT_ALPHA_VERSION}$`));

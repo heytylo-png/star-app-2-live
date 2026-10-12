@@ -9,7 +9,7 @@
 "strip_px": 2,
 "clips": {
 "rai/wave1292_in.avif": {
-"sha256": "3856b26e958cdf63c9f4ac8a3dd7be3fdbcbc9ec1f304c3ea666f31261c19834",
+"sha256": "14b8065e2bdb77c3b7a09a99afa4030bd68060ba0bdaeab7b715cdc7514cf24d",
 "frames": 121,
 "width": 672,
 "height": 1280,
@@ -3219,7 +3219,7 @@
 },
 "hold": {
 "file": "rai/wave1292_hold.webp",
-"sha256": "77cc3a817e78389f623f3b125405ef83d3980a1d871710fc4ff23652f586bfe0",
+"sha256": "23964bddbd2b34184e399cc7f24c755d1b9c29eae526f3b1ca2903a0660af786",
 "bbox": [
 139,
 10,
