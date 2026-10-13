@@ -151,11 +151,14 @@ describe("pose bridge pair table (paste-15: 1085 / 1084 video)", () => {
     assert.equal(SMUG_HOLD_FILE, "rai/smug1085_hold.webp");
   });
 
-  it("wave is 1292 f0..f120 (all 121 frames) + 1140 full (145 frames); 1126 is gone", () => {
+  it("wave is 1292 f0..f120 (all 121 frames) + 1320 full (121 frames, forward); 1126 and 1140 are gone", () => {
     assert.equal(WAVE_IN_CLIP.file, "rai/wave1292_in.avif");
-    assert.equal(WAVE_OUT_CLIP.file, "rai/wave1140_out.avif");
+    assert.equal(WAVE_OUT_CLIP.file, "rai/wave1320_out.avif");
     assert.equal(WAVE_IN_FILES.length, 121);
-    assert.equal(WAVE_OUT_FILES.length, 145);
+    assert.equal(WAVE_OUT_FILES.length, 121);
+    assert.equal(parseClipFrame("rai/wave1140_out.avif#000"), null, "1140 is out");
+    assert.deepEqual(parseClipFrame("rai/wave1320_out.avif#120"), { clip: WAVE_OUT_CLIP, index: 120 });
+    assert.equal(parseClipFrame("rai/wave1320_out.avif#121"), null, "no 1320 frame 121");
     assert.deepEqual(bridgeFilesFor("idle", "wave"), WAVE_IN_FILES);
     assert.deepEqual(bridgeFilesFor("wave", "idle"), WAVE_OUT_FILES);
     // 120 frames after frame 0 at 24 fps = 5.000 s: the clip ends on the hold frame (1292 f120, its last frame).
@@ -295,7 +298,7 @@ describe("pose bridge timing", () => {
     assert.equal(bridgeDwellsFor("idle", "smug")!.length, 49);
     assert.equal(bridgeDwellsFor("smug", "idle")!.length, 145);
     assert.equal(bridgeDwellsFor("idle", "wave")!.length, 121);
-    assert.equal(bridgeDwellsFor("wave", "idle")!.length, 145);
+    assert.equal(bridgeDwellsFor("wave", "idle")!.length, 121);
     for (const d of bridgeDwellsFor("idle", "wave")!) assert.equal(d, 1000 / 24);
   });
 });

@@ -314,7 +314,7 @@ export function Puppet({
   const [display, setDisplay] = useState<DisplayLayer[]>([]);
   const [sheets, setSheets] = useState<Record<string, string>>({});
   const crossfade = useRef<PoseCrossfadePool | null>(null);
-  /** Pose bridge: clip on stage ("in"/"out" = smug 1085/1084, "win"/"wout" = wave 1292/1140, "pin"/"pout" = pout 1158/1162). */
+  /** Pose bridge: clip on stage ("in"/"out" = smug 1085/1084, "win"/"wout" = wave 1292/1320, "pin"/"pout" = pout 1158/1162). */
   const [bridgeClip, setBridgeClip] = useState<BridgeStageKey | null>(null);
   const bridgeClipRef = useRef<BridgeStageKey | null>(null);
   const bridgeCanvasInRef = useRef<HTMLCanvasElement>(null);
@@ -327,7 +327,7 @@ export function Puppet({
   const bridgeCanvasTalkOutRef = useRef<HTMLCanvasElement>(null);
   /** Smug clips player (1085/1084). */
   const clipPlayerRef = useRef<SmugClipPlayer | null>(null);
-  /** Wave clips player (1292/1140). */
+  /** Wave clips player (1292/1320). */
   const wavePlayerRef = useRef<SmugClipPlayer | null>(null);
   /** Pout clips player (1158/1162). */
   const poutPlayerRef = useRef<SmugClipPlayer | null>(null);
@@ -411,7 +411,7 @@ export function Puppet({
    */
   const decodedFrames = useRef<HTMLImageElement[]>([]);
 
-  // Idle <-> smug (1085/1084) and idle <-> wave (1292/1140): each pair has its own worker
+  // Idle <-> smug (1085/1084) and idle <-> wave (1292/1320): each pair has its own worker
   // and canvases. Loaded and primed with their hold sheets at startup.
   useEffect(() => {
     const cin = bridgeCanvasInRef.current;
