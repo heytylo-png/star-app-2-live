@@ -59,6 +59,16 @@ import {
   subscribeSmugReleaseLanded,
 } from "@/lib/pose-phase";
 import { useMemoryStore } from "@/lib/memory-store";
+import {
+  REMEMBER_TOAST_MS,
+  loadRememberSeen,
+  memorySaves,
+  nextRememberToast,
+  rememberToastVisible,
+  saveRememberSeen,
+  type RememberEvent,
+  type RememberToast,
+} from "@/lib/remember-toast";
 import { usePresenceStore } from "@/lib/presence-store";
 import {
   PRESENCE_HEARTBEAT_MS,
@@ -251,6 +261,22 @@ function RaiReady() {
   const [keyJustSaved, setKeyJustSaved] = useState(false);
   const [caption, setCaption] = useState("");
   const [hasSent, setHasSent] = useState(false);
+  const [remember, setRemember] = useState<RememberToast | null>(null);
+  const seenRememberRef = useRef<Set<string> | null>(null);
+  if (seenRememberRef.current === null) {
+    seenRememberRef.current =
+      typeof localStorage === "undefined" ? new Set() : loadRememberSeen((key) => localStorage.getItem(key));
+  }
+  const offerRememberRef = useRef<(event: RememberEvent) => void>(() => {});
+  offerRememberRef.current = (event) => {
+    const seen = seenRememberRef.current ?? new Set<string>();
+    const next = nextRememberToast(seen, event, Date.now());
+    seenRememberRef.current = next.seen;
+    if (next.seen.size !== seen.size && typeof localStorage !== "undefined") {
+      saveRememberSeen(next.seen, (key, value) => localStorage.setItem(key, value));
+    }
+    if (next.toast) setRemember(next.toast);
+  };
   const [emotion, setEmotion] = useState<EmotionId>(DEFAULT_EMOTION);
   const [pose, setPose] = useState<PoseId>("idle");
   /**
@@ -428,6 +454,11 @@ function RaiReady() {
       mayTry: pendingBuild ? mayTryUpdate(pendingBuild, updateStore) : false,
       birthdayCard: showSetup,
     });
+  const showRemember = rememberToastVisible({
+    line: remember?.line ?? null,
+    staleNotice: showNotice,
+    callActive: callActive || callStarting,
+  });
   const showHint =
     chromeReady &&
     showEmptyChatHint({
@@ -436,7 +467,8 @@ function RaiReady() {
       callActive: callActive || callStarting,
     }) &&
     !caption.trim() &&
-    !showNotice;
+    !showNotice &&
+    !showRemember;
   const showChips =
     chromeReady &&
     !callActive &&
@@ -453,6 +485,21 @@ function RaiReady() {
     if (!chatHydrated || starterChipsDone || !hasHistory) return;
     useChatStore.getState().markStarterChipsDone();
   }, [chatHydrated, starterChipsDone, hasHistory]);
+
+  useEffect(() => {
+    return memorySaves.subscribe((texts) => {
+      offerRememberRef.current({ type: "memories", texts });
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!remember) return;
+    const left = remember.shownAt + REMEMBER_TOAST_MS - Date.now();
+    const timer = window.setTimeout(() => {
+      setRemember((current) => (current?.key === remember.key ? null : current));
+    }, Math.max(0, left));
+    return () => window.clearTimeout(timer);
+  }, [remember]);
 
   useEffect(() => {
     draftRef.current = draft;
@@ -2004,6 +2051,7 @@ function RaiReady() {
                 if (natal.user_birth_date) {
                   useMemoryStore.getState().patchSlots(natal);
                   useChartStore.getState().markSetupDone();
+                  offerRememberRef.current({ type: "birthday", date: natal.user_birth_date });
                 }
               }}
             />
@@ -2026,6 +2074,20 @@ function RaiReady() {
                   </span>
                 </button>
               </span>
+            </p>
+          ) : null}
+          {showRemember ? (
+            <p className="mb-1.5 text-center">
+              <button
+                type="button"
+                data-remember-toast=""
+                className="inline-flex h-11 min-h-11 max-w-full items-center justify-center border-0 bg-transparent p-0"
+                onClick={() => setRemember(null)}
+              >
+                <span className="inline-block max-w-full truncate rounded-full bg-[rgba(239,236,230,0.85)] px-2 py-[3px] text-sm text-[#3f3b36]">
+                  {remember?.line}
+                </span>
+              </button>
             </p>
           ) : null}
           {showHint ? (

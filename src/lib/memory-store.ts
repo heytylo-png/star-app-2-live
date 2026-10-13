@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { extractNatalFromUserText } from "./chart";
+import { extractNatalFromUserText } from "./chart.ts";
+import { memorySaves, rememberGistKey } from "./remember-toast.ts";
 import {
   applySlotPatch,
   emptySlots,
@@ -10,7 +11,7 @@ import {
   type AffectionSlotInput,
   type ExtractOpts,
   type MemorySlotState,
-} from "./memory-slots";
+} from "./memory-slots.ts";
 
 /**
  * Persist key: `star-rai-memory` (stable — do not rename without a migrator).
@@ -31,8 +32,10 @@ export type { MemorySlotState };
 type MemoryState = {
   items: MemoryItem[];
   slots: MemorySlotState;
-  add: (text: string) => void;
-  addMany: (texts: string[]) => void;
+  /** The saved text, or null when nothing new was written. */
+  add: (text: string) => string | null;
+  /** Texts that were actually stored, in order. Duplicates are omitted. */
+  addMany: (texts: string[]) => string[];
   remove: (id: string) => void;
   clear: () => void;
   ingestUserTurn: (text: string, opts?: ExtractOpts) => void;
@@ -45,16 +48,42 @@ function normalizeFact(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
+function gistContains(longer: string, shorter: string): boolean {
+  const haystack = rememberGistKey(longer);
+  const needle = rememberGistKey(shorter);
+  return Boolean(haystack && needle && haystack !== needle && haystack.includes(needle));
+}
+
+/** Subject phrase before "name is" / "is named", normalised. */
+function nameFact(text: string): { subject: string; name: string } | null {
+  const lower = text.toLowerCase().replace(/\s+/g, " ").trim();
+  const re = /(name is|is named)\s+([a-z][\w'-]+)/g;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(lower))) {
+    const start = match.index;
+    if (start > 0 && /[a-z0-9]/i.test(lower[start - 1] ?? "")) continue;
+    return { subject: rememberGistKey(lower.slice(0, start)), name: match[2] ?? "" };
+  }
+  return null;
+}
+
+/**
+ * Same given name and the same subject. A missing subject still matches
+ * ("Name is Ada from home" refines "Their name is Ada"). Two different
+ * subjects ("best friend's" vs "coworker's") do not.
+ */
+function sameSubjectName(existing: string, next: string): boolean {
+  const a = nameFact(existing);
+  const b = nameFact(next);
+  if (!a || !b || !a.name || a.name !== b.name) return false;
+  if (a.subject && b.subject && a.subject !== b.subject) return false;
+  return true;
+}
+
+/** True when the new text should replace this item: a longer refinement, or the same subject. */
 function isDuplicate(existing: string, next: string): boolean {
-  const a = existing.toLowerCase();
-  const b = next.toLowerCase();
-  if (a === b) return true;
-  // Same name / like / city with slight wording drift
-  if (a.includes(b) || b.includes(a)) return true;
-  const nameA = a.match(/name is\s+([a-z][\w'-]+)/);
-  const nameB = b.match(/name is\s+([a-z][\w'-]+)/);
-  if (nameA && nameB && nameA[1] === nameB[1]) return true;
-  return false;
+  if (gistContains(next, existing)) return true;
+  return sameSubjectName(existing, next) && !gistContains(existing, next);
 }
 
 export const useMemoryStore = create<MemoryState>()(
@@ -64,18 +93,32 @@ export const useMemoryStore = create<MemoryState>()(
       slots: emptySlots(),
       add: (text) => {
         const cleaned = normalizeFact(text);
-        if (!cleaned) return;
+        if (!cleaned) return null;
         const items = get().items;
-        if (items.some((item) => item.text.toLowerCase() === cleaned.toLowerCase())) return;
+        const gist = rememberGistKey(cleaned);
+        // Case, spacing, and trailing punctuation are the same item.
+        if (gist && items.some((item) => rememberGistKey(item.text) === gist)) return null;
+        // A shorter echo of a fact we already have is not a new write.
+        if (items.some((item) => gistContains(item.text, cleaned))) return null;
+        // A refinement replaces the shorter item. That update does not toast.
         const withoutSimilar = items.filter((item) => !isDuplicate(item.text, cleaned));
+        const replaced = withoutSimilar.length !== items.length;
         const nextItems = [
           { id: crypto.randomUUID(), text: cleaned, createdAt: Date.now() },
           ...withoutSimilar,
         ].slice(0, 80);
         set({ items: nextItems });
+        if (replaced) return null;
+        memorySaves.notify(cleaned);
+        return cleaned;
       },
       addMany: (texts) => {
-        texts.forEach((t) => get().add(t));
+        const saved: string[] = [];
+        for (const text of texts) {
+          const wrote = get().add(text);
+          if (wrote) saved.push(wrote);
+        }
+        return saved;
       },
       remove: (id) => set((state) => ({ items: state.items.filter((item) => item.id !== id) })),
       clear: () => set({ items: [], slots: emptySlots() }),
