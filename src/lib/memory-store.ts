@@ -134,10 +134,10 @@ export const useMemoryStore = create<MemoryState>()(
       clearSlot: (key) =>
         set((state) => {
           const next = { ...state.slots };
-          if (key === "chart" || key === "life" || key === "role") {
-            delete next[key];
-          } else {
-            delete next[key];
+          delete next[key];
+          if (key === "name") {
+            delete next.name_source;
+            delete next.name_checked;
           }
           return { slots: next };
         }),

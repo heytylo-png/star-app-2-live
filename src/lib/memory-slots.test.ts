@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
+import { extractMemCandidate } from "./brain.ts";
 import { MEMORY_SLOTS_CONTRACT, RAI_SYSTEM } from "./generated/star-rai-artifacts.ts";
 import {
   applySlotPatch,
@@ -142,11 +143,36 @@ describe("formatMemoryFacts", () => {
 describe("extractSlotsFromUserText", () => {
   it("fills name when they say it; never invents one", () => {
     assert.equal(extractName("My name is Tylo"), "Tylo");
+    assert.equal(extractName("my name is Ty"), "Ty");
+    assert.equal(extractName("call me Ty"), "Ty");
+    assert.equal(extractName("I go by Ty"), "Ty");
+    assert.equal(extractName("They go by Ty"), "Ty");
+    assert.equal(extractName("your name is Ty"), "Ty");
+    assert.equal(extractName("the user's name is Ty"), "Ty");
+    assert.equal(extractName("Their name is Tylo"), "Tylo");
+    assert.equal(extractName("I'm called Ty"), "Ty");
+    assert.equal(extractName("I am called Ty"), "Ty");
+    assert.equal(extractSlotsFromUserText("I go by Kim").name_source, "self");
     assert.equal(extractName("Hey. Just got here."), undefined);
     assert.equal(extractName("Remember that I like talking to you at night."), undefined);
     assert.equal(extractName("My name is the person talking"), undefined);
+    assert.equal(extractName("Also their name is Tylo"), undefined);
+    assert.equal(extractName("Their cat's name is Miso"), undefined);
+    assert.equal(extractName("Their friend's name is Miso"), undefined);
+    assert.equal(extractName("their dog's name is Rex"), undefined);
+    for (const word of ["maybe", "later", "back", "when", "tomorrow", "anytime", "sometime", "soon", "now", "tonight"]) {
+      assert.equal(extractName(`call me ${word}`), undefined, word);
+    }
+    for (const word of ["pretty", "cute", "nice", "cool", "weird", "funny", "beautiful"]) {
+      assert.equal(extractName(`your name is ${word}`), undefined, word);
+    }
+    assert.equal(extractName("my name is not"), undefined);
+    assert.equal(extractName("my name is not Ty"), undefined);
     const patch = extractSlotsFromUserText("Call me Sam.");
     assert.equal(patch.name, "Sam");
+    assert.equal(extractSlotsFromUserText("my name is Ty").name, "Ty");
+    assert.equal(extractSlotsFromUserText("call me Ty").name, "Ty");
+    assert.equal(extractSlotsFromUserText("Their cat's name is Miso").name, undefined);
   });
 
   it("sets role only on explicit role language — no default cameraman", () => {
@@ -230,6 +256,78 @@ describe("migrateItemsToSlots", () => {
     assert.equal(slots.name, "Tylo");
     assert.equal(slots.role, undefined);
     assert.equal(slots.chart, undefined);
+  });
+
+  it("does not take a third-person possessive as the profile name", () => {
+    const slots = migrateItemsToSlots(
+      [
+        { text: "Their cat's name is Miso" },
+        { text: "Their friend's name is Jo" },
+      ],
+      {},
+    );
+    assert.equal(slots.name, undefined);
+    const kept = migrateItemsToSlots([{ text: "Their cat's name is Miso" }], { name: "Ty" });
+    assert.equal(kept.name, "Ty");
+  });
+
+  it("clears a profile copied only from a pet, friend, or sibling gist", () => {
+    assert.equal(
+      migrateItemsToSlots([{ text: "Their cat's name is Miso" }], { name: "Miso" }).name,
+      undefined,
+    );
+    assert.equal(
+      migrateItemsToSlots([{ text: "Their friend's name is Jo" }], { name: "Jo" }).name,
+      undefined,
+    );
+    assert.equal(
+      migrateItemsToSlots([{ text: "Their sister's name is Ada" }], { name: "Ada" }).name,
+      undefined,
+    );
+    const own = migrateItemsToSlots(
+      [{ text: "Their name is Miso" }, { text: "Their cat's name is Miso" }],
+      { name: "Miso" },
+    );
+    assert.equal(own.name, "Miso");
+  });
+
+  it("keeps a self-sourced name after Their name is Kim is removed", () => {
+    const kept = migrateItemsToSlots(
+      [{ text: "Their sister's name is Kim" }],
+      { name: "Kim", name_source: "self" },
+    );
+    assert.equal(kept.name, "Kim");
+    assert.equal(kept.name_source, "self");
+  });
+
+  it("clears a legacy profile copied from a pet once, then leaves the stamp alone", () => {
+    const cleared = migrateItemsToSlots([{ text: "Their cat's name is Miso" }], { name: "Miso" });
+    assert.equal(cleared.name, undefined);
+    assert.equal(cleared.name_source, undefined);
+    assert.equal(cleared.name_checked, true);
+    const again = migrateItemsToSlots([{ text: "Their cat's name is Miso" }], cleared);
+    assert.equal(again.name, undefined);
+    assert.equal(again.name_checked, true);
+  });
+
+  it("keeps a legacy name when a self-form memory, including They go by, is still stored", () => {
+    const kept = migrateItemsToSlots(
+      [{ text: "They go by Kim" }, { text: "Their sister's name is Kim" }],
+      { name: "Kim" },
+    );
+    assert.equal(kept.name, "Kim");
+    assert.equal(kept.name_source, "legacy");
+    assert.equal(kept.name_checked, true);
+  });
+});
+
+describe("extractMemCandidate name memories", () => {
+  it("saves I go by, your name is, and they go by as Their name is", () => {
+    assert.deepEqual(extractMemCandidate("I go by Kim"), ["Their name is Kim"]);
+    assert.deepEqual(extractMemCandidate("your name is Kim"), ["Their name is Kim"]);
+    assert.deepEqual(extractMemCandidate("They go by Kim"), ["Their name is Kim"]);
+    assert.equal(extractMemCandidate("your name is pretty"), undefined);
+    assert.equal(extractMemCandidate("call me tomorrow"), undefined);
   });
 });
 

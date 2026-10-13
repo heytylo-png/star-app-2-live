@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import { readLocalNow } from "./clock.ts";
+import { extractSlotsFromUserText, migrateItemsToSlots } from "./memory-slots.ts";
 import {
   CHECKIN_LINES,
   checkInBand,
@@ -94,6 +95,45 @@ describe("daily check-in", () => {
       showStarterChips({ hasSent: false, hasHistory: false, starterChipsDone: false, birthdayCard: false }),
       true,
     );
+  });
+
+  it("still greets the cat when that name never became the profile", () => {
+    const slots = migrateItemsToSlots([{ text: "Their cat's name is Miso" }], {});
+    assert.equal(slots.name, undefined);
+    const line = composeCheckInLine(
+      readLocalNow(MORNING, TZ),
+      "2026-09-23",
+      ["Their cat's name is Miso"],
+      slots.name,
+    );
+    assert.match(line, /Tell Miso I said hi\.$/);
+    const copied = migrateItemsToSlots([{ text: "Their cat's name is Miso" }], { name: "Miso" });
+    assert.equal(copied.name, undefined);
+    const restored = composeCheckInLine(
+      readLocalNow(MORNING, TZ),
+      "2026-09-23",
+      ["Their cat's name is Miso"],
+      copied.name,
+    );
+    assert.match(restored, /Tell Miso I said hi\.$/);
+  });
+
+  it("keeps Kim when the same name is also a sister, and does not greet her", () => {
+    const morning = readLocalNow(MORNING, TZ);
+    for (const line of ["I go by Kim", "your name is Kim", "They go by Kim"]) {
+      const patch = extractSlotsFromUserText(line);
+      assert.equal(patch.name, "Kim", line);
+      assert.equal(patch.name_source, "self", line);
+      const slots = migrateItemsToSlots([{ text: "Their sister's name is Kim" }], {
+        name: patch.name,
+        name_source: patch.name_source,
+      });
+      assert.equal(slots.name, "Kim", line);
+      assert.equal(slots.name_source, "self", line);
+      const greeting = composeCheckInLine(morning, "2026-09-23", ["Their sister's name is Kim"], slots.name);
+      assert.ok(CHECKIN_LINES.morning.includes(greeting), `${line} -> ${greeting}`);
+      assert.equal(/\bKim\b/.test(greeting), false, greeting);
+    }
   });
 
   it("says hi to an allowlisted pet and keeps the name's casing", () => {
