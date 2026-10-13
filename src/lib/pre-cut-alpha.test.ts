@@ -122,7 +122,7 @@ const POSE_SHEET_SHA256: Record<string, string> = {
 /** The two smug clips (paste-15): animated AVIF, AV1 + alpha, 24 fps, no audio; pinned bytes. */
 const SMUG_CLIP_SHA256: Record<string, string> = {
   "rai/smug1085_in.avif": "0c2c6a4bb9ab5b995720b2026f8919dfe71632a3d19902fa3ac905c870ec5351",
-  "rai/smug1084_out.avif": "c44e3af0a6233c9979747710cab1c731e5d96691dc3816628978f227f9ff1b50",
+  "rai/smug1084_out.avif": "fec725ee33336a72fc9673cbc3fa5ba2df010a9dca25e358f13e93c6ddfa02a9",
   "rai/wave1292_in.avif": "529468d3d14b27f62504be47f5ec83013f1c9cc9fc41f2e0c50ac5a4a5ae477e",
   "rai/wave1320_out.avif": "e6752c6d86befcbcc7f4e937bd6462e28609198551b1012124cd1943696e35ab",
   "rai/pout1158_in.avif": "495b8d2ce309c6e3aae50f013182c0ef8159841fd4050f5c61c791a4da0eff1c",
@@ -151,6 +151,7 @@ describe("bridge file cache keys (wave w11/w12, pout p2, talk t1)", () => {
       "rai/wave1292_in.avif": "w11",
       "rai/wave1320_out.avif": "w12",
       "rai/wave1292_hold.webp": "w11",
+      "rai/smug1084_out.avif": "s1",
       "rai/pout1158_in.avif": "p2",
       "rai/pout1162_out.avif": "p3",
       "rai/pout1158_hold.webp": "p2",
@@ -173,7 +174,9 @@ describe("bridge file cache keys (wave w11/w12, pout p2, talk t1)", () => {
     assert.match(wout!, /rai\/wave1320_out\.avif\?v=w12$/);
     assert.match(SPRITES.poses.smug, new RegExp(`smug1085_hold\\.webp\\?v=${PRE_CUT_ALPHA_VERSION}$`));
     assert.match(SPRITES.poses.idle, new RegExp(`idle\\.png\\?v=${PRE_CUT_ALPHA_VERSION}$`));
-    for (const u of smugClipUrls()) assert.equal(u.includes("?"), false, u);
+    const [sin, sout] = smugClipUrls();
+    assert.equal(sin!.includes("?"), false, sin);
+    assert.match(sout!, /rai\/smug1084_out\.avif\?v=s1$/);
   });
 });
 
