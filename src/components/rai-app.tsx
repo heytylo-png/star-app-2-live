@@ -89,6 +89,7 @@ import { filterClockSpokenLine, resolveClockTurn, clockTimeZone } from "@/lib/cl
 import {
   checkInSpokenUserName,
   loadCheckInDate,
+  loadCheckInLineId,
   saveCheckInDate,
   settleDailyCheckIn,
 } from "@/lib/daily-checkin";
@@ -783,6 +784,7 @@ function RaiReady() {
       const turn = settleDailyCheckIn(false, {
         timeZone: clockTimeZone(),
         lastDate: loadCheckInDate((key) => localStorage.getItem(key)),
+        lastLineId: loadCheckInLineId((key) => localStorage.getItem(key)),
         threads: threadsNow,
         callActive: false,
         birthdayCard: false,
@@ -795,7 +797,7 @@ function RaiReady() {
         threadsNow.find((item) => item.id === useChatStore.getState().activeId) ??
         threadsNow.find((item) => item.messages.some((message) => message.role === "user"));
       if (!thread) return;
-      saveCheckInDate(turn.plan.date, (key, value) => localStorage.setItem(key, value));
+      saveCheckInDate(turn.plan.date, (key, value) => localStorage.setItem(key, value), turn.plan.lineId);
       useChatStore.getState().appendMessage(thread.id, {
         id: newId(),
         role: "assistant",

@@ -38,7 +38,7 @@ export type CheckInThread = {
 
 export type CheckInPlan =
   | { post: false }
-  | { post: true; date: string; line: string; band: CheckInBand };
+  | { post: true; date: string; line: string; band: CheckInBand; lineId: string };
 
 /** Morning 6–11, afternoon 12–17, evening 18–21, late night 22–23 and 0–5. */
 export function checkInBand(hour: number): CheckInBand {
@@ -63,17 +63,33 @@ function rotate(seed: string, length: number): number {
   return length ? n % length : 0;
 }
 
-export function loadCheckInDate(read: (key: string) => string | null): string | null {
+const CHECKIN_STORED =
+  /^(\d{4}-\d{2}-\d{2})(?:\|((?:morning|afternoon|evening|late):\d+))?$/;
+
+function readCheckIn(read: (key: string) => string | null): { date: string | null; lineId: string | null } {
   try {
-    const raw = read(CHECKIN_DATE_KEY)?.trim() ?? "";
-    return /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : null;
+    const match = read(CHECKIN_DATE_KEY)?.trim().match(CHECKIN_STORED);
+    if (!match) return { date: null, lineId: null };
+    return { date: match[1] ?? null, lineId: match[2] ?? null };
   } catch {
-    return null;
+    return { date: null, lineId: null };
   }
 }
 
-export function saveCheckInDate(date: string, write: (key: string, value: string) => void): void {
-  write(CHECKIN_DATE_KEY, date);
+export function loadCheckInDate(read: (key: string) => string | null): string | null {
+  return readCheckIn(read).date;
+}
+
+export function loadCheckInLineId(read: (key: string) => string | null): string | null {
+  return readCheckIn(read).lineId;
+}
+
+export function saveCheckInDate(
+  date: string,
+  write: (key: string, value: string) => void,
+  lineId?: string | null,
+): void {
+  write(CHECKIN_DATE_KEY, lineId ? `${date}|${lineId}` : date);
 }
 
 /** A chat beat inside this window means the day is already underway. */
@@ -92,7 +108,7 @@ function userMessages(threads: readonly CheckInThread[]): CheckInMessage[] {
 }
 
 function cleanGist(gist: string): string {
-  return gist.replace(/\s+/g, " ").trim().replace(/[.?!]+$/g, "").trim();
+  return gist.replace(/\s+/g, " ").trim();
 }
 
 /** Pet, friend, or sibling. Anything else is not hers to bring up. */
@@ -112,10 +128,16 @@ const ALLOWED_SUBJECTS = new Set([
  * like Alex or Andrew is not caught by "ex" or "dr".
  */
 const CHECKIN_STOP_RE =
-  /\b(?:ex|abusers?|abused|abusive|abuse|therapists?|doctors?|dr|counsell?ors?|dealers?|bosses?|co[- ]?workers?|self[- ]?harm(?:ing)?|suicid(?:e|al)|cutting|drugs?|cocaine|heroin|meth|fentanyl|overdose|opioids?|narcotics?|drinks?|drinking|drunk|alcohol(?:ic)?s?|beer|wine|liquor|booze|black\s*outs?|whiskey|vodka)\b|kill(?:ing)?\s+(?:myself|themselves|himself|herself)/i;
+  /\b(?:ex|abusers?|abused|abusive|abuse|therapists?|doctors?|dr|counsell?ors?|dealers?|bosses?|co[- ]?workers?|self[- ]?harm(?:ing)?|suicid(?:e|al)|cutting|drugs?|cocaine|heroin|meth|fentanyl|overdose|opioids?|narcotics?|drinks?|drinking|drunk|alcohol(?:ic)?s?|beer|wine|liquor|booze|black\s*outs?|whiskey|vodka|died|dead|rehab|prison|assaulted|assaults?|passed\s+away)\b|kill(?:ed|ing)?\s+(?:myself|themselves|himself|herself)/i;
 
-const USER_NAME_RE =
-  /^(?:my|their|the user'?s|user'?s) name is\s+([A-Za-z][\w'-]{1,24})\b/i;
+/** Vocatives and role-words. Not a given name, in any casing. */
+const WORD_NAMES = new Set(
+  `mom mum mommy mummy mama mother dad daddy papa father god jesus christ lord
+   baby babe honey sweetie darling hun dear dude bro sis bruh buddy pal
+   nobody someone somebody anyone anybody everybody everyone`.split(/\s+/),
+);
+
+const CAPITAL_NAME = /^[A-Z][A-Za-z]*(?:\s+[A-Z][A-Za-z]*)?$/;
 
 function relation(subject: string): string | null {
   const text = subject
@@ -129,19 +151,64 @@ function relation(subject: string): string | null {
   return ALLOWED_SUBJECTS.has(text) ? text : null;
 }
 
+/**
+ * Allowlisted subject, then "name is" / "is named", then a name, then nothing.
+ * One trailing . or ! is allowed. Anything after the name is not.
+ * The name is one or two capitalised words of letters only.
+ */
 function namedFact(gist: string): { subject: string; name: string } | null {
-  const cleaned = cleanGist(gist);
-  const nameIs = cleaned.match(/^(.*?)\s+name is\s+([A-Za-z][\w'-]{1,24})\b/i);
-  if (nameIs) return { subject: nameIs[1] ?? "", name: nameIs[2] ?? "" };
-  const isNamed = cleaned.match(/^(.*?)\s+is named\s+([A-Za-z][\w'-]{1,24})\b/i);
-  if (isNamed) return { subject: isNamed[1] ?? "", name: isNamed[2] ?? "" };
-  return null;
+  const text = cleanGist(gist).replace(/[.!]$/, "").trim();
+  const match = text.match(/^(.*)\s+(?:name is|is named)\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)$/i);
+  const name = match?.[2] ?? "";
+  if (!match || !CAPITAL_NAME.test(name)) return null;
+  return { subject: match[1] ?? "", name };
 }
 
-/** The user's own name, from "my name is" / "user's name" / a bare "Their name is". */
+function wordName(name: string): boolean {
+  return name.split(/\s+/).some((word) => WORD_NAMES.has(word.toLowerCase()));
+}
+
+function capitalName(raw: string | undefined): string | null {
+  const kept: string[] = [];
+  for (const word of (raw ?? "").trim().split(/\s+/)) {
+    if (!/^[A-Z][A-Za-z]*$/.test(word)) break;
+    kept.push(word);
+    if (kept.length === 2) break;
+  }
+  return kept.length ? kept.join(" ") : null;
+}
+
+const SELF_NAME_PATTERNS = [
+  /\byour name is\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/gi,
+  /\b(?:they|you) go by\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/gi,
+  /\bcalled\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/gi,
+  /\bi['’]m\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/gi,
+  /\bi am\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/gi,
+  /\bname:\s*([A-Za-z]+(?:\s+[A-Za-z]+)?)/gi,
+  /\bmy name is\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/gi,
+  /\b(?:the )?user'?s name is\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/gi,
+];
+
+/** Names the gist gives the user, not a pet or a friend. */
+export function checkInSelfNames(gist: string): string[] {
+  const text = cleanGist(gist);
+  const found: string[] = [];
+  for (const pattern of SELF_NAME_PATTERNS) {
+    pattern.lastIndex = 0;
+    for (const match of text.matchAll(pattern)) {
+      const name = capitalName(match[1]);
+      if (name) found.push(name);
+    }
+  }
+  const bare = text.match(/^their name is\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/i);
+  const own = capitalName(bare?.[1]);
+  if (own) found.push(own);
+  return found;
+}
+
+/** The user's own name, from a self-name gist. */
 export function checkInUserName(gist: string): string | null {
-  const match = cleanGist(gist).match(USER_NAME_RE);
-  return match?.[1] ?? null;
+  return checkInSelfNames(gist)[0] ?? null;
 }
 
 /**
@@ -157,7 +224,7 @@ export function checkInSpokenUserName(
   const profile = profileName?.trim() ?? "";
   if (!profile) return null;
   const key = profile.toLowerCase();
-  if (gists.some((gist) => checkInUserName(gist)?.toLowerCase() === key)) return profile;
+  if (gists.some((gist) => checkInSelfNames(gist).some((name) => name.toLowerCase() === key))) return profile;
   const copied = gists.some((gist) => {
     const cleaned = cleanGist(gist);
     if (!cleaned || CHECKIN_STOP_RE.test(cleaned)) return false;
@@ -172,8 +239,7 @@ function blockedNames(gists: readonly string[], profileName?: string | null): Se
   const profile = profileName?.trim();
   if (profile) names.add(profile.toLowerCase());
   for (const gist of gists) {
-    const own = checkInUserName(gist);
-    if (own) names.add(own.toLowerCase());
+    for (const own of checkInSelfNames(gist)) names.add(own.toLowerCase());
   }
   return names;
 }
@@ -189,15 +255,21 @@ export function checkInMemoryLine(
   const cleaned = cleanGist(gist);
   if (!cleaned || CHECKIN_STOP_RE.test(cleaned)) return null;
   const named = namedFact(cleaned);
-  if (!named || !relation(named.subject)) return null;
+  if (!named || !relation(named.subject) || wordName(named.name)) return null;
   const blocked = new Set((userNames ?? []).map((name) => name.trim().toLowerCase()).filter(Boolean));
   if (blocked.has(named.name.toLowerCase())) return null;
   return `Tell ${named.name} I said hi.`;
 }
 
-function bandLine(band: CheckInBand, date: string): string {
+function chooseBandLine(
+  band: CheckInBand,
+  date: string,
+  avoidLineId?: string | null,
+): { id: string; text: string } {
   const rows = CHECKIN_LINES[band];
-  return rows[rotate(`${date}:${band}`, rows.length)]!;
+  let index = rotate(`${date}:${band}`, rows.length);
+  if (avoidLineId === `${band}:${index}`) index = (index + 1) % rows.length;
+  return { id: `${band}:${index}`, text: rows[index]! };
 }
 
 function recentMessage(threads: readonly CheckInThread[], nowMs: number): boolean {
@@ -214,9 +286,10 @@ export function composeCheckInLine(
   date: string,
   gists: readonly string[],
   profileName?: string | null,
+  avoidLineId?: string | null,
 ): string {
   const band = checkInBand(now.hour);
-  const base = bandLine(band, date);
+  const base = chooseBandLine(band, date, avoidLineId).text;
   const opts = { now, recentText: "", askedTime: false as const };
   const plain = filterClockSpokenLine(base, opts) || base;
   const blocked = blockedNames(gists, profileName);
@@ -239,8 +312,10 @@ export function planDailyCheckIn(input: {
   birthdayCard: boolean;
   staleNotice: boolean;
   memoryGists?: readonly string[];
-  /** Profile name. A "my name is" / "user's name" gist is read from the gists. */
+  /** Profile name. Self-name gists are read from memory as well. */
   userName?: string | null;
+  /** Yesterday's time-of-day line, so today does not repeat it. */
+  lastLineId?: string | null;
 }): CheckInPlan {
   if (input.callActive || input.birthdayCard || input.staleNotice) return { post: false };
   const timeZone = clockTimeZone(input.timeZone);
@@ -254,11 +329,14 @@ export function planDailyCheckIn(input: {
     return { post: false };
   }
   if (recentMessage(input.threads, now.getTime())) return { post: false };
+  const band = checkInBand(clock.hour);
+  const chosen = chooseBandLine(band, date, input.lastLineId);
   return {
     post: true,
     date,
-    band: checkInBand(clock.hour),
-    line: composeCheckInLine(clock, date, input.memoryGists ?? [], input.userName),
+    band,
+    lineId: chosen.id,
+    line: composeCheckInLine(clock, date, input.memoryGists ?? [], input.userName, input.lastLineId),
   };
 }
 

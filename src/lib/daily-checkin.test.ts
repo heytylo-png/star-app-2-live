@@ -12,6 +12,7 @@ import {
   checkInSpokenUserName,
   composeCheckInLine,
   loadCheckInDate,
+  loadCheckInLineId,
   planDailyCheckIn,
   saveCheckInDate,
   settleDailyCheckIn,
@@ -99,7 +100,9 @@ describe("daily check-in", () => {
     assert.equal(checkInMemoryLine("Their cat's name is Miso"), "Tell Miso I said hi.");
     assert.equal(checkInMemoryLine("Their dog is named Biscuit"), "Tell Biscuit I said hi.");
     assert.equal(checkInMemoryLine("best friend's name is Jo"), "Tell Jo I said hi.");
-    assert.equal(checkInMemoryLine("Their sister's name is ada"), "Tell ada I said hi.");
+    assert.equal(checkInMemoryLine("Their sister's name is ada"), null);
+    assert.equal(checkInMemoryLine("Their sister's name is Ada"), "Tell Ada I said hi.");
+    assert.equal(checkInMemoryLine("Their cat's name is Mary Jane"), "Tell Mary Jane I said hi.");
     assert.equal(checkInMemoryLine("Their cat's name is Alex"), "Tell Alex I said hi.");
     assert.equal(checkInMemoryLine("Their cat's name is Andrew"), "Tell Andrew I said hi.");
     const line = composeCheckInLine(readLocalNow(MORNING, TZ), "2026-09-23", ["Their cat's name is Miso"]);
@@ -151,6 +154,84 @@ describe("daily check-in", () => {
     );
     assert.match(copied, /Tell Miso I said hi\.$/);
     assert.equal(checkInSpokenUserName("Ty", ["My name is Ty", "Their cat's name is Ty"]), "Ty");
+  });
+
+  it("does not speak a name that keeps going, a word-name, or the user's own name", () => {
+    const morning = readLocalNow(MORNING, TZ);
+    const leaks = [
+      "Their cat's name is Miso who died last year",
+      "Their cat's name is Miso, he died",
+      "Their cat's name is Miso (passed away)",
+      "Their cat's name is Miso in rehab",
+      "Their cat's name is Miso in prison",
+      "Their cat's name is Miso was assaulted",
+      "Their cat's name is Miso he killed himself",
+      "Their cat's name is Miso from school",
+      "Their cat's name is Mom",
+      "Their friend's name is God",
+      "Their dog's name is mom",
+      "Your name is Rex",
+    ];
+    for (const gist of leaks) {
+      assert.equal(checkInMemoryLine(gist), null, gist);
+      const line = composeCheckInLine(morning, "2026-09-23", [gist]);
+      assert.ok(CHECKIN_LINES.morning.includes(line), `${gist} -> ${line}`);
+      assert.equal(/\b(?:miso|mom|god|rex|tell)\b/i.test(line), false, line);
+    }
+    assert.equal(checkInMemoryLine("Their cat's name is Miso."), "Tell Miso I said hi.");
+    const rex = composeCheckInLine(morning, "2026-09-23", [
+      "Your name is Rex",
+      "Their dog's name is Rex",
+    ]);
+    assert.ok(CHECKIN_LINES.morning.includes(rex), rex);
+    assert.equal(/\brex\b/i.test(rex), false);
+    for (const gist of ["they go by Rex", "you go by Rex", "called Rex", "I'm Rex", "I am Rex", "Name: Rex"]) {
+      const line = composeCheckInLine(morning, "2026-09-23", [gist, "Their dog's name is Rex"]);
+      assert.ok(CHECKIN_LINES.morning.includes(line), `${gist} -> ${line}`);
+      assert.equal(/\brex\b/i.test(line), false, gist);
+    }
+    const profile = composeCheckInLine(morning, "2026-09-23", ["Their dog's name is Rex"], "Rex");
+    assert.ok(CHECKIN_LINES.morning.includes(profile), profile);
+  });
+
+  it("does not repeat yesterday's time-of-day line", () => {
+    const next = new Date("2026-09-24T08:00:00-05:00");
+    const prior = new Date("2026-09-22T12:00:00-05:00").getTime();
+    const natural = planDailyCheckIn({
+      ...open,
+      now: next,
+      threads: [thread(prior)],
+      lastDate: "2026-09-23",
+    });
+    assert.equal(natural.post, true);
+    if (!natural.post) return;
+    const avoided = planDailyCheckIn({
+      ...open,
+      now: next,
+      threads: [thread(prior)],
+      lastDate: "2026-09-23",
+      lastLineId: natural.lineId,
+    });
+    assert.equal(avoided.post, true);
+    if (!avoided.post) return;
+    assert.notEqual(avoided.line, natural.line);
+    assert.notEqual(avoided.lineId, natural.lineId);
+    assert.ok(CHECKIN_LINES.morning.includes(avoided.line));
+
+    const storage = new Map<string, string>();
+    saveCheckInDate(natural.date, (key, value) => storage.set(key, value), natural.lineId);
+    assert.equal(loadCheckInDate((key) => storage.get(key) ?? null), natural.date);
+    assert.equal(loadCheckInLineId((key) => storage.get(key) ?? null), natural.lineId);
+    const loaded = planDailyCheckIn({
+      ...open,
+      now: next,
+      threads: [thread(prior)],
+      lastDate: "2026-09-23",
+      lastLineId: loadCheckInLineId((key) => storage.get(key) ?? null),
+    });
+    assert.equal(loaded.post, true);
+    if (!loaded.post) return;
+    assert.notEqual(loaded.line, natural.line);
   });
 
   it("posts one late beat at 23:59 and stays quiet two minutes later", () => {
@@ -216,6 +297,8 @@ describe("daily check-in", () => {
     const body = app.slice(at, close);
     assert.match(body, /appendMessage/);
     assert.match(body, /saveCheckInDate/);
+    assert.match(body, /turn\.plan\.lineId/);
+    assert.match(body, /loadCheckInLineId/);
     assert.match(body, /checkInSpokenUserName\(memory\.slots\.name, memoryGists\)/);
     assert.match(app.slice(0, at), /checkInTriedRef/);
     assert.doesNotMatch(body, /setPose|speak\(|markStarterChipsDone|setCaption/);
