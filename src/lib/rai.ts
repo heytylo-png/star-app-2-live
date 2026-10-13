@@ -751,8 +751,13 @@ export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
   "rai/wave1292_hold.webp": "w11",
   // Pout (1158 in / hold f48 / 1162 out): p1 = face skin re-matched to idle; p2 = face above the jaw only
   // (neck / under-chin shadow, jaw line, mouth line + lips keep their 49aa88b pixels), 2026-10-10.
+  // Smug out s1 (TyLo 2026-10-12 22:21): 1084 f129-f144 eased into idle like 1276 t3 / pout p3 (flow morph of the whole
+  // figure to idle.png; f144 = idle). f0-f128 keep the original coded frames (TUs copied). The intro and hold stay unversioned.
+  "rai/smug1084_out.avif": "s1",
   "rai/pout1158_in.avif": "p2",
-  "rai/pout1162_out.avif": "p2",
+  // p3 (TyLo 2026-10-12 22:21): 1162 f129-f144 eased into idle like 1276 t3 (flow morph of the whole figure to idle.png;
+  // f144 = idle). f0-f128 keep the p2 coded frames (bitstream TUs copied, decoded bit-identical). Intro + hold stay p2.
+  "rai/pout1162_out.avif": "p3",
   "rai/pout1158_hold.webp": "p2",
   // Talk (1257 in / hold f144 / 1276 out), 2026-10-11: per-frame pout fit (camera push), white matte cut,
   // per-zone skin match + face above the jaw (pout p2), alpha-only post. Muted (no audio track).
