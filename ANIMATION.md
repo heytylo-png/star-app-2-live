@@ -98,6 +98,9 @@ Same player path as 1085/1084: muted animated AVIF (no audio track), WebCodecs I
 - w6 (2026-10-10, CoS fa14ed7 FAIL): 1126 f0-6/8/10/12/14/18/28/30 had an opaque near-white patch between the thighs (~16.8k px); it is alpha 0 now, with its light 1-3 px fringe (alpha only, RGB untouched). Every decoded intro frame has 0 near-white opaque px in the thigh gap. f41-45 finger-gap matte touching transparency cleared (alpha only). 1140 f0-f7: the hold's (f98) smile is morphed into 1140's own mouth (ink-ratio warp along an interpolated centreline, t=(i/8)^1.4), mouth patch only, alpha/legs/arms/pose untouched, so the mouth no longer snaps at hold→1140. The hold is re-exported from the decoded w6 f98 (alpha identical, colour WebP q95). Scripts: f807/bridge/w1126/w6_fixes.py (gap), w6b_fixes.py, w6c_finger_edge.py.
 - Encode: libaom crf 26, 99 / 145 frames, 24 fps, 672×1280 + alpha. URLs carry `?v=w6` for the intro, hold and 1140 (`BRIDGE_FILE_VERSION`); smug/idle URLs unchanged. Allowlist: idle sheets + the two clips + hold.
 
+### Wave 1320 face landing (w14, TyLo 2026-10-13)
+- f113–f120: only the face interior (eyes, brows, mouth; eroded so the silhouette and alpha stay put) flow-morphs into idle, W = 0.25, 0.6, 0.9, 1.0, 0.85, 0.6, 0.35, 0.12; the steady 1 px offset is removed sub-pixel over the same frames. f0–f112 coded frames unchanged; no crossfade, no idle swap.
+
 ### Landing ease re-time (pout p4 / smug s2, TyLo 2026-10-13)
 - f129–f144 increments W = 0.15, 0.4, 0.7, 0.9, 1.0, 0.95 … 0.09 (ease out: soft onset continuous with f128, peak at f133, the last steps smallest). f144 = idle; f0–f128 coded frames, intros and holds unchanged. Wave w13: 1320 f38/39/41/42/47 finger-root white punched (alpha only).
 
