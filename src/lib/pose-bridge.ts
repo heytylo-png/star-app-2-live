@@ -114,7 +114,7 @@ export const POUT_CLIP_BOX = { x: 128, y: 0, w: 480, h: 1280 } as const;
 export const TALK_CLIP_BOX = { x: 128, y: 0, w: 480, h: 1280 } as const;
 
 /**
- * Welcome-back wave (TyLo 2026-10-13 10:08, wb1): 1329 (face stays closer to the glare) and 1330 (face softens more),
+ * Welcome-back wave (TyLo 2026-10-13 10:08, wb1; wb2 16:24: f0-f7 face-only ease-in from idle, f8+ unchanged): 1329 (face stays closer to the glare) and 1330 (face softens more),
  * each 121 frames, idle glare -> open-palm wave -> idle glare, muted. Registered to idle like 1320 (uniform x1.845, soles +
  * feet centre on idle), same x 0..672 band as the wave. Not a pose pair: they play from idle back to idle on one player
  * ("in" = 1329, "out" = 1330 canvases). See welcome-wave.ts for when.

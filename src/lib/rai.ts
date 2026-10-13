@@ -754,8 +754,8 @@ export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
   "rai/wave1320_out.avif": "w14",
   "rai/wave1292_hold.webp": "w11",
   // Welcome-back wave (TyLo 2026-10-13 10:08): 1329 / 1330, idle -> idle, muted, lazy (welcome-wave.ts).
-  "rai/welcome1329.avif": "wb1",
-  "rai/welcome1330.avif": "wb1",
+  "rai/welcome1329.avif": "wb2",
+  "rai/welcome1330.avif": "wb2",
   // Pout (1158 in / hold f48 / 1162 out): p1 = face skin re-matched to idle; p2 = face above the jaw only
   // (neck / under-chin shadow, jaw line, mouth line + lips keep their 49aa88b pixels), 2026-10-10.
   // Smug out s1 (TyLo 2026-10-12 22:21): 1084 f129-f144 eased into idle like 1276 t3 / pout p3 (flow morph of the whole

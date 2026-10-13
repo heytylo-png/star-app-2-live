@@ -33,19 +33,19 @@ const manifest = JSON.parse(readFileSync(join(root, "src/lib/welcome-clip-edges.
 const idle = { restingIdle: true, talking: false, wantedIdle: true, reducedMotion: false };
 
 describe("welcome-back wave (TyLo 2026-10-13 10:08)", () => {
-  it("two separate 121-frame clips, tagged wb1, lazy (not a pose pair, not in the startup clips)", () => {
+  it("two separate 121-frame clips, tagged wb2, lazy (not a pose pair, not in the startup clips)", () => {
     assert.equal(WELCOME_1329_CLIP.file, "rai/welcome1329.avif");
     assert.equal(WELCOME_1330_CLIP.file, "rai/welcome1330.avif");
     for (const c of WELCOME_CLIPS) {
       assert.equal(c.frames, 121);
-      assert.equal(BRIDGE_FILE_VERSION[c.file], "wb1");
-      assert.equal(parseClipFrame(`${c.file}?v=wb1#120`)?.clip, c);
+      assert.equal(BRIDGE_FILE_VERSION[c.file], "wb2");
+      assert.equal(parseClipFrame(`${c.file}?v=wb2#120`)?.clip, c);
       assert.ok(!bridgeClips().includes(c));
       for (const list of Object.values(POSE_BRIDGE_PAIRS)) assert.ok(!list.some((f) => f.startsWith(c.file)));
     }
     assert.deepEqual(
       welcomeClipUrls().map((u) => u.replace(/^.*\/rai\//, "rai/")),
-      ["rai/welcome1329.avif?v=wb1", "rai/welcome1330.avif?v=wb1"],
+      ["rai/welcome1329.avif?v=wb2", "rai/welcome1330.avif?v=wb2"],
     );
     const sw = readFileSync(join(root, "public/sw.js"), "utf8");
     assert.doesNotMatch(sw, /welcome13/, "never precached");
