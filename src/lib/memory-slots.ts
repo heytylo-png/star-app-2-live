@@ -43,6 +43,13 @@ export type MemorySlotState = {
   chart_source?: ChartSource;
   /** Explicit user-set IANA zone only. Device zone is the Clock default. */
   timezone?: string;
+  /**
+   * Where `name` came from. `self` is a user-name form. `legacy` is a value
+   * that was already stored with no source. A self name is never cleared.
+   */
+  name_source?: "self" | "legacy";
+  /** The legacy clear has already run. Do not judge this profile again. */
+  name_checked?: true;
 };
 
 export type AffectionSlotInput = {
@@ -137,8 +144,16 @@ export function applySlotPatch(current: MemorySlotState, patch: MemorySlotState)
   if (patch.timezone !== undefined) {
     next.timezone = patch.timezone.trim() || undefined;
   }
+  if (patch.name_source === "self") {
+    next.name_source = "self";
+    delete next.name_checked;
+  } else if (patch.name_source === "legacy") {
+    next.name_source = "legacy";
+  }
+  if (patch.name_checked === true) next.name_checked = true;
 
   if (!next.name) delete next.name;
+  if (!next.name) delete next.name_source;
   if (!next.mood) delete next.mood;
   if (!next.last_topic) delete next.last_topic;
   if (!next.last_choice) delete next.last_choice;
@@ -160,27 +175,54 @@ export function applySlotPatch(current: MemorySlotState, patch: MemorySlotState)
  * brain.ts saves. A possessive subject ("their cat's name is") never matches.
  */
 const USER_NAME_RE =
-  /(?:^their name is|\b(?:my name is|i(?:['’]m| am) called|call me|i go by|your name is|(?:the )?user['’]s name is))\s+([A-Za-z][\w'-]{1,24})/i;
+  /(?:^their name is|\b(?:my name is|i(?:['’]m| am) called|call me|i go by|they go by|your name is|(?:the )?user['’]s name is))\s+([A-Za-z][\w'-]{1,24})/gi;
 
-const CALL_ME_NOT_A_NAME = new Set(["maybe", "later", "back", "when"]);
+const CALL_ME_NOT_A_NAME = new Set([
+  "maybe",
+  "later",
+  "back",
+  "when",
+  "tomorrow",
+  "anytime",
+  "sometime",
+  "soon",
+  "now",
+  "tonight",
+]);
+
+const NAME_ADJECTIVE = new Set(["pretty", "cute", "nice", "cool", "weird", "funny", "beautiful"]);
 
 /** Pet, friend, or sibling in a possessive gist. Not the user's name. */
 const POSSESSIVE_KIN_RE =
   /^(?:their|the|my|our|your|her|his|a|an)\s+(?:best\s+)?(?:pet|cat|dog|friend|sibling|brother|sister)['’]s\s+(?:name is|is named)\s+([A-Za-z][\w'-]{1,24})/i;
 
-export function extractName(text: string): string | undefined {
-  const cleaned = text.replace(/\s+/g, " ").trim();
-  if (!cleaned) return undefined;
-  const m = cleaned.match(USER_NAME_RE);
-  const raw = m?.[1];
-  if (!raw) return undefined;
+function acceptCapturedName(phrase: string, raw: string): string | undefined {
   const name = cleanToken(raw);
   if (!name || NAME_STOP.has(name.toLowerCase())) return undefined;
   if (/^(cameraman|director|photographer)$/i.test(name)) return undefined;
-  const phrase = (m[0] ?? "").toLowerCase();
-  if (phrase.startsWith("call me") && CALL_ME_NOT_A_NAME.has(name.toLowerCase())) return undefined;
-  if (/^my name is not\b/i.test(phrase)) return undefined;
+  const lead = phrase.toLowerCase();
+  if (lead.startsWith("call me") && CALL_ME_NOT_A_NAME.has(name.toLowerCase())) return undefined;
+  if (/^my name is not\b/i.test(lead)) return undefined;
+  if (lead.startsWith("your name is") && NAME_ADJECTIVE.has(name.toLowerCase())) return undefined;
   return name;
+}
+
+/** Every self-name in the text, in order. Possessive subjects are not included. */
+export function selfFormNames(text: string): string[] {
+  const cleaned = text.replace(/\s+/g, " ").trim();
+  if (!cleaned) return [];
+  USER_NAME_RE.lastIndex = 0;
+  const names: string[] = [];
+  for (const match of cleaned.matchAll(USER_NAME_RE)) {
+    const name = acceptCapturedName(match[0] ?? "", match[1] ?? "");
+    if (name) names.push(name);
+  }
+  USER_NAME_RE.lastIndex = 0;
+  return names;
+}
+
+export function extractName(text: string): string | undefined {
+  return selfFormNames(text)[0];
 }
 
 function possessiveKinName(text: string): string | undefined {
@@ -190,20 +232,16 @@ function possessiveKinName(text: string): string | undefined {
 }
 
 /**
- * True when the profile equals a pet, friend, or sibling named only by a
- * possessive gist. A real user-name gist for that same name keeps the profile.
+ * Legacy profile equals a pet, friend, or sibling, and no self-form memory
+ * (including "They go by X") names that same person.
  */
-function profileCopiedFromKin(items: MemoryItemLike[], profile: string): boolean {
+function legacyNameIsPossessiveOnly(items: MemoryItemLike[], profile: string): boolean {
   const want = profile.trim().toLowerCase();
   if (!want) return false;
-  let fromKin = false;
   for (const item of items) {
-    const own = extractName(item.text);
-    if (own && own.toLowerCase() === want) return false;
-    const kin = possessiveKinName(item.text);
-    if (kin && kin.toLowerCase() === want) fromKin = true;
+    if (selfFormNames(item.text).some((name) => name.toLowerCase() === want)) return false;
   }
-  return fromKin;
+  return items.some((item) => possessiveKinName(item.text)?.toLowerCase() === want);
 }
 
 export function extractRole(text: string): string | undefined {
@@ -305,7 +343,10 @@ export function extractSlotsFromUserText(
 
   const patch: MemorySlotState = {};
   const name = extractName(cleaned);
-  if (name) patch.name = name;
+  if (name) {
+    patch.name = name;
+    patch.name_source = "self";
+  }
 
   const mood = extractMood(cleaned);
   if (mood) patch.mood = mood;
@@ -357,7 +398,7 @@ export function migrateItemsToSlots(
     for (const item of items) {
       const name = extractName(item.text);
       if (name) {
-        next = applySlotPatch(next, { name });
+        next = applySlotPatch(next, { name, name_source: "self" });
         break;
       }
     }
@@ -371,8 +412,13 @@ export function migrateItemsToSlots(
       }
     }
   }
-  if (next.name && profileCopiedFromKin(items, next.name)) {
-    next = applySlotPatch(next, { name: "" });
+  if (next.name && next.name_source !== "self" && !next.name_checked) {
+    if (legacyNameIsPossessiveOnly(items, next.name)) {
+      next = applySlotPatch(next, { name: "" });
+    } else if (!next.name_source) {
+      next.name_source = "legacy";
+    }
+    next.name_checked = true;
   }
   return next;
 }

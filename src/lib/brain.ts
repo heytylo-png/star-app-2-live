@@ -11,6 +11,7 @@ import {
   type PoseId,
   type ResolveSpokenPoseOpts,
 } from "./rai.ts";
+import { extractName } from "./memory-slots.ts";
 import { filterEchoedLine, isBareGreeting, localTrackAct } from "./track.ts";
 
 export type BrainMessage = { role: "user" | "assistant"; content: string };
@@ -35,11 +36,9 @@ export function extractMemCandidate(text: string): string[] | undefined {
   const cleaned = text.replace(/\s+/g, " ").trim();
   if (!cleaned) return undefined;
 
-  const name = cleaned.match(
-    /(?:my name is|i(?:'m| am) called|call me)\s+([A-Za-z][\w'-]{1,24})/i,
-  );
-  if (name?.[1] && !NAME_STOP.has(name[1].toLowerCase())) {
-    out.push(`Their name is ${name[1]}`);
+  const name = extractName(cleaned);
+  if (name && !NAME_STOP.has(name.toLowerCase())) {
+    out.push(`Their name is ${name}`);
   }
 
   const city = cleaned.match(

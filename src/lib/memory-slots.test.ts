@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
+import { extractMemCandidate } from "./brain.ts";
 import { MEMORY_SLOTS_CONTRACT, RAI_SYSTEM } from "./generated/star-rai-artifacts.ts";
 import {
   applySlotPatch,
@@ -145,11 +146,13 @@ describe("extractSlotsFromUserText", () => {
     assert.equal(extractName("my name is Ty"), "Ty");
     assert.equal(extractName("call me Ty"), "Ty");
     assert.equal(extractName("I go by Ty"), "Ty");
+    assert.equal(extractName("They go by Ty"), "Ty");
     assert.equal(extractName("your name is Ty"), "Ty");
     assert.equal(extractName("the user's name is Ty"), "Ty");
     assert.equal(extractName("Their name is Tylo"), "Tylo");
     assert.equal(extractName("I'm called Ty"), "Ty");
     assert.equal(extractName("I am called Ty"), "Ty");
+    assert.equal(extractSlotsFromUserText("I go by Kim").name_source, "self");
     assert.equal(extractName("Hey. Just got here."), undefined);
     assert.equal(extractName("Remember that I like talking to you at night."), undefined);
     assert.equal(extractName("My name is the person talking"), undefined);
@@ -157,10 +160,12 @@ describe("extractSlotsFromUserText", () => {
     assert.equal(extractName("Their cat's name is Miso"), undefined);
     assert.equal(extractName("Their friend's name is Miso"), undefined);
     assert.equal(extractName("their dog's name is Rex"), undefined);
-    assert.equal(extractName("call me maybe"), undefined);
-    assert.equal(extractName("call me later"), undefined);
-    assert.equal(extractName("call me back"), undefined);
-    assert.equal(extractName("call me when"), undefined);
+    for (const word of ["maybe", "later", "back", "when", "tomorrow", "anytime", "sometime", "soon", "now", "tonight"]) {
+      assert.equal(extractName(`call me ${word}`), undefined, word);
+    }
+    for (const word of ["pretty", "cute", "nice", "cool", "weird", "funny", "beautiful"]) {
+      assert.equal(extractName(`your name is ${word}`), undefined, word);
+    }
     assert.equal(extractName("my name is not"), undefined);
     assert.equal(extractName("my name is not Ty"), undefined);
     const patch = extractSlotsFromUserText("Call me Sam.");
@@ -284,6 +289,45 @@ describe("migrateItemsToSlots", () => {
       { name: "Miso" },
     );
     assert.equal(own.name, "Miso");
+  });
+
+  it("keeps a self-sourced name after Their name is Kim is removed", () => {
+    const kept = migrateItemsToSlots(
+      [{ text: "Their sister's name is Kim" }],
+      { name: "Kim", name_source: "self" },
+    );
+    assert.equal(kept.name, "Kim");
+    assert.equal(kept.name_source, "self");
+  });
+
+  it("clears a legacy profile copied from a pet once, then leaves the stamp alone", () => {
+    const cleared = migrateItemsToSlots([{ text: "Their cat's name is Miso" }], { name: "Miso" });
+    assert.equal(cleared.name, undefined);
+    assert.equal(cleared.name_source, undefined);
+    assert.equal(cleared.name_checked, true);
+    const again = migrateItemsToSlots([{ text: "Their cat's name is Miso" }], cleared);
+    assert.equal(again.name, undefined);
+    assert.equal(again.name_checked, true);
+  });
+
+  it("keeps a legacy name when a self-form memory, including They go by, is still stored", () => {
+    const kept = migrateItemsToSlots(
+      [{ text: "They go by Kim" }, { text: "Their sister's name is Kim" }],
+      { name: "Kim" },
+    );
+    assert.equal(kept.name, "Kim");
+    assert.equal(kept.name_source, "legacy");
+    assert.equal(kept.name_checked, true);
+  });
+});
+
+describe("extractMemCandidate name memories", () => {
+  it("saves I go by, your name is, and they go by as Their name is", () => {
+    assert.deepEqual(extractMemCandidate("I go by Kim"), ["Their name is Kim"]);
+    assert.deepEqual(extractMemCandidate("your name is Kim"), ["Their name is Kim"]);
+    assert.deepEqual(extractMemCandidate("They go by Kim"), ["Their name is Kim"]);
+    assert.equal(extractMemCandidate("your name is pretty"), undefined);
+    assert.equal(extractMemCandidate("call me tomorrow"), undefined);
   });
 });
 
