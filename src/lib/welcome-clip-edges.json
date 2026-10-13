@@ -9,7 +9,7 @@
 "strip_px": 2,
 "clips": {
 "rai/welcome1329.avif": {
-"sha256": "94400860305d625e033e0e068e61ecc4323ed7ee1428e89c785949a9a2b450ca",
+"sha256": "d2682103ae8788b6428eba5bf0f4237324466cb529c7a1015b74f450481db765",
 "frames": 121,
 "width": 672,
 "height": 1280,
@@ -1469,7 +1469,7 @@
 ]
 },
 "rai/welcome1330.avif": {
-"sha256": "ada39e7275372b944c9061fb3afc87e1833df1ec69d0c9a62372e2a176398f8f",
+"sha256": "b98d7b87abc7f63e013a27c4b4f5c9811a61bc0a77a2e320b98f30870e0c0e74",
 "frames": 121,
 "width": 672,
 "height": 1280,
