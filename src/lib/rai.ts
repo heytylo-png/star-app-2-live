@@ -745,10 +745,11 @@ export function spriteNeedsWhitePunch(src: string): boolean {
  *   w12 (TyLo 2026-10-12 21:36): 1320 f38-f55 white-matte streaks between the fingers punched to alpha 0 (alpha only).
  *   Only 1320 changes; 1292 + hold stay w11.
  *   w13 (TyLo 2026-10-13): 1320 f38/39/41/42/47 leftover near-white at the finger roots punched to alpha 0 (alpha only).
+ *   w14 (TyLo 2026-10-13): 1320 f113-f120 face-only ease (eyes, brows, mouth) into idle + subpixel 1 px offset fix; f0-f112 coded frames unchanged.
  */
 export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
   "rai/wave1292_in.avif": "w11",
-  "rai/wave1320_out.avif": "w13",
+  "rai/wave1320_out.avif": "w14",
   "rai/wave1292_hold.webp": "w11",
   // Pout (1158 in / hold f48 / 1162 out): p1 = face skin re-matched to idle; p2 = face above the jaw only
   // (neck / under-chin shadow, jaw line, mouth line + lips keep their 49aa88b pixels), 2026-10-10.
