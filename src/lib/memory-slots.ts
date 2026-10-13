@@ -154,12 +154,17 @@ export function applySlotPatch(current: MemorySlotState, patch: MemorySlotState)
   return next;
 }
 
+/**
+ * The user's own name only. A third-person possessive
+ * ("their cat's name is", "a friend's name is") is never the profile.
+ */
+const USER_NAME_RE =
+  /\b(?:my name is|call me|i go by|your name is|(?:the )?user['’]s name is)\s+([A-Za-z][\w'-]{1,24})/i;
+
 export function extractName(text: string): string | undefined {
   const cleaned = text.replace(/\s+/g, " ").trim();
   if (!cleaned) return undefined;
-  const m = cleaned.match(
-    /(?:my name is|i(?:'m| am) called|call me|their name is|name is)\s+([A-Za-z][\w'-]{1,24})/i,
-  );
+  const m = cleaned.match(USER_NAME_RE);
   const raw = m?.[1];
   if (!raw) return undefined;
   const name = cleanToken(raw);

@@ -142,11 +142,22 @@ describe("formatMemoryFacts", () => {
 describe("extractSlotsFromUserText", () => {
   it("fills name when they say it; never invents one", () => {
     assert.equal(extractName("My name is Tylo"), "Tylo");
+    assert.equal(extractName("my name is Ty"), "Ty");
+    assert.equal(extractName("call me Ty"), "Ty");
+    assert.equal(extractName("I go by Ty"), "Ty");
+    assert.equal(extractName("your name is Ty"), "Ty");
+    assert.equal(extractName("the user's name is Ty"), "Ty");
     assert.equal(extractName("Hey. Just got here."), undefined);
     assert.equal(extractName("Remember that I like talking to you at night."), undefined);
     assert.equal(extractName("My name is the person talking"), undefined);
+    assert.equal(extractName("Their cat's name is Miso"), undefined);
+    assert.equal(extractName("Their friend's name is Miso"), undefined);
+    assert.equal(extractName("their dog's name is Rex"), undefined);
     const patch = extractSlotsFromUserText("Call me Sam.");
     assert.equal(patch.name, "Sam");
+    assert.equal(extractSlotsFromUserText("my name is Ty").name, "Ty");
+    assert.equal(extractSlotsFromUserText("call me Ty").name, "Ty");
+    assert.equal(extractSlotsFromUserText("Their cat's name is Miso").name, undefined);
   });
 
   it("sets role only on explicit role language — no default cameraman", () => {
@@ -222,7 +233,7 @@ describe("migrateItemsToSlots", () => {
     const slots = migrateItemsToSlots(
       [
         { text: "They live in Tokyo" },
-        { text: "Their name is Tylo" },
+        { text: "The user's name is Tylo" },
         { text: "Their job: engineer" },
       ],
       {},
@@ -230,6 +241,19 @@ describe("migrateItemsToSlots", () => {
     assert.equal(slots.name, "Tylo");
     assert.equal(slots.role, undefined);
     assert.equal(slots.chart, undefined);
+  });
+
+  it("does not take a third-person possessive as the profile name", () => {
+    const slots = migrateItemsToSlots(
+      [
+        { text: "Their cat's name is Miso" },
+        { text: "Their friend's name is Jo" },
+      ],
+      {},
+    );
+    assert.equal(slots.name, undefined);
+    const kept = migrateItemsToSlots([{ text: "Their cat's name is Miso" }], { name: "Ty" });
+    assert.equal(kept.name, "Ty");
   });
 });
 

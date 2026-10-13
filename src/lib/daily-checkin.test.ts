@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import { readLocalNow } from "./clock.ts";
+import { migrateItemsToSlots } from "./memory-slots.ts";
 import {
   CHECKIN_LINES,
   checkInBand,
@@ -94,6 +95,18 @@ describe("daily check-in", () => {
       showStarterChips({ hasSent: false, hasHistory: false, starterChipsDone: false, birthdayCard: false }),
       true,
     );
+  });
+
+  it("still greets the cat when that name never became the profile", () => {
+    const slots = migrateItemsToSlots([{ text: "Their cat's name is Miso" }], {});
+    assert.equal(slots.name, undefined);
+    const line = composeCheckInLine(
+      readLocalNow(MORNING, TZ),
+      "2026-09-23",
+      ["Their cat's name is Miso"],
+      slots.name,
+    );
+    assert.match(line, /Tell Miso I said hi\.$/);
   });
 
   it("says hi to an allowlisted pet and keeps the name's casing", () => {
