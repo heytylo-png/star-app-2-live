@@ -13,8 +13,11 @@ import {
   WELCOME_GAP_MS,
   WELCOME_PENDING_MAX_MS,
   WELCOME_SETTLE_MS,
+  WELCOME_CHECKIN_KEY,
   WelcomeGate,
   pickWelcomeClip,
+  welcomeBlocker,
+  welcomePageFromDom,
   readLastActivity,
   welcomeDebugClip,
   welcomeDue,
@@ -126,5 +129,42 @@ describe("welcome-back wave (TyLo 2026-10-13 10:08)", () => {
     assert.match(css, /data-rai-bridge-on="wcb"\] > \.rai-layer\[data-rai-role="bridge"\]\[data-rai-clip="wcb"\]/);
     const mod = readFileSync(join(root, "src/lib/welcome-wave.ts"), "utf8");
     assert.doesNotMatch(mod, /speak\(|addMessage|new Audio|createThread/);
+  });
+});
+
+describe("welcome-back wave gates (CoS 356cdf5)", () => {
+  const none = { call: false, callEndedCard: false, rememberToast: false, reloadNotice: false, checkInPosted: false };
+  it("never with a call, the check-in line, the call-ended card, the remember toast or the Reload notice", () => {
+    assert.equal(welcomeBlocker(none), null);
+    assert.equal(welcomeBlocker({ ...none, call: true }), "call");
+    assert.equal(welcomeBlocker({ ...none, checkInPosted: true }), "check-in");
+    assert.equal(welcomeBlocker({ ...none, callEndedCard: true }), "call-ended");
+    assert.equal(welcomeBlocker({ ...none, rememberToast: true }), "remember-toast");
+    assert.equal(welcomeBlocker({ ...none, reloadNotice: true }), "reload-notice");
+  });
+  it("reads the call bars and notice markers from the DOM", () => {
+    const doc = (spans: string[], sel: string[]) => ({
+      querySelector: (q: string) => (sel.some((s) => q.includes(s)) ? {} : null),
+      querySelectorAll: () => spans.map((t) => ({ textContent: t })),
+    });
+    assert.equal(welcomePageFromDom(doc(["On call"], []), false).call, true);
+    assert.equal(welcomePageFromDom(doc(["Allow microphone"], []), false).call, true);
+    assert.equal(welcomePageFromDom(doc(["Settings"], []), false).call, false);
+    assert.equal(welcomePageFromDom(doc([], ['placeholder^="Listening to"']), false).call, true);
+    assert.equal(welcomePageFromDom(doc([], ["[data-call-ended]"]), false).callEndedCard, true);
+    assert.equal(welcomePageFromDom(doc([], ["[data-remember-toast]"]), false).rememberToast, true);
+    assert.equal(welcomePageFromDom(doc([], ["[data-stale-build-notice]"]), false).reloadNotice, true);
+    assert.equal(welcomePageFromDom(doc([], []), true).checkInPosted, true);
+    const rai = readFileSync(join(root, "src/components/rai-app.tsx"), "utf8");
+    for (const m of ["data-call-ended", "data-remember-toast", "data-stale-build-notice", ">On call<", ">Allow microphone<"]) assert.ok(rai.includes(m), m);
+    const ck = readFileSync(join(root, "src/lib/daily-checkin.ts"), "utf8");
+    assert.match(ck, new RegExp(`CHECKIN_DATE_KEY = "${WELCOME_CHECKIN_KEY}"`));
+  });
+  it("loads only the picked clip", () => {
+    const puppet = readFileSync(join(root, "src/components/puppet.tsx"), "utf8");
+    const p = puppet.slice(puppet.indexOf("welcomePlayerRef.current = SmugClipPlayer.for("));
+    assert.match(p.slice(0, 600), /keys: \[clip\.key\],/);
+    const player = readFileSync(join(root, "src/lib/smug-clip-player.ts"), "utf8");
+    assert.match(player, /this\.keys = opts\.keys \?\? \["in", "out"\];/);
   });
 });

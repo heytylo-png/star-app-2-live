@@ -9,6 +9,10 @@
  *   stage is idle again.
  * - Lazy: its player and files only start when a welcome is due (or the debug param asks), never at startup.
  * - Debug: `?welcome=1329` / `?welcome=1330` (or `?welcome=1`, random) plays it once on load whatever the gap.
+ * - Never during a call (connecting or up): a call while it is pending drops it for that return; a call that starts
+ *   while it is already playing lets the 5 s clip finish (CoS 356cdf5). Never on the same open as the daily check-in
+ *   line, the call-ended card, the remember toast or the Reload notice (welcomeBlocker, read from the existing DOM /
+ *   storage; Designer code untouched). Only the picked clip is loaded.
  *
  * Pure (no DOM): the puppet owns the canvases and the player; this module decides when.
  */
@@ -128,4 +132,49 @@ export class WelcomeGate {
     this.pendingSince = null;
     this.idleSince = null;
   }
+}
+
+/** Daily check-in stamp key (daily-checkin.ts CHECKIN_DATE_KEY; read only). */
+export const WELCOME_CHECKIN_KEY = "star-rai-checkin";
+
+/** What the page shows right now, for the welcome's blockers (read from the existing DOM; see welcomeBlockerFromDom). */
+export type WelcomePage = {
+  /** "On call" bar or "Allow microphone" (connecting) bar, or the call textbox placeholder. */
+  call: boolean;
+  callEndedCard: boolean;
+  rememberToast: boolean;
+  reloadNotice: boolean;
+  /** The daily check-in stamp changed on this open (Designer's check-in line posted). */
+  checkInPosted: boolean;
+};
+
+/** The first reason the welcome must not play on this open, or null. */
+export function welcomeBlocker(page: WelcomePage): string | null {
+  if (page.call) return "call";
+  if (page.checkInPosted) return "check-in";
+  if (page.callEndedCard) return "call-ended";
+  if (page.rememberToast) return "remember-toast";
+  if (page.reloadNotice) return "reload-notice";
+  return null;
+}
+
+type DocLike = { querySelector: (sel: string) => unknown; querySelectorAll: (sel: string) => ArrayLike<{ textContent: string | null }> };
+
+/** Reads WelcomePage off the live DOM (markers already rendered by rai-app.tsx). */
+export function welcomePageFromDom(doc: DocLike, checkInPosted: boolean): WelcomePage {
+  let call = false;
+  const bars = doc.querySelectorAll("span.font-medium");
+  for (let i = 0; i < bars.length; i++) {
+    const t = bars[i]!.textContent?.trim() ?? "";
+    if (t === "On call" || t === "Allow microphone") call = true;
+  }
+  const box = doc.querySelector('textarea[placeholder^="On call"], textarea[placeholder^="Listening to"], input[placeholder^="On call"]');
+  if (box) call = true;
+  return {
+    call,
+    callEndedCard: Boolean(doc.querySelector("[data-call-ended]")),
+    rememberToast: Boolean(doc.querySelector("[data-remember-toast]")),
+    reloadNotice: Boolean(doc.querySelector("[data-stale-build-notice]")),
+    checkInPosted,
+  };
 }
