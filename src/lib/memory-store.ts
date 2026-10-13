@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { extractNatalFromUserText } from "./chart";
+import { memorySaves } from "./remember-toast.ts";
 import {
   applySlotPatch,
   emptySlots,
@@ -31,8 +32,10 @@ export type { MemorySlotState };
 type MemoryState = {
   items: MemoryItem[];
   slots: MemorySlotState;
-  add: (text: string) => void;
-  addMany: (texts: string[]) => void;
+  /** The saved text, or null when nothing new was written. */
+  add: (text: string) => string | null;
+  /** Texts that were actually stored, in order. Duplicates are omitted. */
+  addMany: (texts: string[]) => string[];
   remove: (id: string) => void;
   clear: () => void;
   ingestUserTurn: (text: string, opts?: ExtractOpts) => void;
@@ -64,18 +67,25 @@ export const useMemoryStore = create<MemoryState>()(
       slots: emptySlots(),
       add: (text) => {
         const cleaned = normalizeFact(text);
-        if (!cleaned) return;
+        if (!cleaned) return null;
         const items = get().items;
-        if (items.some((item) => item.text.toLowerCase() === cleaned.toLowerCase())) return;
+        if (items.some((item) => item.text.toLowerCase() === cleaned.toLowerCase())) return null;
         const withoutSimilar = items.filter((item) => !isDuplicate(item.text, cleaned));
         const nextItems = [
           { id: crypto.randomUUID(), text: cleaned, createdAt: Date.now() },
           ...withoutSimilar,
         ].slice(0, 80);
         set({ items: nextItems });
+        memorySaves.notify(cleaned);
+        return cleaned;
       },
       addMany: (texts) => {
-        texts.forEach((t) => get().add(t));
+        const saved: string[] = [];
+        for (const text of texts) {
+          const wrote = get().add(text);
+          if (wrote) saved.push(wrote);
+        }
+        return saved;
       },
       remove: (id) => set((state) => ({ items: state.items.filter((item) => item.id !== id) })),
       clear: () => set({ items: [], slots: emptySlots() }),

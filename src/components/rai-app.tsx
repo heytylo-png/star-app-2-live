@@ -59,6 +59,14 @@ import {
   subscribeSmugReleaseLanded,
 } from "@/lib/pose-phase";
 import { useMemoryStore } from "@/lib/memory-store";
+import {
+  REMEMBER_TOAST_MS,
+  memorySaves,
+  nextRememberToast,
+  rememberToastVisible,
+  type RememberEvent,
+  type RememberToast,
+} from "@/lib/remember-toast";
 import { usePresenceStore } from "@/lib/presence-store";
 import {
   PRESENCE_HEARTBEAT_MS,
@@ -251,6 +259,14 @@ function RaiReady() {
   const [keyJustSaved, setKeyJustSaved] = useState(false);
   const [caption, setCaption] = useState("");
   const [hasSent, setHasSent] = useState(false);
+  const [remember, setRemember] = useState<RememberToast | null>(null);
+  const seenRememberRef = useRef(new Set<string>());
+  const offerRememberRef = useRef<(event: RememberEvent) => void>(() => {});
+  offerRememberRef.current = (event) => {
+    const next = nextRememberToast(seenRememberRef.current, event, Date.now());
+    seenRememberRef.current = next.seen;
+    if (next.toast) setRemember(next.toast);
+  };
   const [emotion, setEmotion] = useState<EmotionId>(DEFAULT_EMOTION);
   const [pose, setPose] = useState<PoseId>("idle");
   /**
@@ -428,6 +444,11 @@ function RaiReady() {
       mayTry: pendingBuild ? mayTryUpdate(pendingBuild, updateStore) : false,
       birthdayCard: showSetup,
     });
+  const showRemember = rememberToastVisible({
+    line: remember?.line ?? null,
+    staleNotice: showNotice,
+    callActive: callActive || callStarting,
+  });
   const showHint =
     chromeReady &&
     showEmptyChatHint({
@@ -436,7 +457,8 @@ function RaiReady() {
       callActive: callActive || callStarting,
     }) &&
     !caption.trim() &&
-    !showNotice;
+    !showNotice &&
+    !showRemember;
   const showChips =
     chromeReady &&
     !callActive &&
@@ -453,6 +475,21 @@ function RaiReady() {
     if (!chatHydrated || starterChipsDone || !hasHistory) return;
     useChatStore.getState().markStarterChipsDone();
   }, [chatHydrated, starterChipsDone, hasHistory]);
+
+  useEffect(() => {
+    return memorySaves.subscribe((texts) => {
+      offerRememberRef.current({ type: "memories", texts });
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!remember) return;
+    const left = remember.shownAt + REMEMBER_TOAST_MS - Date.now();
+    const timer = window.setTimeout(() => {
+      setRemember((current) => (current?.key === remember.key ? null : current));
+    }, Math.max(0, left));
+    return () => window.clearTimeout(timer);
+  }, [remember]);
 
   useEffect(() => {
     draftRef.current = draft;
@@ -2004,6 +2041,7 @@ function RaiReady() {
                 if (natal.user_birth_date) {
                   useMemoryStore.getState().patchSlots(natal);
                   useChartStore.getState().markSetupDone();
+                  offerRememberRef.current({ type: "birthday", date: natal.user_birth_date });
                 }
               }}
             />
@@ -2026,6 +2064,18 @@ function RaiReady() {
                   </span>
                 </button>
               </span>
+            </p>
+          ) : null}
+          {showRemember ? (
+            <p className="mb-1.5 text-center">
+              <button
+                type="button"
+                data-remember-toast=""
+                className="inline-block max-w-full truncate rounded-full border-0 bg-[rgba(239,236,230,0.85)] px-2 py-[3px] text-sm text-[#3f3b36]"
+                onClick={() => setRemember(null)}
+              >
+                {remember?.line}
+              </button>
             </p>
           ) : null}
           {showHint ? (
