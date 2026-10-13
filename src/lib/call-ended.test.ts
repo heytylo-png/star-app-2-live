@@ -38,7 +38,10 @@ describe("call ended duration", () => {
     assert.equal(callEndedBucket(29_999), "short");
     assert.equal(callEndedBucket(30_000), "normal");
     assert.equal(callEndedBucket(10 * 60 * 1000), "normal");
-    assert.equal(callEndedBucket(10 * 60 * 1000 + 1), "long");
+    assert.equal(callEndedBucket(600.5 * 1000), "normal");
+    assert.equal(formatCallDuration(600.5 * 1000), "10:00");
+    assert.equal(callEndedBucket(10 * 60 * 1000 + 1), "normal");
+    assert.equal(callEndedBucket(601 * 1000), "long");
     assert.equal(callEndedBucket(61 * 60 * 1000), "long");
   });
 });
@@ -95,6 +98,24 @@ describe("call ended line", () => {
     assert.equal(long?.duration, "1:01:00");
     assert.equal(long?.id, "long:0");
     assert.equal(long?.line, "You stayed. I noticed.");
+    const edge = planCallEnded({
+      connected: true,
+      startedAt: 0,
+      endedAt: 600.5 * 1000,
+      lastLineId: null,
+    });
+    assert.equal(edge?.duration, "10:00");
+    assert.equal(edge?.id.startsWith("normal:"), true);
+    assert.equal(
+      planCallEnded({
+        connected: true,
+        startedAt: 0,
+        endedAt: 5_000,
+        lastLineId: null,
+        micDenied: true,
+      }),
+      null,
+    );
   });
 
   it("yields to reload and a live call, and leaves after 6s", () => {
@@ -129,9 +150,10 @@ describe("call ended line", () => {
     assert.match(app, /loadCallEndedLineId/);
     assert.match(app, /saveCallEndedLineId/);
     assert.match(app, /!showCallEnded/);
-    const hangStart = app.indexOf("function hangUp()");
+    const hangStart = app.indexOf("function hangUp(");
     const hang = app.slice(hangStart, app.indexOf("\n  }\n", hangStart));
-    assert.match(hang, /connected && startedAt != null/);
+    assert.match(hang, /connected && startedAt != null && !opts\?\.micDenied/);
+    assert.equal(app.match(/hangUpRef\.current\(\{ micDenied: true \}\)/g)?.length, 2);
     assert.doesNotMatch(hang, /appendMessage|setPose|speak\(|speechSynthesis/);
     assert.ok(hang.trimEnd().endsWith("settleUpdate();"));
   });

@@ -16,6 +16,64 @@ export type RememberEvent =
   | { type: "memories"; texts: readonly string[] }
   | { type: "birthday"; date: string };
 
+/** Offers held while the call-ended card owns the slot. Not marked seen yet. */
+export type QueuedRemember = {
+  texts: string[];
+  birthday: string | null;
+};
+
+export function emptyRememberQueue(): QueuedRemember {
+  return { texts: [], birthday: null };
+}
+
+export function queueRememberDuringCard(queued: QueuedRemember, event: RememberEvent): QueuedRemember {
+  if (event.type === "birthday") return { ...queued, birthday: event.date };
+  return { ...queued, texts: [...queued.texts, ...event.texts] };
+}
+
+/**
+ * While the card is up, keep the offer and leave `seen` alone.
+ * Otherwise mark it seen and start the toast clock now.
+ */
+export function offerRememberDuringCard(input: {
+  cardUp: boolean;
+  seen: ReadonlySet<string>;
+  queued: QueuedRemember;
+  event: RememberEvent;
+  now: number;
+}): { seen: Set<string>; toast: RememberToast | null; queued: QueuedRemember } {
+  if (input.cardUp) {
+    return {
+      seen: new Set(input.seen),
+      toast: null,
+      queued: queueRememberDuringCard(input.queued, input.event),
+    };
+  }
+  const next = nextRememberToast(input.seen, input.event, input.now);
+  return { seen: next.seen, toast: next.toast, queued: emptyRememberQueue() };
+}
+
+/** Mark the held offer seen and start its timer only once the card is gone. */
+export function releaseRememberQueue(
+  seen: ReadonlySet<string>,
+  queued: QueuedRemember,
+  now: number,
+): { seen: Set<string>; toast: RememberToast | null; queued: QueuedRemember } {
+  let current = new Set(seen);
+  let toast: RememberToast | null = null;
+  if (queued.texts.length) {
+    const mem = nextRememberToast(current, { type: "memories", texts: queued.texts }, now);
+    current = mem.seen;
+    toast = mem.toast;
+  }
+  if (queued.birthday) {
+    const day = nextRememberToast(current, { type: "birthday", date: queued.birthday }, now);
+    current = day.seen;
+    if (day.toast) toast = day.toast;
+  }
+  return { seen: current, toast, queued: emptyRememberQueue() };
+}
+
 function cleanGist(value: string): string {
   return value
     .replace(/\p{Extended_Pictographic}/gu, "")

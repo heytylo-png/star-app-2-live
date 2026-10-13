@@ -69,11 +69,15 @@ import {
 import { useMemoryStore } from "@/lib/memory-store";
 import {
   REMEMBER_TOAST_MS,
+  emptyRememberQueue,
   loadRememberSeen,
   memorySaves,
-  nextRememberToast,
+  offerRememberDuringCard,
+  queueRememberDuringCard,
+  releaseRememberQueue,
   rememberToastVisible,
   saveRememberSeen,
+  type QueuedRemember,
   type RememberEvent,
   type RememberToast,
 } from "@/lib/remember-toast";
@@ -283,14 +287,30 @@ function RaiReady() {
       typeof localStorage === "undefined" ? new Set() : loadRememberSeen((key) => localStorage.getItem(key));
   }
   const offerRememberRef = useRef<(event: RememberEvent) => void>(() => {});
+  const queuedRememberRef = useRef<QueuedRemember>(emptyRememberQueue());
+  const callEndedRef = useRef<CallEndedCard | null>(null);
+  const applyRemember = (seen: Set<string>, nextSeen: Set<string>, toast: RememberToast | null) => {
+    seenRememberRef.current = nextSeen;
+    if (nextSeen.size !== seen.size && typeof localStorage !== "undefined") {
+      saveRememberSeen(nextSeen, (key, value) => localStorage.setItem(key, value));
+    }
+    if (toast) setRemember(toast);
+  };
   offerRememberRef.current = (event) => {
     const seen = seenRememberRef.current ?? new Set<string>();
-    const next = nextRememberToast(seen, event, Date.now());
-    seenRememberRef.current = next.seen;
-    if (next.seen.size !== seen.size && typeof localStorage !== "undefined") {
-      saveRememberSeen(next.seen, (key, value) => localStorage.setItem(key, value));
+    if (callEndedRef.current) {
+      queuedRememberRef.current = queueRememberDuringCard(queuedRememberRef.current, event);
+      return;
     }
-    if (next.toast) setRemember(next.toast);
+    const next = offerRememberDuringCard({
+      cardUp: false,
+      seen,
+      queued: queuedRememberRef.current,
+      event,
+      now: Date.now(),
+    });
+    queuedRememberRef.current = next.queued;
+    applyRemember(seen, next.seen, next.toast);
   };
   const [emotion, setEmotion] = useState<EmotionId>(DEFAULT_EMOTION);
   const [pose, setPose] = useState<PoseId>("idle");
@@ -310,6 +330,7 @@ function RaiReady() {
   const [callStarting, setCallStarting] = useState(false);
   const [callNotice, setCallNotice] = useState<CallMicNotice | null>(null);
   const [callEnded, setCallEnded] = useState<CallEndedCard | null>(null);
+  callEndedRef.current = callEnded;
   const [amp, setAmp] = useState(0);
   /** This turn will use ElevenLabs. Text chew stays off until TTS fails. */
   const [audioTurn, setAudioTurn] = useState(false);
@@ -332,7 +353,7 @@ function RaiReady() {
   const mouthPlayRef = useRef(initialMouthPlayback());
   const chewTimerRef = useRef(0);
   const listenAfterSpeakRef = useRef(false);
-  const hangUpRef = useRef<() => void>(() => {});
+  const hangUpRef = useRef<(opts?: { micDenied?: boolean }) => void>(() => {});
   const micStreamRef = useRef<MediaStream | null>(null);
   const callStartingRef = useRef(false);
   const micGrantedRef = useRef(false);
@@ -519,6 +540,16 @@ function RaiReady() {
       offerRememberRef.current({ type: "memories", texts });
     });
   }, []);
+
+  useEffect(() => {
+    if (callEnded) return;
+    const queued = queuedRememberRef.current;
+    if (!queued.texts.length && !queued.birthday) return;
+    const seen = seenRememberRef.current ?? new Set<string>();
+    const released = releaseRememberQueue(seen, queued, Date.now());
+    queuedRememberRef.current = released.queued;
+    applyRemember(seen, released.seen, released.toast);
+  }, [callEnded]);
 
   useEffect(() => {
     if (!callEnded) return;
@@ -1188,7 +1219,7 @@ function RaiReady() {
         recRef.current = null;
         setCallListening(false);
         setCallNotice(callMicNotice("denied"));
-        hangUpRef.current();
+        hangUpRef.current({ micDenied: true });
         return;
       }
       // no-speech / aborted / network: do not start() here — Chrome also fires onend.
@@ -1235,7 +1266,7 @@ function RaiReady() {
       recRef.current = null;
       if (!micGrantedRef.current) {
         setCallNotice(callMicNotice("denied"));
-        hangUpRef.current();
+        hangUpRef.current({ micDenied: true });
         return;
       }
       const delay = nextCallListenBackoffMs(listenBackoffAttemptRef.current);
@@ -1727,7 +1758,7 @@ function RaiReady() {
     settleUpdate();
   }
 
-  function hangUp() {
+  function hangUp(opts?: { micDenied?: boolean }) {
     const connected = callActiveRef.current;
     const startedAt = callConnectedAtRef.current;
     callConnectedAtRef.current = null;
@@ -1747,12 +1778,13 @@ function RaiReady() {
     stopCallMic();
     // Thread / memory / sheet stay. Drop the listen placeholder so the last line shows.
     setCaption((c) => (c === "Listening…" || c === callListenLabel() ? "" : c));
-    if (connected && startedAt != null) {
+    if (connected && startedAt != null && !opts?.micDenied) {
       const card = planCallEnded({
         connected: true,
         startedAt,
         endedAt: Date.now(),
         lastLineId: loadCallEndedLineId((key) => localStorage.getItem(key)),
+        micDenied: opts?.micDenied,
       });
       if (card) {
         saveCallEndedLineId(card.id, (key, value) => localStorage.setItem(key, value));
@@ -2092,7 +2124,7 @@ function RaiReady() {
                 <span className="font-medium text-fg">Allow microphone</span>
                 {" · Chrome should ask now"}
               </p>
-              <Button type="button" size="sm" variant="secondary" onClick={hangUp}>
+              <Button type="button" size="sm" variant="secondary" onClick={() => hangUp()}>
                 <PhoneOff className="size-3.5" />
                 Cancel
               </Button>
@@ -2104,7 +2136,7 @@ function RaiReady() {
                 {" · "}
                 {talking ? "Speaking" : sending ? "Thinking" : callListening ? callListenLabel() : "Ready"}
               </p>
-              <Button type="button" size="sm" variant="secondary" onClick={hangUp}>
+              <Button type="button" size="sm" variant="secondary" onClick={() => hangUp()}>
                 <PhoneOff className="size-3.5" />
                 Hang up
               </Button>

@@ -10,6 +10,8 @@ import {
   memorySaves,
   memoryToastLine,
   nextRememberToast,
+  offerRememberDuringCard,
+  releaseRememberQueue,
   rememberToastExpired,
   rememberToastVisible,
   saveRememberSeen,
@@ -83,6 +85,35 @@ describe("remember toast copy", () => {
 
     const fresh = nextRememberToast(restored, { type: "memories", texts: ["Their name is Ada"] }, 6);
     assert.equal(fresh.toast?.line, "Noted. Their name is Ada.");
+  });
+
+  it("holds a toast offered under the call-ended card until the card clears", () => {
+    const seen = new Set<string>();
+    const held = offerRememberDuringCard({
+      cardUp: true,
+      seen,
+      queued: { texts: [], birthday: null },
+      event: { type: "memories", texts: ["They like night talks"] },
+      now: 1_000,
+    });
+    assert.equal(held.toast, null);
+    assert.equal(held.seen.size, 0);
+    assert.deepEqual([...held.seen], [...seen]);
+    assert.deepEqual(held.queued.texts, ["They like night talks"]);
+    assert.equal(rememberToastExpired(1_000, 4_500), true);
+
+    const shown = releaseRememberQueue(held.seen, held.queued, 8_000);
+    assert.equal(shown.toast?.line, "Noted. They like night talks.");
+    assert.equal(shown.toast?.shownAt, 8_000);
+    assert.equal(shown.seen.size, 1);
+    assert.equal(rememberToastExpired(shown.toast?.shownAt ?? 0, 8_000 + 3_499), false);
+    assert.equal(shown.queued.texts.length, 0);
+
+    const app = readFileSync(join(root, "src/components/rai-app.tsx"), "utf8");
+    const offer = app.slice(app.indexOf("offerRememberRef.current ="), app.indexOf("const [emotion"));
+    assert.match(offer, /if \(callEndedRef\.current\)/);
+    assert.ok(offer.indexOf("queueRememberDuringCard") < offer.indexOf("offerRememberDuringCard"));
+    assert.match(app, /releaseRememberQueue\(seen, queued, Date\.now\(\)\)/);
   });
 
   it("yields to the stale-build line and a call, and leaves after 3.5s", () => {

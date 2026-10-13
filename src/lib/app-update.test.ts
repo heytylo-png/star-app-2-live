@@ -243,7 +243,7 @@ describe("update reload always reaches the network (CoS, f84389f)", () => {
     // TTS onStop
     const onStop = app.indexOf("onStop: () => {");
     assert.ok(app.slice(onStop, app.indexOf("},\n", app.indexOf("setSending(false);", onStop))).includes("settleUpdate();"), "onStop");
-    for (const fn of ["function stop()", "function hangUp()", "function bargeInTap()"]) {
+    for (const fn of ["function stop()", "function hangUp(", "function bargeInTap()"]) {
       const i = app.indexOf(fn);
       const body = app.slice(i, app.indexOf("\n  }\n", i));
       assert.ok(body.trimEnd().endsWith("settleUpdate();"), fn);

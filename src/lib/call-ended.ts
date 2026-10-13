@@ -20,9 +20,15 @@ export type CallEndedCard = {
   shownAt: number;
 };
 
+/** Whole seconds. 600.5s is 10:00, still inside the normal bucket. */
+export function callEndedWholeSeconds(ms: number): number {
+  const safe = Number.isFinite(ms) ? Math.max(0, ms) : 0;
+  return Math.floor(safe / 1000);
+}
+
 /** Very short under 30s. Long past 10 minutes. The edges stay in normal. */
 export function callEndedBucket(ms: number): CallEndedBucket {
-  const sec = (Number.isFinite(ms) ? Math.max(0, ms) : 0) / 1000;
+  const sec = callEndedWholeSeconds(ms);
   if (sec < 30) return "short";
   if (sec > 10 * 60) return "long";
   return "normal";
@@ -91,7 +97,10 @@ export function planCallEnded(input: {
   endedAt: number;
   lastLineId: string | null;
   now?: number;
+  /** Mid-call mic denial owns the slot. That call gets no card. */
+  micDenied?: boolean;
 }): CallEndedCard | null {
+  if (input.micDenied) return null;
   if (!input.connected || input.startedAt == null || !Number.isFinite(input.startedAt)) return null;
   const elapsed = Math.max(0, input.endedAt - input.startedAt);
   const line = pickCallEndedLine(callEndedBucket(elapsed), input.lastLineId);
