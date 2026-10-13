@@ -126,7 +126,7 @@ const SMUG_CLIP_SHA256: Record<string, string> = {
   "rai/wave1292_in.avif": "529468d3d14b27f62504be47f5ec83013f1c9cc9fc41f2e0c50ac5a4a5ae477e",
   "rai/wave1320_out.avif": "e6752c6d86befcbcc7f4e937bd6462e28609198551b1012124cd1943696e35ab",
   "rai/pout1158_in.avif": "495b8d2ce309c6e3aae50f013182c0ef8159841fd4050f5c61c791a4da0eff1c",
-  "rai/pout1162_out.avif": "5278c12f28283eb2046c31943c49967857b2799496648e68dc63da03400112dc",
+  "rai/pout1162_out.avif": "6ee7d79116beaf7133c8302f1018a633ca1e58db0b3ecbe8c2b0bb395d917077",
 };
 
 describe("smug clips (1085 in / 1084 out)", () => {
@@ -152,7 +152,7 @@ describe("bridge file cache keys (wave w11/w12, pout p2, talk t1)", () => {
       "rai/wave1320_out.avif": "w12",
       "rai/wave1292_hold.webp": "w11",
       "rai/pout1158_in.avif": "p2",
-      "rai/pout1162_out.avif": "p2",
+      "rai/pout1162_out.avif": "p3",
       "rai/pout1158_hold.webp": "p2",
       "rai/talk1257_in.avif": "t1",
       "rai/talk1276_out.avif": "t3",
@@ -165,7 +165,7 @@ describe("bridge file cache keys (wave w11/w12, pout p2, talk t1)", () => {
     assert.match(SPRITES.poses.pout, /rai\/pout1158_hold\.webp\?v=p2$/);
     const [pin, pout] = poutClipUrls();
     assert.match(pin!, /rai\/pout1158_in\.avif\?v=p2$/);
-    assert.match(pout!, /rai\/pout1162_out\.avif\?v=p2$/);
+    assert.match(pout!, /rai\/pout1162_out\.avif\?v=p3$/);
     assert.match(SPRITES.poses.wave, /rai\/wave1292_hold\.webp\?v=w11$/);
     assert.equal(spriteNeedsWhitePunch(SPRITES.poses.wave), false);
     const [win, wout] = waveClipUrls();
