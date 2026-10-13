@@ -15,12 +15,12 @@ type Manifest = {
   clips: Record<string, { sha256: string; frames: number; width: number; height: number; frame_edges: FrameEdge[] }>;
   hold: { file: string; sha256: string; bbox: [number, number, number, number]; outside_band_alpha_max: number; alpha_mean_abs_diff_vs_intro_last: number };
 };
-/** Decoded alpha of every frame of the shipped wave clips (f807/bridge/w1292/edges/gen_edges.py). */
+/** Decoded alpha of every frame of the shipped wave clips (f807/bridge/w1320/edges/gen_edges.py). */
 const manifest = JSON.parse(readFileSync(join(root, "src/lib/wave-clip-edges.json"), "utf8")) as Manifest;
 /** Minimum fully transparent margin between the figure and the band's left / right edge. */
 const MIN_MARGIN_PX = 8;
 
-describe("wave clip band (1292 / 1140)", () => {
+describe("wave clip band (1292 / 1320)", () => {
   it("has its own band, wider than the smug band, drawn 1:1 inside the 720x1280 sheet", () => {
     assert.notDeepEqual(WAVE_CLIP_BOX, SMUG_CLIP_BOX);
     assert.ok(WAVE_CLIP_BOX.w > SMUG_CLIP_BOX.w);

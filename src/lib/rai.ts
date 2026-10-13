@@ -399,14 +399,14 @@ export function isSmugPathSheetSrc(src: string): boolean {
 
 /**
  * Sheets allowed on the idle↔wave beat: idle sheets, the 1292 intro clip, wave1292_hold,
- * the 1140 rest clip. Anything else must not paint during a Wave send.
+ * the 1320 rest clip. Anything else must not paint during a Wave send (1140 and 1126 are gone).
  */
 export function isWavePathSheetSrc(src: string): boolean {
   const path = src.split(/[?#]/)[0] ?? src;
   const name = path.slice(path.lastIndexOf("/") + 1);
   if (name === "wave1292_hold.webp") return true;
   if (name === "wave1292_in.avif") return true;
-  if (name === "wave1140_out.avif") return true;
+  if (name === "wave1320_out.avif") return true;
   if (name === "idle.png") return true;
   if (/^idle_blink_/.test(name)) return true;
   if (/^idle_mouth_/.test(name)) return true;
@@ -679,7 +679,7 @@ export const PRE_CUT_ALPHA_FILES = [
   "rai/scold_official.png",
   "rai/tired_official.png",
   // TyLo's 2026-10-06 wave still (white-matte cut, x1.4 onto the idle canvas). Not on the Wave key:
-  // that key is the 1292/1140 bridge + wave1292_hold.webp.
+  // that key is the 1292/1320 bridge + wave1292_hold.webp.
   "rai/wave_official.png",
   "rai/peace.png",
   "rai/side_profile.png",
@@ -738,11 +738,15 @@ export function spriteNeedsWhitePunch(src: string): boolean {
  *   L = min(idle, 1140 f0) - 1.5 per face / arms / legs, tan a/b of 1140); hold rebuilt from the new f120 (lossless).
  *   w10 (TyLo 2026-10-12 18:25, "if it is darker then correct"): same darken with margin 0, so 1292 skin L = min(idle,
  *   1140 f0) (= 1140 f0 per region); hold rebuilt (lossless). 1140 untouched (w9).
+ *   w11 (TyLo 2026-10-12 19:04, "Wave exit swap"): the rest is 1320 (all 121 frames, forward, muted; uniform x1.33 onto
+ *   idle, soles + feet centre anchored; skin per region ramped from the hold at f0 to idle at f120). 1140 is deleted.
+ *   1292 + hold: the cheek/nose/mouth blush band (skipped by the w10 lift) lifted +1.4 L, feathered, L only; hold
+ *   rebuilt (lossless). All three files w11.
  */
 export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
-  "rai/wave1292_in.avif": "w10",
-  "rai/wave1140_out.avif": "w9",
-  "rai/wave1292_hold.webp": "w10",
+  "rai/wave1292_in.avif": "w11",
+  "rai/wave1320_out.avif": "w11",
+  "rai/wave1292_hold.webp": "w11",
   // Pout (1158 in / hold f48 / 1162 out): p1 = face skin re-matched to idle; p2 = face above the jaw only
   // (neck / under-chin shadow, jaw line, mouth line + lips keep their 49aa88b pixels), 2026-10-10.
   "rai/pout1158_in.avif": "p2",
@@ -1033,7 +1037,7 @@ export function poutClipUrls(): string[] {
   return [ASSET(POUT_IN_CLIP.file), ASSET(POUT_OUT_CLIP.file)];
 }
 
-/** The two clips of the idle <-> wave beat: 1292 intro (f0-f120, all frames), 1140 rest. */
+/** The two clips of the idle <-> wave beat: 1292 intro (f0-f120, all frames), 1320 rest (f0-f120, all frames). */
 export function waveClipUrls(): string[] {
   return [ASSET(WAVE_IN_CLIP.file), ASSET(WAVE_OUT_CLIP.file)];
 }

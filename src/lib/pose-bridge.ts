@@ -1,13 +1,13 @@
 /**
  * Helix pose bridge: in-between motion played when the shown sheet changes between a
- * paired set of poses. Pairs: idle <-> smug (1085/1084), idle <-> wave (1292/1140),
+ * paired set of poses. Pairs: idle <-> smug (1085/1084), idle <-> wave (1292/1320),
  * idle <-> pout (1158/1162) and idle <-> talk (1257/1276).
  *
  * Both pairs are two real videos played as video, every source frame in order at their
  * native 24 fps. The intro runs from 0.000 s to its hold frame only (smug 1085: 2.000 s,
  * frames 0..48; wave 1292: its full 5.04 s, frames 0..120; pout 1158: 2.000 s, frames 0..48; talk 1257: its full
  * 6.04 s, frames 0..144) and lands on a hold WebP (= that exact
- * frame) until the next send. The rest runs its full 145 frames forward onto the live idle
+ * frame) until the next send. The rest runs its full length forward (145 frames; wave 1320: 121) onto the live idle
  * sheet. No reverse, no audio (the clips are AVIF image sequences). Smug, wave, pout and talk each have
  * their own canvases / hold sheet.
  *
@@ -49,8 +49,8 @@ export const SMUG_HOLD_FILE = "rai/smug1085_hold.webp";
  * Arms-down glare → wave arm up → palm up, other hand on hip (glare, flat mouth). 1126 is out.
  */
 export const WAVE_IN_CLIP: SmugClip = { pair: "wave", key: "in", file: "rai/wave1292_in.avif", frames: 121 };
-/** Wave rest: 1140 full length (145 frames, 6.04 s). Wave hand comes down → both arms down → idle glare. */
-export const WAVE_OUT_CLIP: SmugClip = { pair: "wave", key: "out", file: "rai/wave1140_out.avif", frames: 145 };
+/** Wave rest (TyLo 2026-10-12 19:04, "Wave exit swap"): 1320 full length, forward (121 frames, 5.04 s). Wave hand comes down → idle glare. Muted (no audio track). */
+export const WAVE_OUT_CLIP: SmugClip = { pair: "wave", key: "out", file: "rai/wave1320_out.avif", frames: 121 };
 /** Wave hold sheet: 1292 frame 120 = the intro's exact last frame (decoded, lossless), 720×1280 RGBA WebP. */
 export const WAVE_HOLD_FILE = "rai/wave1292_hold.webp";
 
@@ -86,8 +86,8 @@ export const TALK_HOLD_FILE = "rai/talk1257_hold.webp";
 export const SMUG_CLIP_SHEET = { w: 720, h: 1280 } as const;
 export const SMUG_CLIP_BOX = { x: 112, y: 0, w: 448, h: 1280 } as const;
 /**
- * Wave clips (1292 720×1280 and 1140 784×1168) are white-matte cuts registered to idle.png in the
- * same 720×1280 sheet space: 1292 uniform ×1.284, 1140 uniform ×1.118, each anchored on the soles
+ * Wave clips (1292 720×1280 and 1320 784×1168) are white-matte cuts registered to idle.png in the
+ * same 720×1280 sheet space: 1292 uniform ×1.284, 1320 uniform ×1.33, each anchored on the soles
  * and feet centre of idle (feet, scale and head land on idle and on each other at the joins).
  * The raised wave arm reaches far wider than the smug band, so wave has its own band: x 0..672.
  * Every frame of both clips has a fully transparent margin at the band's left and right edges

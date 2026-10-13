@@ -62,7 +62,14 @@ TyLo paste-15 replaces the 968/973 stills (and every earlier smug asset) with tw
 - Reduced motion, or a browser without `ImageDecoder` / `OffscreenCanvas` workers: hard cut onto the hold, hard cut back to idle.
 - Debug: `data-rai-hold-sheet=smug1085_hold` while holding; each clip canvas has `data-rai-clip` and `data-rai-sheet` = `in-NNN` / `out-NNN` (last frame reported); `window.__raiBridgeLog` = `[t, clip, frame]` per painted frame (stage clock), `window.__raiBridgeDone` = `[t, clip, stalls, reanchors]` per play.
 
-### 1292 / 1140 video (idle ↔ wave, w7, TyLo 2026-10-12 10:19; replaces 1126)
+### 1292 / 1320 video (idle ↔ wave, w11, TyLo 2026-10-12 19:04; 1320 replaces 1140)
+- "Wave exit swap. Videos only. Mute both. Play 1292 forward. Hold the last frame of 1292 while the line is up. On the next send, play 1320 forward. Land on the idle glare. Do not cut to idle.png. 1140 is out. Do not use 1140. Do not add a slide to the start of 1320."
+- Exit: `public/rai/wave1320_out.avif`, all 121 frames forward (5.04 s), muted (no audio track) → idle glare. 1140 is deleted (404) and never requested; 1126 stays gone. Hold → 1320 f0 is a plain snap (no slide, no landing ease, no mouth re-ease).
+- 1320 pipeline (f807/bridge/w1320): uniform registration onto idle ×1.33 (face-height fit as 1292; soles → 1258, feet centre → 363.5; f120 lands on idle's crown/sole/feet exactly), white-matte cut (engine sheets_1320 = sheets_1292 rule), per-zone skin retone, face p2, alpha-only post (specks, leg fringe, thigh gap, finger gaps), then a wide-mask skin match ramped (smoothstep) from the hold's face/arms/legs LAB at f0 to idle's at f120. The lowering hand passes the stage's left edge on f43–f52; alpha is faded to 0 over x 19→12 there so the band keeps its 8 px margin (alpha only).
+- 1292 + hold (w11): the cheek/nose/mouth blush band that the w10 lift skipped is lifted +1.4 L (L only, feathered σ5, skin pixels only); hold rebuilt lossless from the decoded last frame. All three wave files carry `?v=w11`.
+
+### 1292 / 1140 video (superseded by w11)
+(idle ↔ wave, w7, TyLo 2026-10-12 10:19; replaces 1126)
 
 - "Wave intro swap. Videos only. Mute both. Play 1292 forward. Hold the last frame of 1292 while the line is up. On the next send, play 1140 forward. Land on the idle glare. Do not cut to idle.png. 1126 is out."
 - Entry: `public/rai/wave1292_in.avif`, TyLo's 720×1280 24 fps video, every frame f0..f120 (121 frames, 5.04 s) forward. No audio track. 1126 files are deleted (404).
