@@ -742,10 +742,12 @@ export function spriteNeedsWhitePunch(src: string): boolean {
  *   idle, soles + feet centre anchored; skin per region ramped from the hold at f0 to idle at f120). 1140 is deleted.
  *   1292 + hold: the cheek/nose/mouth blush band (skipped by the w10 lift) lifted +1.4 L, feathered, L only; hold
  *   rebuilt (lossless). All three files w11.
+ *   w12 (TyLo 2026-10-12 21:36): 1320 f38-f55 white-matte streaks between the fingers punched to alpha 0 (alpha only).
+ *   Only 1320 changes; 1292 + hold stay w11.
  */
 export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
   "rai/wave1292_in.avif": "w11",
-  "rai/wave1320_out.avif": "w11",
+  "rai/wave1320_out.avif": "w12",
   "rai/wave1292_hold.webp": "w11",
   // Pout (1158 in / hold f48 / 1162 out): p1 = face skin re-matched to idle; p2 = face above the jaw only
   // (neck / under-chin shadow, jaw line, mouth line + lips keep their 49aa88b pixels), 2026-10-10.
