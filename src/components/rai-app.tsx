@@ -85,7 +85,8 @@ import {
   resolveChartTurn,
   shapeChartSpokenLine,
 } from "@/lib/chart";
-import { filterClockSpokenLine, resolveClockTurn } from "@/lib/clock";
+import { filterClockSpokenLine, resolveClockTurn, clockTimeZone } from "@/lib/clock";
+import { loadCheckInDate, planDailyCheckIn, saveCheckInDate } from "@/lib/daily-checkin";
 import { filterEchoedLine } from "@/lib/track";
 import { useChartStore } from "@/lib/chart-store";
 import { useHerMusicStore } from "@/lib/her-music-store";
@@ -758,6 +759,37 @@ function RaiReady() {
       stopBeat();
     };
   }, [chatHydrated, presenceHydrated]);
+
+  useEffect(() => {
+    if (!chromeReady || showSetup || showNotice || callActive || callStarting) return;
+    const postCheckIn = () => {
+      if (!useMemoryStore.persist.hasHydrated()) return;
+      const threadsNow = useChatStore.getState().threads;
+      const plan = planDailyCheckIn({
+        timeZone: clockTimeZone(),
+        lastDate: loadCheckInDate((key) => localStorage.getItem(key)),
+        threads: threadsNow,
+        callActive: false,
+        birthdayCard: false,
+        staleNotice: false,
+        memoryGists: useMemoryStore.getState().items.map((item) => item.text),
+      });
+      if (!plan.post) return;
+      const thread =
+        threadsNow.find((item) => item.id === useChatStore.getState().activeId) ??
+        threadsNow.find((item) => item.messages.some((message) => message.role === "user"));
+      if (!thread) return;
+      saveCheckInDate(plan.date, (key, value) => localStorage.setItem(key, value));
+      useChatStore.getState().appendMessage(thread.id, {
+        id: newId(),
+        role: "assistant",
+        content: plan.line,
+        createdAt: Date.now(),
+      });
+    };
+    if (useMemoryStore.persist.hasHydrated()) postCheckIn();
+    return useMemoryStore.persist.onFinishHydration(postCheckIn);
+  }, [chromeReady, showSetup, showNotice, callActive, callStarting]);
 
   // Stale-build guard: a resumed PWA keeps running the build it first loaded (no navigation),
   // so new deploys never reach it. On each return to the foreground (and every 10 min while
