@@ -86,7 +86,7 @@ import {
   shapeChartSpokenLine,
 } from "@/lib/chart";
 import { filterClockSpokenLine, resolveClockTurn, clockTimeZone } from "@/lib/clock";
-import { loadCheckInDate, planDailyCheckIn, saveCheckInDate } from "@/lib/daily-checkin";
+import { loadCheckInDate, saveCheckInDate, settleDailyCheckIn } from "@/lib/daily-checkin";
 import { filterEchoedLine } from "@/lib/track";
 import { useChartStore } from "@/lib/chart-store";
 import { useHerMusicStore } from "@/lib/her-music-store";
@@ -306,6 +306,8 @@ function RaiReady() {
   const draftRef = useRef("");
   const voiceOnRef = useRef(voiceOn);
   const callActiveRef = useRef(false);
+  /** Check-in is decided once per page load, not when a call or other chrome changes. */
+  const checkInTriedRef = useRef(false);
   const sendingRef = useRef(false);
   const talkingRef = useRef(false);
   const chewStartRef = useRef(0);
@@ -761,35 +763,43 @@ function RaiReady() {
   }, [chatHydrated, presenceHydrated]);
 
   useEffect(() => {
-    if (!chromeReady || showSetup || showNotice || callActive || callStarting) return;
+    if (!chromeReady || checkInTriedRef.current) return;
+    if (showSetup || showNotice || callActive || callStarting) {
+      checkInTriedRef.current = true;
+      return;
+    }
     const postCheckIn = () => {
-      if (!useMemoryStore.persist.hasHydrated()) return;
+      if (checkInTriedRef.current || !useMemoryStore.persist.hasHydrated()) return;
+      checkInTriedRef.current = true;
+      if (callActiveRef.current || callStartingRef.current) return;
       const threadsNow = useChatStore.getState().threads;
-      const plan = planDailyCheckIn({
+      const memory = useMemoryStore.getState();
+      const turn = settleDailyCheckIn(false, {
         timeZone: clockTimeZone(),
         lastDate: loadCheckInDate((key) => localStorage.getItem(key)),
         threads: threadsNow,
         callActive: false,
         birthdayCard: false,
         staleNotice: false,
-        memoryGists: useMemoryStore.getState().items.map((item) => item.text),
+        memoryGists: memory.items.map((item) => item.text),
+        userName: memory.slots.name,
       });
-      if (!plan.post) return;
+      if (!turn.plan.post) return;
       const thread =
         threadsNow.find((item) => item.id === useChatStore.getState().activeId) ??
         threadsNow.find((item) => item.messages.some((message) => message.role === "user"));
       if (!thread) return;
-      saveCheckInDate(plan.date, (key, value) => localStorage.setItem(key, value));
+      saveCheckInDate(turn.plan.date, (key, value) => localStorage.setItem(key, value));
       useChatStore.getState().appendMessage(thread.id, {
         id: newId(),
         role: "assistant",
-        content: plan.line,
+        content: turn.plan.line,
         createdAt: Date.now(),
       });
     };
     if (useMemoryStore.persist.hasHydrated()) postCheckIn();
     return useMemoryStore.persist.onFinishHydration(postCheckIn);
-  }, [chromeReady, showSetup, showNotice, callActive, callStarting]);
+  }, [chromeReady]);
 
   // Stale-build guard: a resumed PWA keeps running the build it first loaded (no navigation),
   // so new deploys never reach it. On each return to the foreground (and every 10 min while

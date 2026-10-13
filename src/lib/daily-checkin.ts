@@ -76,64 +76,100 @@ export function saveCheckInDate(date: string, write: (key: string, value: string
   write(CHECKIN_DATE_KEY, date);
 }
 
-function userMessages(threads: readonly CheckInThread[]): CheckInMessage[] {
+/** A chat beat inside this window means the day is already underway. */
+export const CHECKIN_QUIET_MS = 2 * 60 * 60 * 1000;
+
+function allMessages(threads: readonly CheckInThread[]): CheckInMessage[] {
   const out: CheckInMessage[] = [];
   for (const thread of threads) {
-    for (const message of thread.messages ?? []) {
-      if (message.role === "user") out.push(message);
-    }
+    for (const message of thread.messages ?? []) out.push(message);
   }
   return out;
+}
+
+function userMessages(threads: readonly CheckInThread[]): CheckInMessage[] {
+  return allMessages(threads).filter((message) => message.role === "user");
 }
 
 function cleanGist(gist: string): string {
   return gist.replace(/\s+/g, " ").trim().replace(/[.?!]+$/g, "").trim();
 }
 
-/** One stored fact for the day. Empty when she has nothing to mention. */
-export function checkInGist(gists: readonly string[], date: string): string | null {
-  const clean = gists.map(cleanGist).filter(Boolean);
-  if (!clean.length) return null;
-  return clean[rotate(`${date}:gist`, clean.length)]!;
+/** Pet, friend, or sibling. Anything else is not hers to bring up. */
+const ALLOWED_SUBJECTS = new Set([
+  "pet",
+  "cat",
+  "dog",
+  "friend",
+  "best friend",
+  "sibling",
+  "brother",
+  "sister",
+]);
+
+/**
+ * Hard stop, anywhere in the gist. Short tokens stay whole words so a name
+ * like Alex or Andrew is not caught by "ex" or "dr".
+ */
+const CHECKIN_STOP_RE =
+  /\b(?:ex|abusers?|abused|abusive|abuse|therapists?|doctors?|dr|counsell?ors?|dealers?|bosses?|co[- ]?workers?|self[- ]?harm(?:ing)?|suicid(?:e|al)|cutting|drugs?|cocaine|heroin|meth|fentanyl|overdose|opioids?|narcotics?|drinks?|drinking|drunk|alcohol(?:ic)?s?|beer|wine|liquor|booze|black\s*outs?|whiskey|vodka)\b|kill(?:ing)?\s+(?:myself|themselves|himself|herself)/i;
+
+const USER_NAME_RE =
+  /^(?:my|their|the user'?s|user'?s) name is\s+([A-Za-z][\w'-]{1,24})\b/i;
+
+function relation(subject: string): string | null {
+  const text = subject
+    .toLowerCase()
+    .replace(/[’']/g, "'")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/'s\b/g, "")
+    .replace(/^(?:their|the|my|our|your|her|his|a|an)\s+/, "")
+    .trim();
+  return ALLOWED_SUBJECTS.has(text) ? text : null;
 }
 
-const NAME_STOP = new Set(
-  "the person talking you user rai star idol she he they someone anyone their them".split(" "),
-);
-
-function properName(raw: string): string | null {
-  const name = raw.trim();
-  if (!/^[A-Za-z][\w'-]{1,24}$/.test(name)) return null;
-  if (NAME_STOP.has(name.toLowerCase())) return null;
-  return name.charAt(0).toUpperCase() + name.slice(1);
+function namedFact(gist: string): { subject: string; name: string } | null {
+  const cleaned = cleanGist(gist);
+  const nameIs = cleaned.match(/^(.*?)\s+name is\s+([A-Za-z][\w'-]{1,24})\b/i);
+  if (nameIs) return { subject: nameIs[1] ?? "", name: nameIs[2] ?? "" };
+  const isNamed = cleaned.match(/^(.*?)\s+is named\s+([A-Za-z][\w'-]{1,24})\b/i);
+  if (isNamed) return { subject: isNamed[1] ?? "", name: isNamed[2] ?? "" };
+  return null;
 }
 
-/** A liking phrase, lowercased so it can sit inside her sentence. */
-function likePhrase(raw: string): string | null {
-  const phrase = cleanGist(raw).toLowerCase();
-  if (phrase.length < 2 || phrase.length > 48) return null;
-  if (!/^[a-z0-9]/.test(phrase)) return null;
-  return phrase;
+/** The user's own name, from "my name is" / "user's name" / a bare "Their name is". */
+export function checkInUserName(gist: string): string | null {
+  const match = cleanGist(gist).match(USER_NAME_RE);
+  return match?.[1] ?? null;
+}
+
+function blockedNames(gists: readonly string[], profileName?: string | null): Set<string> {
+  const names = new Set<string>();
+  const profile = profileName?.trim();
+  if (profile) names.add(profile.toLowerCase());
+  for (const gist of gists) {
+    const own = checkInUserName(gist);
+    if (own) names.add(own.toLowerCase());
+  }
+  return names;
 }
 
 /**
- * A memory only when the gist matches a known shape.
- * A name becomes "Tell Ada I said hi." A liking becomes "Still into quiet tea?"
- * Anything else is left unsaid.
+ * "Tell Miso I said hi." only for an allowlisted pet, friend, or sibling.
+ * The name keeps the casing stored in the gist. No other memory is spoken.
  */
-export function checkInMemoryLine(gist: string): string | null {
+export function checkInMemoryLine(
+  gist: string,
+  userNames?: readonly string[] | null,
+): string | null {
   const cleaned = cleanGist(gist);
-  if (!cleaned || /i remember/i.test(cleaned)) return null;
-  if (/^they like\b/i.test(cleaned)) {
-    const like = cleaned.match(/^they like\s+(.+)$/i);
-    const phrase = like?.[1] ? likePhrase(like[1]) : null;
-    return phrase ? `Still into ${phrase}?` : null;
-  }
-  const named =
-    cleaned.match(/^(?:.+\s)?name is\s+([A-Za-z][\w'-]{1,24})\b/i) ??
-    cleaned.match(/^(?:.+\s)?is named\s+([A-Za-z][\w'-]{1,24})\b/i);
-  const name = named?.[1] ? properName(named[1]) : null;
-  return name ? `Tell ${name} I said hi.` : null;
+  if (!cleaned || CHECKIN_STOP_RE.test(cleaned)) return null;
+  const named = namedFact(cleaned);
+  if (!named || !relation(named.subject)) return null;
+  const blocked = new Set((userNames ?? []).map((name) => name.trim().toLowerCase()).filter(Boolean));
+  if (blocked.has(named.name.toLowerCase())) return null;
+  return `Tell ${named.name} I said hi.`;
 }
 
 function bandLine(band: CheckInBand, date: string): string {
@@ -141,15 +177,31 @@ function bandLine(band: CheckInBand, date: string): string {
   return rows[rotate(`${date}:${band}`, rows.length)]!;
 }
 
+function recentMessage(threads: readonly CheckInThread[], nowMs: number): boolean {
+  for (const message of allMessages(threads)) {
+    if (message.createdAt == null) continue;
+    if (nowMs - message.createdAt <= CHECKIN_QUIET_MS) return true;
+  }
+  return false;
+}
+
 /** Clock filter drops an off-hour memory clause and leaves the band line. */
-export function composeCheckInLine(now: ClockNow, date: string, gists: readonly string[]): string {
+export function composeCheckInLine(
+  now: ClockNow,
+  date: string,
+  gists: readonly string[],
+  profileName?: string | null,
+): string {
   const band = checkInBand(now.hour);
   const base = bandLine(band, date);
   const opts = { now, recentText: "", askedTime: false as const };
   const plain = filterClockSpokenLine(base, opts) || base;
-  const gist = checkInGist(gists, date);
-  const memory = gist ? checkInMemoryLine(gist) : null;
-  if (!memory) return plain;
+  const blocked = blockedNames(gists, profileName);
+  const spoken = gists
+    .map((gist) => checkInMemoryLine(gist, [...blocked]))
+    .filter((line): line is string => Boolean(line));
+  if (!spoken.length) return plain;
+  const memory = spoken[rotate(`${date}:gist`, spoken.length)]!;
   const filtered = filterClockSpokenLine(`${base} ${memory}`, opts);
   const kept = filtered && filtered !== CLOCK_NEUTRAL_LINE && filtered.includes(memory);
   return kept ? filtered : plain;
@@ -164,6 +216,8 @@ export function planDailyCheckIn(input: {
   birthdayCard: boolean;
   staleNotice: boolean;
   memoryGists?: readonly string[];
+  /** Profile name. A "my name is" / "user's name" gist is read from the gists. */
+  userName?: string | null;
 }): CheckInPlan {
   if (input.callActive || input.birthdayCard || input.staleNotice) return { post: false };
   const timeZone = clockTimeZone(input.timeZone);
@@ -176,12 +230,25 @@ export function planDailyCheckIn(input: {
   if (sent.some((message) => message.createdAt != null && dayStamp(message.createdAt, timeZone) === date)) {
     return { post: false };
   }
+  if (recentMessage(input.threads, now.getTime())) return { post: false };
   return {
     post: true,
     date,
     band: checkInBand(clock.hour),
-    line: composeCheckInLine(clock, date, input.memoryGists ?? []),
+    line: composeCheckInLine(clock, date, input.memoryGists ?? [], input.userName),
   };
+}
+
+/**
+ * One evaluation per page load. A later call start, call end, or other
+ * state change passes `tried: true` and inserts nothing.
+ */
+export function settleDailyCheckIn(
+  tried: boolean,
+  input: Parameters<typeof planDailyCheckIn>[0],
+): { tried: true; plan: CheckInPlan } {
+  if (tried) return { tried: true, plan: { post: false } };
+  return { tried: true, plan: planDailyCheckIn(input) };
 }
 
 export function checkInLineIsInBand(line: string, band: CheckInBand): boolean {
