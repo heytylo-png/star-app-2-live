@@ -199,6 +199,12 @@ describe("memory saves notify once", () => {
     assert.deepEqual(texts(), ["Your cat is named Miso and she is three"]);
     assert.equal(noted.length, 1);
 
+    assert.equal(add("Your cat is named Miso"), null);
+    assert.equal(add("your cat is named miso."), null);
+    await flush();
+    assert.deepEqual(texts(), ["Your cat is named Miso and she is three"]);
+    assert.equal(noted.length, 1);
+
     assert.equal(add("Their name is Ada"), "Their name is Ada");
     await flush();
     assert.deepEqual(texts(), ["Their name is Ada", "Your cat is named Miso and she is three"]);
@@ -240,6 +246,38 @@ describe("memory saves notify once", () => {
       2,
     );
     assert.equal(replay.toast, null);
+    stop();
+  });
+
+  it("keeps a different name subject as its own memory", async () => {
+    const { useMemoryStore } = await import("./memory-store.ts");
+    useMemoryStore.getState().clear();
+    const noted: string[][] = [];
+    const stop = memorySaves.subscribe((texts) => noted.push(texts));
+    const flush = () => new Promise((resolve) => queueMicrotask(resolve));
+    const add = (text: string) => useMemoryStore.getState().add(text);
+    const texts = () => useMemoryStore.getState().items.map((item) => item.text);
+
+    assert.equal(add("best friend's name is Jo"), "best friend's name is Jo");
+    await flush();
+    assert.equal(add("coworker's name is Jo"), "coworker's name is Jo");
+    await flush();
+    assert.deepEqual(texts(), ["coworker's name is Jo", "best friend's name is Jo"]);
+    assert.deepEqual(noted, [["best friend's name is Jo"], ["coworker's name is Jo"]]);
+
+    assert.equal(add("best friend's name is Jo really"), null);
+    await flush();
+    assert.equal(noted.length, 2);
+    assert.ok(texts().includes("best friend's name is Jo really"));
+    assert.ok(!texts().includes("best friend's name is Jo"));
+    assert.ok(texts().includes("coworker's name is Jo"));
+
+    assert.equal(add("best friend's name is Jo actually"), null);
+    await flush();
+    assert.equal(noted.length, 2);
+    assert.ok(texts().includes("best friend's name is Jo actually"));
+    assert.ok(!texts().includes("best friend's name is Jo really"));
+    assert.ok(texts().includes("coworker's name is Jo"));
     stop();
   });
 });
