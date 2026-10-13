@@ -30,6 +30,8 @@ export type SmugClipPlayerOptions = {
   box: { x: number; y: number; w: number; h: number };
   keyOf: (file: string) => ClipKey | null;
   onState: (state: ClipPlayerState) => void;
+  /** Clips this player loads (default both). The welcome wave loads only the picked one. */
+  keys?: readonly ClipKey[];
 };
 
 /** True when this browser can run the off-main-thread clip player at all. */
@@ -54,6 +56,7 @@ export class SmugClipPlayer implements BridgeClipPlayer {
   private seq = 0;
   private current: { key: ClipKey; id: number; events: BridgeClipEvents } | null = null;
   private waiters: Array<() => void> = [];
+  private readonly keys: readonly ClipKey[];
 
   /** One player per pair of canvases for the life of the page (a canvas can be handed over once). */
   static for(opts: SmugClipPlayerOptions): SmugClipPlayer {
@@ -70,6 +73,7 @@ export class SmugClipPlayer implements BridgeClipPlayer {
 
   private constructor(opts: SmugClipPlayerOptions) {
     this.keyOf = opts.keyOf;
+    this.keys = opts.keys ?? ["in", "out"];
     this.onState = opts.onState;
     this.worker = new Worker(new URL("./smug-clip-worker.ts", import.meta.url), { type: "module" });
     this.worker.onmessage = (ev: MessageEvent<ClipWorkerOut>) => this.receive(ev.data);
@@ -79,8 +83,7 @@ export class SmugClipPlayer implements BridgeClipPlayer {
       this.onState(this.state());
       this.flush();
     };
-    const keys: ClipKey[] = ["in", "out"];
-    const clips = keys.map((key) => ({
+    const clips = this.keys.map((key) => ({
       key,
       url: new URL(opts.urls[key], location.href).href,
       frames: opts.frames[key],
@@ -106,7 +109,7 @@ export class SmugClipPlayer implements BridgeClipPlayer {
 
   /** Resolves once both clips are ready (true) or one failed (false). Retries a failed load. */
   load(): Promise<boolean> {
-    if (this.st.in && this.st.out) return Promise.resolve(true);
+    if (this.allReady()) return Promise.resolve(true);
     if (this.st.unsupported) return Promise.resolve(false);
     if (this.st.failed) {
       this.failedKeys.clear();
@@ -114,12 +117,16 @@ export class SmugClipPlayer implements BridgeClipPlayer {
       this.send({ type: "load" });
     }
     return new Promise((resolve) => {
-      this.waiters.push(() => resolve(this.st.in && this.st.out));
+      this.waiters.push(() => resolve(this.allReady()));
     });
   }
 
+  private allReady(): boolean {
+    return this.keys.every((k) => this.st[k]);
+  }
+
   private flush() {
-    if (!(this.st.in && this.st.out) && !this.st.failed && !this.st.unsupported) return;
+    if (!this.allReady() && !this.st.failed && !this.st.unsupported) return;
     const w = this.waiters;
     this.waiters = [];
     for (const fn of w) fn();

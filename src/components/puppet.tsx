@@ -102,8 +102,11 @@ import {
 import {
   WELCOME_1329_CLIP,
   WELCOME_1330_CLIP,
+  WELCOME_CHECKIN_KEY,
   WelcomeGate,
   pickWelcomeClip,
+  welcomeBlocker,
+  welcomePageFromDom,
   readLastActivity,
   welcomeDebugClip,
   welcomeDue,
@@ -1370,7 +1373,9 @@ export function Puppet({
       const g = globalThis as { __raiWelcome?: unknown[] };
       (g.__raiWelcome ??= []).push([performance.now(), ...msg]);
     };
-    const ensurePlayer = (): SmugClipPlayer | null => {
+    // Only the picked clip is fetched: the player is made for that one clip, and later returns on this page reuse it.
+    let playerClip: SmugClip | null = null;
+    const ensurePlayer = (clip: SmugClip): SmugClipPlayer | null => {
       if (welcomePlayerRef.current) return welcomePlayerRef.current;
       const a = bridgeCanvasWelcomeARef.current;
       const b = bridgeCanvasWelcomeBRef.current;
@@ -1381,6 +1386,7 @@ export function Puppet({
           canvases: { in: a, out: b },
           urls: { in: aUrl!, out: bUrl! },
           frames: { in: WELCOME_1329_CLIP.frames, out: WELCOME_1330_CLIP.frames },
+          keys: [clip.key],
           box: WAVE_CLIP_BOX,
           keyOf: (file) => {
             const f = parseClipFrame(file);
@@ -1394,12 +1400,36 @@ export function Puppet({
         console.warn("[rai] welcome clip player did not start; no welcome wave", err);
         return null;
       }
+      playerClip = clip;
       void welcomePlayerRef.current.load();
       return welcomePlayerRef.current;
     };
+    // Check-in stamp at mount: if Designer's check-in line posts on this open, the stamp changes (no welcome then).
+    const checkInAtOpen = (() => {
+      try {
+        return store?.getItem(WELCOME_CHECKIN_KEY) ?? null;
+      } catch {
+        return null;
+      }
+    })();
+    const blocker = (): string | null => {
+      let posted = false;
+      try {
+        posted = (store?.getItem(WELCOME_CHECKIN_KEY) ?? null) !== checkInAtOpen;
+      } catch {
+        posted = false;
+      }
+      return welcomeBlocker(welcomePageFromDom(document, posted));
+    };
     let armedAt = 0;
-    const arm = (clip: SmugClip, why: string) => {
+    const arm = (picked: SmugClip, why: string) => {
       if (welcomeActive.current || !smugClipPlayerSupported()) return;
+      const clip = playerClip ?? picked;
+      const b = blocker();
+      if (b) {
+        log(["blocked", why, b]);
+        return;
+      }
       armedAt = performance.now();
       gate.arm(clip, Date.now());
       setWelcomeLabel(`pending-${clip.file.slice(-9, -5)}`);
@@ -1434,11 +1464,20 @@ export function Puppet({
     const timer = window.setInterval(() => {
       const clip = gate.pending();
       if (!clip) return;
+      // A call (connecting or up), the check-in line, the call-ended card, the remember toast or the Reload notice
+      // on this open: drop the welcome for this return.
+      const b = blocker();
+      if (b) {
+        gate.clear();
+        setWelcomeLabel("off");
+        log(["dropped", b]);
+        return;
+      }
       // Lazy: the welcome files only go on the wire once the startup clips (smug + wave) are in, or after 20 s,
       // so they never hold up the clips a send can need.
       const st = clipsStateRef.current;
       if (!welcomePlayerRef.current && ((st.in && st.out && st.win && st.wout) || st.unsupported || performance.now() - armedAt > 20_000))
-        ensurePlayer();
+        ensurePlayer(clip);
       const player = welcomePlayerRef.current;
       const ready = Boolean(player) && welcomeState.current[clip.key];
       const restingIdle =
