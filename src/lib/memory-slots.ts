@@ -155,11 +155,18 @@ export function applySlotPatch(current: MemorySlotState, patch: MemorySlotState)
 }
 
 /**
- * The user's own name only. A third-person possessive
- * ("their cat's name is", "a friend's name is") is never the profile.
+ * The user's own name only.
+ * "Their name is X" counts only at the start of the gist — that is the form
+ * brain.ts saves. A possessive subject ("their cat's name is") never matches.
  */
 const USER_NAME_RE =
-  /\b(?:my name is|call me|i go by|your name is|(?:the )?user['’]s name is)\s+([A-Za-z][\w'-]{1,24})/i;
+  /(?:^their name is|\b(?:my name is|i(?:['’]m| am) called|call me|i go by|your name is|(?:the )?user['’]s name is))\s+([A-Za-z][\w'-]{1,24})/i;
+
+const CALL_ME_NOT_A_NAME = new Set(["maybe", "later", "back", "when"]);
+
+/** Pet, friend, or sibling in a possessive gist. Not the user's name. */
+const POSSESSIVE_KIN_RE =
+  /^(?:their|the|my|our|your|her|his|a|an)\s+(?:best\s+)?(?:pet|cat|dog|friend|sibling|brother|sister)['’]s\s+(?:name is|is named)\s+([A-Za-z][\w'-]{1,24})/i;
 
 export function extractName(text: string): string | undefined {
   const cleaned = text.replace(/\s+/g, " ").trim();
@@ -170,7 +177,33 @@ export function extractName(text: string): string | undefined {
   const name = cleanToken(raw);
   if (!name || NAME_STOP.has(name.toLowerCase())) return undefined;
   if (/^(cameraman|director|photographer)$/i.test(name)) return undefined;
+  const phrase = (m[0] ?? "").toLowerCase();
+  if (phrase.startsWith("call me") && CALL_ME_NOT_A_NAME.has(name.toLowerCase())) return undefined;
+  if (/^my name is not\b/i.test(phrase)) return undefined;
   return name;
+}
+
+function possessiveKinName(text: string): string | undefined {
+  const cleaned = text.replace(/\s+/g, " ").trim();
+  const name = cleanToken(cleaned.match(POSSESSIVE_KIN_RE)?.[1] ?? "");
+  return name || undefined;
+}
+
+/**
+ * True when the profile equals a pet, friend, or sibling named only by a
+ * possessive gist. A real user-name gist for that same name keeps the profile.
+ */
+function profileCopiedFromKin(items: MemoryItemLike[], profile: string): boolean {
+  const want = profile.trim().toLowerCase();
+  if (!want) return false;
+  let fromKin = false;
+  for (const item of items) {
+    const own = extractName(item.text);
+    if (own && own.toLowerCase() === want) return false;
+    const kin = possessiveKinName(item.text);
+    if (kin && kin.toLowerCase() === want) fromKin = true;
+  }
+  return fromKin;
 }
 
 export function extractRole(text: string): string | undefined {
@@ -337,6 +370,9 @@ export function migrateItemsToSlots(
         break;
       }
     }
+  }
+  if (next.name && profileCopiedFromKin(items, next.name)) {
+    next = applySlotPatch(next, { name: "" });
   }
   return next;
 }

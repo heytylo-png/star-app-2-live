@@ -107,6 +107,15 @@ describe("daily check-in", () => {
       slots.name,
     );
     assert.match(line, /Tell Miso I said hi\.$/);
+    const copied = migrateItemsToSlots([{ text: "Their cat's name is Miso" }], { name: "Miso" });
+    assert.equal(copied.name, undefined);
+    const restored = composeCheckInLine(
+      readLocalNow(MORNING, TZ),
+      "2026-09-23",
+      ["Their cat's name is Miso"],
+      copied.name,
+    );
+    assert.match(restored, /Tell Miso I said hi\.$/);
   });
 
   it("says hi to an allowlisted pet and keeps the name's casing", () => {

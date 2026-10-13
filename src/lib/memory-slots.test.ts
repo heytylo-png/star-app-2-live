@@ -147,12 +147,22 @@ describe("extractSlotsFromUserText", () => {
     assert.equal(extractName("I go by Ty"), "Ty");
     assert.equal(extractName("your name is Ty"), "Ty");
     assert.equal(extractName("the user's name is Ty"), "Ty");
+    assert.equal(extractName("Their name is Tylo"), "Tylo");
+    assert.equal(extractName("I'm called Ty"), "Ty");
+    assert.equal(extractName("I am called Ty"), "Ty");
     assert.equal(extractName("Hey. Just got here."), undefined);
     assert.equal(extractName("Remember that I like talking to you at night."), undefined);
     assert.equal(extractName("My name is the person talking"), undefined);
+    assert.equal(extractName("Also their name is Tylo"), undefined);
     assert.equal(extractName("Their cat's name is Miso"), undefined);
     assert.equal(extractName("Their friend's name is Miso"), undefined);
     assert.equal(extractName("their dog's name is Rex"), undefined);
+    assert.equal(extractName("call me maybe"), undefined);
+    assert.equal(extractName("call me later"), undefined);
+    assert.equal(extractName("call me back"), undefined);
+    assert.equal(extractName("call me when"), undefined);
+    assert.equal(extractName("my name is not"), undefined);
+    assert.equal(extractName("my name is not Ty"), undefined);
     const patch = extractSlotsFromUserText("Call me Sam.");
     assert.equal(patch.name, "Sam");
     assert.equal(extractSlotsFromUserText("my name is Ty").name, "Ty");
@@ -233,7 +243,7 @@ describe("migrateItemsToSlots", () => {
     const slots = migrateItemsToSlots(
       [
         { text: "They live in Tokyo" },
-        { text: "The user's name is Tylo" },
+        { text: "Their name is Tylo" },
         { text: "Their job: engineer" },
       ],
       {},
@@ -254,6 +264,26 @@ describe("migrateItemsToSlots", () => {
     assert.equal(slots.name, undefined);
     const kept = migrateItemsToSlots([{ text: "Their cat's name is Miso" }], { name: "Ty" });
     assert.equal(kept.name, "Ty");
+  });
+
+  it("clears a profile copied only from a pet, friend, or sibling gist", () => {
+    assert.equal(
+      migrateItemsToSlots([{ text: "Their cat's name is Miso" }], { name: "Miso" }).name,
+      undefined,
+    );
+    assert.equal(
+      migrateItemsToSlots([{ text: "Their friend's name is Jo" }], { name: "Jo" }).name,
+      undefined,
+    );
+    assert.equal(
+      migrateItemsToSlots([{ text: "Their sister's name is Ada" }], { name: "Ada" }).name,
+      undefined,
+    );
+    const own = migrateItemsToSlots(
+      [{ text: "Their name is Miso" }, { text: "Their cat's name is Miso" }],
+      { name: "Miso" },
+    );
+    assert.equal(own.name, "Miso");
   });
 });
 
