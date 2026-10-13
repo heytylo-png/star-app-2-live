@@ -143,6 +143,103 @@ describe("memory saves notify once", () => {
     const notifyAt = addFn.indexOf("memorySaves.notify(cleaned)");
     const similarAt = addFn.indexOf("isDuplicate(item.text, cleaned)");
     assert.ok(similarAt > 0 && duplicateAt > similarAt && notifyAt > duplicateAt);
+    assert.match(addFn, /rememberGistKey\(item\.text\) === gist/);
+    assert.match(addFn, /if \(replaced\) return null/);
     assert.match(store, /if \(wrote\) saved.push\(wrote\)/);
+  });
+
+  it("replaces a refined fact without toasting, and a reload stays quiet", async () => {
+    const storage = new Map<string, string>();
+    const local = {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        storage.set(key, String(value));
+      },
+      removeItem: (key: string) => {
+        storage.delete(key);
+      },
+      clear: () => storage.clear(),
+      key: (index: number) => [...storage.keys()][index] ?? null,
+      get length() {
+        return storage.size;
+      },
+    };
+    Object.defineProperty(globalThis, "localStorage", { value: local, configurable: true });
+
+    const { useMemoryStore } = await import("./memory-store.ts");
+    if (!useMemoryStore.persist.hasHydrated()) {
+      await new Promise<void>((resolve) => {
+        const unsub = useMemoryStore.persist.onFinishHydration(() => {
+          unsub();
+          resolve();
+        });
+      });
+    }
+    useMemoryStore.getState().clear();
+
+    const noted: string[][] = [];
+    const stop = memorySaves.subscribe((texts) => noted.push(texts));
+    const flush = () => new Promise((resolve) => queueMicrotask(resolve));
+    const add = (text: string) => useMemoryStore.getState().add(text);
+    const texts = () => useMemoryStore.getState().items.map((item) => item.text);
+
+    add("Your cat is named Miso");
+    await flush();
+    assert.deepEqual(texts(), ["Your cat is named Miso"]);
+    assert.deepEqual(noted, [["Your cat is named Miso"]]);
+
+    assert.equal(add("YOUR CAT IS NAMED MISO."), null);
+    assert.equal(add("Your cat is named Miso"), null);
+    await flush();
+    assert.deepEqual(texts(), ["Your cat is named Miso"]);
+    assert.equal(noted.length, 1);
+
+    assert.equal(add("Your cat is named Miso and she is three"), null);
+    await flush();
+    assert.deepEqual(texts(), ["Your cat is named Miso and she is three"]);
+    assert.equal(noted.length, 1);
+
+    assert.equal(add("Their name is Ada"), "Their name is Ada");
+    await flush();
+    assert.deepEqual(texts(), ["Their name is Ada", "Your cat is named Miso and she is three"]);
+    assert.deepEqual(noted[1], ["Their name is Ada"]);
+
+    assert.equal(add("Name is Ada from home"), null);
+    await flush();
+    assert.deepEqual(texts(), ["Name is Ada from home", "Your cat is named Miso and she is three"]);
+    assert.equal(noted.length, 2);
+
+    assert.equal(add("They like rain"), "They like rain");
+    await flush();
+    assert.equal(noted.length, 3);
+    assert.deepEqual(noted[2], ["They like rain"]);
+    assert.equal(texts().filter((text) => text === "They like rain").length, 1);
+
+    let seen = loadRememberSeen((key) => storage.get(key) ?? null);
+    for (const batch of noted) {
+      const next = nextRememberToast(seen, { type: "memories", texts: batch }, 1);
+      assert.ok(next.toast);
+      seen = next.seen;
+      saveRememberSeen(seen, (key, value) => storage.set(key, value));
+    }
+
+    await useMemoryStore.persist.rehydrate();
+    const before = noted.length;
+    const kept = texts();
+    add("YOUR CAT IS NAMED MISO AND SHE IS THREE.");
+    add("name is ada from home");
+    add("They like rain.");
+    await flush();
+    assert.equal(noted.length, before);
+    assert.deepEqual(texts(), kept);
+
+    const restored = loadRememberSeen((key) => storage.get(key) ?? null);
+    const replay = nextRememberToast(
+      restored,
+      { type: "memories", texts: ["Your cat is named Miso", "Their name is Ada", "They like rain"] },
+      2,
+    );
+    assert.equal(replay.toast, null);
+    stop();
   });
 });

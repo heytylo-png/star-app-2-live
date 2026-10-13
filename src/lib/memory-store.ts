@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { extractNatalFromUserText } from "./chart";
-import { memorySaves } from "./remember-toast.ts";
+import { extractNatalFromUserText } from "./chart.ts";
+import { memorySaves, rememberGistKey } from "./remember-toast.ts";
 import {
   applySlotPatch,
   emptySlots,
@@ -11,7 +11,7 @@ import {
   type AffectionSlotInput,
   type ExtractOpts,
   type MemorySlotState,
-} from "./memory-slots";
+} from "./memory-slots.ts";
 
 /**
  * Persist key: `star-rai-memory` (stable — do not rename without a migrator).
@@ -69,14 +69,19 @@ export const useMemoryStore = create<MemoryState>()(
         const cleaned = normalizeFact(text);
         if (!cleaned) return null;
         const items = get().items;
-        // Case, punctuation, and other near-copies are the same item. Do not
-        // write them again and do not toast.
-        if (items.some((item) => isDuplicate(item.text, cleaned))) return null;
+        const gist = rememberGistKey(cleaned);
+        // Case, spacing, and trailing punctuation are the same item.
+        if (gist && items.some((item) => rememberGistKey(item.text) === gist)) return null;
+        // Containment and same-name drift still replace the old wording.
+        // That update is not a new memory, so it does not toast.
+        const withoutSimilar = items.filter((item) => !isDuplicate(item.text, cleaned));
+        const replaced = withoutSimilar.length !== items.length;
         const nextItems = [
           { id: crypto.randomUUID(), text: cleaned, createdAt: Date.now() },
-          ...items,
+          ...withoutSimilar,
         ].slice(0, 80);
         set({ items: nextItems });
+        if (replaced) return null;
         memorySaves.notify(cleaned);
         return cleaned;
       },
