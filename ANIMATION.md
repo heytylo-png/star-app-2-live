@@ -215,3 +215,7 @@ resume window is open and only "busy" blocks it, the guard also re-checks every 
 `?v=<live>&r=<attempt>-<time>`, which is unique per attempt so the browser cache can never answer, and the SW fetches
 navigations with `cache: "no-cache"`. `r` is removed with `history.replaceState` after load.
 
+
+### Welcome-back wave (wb1, TyLo 2026-10-13 10:08)
+- Two muted clips, 121 frames each, idle glare → open-palm wave → idle glare: `rai/welcome1329.avif` (face stays closer to the glare) and `rai/welcome1330.avif` (face softens more). Same pipeline as the wave: one uniform registration onto idle (×1.845, soles + feet centre; no slide), white-matte cut, alpha-only post (specks, leg/thigh gap, finger gaps, left-edge fade), darker official-Rai skin matched to idle per region incl. the blush band, x 0..672 band (crf 26 / alpha 20). f113–f120 face-only landing (eyes, brows, mouth) like w14.
+- Trigger (`src/lib/welcome-wave.ts`): on open / resume when the last user activity is ≥ 6 h old, one random clip plays in full from a rested idle stage (no bridge, no hold, not talking; a send defers it), once per return, no chat line, no TTS. Lazy: its player starts after the startup clips. Debug: `?welcome=1329|1330|1`.

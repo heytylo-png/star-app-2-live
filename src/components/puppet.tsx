@@ -43,6 +43,7 @@ import {
   smugBeatSheetUrls,
   smugClipUrls,
   waveClipUrls,
+  welcomeClipUrls,
   poutClipUrls,
   talkClipUrls,
   type PosePhase,
@@ -92,9 +93,22 @@ import {
   POUT_OUT_CLIP,
   TALK_IN_CLIP,
   TALK_OUT_CLIP,
+  clipFrameFiles,
   type BridgeTimers,
+  type ClipFamily,
   type ClipPair,
+  type SmugClip,
 } from "@/lib/pose-bridge";
+import {
+  WELCOME_1329_CLIP,
+  WELCOME_1330_CLIP,
+  WelcomeGate,
+  pickWelcomeClip,
+  readLastActivity,
+  welcomeDebugClip,
+  welcomeDue,
+  writeLastActivity,
+} from "@/lib/welcome-wave";
 import { SmugClipPlayer, smugClipPlayerSupported } from "@/lib/smug-clip-player";
 import type { BridgeClipPlayer } from "@/lib/pose-bridge";
 import { PoseCrossfadePool, type CrossfadeLayer } from "@/lib/pose-crossfade";
@@ -114,9 +128,10 @@ import {
 import { cn } from "@/lib/utils";
 
 /** Bridge canvases on the stage: smug in/out, wave win/wout, pout pin/pout, talk tin/tout. */
-type BridgeStageKey = "in" | "out" | "win" | "wout" | "pin" | "pout" | "tin" | "tout";
+type BridgeStageKey = "in" | "out" | "win" | "wout" | "pin" | "pout" | "tin" | "tout" | "wca" | "wcb";
 /** Each clip pair's [intro, rest] canvases. */
-const BRIDGE_STAGE_KEYS: Record<ClipPair, readonly [BridgeStageKey, BridgeStageKey]> = {
+const BRIDGE_STAGE_KEYS: Record<ClipFamily, readonly [BridgeStageKey, BridgeStageKey]> = {
+  welcome: ["wca", "wcb"],
   smug: ["in", "out"],
   wave: ["win", "wout"],
   pout: ["pin", "pout"],
@@ -325,6 +340,18 @@ export function Puppet({
   const bridgeCanvasPoutOutRef = useRef<HTMLCanvasElement>(null);
   const bridgeCanvasTalkInRef = useRef<HTMLCanvasElement>(null);
   const bridgeCanvasTalkOutRef = useRef<HTMLCanvasElement>(null);
+  /** Welcome-back wave canvases (1329 / 1330) and their lazy player (welcome-wave.ts). */
+  const bridgeCanvasWelcomeARef = useRef<HTMLCanvasElement>(null);
+  const bridgeCanvasWelcomeBRef = useRef<HTMLCanvasElement>(null);
+  const welcomePlayerRef = useRef<SmugClipPlayer | null>(null);
+  const welcomeState = useRef({ in: false, out: false, unsupported: false });
+  /** The welcome clip on stage (its frames own the bridge canvases until done), or null. */
+  const welcomeActive = useRef<SmugClip | null>(null);
+  const welcomeGate = useRef<WelcomeGate | null>(null);
+  if (!welcomeGate.current) welcomeGate.current = new WelcomeGate();
+  const [welcomeLabel, setWelcomeLabel] = useState("off");
+  const poseRef = useRef(pose);
+  poseRef.current = pose;
   /** Smug clips player (1085/1084). */
   const clipPlayerRef = useRef<SmugClipPlayer | null>(null);
   /** Wave clips player (1292/1320). */
@@ -334,8 +361,10 @@ export function Puppet({
   /** Talk clips player (1257/1276). */
   const talkPlayerRef = useRef<SmugClipPlayer | null>(null);
   /** The clip player of a pair (refs only, so it is safe in any effect). */
-  const playerFor = (pair: ClipPair | undefined): SmugClipPlayer | null =>
-    pair === "wave"
+  const playerFor = (pair: ClipFamily | undefined): SmugClipPlayer | null =>
+    pair === "welcome"
+      ? welcomePlayerRef.current
+      : pair === "wave"
       ? wavePlayerRef.current
       : pair === "pout"
         ? poutPlayerRef.current
@@ -344,6 +373,7 @@ export function Puppet({
           : clipPlayerRef.current;
   /** Either pair can never play in this browser (read in the crossfade effect). */
   const clipsUnsupportedRef = useRef(false);
+  const clipsStateRef = useRef({ in: false, out: false, win: false, wout: false, unsupported: false });
   const [clipsState, setClipsState] = useState({
     in: false,
     out: false,
@@ -1177,6 +1207,7 @@ export function Puppet({
   }, [pose, emotion, talking, ampLive, blinkShown, mouthShown, reducedMotion]);
   // Both smug clips loaded and primed (their first frames decoded): a change may play.
   const smugClipsReady = clipsState.in && clipsState.out;
+  clipsStateRef.current = clipsState;
   const waveClipsReady = clipsState.win && clipsState.wout;
   const poutClipsReady = clipsState.pin && clipsState.pout;
   const talkClipsReady = clipsState.tin && clipsState.tout;
@@ -1289,6 +1320,8 @@ export function Puppet({
         pout: bridgeCanvasPoutOutRef.current,
         tin: bridgeCanvasTalkInRef.current,
         tout: bridgeCanvasTalkOutRef.current,
+        wca: bridgeCanvasWelcomeARef.current,
+        wcb: bridgeCanvasWelcomeBRef.current,
       };
       if (src === null) {
         bridgeClipRef.current = null;
@@ -1300,6 +1333,13 @@ export function Puppet({
       }
       const f = parseClipFrame(src);
       if (!f) return;
+      // A pose bridge that starts while the welcome wave is up takes the stage: the welcome stops there.
+      if (f.clip.pair !== "welcome" && welcomeActive.current) {
+        welcomeActive.current = null;
+        welcomePlayerRef.current?.stop();
+        if (canvases.wca) canvases.wca.dataset.raiSheet = "off";
+        if (canvases.wcb) canvases.wcb.dataset.raiSheet = "off";
+      }
       const pairKeys = BRIDGE_STAGE_KEYS[f.clip.pair];
       const stageKey = f.clip.key === "in" ? pairKeys[0] : pairKeys[1];
       const other = stageKey === pairKeys[0] ? pairKeys[1] : pairKeys[0];
@@ -1314,6 +1354,150 @@ export function Puppet({
     },
     [releaseSmugExit],
   );
+
+  // Welcome-back wave (TyLo 2026-10-13 10:08, welcome-wave.ts): on open / resume after >= 6 h of no user activity
+  // (or ?welcome=1329|1330), one clip plays in full from the resting idle back to idle. Lazy player; muted.
+  useEffect(() => {
+    const store = (() => {
+      try {
+        return window.localStorage;
+      } catch {
+        return null;
+      }
+    })();
+    const gate = welcomeGate.current!;
+    const log = (msg: unknown[]) => {
+      const g = globalThis as { __raiWelcome?: unknown[] };
+      (g.__raiWelcome ??= []).push([performance.now(), ...msg]);
+    };
+    const ensurePlayer = (): SmugClipPlayer | null => {
+      if (welcomePlayerRef.current) return welcomePlayerRef.current;
+      const a = bridgeCanvasWelcomeARef.current;
+      const b = bridgeCanvasWelcomeBRef.current;
+      if (!a || !b || !smugClipPlayerSupported()) return null;
+      const [aUrl, bUrl] = welcomeClipUrls();
+      try {
+        welcomePlayerRef.current = SmugClipPlayer.for({
+          canvases: { in: a, out: b },
+          urls: { in: aUrl!, out: bUrl! },
+          frames: { in: WELCOME_1329_CLIP.frames, out: WELCOME_1330_CLIP.frames },
+          box: WAVE_CLIP_BOX,
+          keyOf: (file) => {
+            const f = parseClipFrame(file);
+            return f?.clip.pair === "welcome" ? f.clip.key : null;
+          },
+          onState: (st) => {
+            welcomeState.current = st;
+          },
+        });
+      } catch (err) {
+        console.warn("[rai] welcome clip player did not start; no welcome wave", err);
+        return null;
+      }
+      void welcomePlayerRef.current.load();
+      return welcomePlayerRef.current;
+    };
+    let armedAt = 0;
+    const arm = (clip: SmugClip, why: string) => {
+      if (welcomeActive.current || !smugClipPlayerSupported()) return;
+      armedAt = performance.now();
+      gate.arm(clip, Date.now());
+      setWelcomeLabel(`pending-${clip.file.slice(-9, -5)}`);
+      log(["arm", why, clip.file]);
+    };
+    const checkReturn = (why: string) => {
+      const last = readLastActivity(store);
+      const now = Date.now();
+      if (welcomeDue(last, now)) arm(pickWelcomeClip(), `${why} gap ${Math.round((now - last!) / 60000)} min`);
+      else log(["no-welcome", why, last == null ? null : Math.round((now - last) / 60000)]);
+      writeLastActivity(store, now);
+    };
+    const forced = welcomeDebugClip(location.search);
+    if (forced) {
+      arm(forced, "debug");
+      writeLastActivity(store, Date.now());
+    } else checkReturn("open");
+    const onVis = () => {
+      if (document.visibilityState === "hidden") writeLastActivity(store, Date.now());
+      else checkReturn("resume");
+    };
+    let lastWrite = 0;
+    const onActivity = () => {
+      const now = Date.now();
+      if (now - lastWrite < 5000) return;
+      lastWrite = now;
+      writeLastActivity(store, now);
+    };
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("pointerdown", onActivity, { passive: true });
+    window.addEventListener("keydown", onActivity);
+    const timer = window.setInterval(() => {
+      const clip = gate.pending();
+      if (!clip) return;
+      // Lazy: the welcome files only go on the wire once the startup clips (smug + wave) are in, or after 20 s,
+      // so they never hold up the clips a send can need.
+      const st = clipsStateRef.current;
+      if (!welcomePlayerRef.current && ((st.in && st.out && st.win && st.wout) || st.unsupported || performance.now() - armedAt > 20_000))
+        ensurePlayer();
+      const player = welcomePlayerRef.current;
+      const ready = Boolean(player) && welcomeState.current[clip.key];
+      const restingIdle =
+        ready &&
+        !bridgeClipRef.current &&
+        !bridge.current?.active() &&
+        bridgeKeyOfPlates(shownPlates.current) === "idle" &&
+        !smugGate.current?.exiting();
+      const go = gate.tick(
+        { restingIdle, talking: talkingRef.current, wantedIdle: poseRef.current === "idle", reducedMotion: reducedRef.current },
+        Date.now(),
+      );
+      if (!gate.pending() && !go) {
+        setWelcomeLabel("off");
+        log(["dropped"]);
+        return;
+      }
+      if (!go || !player) return;
+      const files = clipFrameFiles(go);
+      welcomeActive.current = go;
+      onBridgeFrame(files[0]!);
+      const ok = player.play(files, 0, {
+        shown: (i) => {
+          if (welcomeActive.current === go && files[i]) onBridgeFrame(files[i]!);
+        },
+        done: () => {
+          if (welcomeActive.current !== go) return;
+          welcomeActive.current = null;
+          onBridgeFrame(null);
+          setWelcomeLabel(`done-${go.file.slice(-9, -5)}`);
+          log(["done", go.file]);
+        },
+      });
+      if (!ok) {
+        welcomeActive.current = null;
+        onBridgeFrame(null);
+        setWelcomeLabel("off");
+        log(["play-failed", go.file]);
+        return;
+      }
+      setWelcomeLabel(`play-${go.file.slice(-9, -5)}`);
+      log(["play", go.file]);
+    }, 250);
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("pointerdown", onActivity);
+      window.removeEventListener("keydown", onActivity);
+      window.clearInterval(timer);
+    };
+  }, [onBridgeFrame]);
+  // A send while a welcome is pending defers it (the stage has to rest on idle again first) and counts as activity.
+  useEffect(() => {
+    welcomeGate.current?.deferForSend();
+    try {
+      writeLastActivity(window.localStorage, Date.now());
+    } catch {
+      /* no storage */
+    }
+  }, [smugRelease]);
 
   // Pose bridge (idle <-> smug, see pose-bridge.ts). The request is made in the
   // crossfade effect below, keyed on the shown plates, so a sheet that has not
@@ -1650,6 +1834,7 @@ export function Puppet({
       }
       data-rai-smug-release={smugGate.current?.exiting() ? "exit" : "off"}
       data-rai-build={buildId()}
+      data-rai-welcome={welcomeLabel}
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
     >
       <div data-rai-rig className="rai-rig">
@@ -1789,6 +1974,31 @@ export function Puppet({
           className="rai-layer"
           data-rai-role="bridge"
           data-rai-clip="tout"
+          data-rai-sheet="off"
+          style={{ opacity: 1, zIndex: 60, transition: "none" }}
+        />
+        {/* Welcome-back wave (1329 / 1330): lazy, idle -> idle, muted (welcome-wave.ts). */}
+        <canvas
+          key="pose-bridge-wca"
+          ref={bridgeCanvasWelcomeARef}
+          width={SMUG_CLIP_SHEET.w}
+          height={SMUG_CLIP_SHEET.h}
+          aria-hidden="true"
+          className="rai-layer"
+          data-rai-role="bridge"
+          data-rai-clip="wca"
+          data-rai-sheet="off"
+          style={{ opacity: 1, zIndex: 60, transition: "none" }}
+        />
+        <canvas
+          key="pose-bridge-wcb"
+          ref={bridgeCanvasWelcomeBRef}
+          width={SMUG_CLIP_SHEET.w}
+          height={SMUG_CLIP_SHEET.h}
+          aria-hidden="true"
+          className="rai-layer"
+          data-rai-role="bridge"
+          data-rai-clip="wcb"
           data-rai-sheet="off"
           style={{ opacity: 1, zIndex: 60, transition: "none" }}
         />
