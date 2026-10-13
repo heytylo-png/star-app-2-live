@@ -124,7 +124,7 @@ const SMUG_CLIP_SHA256: Record<string, string> = {
   "rai/smug1085_in.avif": "0c2c6a4bb9ab5b995720b2026f8919dfe71632a3d19902fa3ac905c870ec5351",
   "rai/smug1084_out.avif": "c44e3af0a6233c9979747710cab1c731e5d96691dc3816628978f227f9ff1b50",
   "rai/wave1292_in.avif": "529468d3d14b27f62504be47f5ec83013f1c9cc9fc41f2e0c50ac5a4a5ae477e",
-  "rai/wave1320_out.avif": "639ab6f89cbb385cba28b63d472895435a950be67685182a940b3bdfe4b2c927",
+  "rai/wave1320_out.avif": "e6752c6d86befcbcc7f4e937bd6462e28609198551b1012124cd1943696e35ab",
   "rai/pout1158_in.avif": "495b8d2ce309c6e3aae50f013182c0ef8159841fd4050f5c61c791a4da0eff1c",
   "rai/pout1162_out.avif": "5278c12f28283eb2046c31943c49967857b2799496648e68dc63da03400112dc",
 };
@@ -145,11 +145,11 @@ describe("smug clips (1085 in / 1084 out)", () => {
   });
 });
 
-describe("bridge file cache keys (wave w11, pout p2, talk t1)", () => {
-  it("versions only the re-cut wave (w11 1292 + hold + 1320), pout (p2) and talk (t1) files; smug and idle URLs stay as they were", () => {
+describe("bridge file cache keys (wave w11/w12, pout p2, talk t1)", () => {
+  it("versions only the re-cut wave (w11 1292 + hold, w12 1320), pout (p2) and talk (t1) files; smug and idle URLs stay as they were", () => {
     assert.deepEqual(BRIDGE_FILE_VERSION, {
       "rai/wave1292_in.avif": "w11",
-      "rai/wave1320_out.avif": "w11",
+      "rai/wave1320_out.avif": "w12",
       "rai/wave1292_hold.webp": "w11",
       "rai/pout1158_in.avif": "p2",
       "rai/pout1162_out.avif": "p2",
@@ -170,7 +170,7 @@ describe("bridge file cache keys (wave w11, pout p2, talk t1)", () => {
     assert.equal(spriteNeedsWhitePunch(SPRITES.poses.wave), false);
     const [win, wout] = waveClipUrls();
     assert.match(win!, /rai\/wave1292_in\.avif\?v=w11$/);
-    assert.match(wout!, /rai\/wave1320_out\.avif\?v=w11$/);
+    assert.match(wout!, /rai\/wave1320_out\.avif\?v=w12$/);
     assert.match(SPRITES.poses.smug, new RegExp(`smug1085_hold\\.webp\\?v=${PRE_CUT_ALPHA_VERSION}$`));
     assert.match(SPRITES.poses.idle, new RegExp(`idle\\.png\\?v=${PRE_CUT_ALPHA_VERSION}$`));
     for (const u of smugClipUrls()) assert.equal(u.includes("?"), false, u);
