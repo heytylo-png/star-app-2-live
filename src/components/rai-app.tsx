@@ -790,7 +790,7 @@ function RaiReady() {
         birthdayCard: false,
         staleNotice: false,
         memoryGists,
-        userName: checkInSpokenUserName(memory.slots.name, memoryGists),
+        userName: checkInSpokenUserName(memory.slots.name),
       });
       if (!turn.plan.post) return;
       const thread =

@@ -102,7 +102,7 @@ describe("daily check-in", () => {
     assert.equal(checkInMemoryLine("best friend's name is Jo"), "Tell Jo I said hi.");
     assert.equal(checkInMemoryLine("Their sister's name is ada"), null);
     assert.equal(checkInMemoryLine("Their sister's name is Ada"), "Tell Ada I said hi.");
-    assert.equal(checkInMemoryLine("Their cat's name is Mary Jane"), "Tell Mary Jane I said hi.");
+    assert.equal(checkInMemoryLine("Their cat's name is Mary Jane"), null);
     assert.equal(checkInMemoryLine("Their cat's name is Alex"), "Tell Alex I said hi.");
     assert.equal(checkInMemoryLine("Their cat's name is Andrew"), "Tell Andrew I said hi.");
     const line = composeCheckInLine(readLocalNow(MORNING, TZ), "2026-09-23", ["Their cat's name is Miso"]);
@@ -145,15 +145,10 @@ describe("daily check-in", () => {
     const other = composeCheckInLine(morning, "2026-09-23", ["Their name is Ty", "Their cat's name is Miso"]);
     assert.match(other, /Tell Miso I said hi\.$/);
     assert.equal(/\bTy\b/.test(other), false);
-    assert.equal(checkInSpokenUserName("Miso", ["Their cat's name is Miso"]), null);
-    const copied = composeCheckInLine(
-      morning,
-      "2026-09-23",
-      ["Their cat's name is Miso"],
-      checkInSpokenUserName("Miso", ["Their cat's name is Miso"]),
-    );
-    assert.match(copied, /Tell Miso I said hi\.$/);
-    assert.equal(checkInSpokenUserName("Ty", ["My name is Ty", "Their cat's name is Ty"]), "Ty");
+    assert.equal(checkInSpokenUserName("TY"), "TY");
+    const sameName = composeCheckInLine(morning, "2026-09-23", ["Their cat's name is Miso"], "Miso");
+    assert.ok(CHECKIN_LINES.morning.includes(sameName), sameName);
+    assert.equal(/\bmiso\b/i.test(sameName), false);
   });
 
   it("does not speak a name that keeps going, a word-name, or the user's own name", () => {
@@ -179,6 +174,33 @@ describe("daily check-in", () => {
       assert.equal(/\b(?:miso|mom|god|rex|tell)\b/i.test(line), false, line);
     }
     assert.equal(checkInMemoryLine("Their cat's name is Miso."), "Tell Miso I said hi.");
+    for (const gist of [
+      "Their dog's name is Rex Passed",
+      "Their dog's name is Rex Gone",
+      "Their friend's name is Sam Sick",
+      "Their cat's name is Kim Missing",
+      "Their cat's name is Satan",
+      "Their cat's name is Hitler",
+      "Their cat's name is Sexy",
+      "Their cat's name is Passed",
+      "Their dog's name is Dead",
+    ]) {
+      assert.equal(checkInMemoryLine(gist), null, gist);
+      const line = composeCheckInLine(morning, "2026-09-23", [gist]);
+      assert.ok(CHECKIN_LINES.morning.includes(line), `${gist} -> ${line}`);
+      assert.equal(/\b(?:rex|sam|kim|satan|hitler|sexy|passed|dead|tell)\b/i.test(line), false, line);
+    }
+    const lower = composeCheckInLine(morning, "2026-09-23", ["Your name is ty", "dog's name is Ty"]);
+    assert.ok(CHECKIN_LINES.morning.includes(lower), lower);
+    assert.equal(/\bty\b/i.test(lower), false);
+    const profileTy = composeCheckInLine(morning, "2026-09-23", ["dog's name is Ty"], "TY");
+    assert.ok(CHECKIN_LINES.morning.includes(profileTy), profileTy);
+    assert.equal(/\bty\b/i.test(profileTy), false);
+    for (const self of ["ty", "TY", "Ty"]) {
+      const line = composeCheckInLine(morning, "2026-09-23", ["Their dog's name is Ty"], self);
+      assert.ok(CHECKIN_LINES.morning.includes(line), `${self} -> ${line}`);
+      assert.equal(/\bty\b/i.test(line), false, self);
+    }
     const rex = composeCheckInLine(morning, "2026-09-23", [
       "Your name is Rex",
       "Their dog's name is Rex",
@@ -299,7 +321,7 @@ describe("daily check-in", () => {
     assert.match(body, /saveCheckInDate/);
     assert.match(body, /turn\.plan\.lineId/);
     assert.match(body, /loadCheckInLineId/);
-    assert.match(body, /checkInSpokenUserName\(memory\.slots\.name, memoryGists\)/);
+    assert.match(body, /checkInSpokenUserName\(memory\.slots\.name\)/);
     assert.match(app.slice(0, at), /checkInTriedRef/);
     assert.doesNotMatch(body, /setPose|speak\(|markStarterChipsDone|setCaption/);
     assert.equal(/callActive|callStarting|showSetup|showNotice/.test(app.slice(close, close + 24)), false);

@@ -130,14 +130,17 @@ const ALLOWED_SUBJECTS = new Set([
 const CHECKIN_STOP_RE =
   /\b(?:ex|abusers?|abused|abusive|abuse|therapists?|doctors?|dr|counsell?ors?|dealers?|bosses?|co[- ]?workers?|self[- ]?harm(?:ing)?|suicid(?:e|al)|cutting|drugs?|cocaine|heroin|meth|fentanyl|overdose|opioids?|narcotics?|drinks?|drinking|drunk|alcohol(?:ic)?s?|beer|wine|liquor|booze|black\s*outs?|whiskey|vodka|died|dead|rehab|prison|assaulted|assaults?|passed\s+away)\b|kill(?:ed|ing)?\s+(?:myself|themselves|himself|herself)/i;
 
-/** Vocatives and role-words. Not a given name, in any casing. */
+/** Vocatives, role-words, and state-words. Not a given name, in any casing. */
 const WORD_NAMES = new Set(
   `mom mum mommy mummy mama mother dad daddy papa father god jesus christ lord
    baby babe honey sweetie darling hun dear dude bro sis bruh buddy pal
-   nobody someone somebody anyone anybody everybody everyone`.split(/\s+/),
+   nobody someone somebody anyone anybody everybody everyone
+   satan hitler sexy master slave devil death
+   passed gone rip sick missing late lost dead`.split(/\s+/),
 );
 
-const CAPITAL_NAME = /^[A-Z][A-Za-z]*(?:\s+[A-Z][A-Za-z]*)?$/;
+/** One capitalised word, letters only, 2–12 characters. */
+const CAPITAL_NAME = /^[A-Z][A-Za-z]{1,11}$/;
 
 function relation(subject: string): string | null {
   const text = subject
@@ -152,13 +155,12 @@ function relation(subject: string): string | null {
 }
 
 /**
- * Allowlisted subject, then "name is" / "is named", then a name, then nothing.
- * One trailing . or ! is allowed. Anything after the name is not.
- * The name is one or two capitalised words of letters only.
+ * Allowlisted subject, then "name is" / "is named", then one name, then nothing.
+ * One trailing . or ! is allowed. A second word is not a name.
  */
 function namedFact(gist: string): { subject: string; name: string } | null {
   const text = cleanGist(gist).replace(/[.!]$/, "").trim();
-  const match = text.match(/^(.*)\s+(?:name is|is named)\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)$/i);
+  const match = text.match(/^(.*)\s+(?:name is|is named)\s+([A-Za-z]+)$/i);
   const name = match?.[2] ?? "";
   if (!match || !CAPITAL_NAME.test(name)) return null;
   return { subject: match[1] ?? "", name };
@@ -168,14 +170,11 @@ function wordName(name: string): boolean {
   return name.split(/\s+/).some((word) => WORD_NAMES.has(word.toLowerCase()));
 }
 
-function capitalName(raw: string | undefined): string | null {
-  const kept: string[] = [];
-  for (const word of (raw ?? "").trim().split(/\s+/)) {
-    if (!/^[A-Z][A-Za-z]*$/.test(word)) break;
-    kept.push(word);
-    if (kept.length === 2) break;
-  }
-  return kept.length ? kept.join(" ") : null;
+/** A self-name in any casing. Compared later without regard to case. */
+function selfName(raw: string | undefined): string | null {
+  const name = (raw ?? "").trim();
+  if (!/^[A-Za-z]+(?:\s+[A-Za-z]+)?$/.test(name)) return null;
+  return name;
 }
 
 const SELF_NAME_PATTERNS = [
@@ -196,12 +195,12 @@ export function checkInSelfNames(gist: string): string[] {
   for (const pattern of SELF_NAME_PATTERNS) {
     pattern.lastIndex = 0;
     for (const match of text.matchAll(pattern)) {
-      const name = capitalName(match[1]);
+      const name = selfName(match[1]);
       if (name) found.push(name);
     }
   }
   const bare = text.match(/^their name is\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/i);
-  const own = capitalName(bare?.[1]);
+  const own = selfName(bare?.[1]);
   if (own) found.push(own);
   return found;
 }
@@ -212,34 +211,26 @@ export function checkInUserName(gist: string): string | null {
 }
 
 /**
- * Profile name for the check-in. A slot copied from a pet, friend, or sibling
- * fact is not the user — "Their cat's name is Miso" must not block Miso.
- * A "my name is" / "user's name" gist still counts, and so does a profile
- * name that no allowlisted fact explains.
+ * Profile name. It is the user's name even when a pet or friend has the same one.
  */
-export function checkInSpokenUserName(
-  profileName: string | null | undefined,
-  gists: readonly string[],
-): string | null {
+export function checkInSpokenUserName(profileName: string | null | undefined): string | null {
   const profile = profileName?.trim() ?? "";
-  if (!profile) return null;
-  const key = profile.toLowerCase();
-  if (gists.some((gist) => checkInSelfNames(gist).some((name) => name.toLowerCase() === key))) return profile;
-  const copied = gists.some((gist) => {
-    const cleaned = cleanGist(gist);
-    if (!cleaned || CHECKIN_STOP_RE.test(cleaned)) return false;
-    const named = namedFact(cleaned);
-    return Boolean(named && relation(named.subject) && named.name.toLowerCase() === key);
-  });
-  return copied ? null : profile;
+  return profile || null;
+}
+
+function addBlocked(names: Set<string>, raw: string) {
+  const text = raw.trim().toLowerCase();
+  if (!text) return;
+  names.add(text);
+  for (const word of text.split(/\s+/)) names.add(word);
 }
 
 function blockedNames(gists: readonly string[], profileName?: string | null): Set<string> {
   const names = new Set<string>();
-  const profile = profileName?.trim();
-  if (profile) names.add(profile.toLowerCase());
+  const profile = checkInSpokenUserName(profileName);
+  if (profile) addBlocked(names, profile);
   for (const gist of gists) {
-    for (const own of checkInSelfNames(gist)) names.add(own.toLowerCase());
+    for (const own of checkInSelfNames(gist)) addBlocked(names, own);
   }
   return names;
 }
