@@ -6,6 +6,8 @@ import {
   WAVE_HOLD_FILE,
   WAVE_IN_CLIP,
   WAVE_OUT_CLIP,
+  WELCOME_1329_CLIP,
+  WELCOME_1330_CLIP,
   POUT_HOLD_FILE,
   POUT_IN_CLIP,
   POUT_OUT_CLIP,
@@ -751,6 +753,9 @@ export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
   "rai/wave1292_in.avif": "w11",
   "rai/wave1320_out.avif": "w14",
   "rai/wave1292_hold.webp": "w11",
+  // Welcome-back wave (TyLo 2026-10-13 10:08): 1329 / 1330, idle -> idle, muted, lazy (welcome-wave.ts).
+  "rai/welcome1329.avif": "wb1",
+  "rai/welcome1330.avif": "wb1",
   // Pout (1158 in / hold f48 / 1162 out): p1 = face skin re-matched to idle; p2 = face above the jaw only
   // (neck / under-chin shadow, jaw line, mouth line + lips keep their 49aa88b pixels), 2026-10-10.
   // Smug out s1 (TyLo 2026-10-12 22:21): 1084 f129-f144 eased into idle like 1276 t3 / pout p3 (flow morph of the whole
@@ -1049,6 +1054,11 @@ export function poutClipUrls(): string[] {
 }
 
 /** The two clips of the idle <-> wave beat: 1292 intro (f0-f120, all frames), 1320 rest (f0-f120, all frames). */
+/** The two welcome-back clips: [1329, 1330]. Lazy: only fetched when a welcome is due (welcome-wave.ts). */
+export function welcomeClipUrls(): string[] {
+  return [ASSET(WELCOME_1329_CLIP.file), ASSET(WELCOME_1330_CLIP.file)];
+}
+
 export function waveClipUrls(): string[] {
   return [ASSET(WAVE_IN_CLIP.file), ASSET(WAVE_OUT_CLIP.file)];
 }

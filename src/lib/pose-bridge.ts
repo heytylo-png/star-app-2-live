@@ -22,9 +22,11 @@ export const SMUG_CLIP_FPS = 24;
 export const SMUG_CLIP_FRAME_MS = 1000 / SMUG_CLIP_FPS;
 
 export type ClipPair = "smug" | "wave" | "pout" | "talk";
+/** Clip families on the stage: the four pose pairs, plus the welcome-back wave (idle -> idle, no pose change; welcome-wave.ts). */
+export type ClipFamily = ClipPair | "welcome";
 export type SmugClip = {
   /** Which hold pose this clip belongs to. */
-  readonly pair: ClipPair;
+  readonly pair: ClipFamily;
   /** "in" = intro (idle -> hold), "out" = rest (hold -> idle). */
   readonly key: "in" | "out";
   /** Animated AVIF (AV1 + alpha, 24 fps, no audio) under public/. */
@@ -111,6 +113,15 @@ export const POUT_CLIP_BOX = { x: 128, y: 0, w: 480, h: 1280 } as const;
  */
 export const TALK_CLIP_BOX = { x: 128, y: 0, w: 480, h: 1280 } as const;
 
+/**
+ * Welcome-back wave (TyLo 2026-10-13 10:08, wb1): 1329 (face stays closer to the glare) and 1330 (face softens more),
+ * each 121 frames, idle glare -> open-palm wave -> idle glare, muted. Registered to idle like 1320 (uniform x1.845, soles +
+ * feet centre on idle), same x 0..672 band as the wave. Not a pose pair: they play from idle back to idle on one player
+ * ("in" = 1329, "out" = 1330 canvases). See welcome-wave.ts for when.
+ */
+export const WELCOME_1329_CLIP: SmugClip = { pair: "welcome", key: "in", file: "rai/welcome1329.avif", frames: 121 };
+export const WELCOME_1330_CLIP: SmugClip = { pair: "welcome", key: "out", file: "rai/welcome1330.avif", frames: 121 };
+
 /** Bridge frame id for frame `index` of a clip: `<file>#NNN`. */
 export function clipFrameFile(clip: SmugClip, index: number): string {
   return `${clip.file}#${String(index).padStart(3, "0")}`;
@@ -125,7 +136,7 @@ export function clipFrameFiles(clip: SmugClip): string[] {
 export function parseClipFrame(src: string): { clip: SmugClip; index: number } | null {
   const m = /([^/?#]+\.avif)(?:\?[^#]*)?#(\d{3})$/.exec(src);
   if (!m) return null;
-  const clip = [SMUG_IN_CLIP, SMUG_OUT_CLIP, WAVE_IN_CLIP, WAVE_OUT_CLIP, POUT_IN_CLIP, POUT_OUT_CLIP, TALK_IN_CLIP, TALK_OUT_CLIP].find(
+  const clip = [SMUG_IN_CLIP, SMUG_OUT_CLIP, WAVE_IN_CLIP, WAVE_OUT_CLIP, POUT_IN_CLIP, POUT_OUT_CLIP, TALK_IN_CLIP, TALK_OUT_CLIP, WELCOME_1329_CLIP, WELCOME_1330_CLIP].find(
     (c) => c.file.endsWith(`/${m[1]}`) || c.file === m[1],
   );
   if (!clip) return null;

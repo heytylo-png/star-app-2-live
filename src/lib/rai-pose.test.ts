@@ -560,10 +560,11 @@ describe("layersFor talking vs pose hold", () => {
       assert.doesNotMatch(source, /790-open-brow|788-open|791-half|789-closed/);
     }
     // Blink never paints through a canvas. The only canvases on the stage are the eight bridge clip
-    // canvases (smug / wave / pout / talk in + out), handed to the clip worker: the puppet never draws on them.
+    // canvases (smug / wave / pout / talk in + out) plus the two welcome-back clips (1329 / 1330), handed to the
+    // clip workers: the puppet never draws on them.
     assert.doesNotMatch(puppetSrc, /drawImage|getContext/);
     const canvases = puppetSrc.match(/<canvas[\s\S]*?\/>/g) ?? [];
-    assert.equal(canvases.length, 8);
+    assert.equal(canvases.length, 10);
     for (const c of canvases) assert.match(c, /data-rai-role="bridge"/);
     assert.match(puppetSrc, /restOnly/);
     assert.match(puppetSrc, /transition: "none"/);

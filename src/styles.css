@@ -553,7 +553,10 @@
 .rai-rig[data-rai-bridge-on="pin"] > .rai-layer[data-rai-role="bridge"][data-rai-clip="pin"],
 .rai-rig[data-rai-bridge-on="pout"] > .rai-layer[data-rai-role="bridge"][data-rai-clip="pout"],
 .rai-rig[data-rai-bridge-on="tin"] > .rai-layer[data-rai-role="bridge"][data-rai-clip="tin"],
-.rai-rig[data-rai-bridge-on="tout"] > .rai-layer[data-rai-role="bridge"][data-rai-clip="tout"] {
+.rai-rig[data-rai-bridge-on="tout"] > .rai-layer[data-rai-role="bridge"][data-rai-clip="tout"],
+/* welcome-back wave (wca = 1329, wcb = 1330; welcome-wave.ts) */
+.rai-rig[data-rai-bridge-on="wca"] > .rai-layer[data-rai-role="bridge"][data-rai-clip="wca"],
+.rai-rig[data-rai-bridge-on="wcb"] > .rai-layer[data-rai-role="bridge"][data-rai-clip="wcb"] {
   visibility: visible;
 }
 .rai-rig[data-rai-bridge-on] > .rai-layer:not([data-rai-role="bridge"]) {
