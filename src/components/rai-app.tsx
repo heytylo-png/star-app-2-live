@@ -25,6 +25,14 @@ import {
   useAffectionStore,
 } from "@/lib/affection-store";
 import { poseForLandedReply, shouldHoldLocalKiss } from "@/lib/brain";
+import {
+  CALL_ENDED_MS,
+  callEndedVisible,
+  loadCallEndedLineId,
+  planCallEnded,
+  saveCallEndedLineId,
+  type CallEndedCard,
+} from "@/lib/call-ended";
 import { useChatStore } from "@/lib/chat-store";
 import {
   armTextChewState,
@@ -301,6 +309,7 @@ function RaiReady() {
   const [callSupported, setCallSupported] = useState(true);
   const [callStarting, setCallStarting] = useState(false);
   const [callNotice, setCallNotice] = useState<CallMicNotice | null>(null);
+  const [callEnded, setCallEnded] = useState<CallEndedCard | null>(null);
   const [amp, setAmp] = useState(0);
   /** This turn will use ElevenLabs. Text chew stays off until TTS fails. */
   const [audioTurn, setAudioTurn] = useState(false);
@@ -312,6 +321,8 @@ function RaiReady() {
   const draftRef = useRef("");
   const voiceOnRef = useRef(voiceOn);
   const callActiveRef = useRef(false);
+  /** Set only once the mic session is open. A cancelled start stays null. */
+  const callConnectedAtRef = useRef<number | null>(null);
   /** Check-in is decided once per page load, not when a call or other chrome changes. */
   const checkInTriedRef = useRef(false);
   const sendingRef = useRef(false);
@@ -463,11 +474,17 @@ function RaiReady() {
       mayTry: pendingBuild ? mayTryUpdate(pendingBuild, updateStore) : false,
       birthdayCard: showSetup,
     });
-  const showRemember = rememberToastVisible({
-    line: remember?.line ?? null,
+  const showCallEnded = callEndedVisible({
+    card: Boolean(callEnded?.line),
     staleNotice: showNotice,
     callActive: callActive || callStarting,
   });
+  const showRemember =
+    rememberToastVisible({
+      line: remember?.line ?? null,
+      staleNotice: showNotice,
+      callActive: callActive || callStarting,
+    }) && !showCallEnded;
   const showHint =
     chromeReady &&
     showEmptyChatHint({
@@ -477,6 +494,7 @@ function RaiReady() {
     }) &&
     !caption.trim() &&
     !showNotice &&
+    !showCallEnded &&
     !showRemember;
   const showChips =
     chromeReady &&
@@ -488,7 +506,8 @@ function RaiReady() {
       starterChipsDone,
       birthdayCard: showSetup,
     }) &&
-    !showNotice;
+    !showNotice &&
+    !showCallEnded;
 
   useEffect(() => {
     if (!chatHydrated || starterChipsDone || !hasHistory) return;
@@ -500,6 +519,15 @@ function RaiReady() {
       offerRememberRef.current({ type: "memories", texts });
     });
   }, []);
+
+  useEffect(() => {
+    if (!callEnded) return;
+    const left = callEnded.shownAt + CALL_ENDED_MS - Date.now();
+    const timer = window.setTimeout(() => {
+      setCallEnded((current) => (current?.id === callEnded.id && current.shownAt === callEnded.shownAt ? null : current));
+    }, Math.max(0, left));
+    return () => window.clearTimeout(timer);
+  }, [callEnded]);
 
   useEffect(() => {
     if (!remember) return;
@@ -1700,6 +1728,9 @@ function RaiReady() {
   }
 
   function hangUp() {
+    const connected = callActiveRef.current;
+    const startedAt = callConnectedAtRef.current;
+    callConnectedAtRef.current = null;
     callStartGenRef.current += 1;
     callListenGenRef.current += 1;
     callActiveRef.current = false;
@@ -1715,7 +1746,20 @@ function RaiReady() {
     stop();
     stopCallMic();
     // Thread / memory / sheet stay. Drop the listen placeholder so the last line shows.
-    setCaption((c) => (c === "Listening…" || c === callListenLabel() ? "" : c));    settleUpdate();
+    setCaption((c) => (c === "Listening…" || c === callListenLabel() ? "" : c));
+    if (connected && startedAt != null) {
+      const card = planCallEnded({
+        connected: true,
+        startedAt,
+        endedAt: Date.now(),
+        lastLineId: loadCallEndedLineId((key) => localStorage.getItem(key)),
+      });
+      if (card) {
+        saveCallEndedLineId(card.id, (key, value) => localStorage.setItem(key, value));
+        setCallEnded(card);
+      }
+    }
+    settleUpdate();
   }
   hangUpRef.current = hangUp;
 
@@ -1798,6 +1842,7 @@ function RaiReady() {
         stopMediaTracks(stream);
         micGrantedRef.current = true;
         callActiveRef.current = true;
+        callConnectedAtRef.current = Date.now();
         listenBackoffAttemptRef.current = 0;
         listenPausedForTtsRef.current = false;
         setCallActive(true);
@@ -2124,6 +2169,22 @@ function RaiReady() {
                   </span>
                 </button>
               </span>
+            </p>
+          ) : null}
+          {showCallEnded && callEnded ? (
+            <p className="mb-1.5 text-center">
+              <button
+                type="button"
+                data-call-ended=""
+                className="inline-flex h-11 min-h-11 max-w-full items-center justify-center border-0 bg-transparent p-0"
+                onClick={() => setCallEnded(null)}
+              >
+                <span className="inline-flex max-w-full items-center gap-1.5 truncate rounded-2xl bg-[rgba(239,236,230,0.85)] px-3 py-[3px] text-sm text-[#3f3b36]">
+                  <span className="shrink-0 font-medium tabular-nums">{callEnded.duration}</span>
+                  <span aria-hidden="true">·</span>
+                  <span className="min-w-0 truncate">{callEnded.line}</span>
+                </span>
+              </button>
             </p>
           ) : null}
           {showRemember ? (
