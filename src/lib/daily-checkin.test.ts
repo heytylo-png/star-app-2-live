@@ -9,6 +9,7 @@ import {
   checkInBand,
   checkInLineIsInBand,
   checkInMemoryLine,
+  checkInSpokenUserName,
   composeCheckInLine,
   loadCheckInDate,
   planDailyCheckIn,
@@ -141,6 +142,15 @@ describe("daily check-in", () => {
     const other = composeCheckInLine(morning, "2026-09-23", ["Their name is Ty", "Their cat's name is Miso"]);
     assert.match(other, /Tell Miso I said hi\.$/);
     assert.equal(/\bTy\b/.test(other), false);
+    assert.equal(checkInSpokenUserName("Miso", ["Their cat's name is Miso"]), null);
+    const copied = composeCheckInLine(
+      morning,
+      "2026-09-23",
+      ["Their cat's name is Miso"],
+      checkInSpokenUserName("Miso", ["Their cat's name is Miso"]),
+    );
+    assert.match(copied, /Tell Miso I said hi\.$/);
+    assert.equal(checkInSpokenUserName("Ty", ["My name is Ty", "Their cat's name is Ty"]), "Ty");
   });
 
   it("posts one late beat at 23:59 and stays quiet two minutes later", () => {
@@ -206,7 +216,7 @@ describe("daily check-in", () => {
     const body = app.slice(at, close);
     assert.match(body, /appendMessage/);
     assert.match(body, /saveCheckInDate/);
-    assert.match(body, /userName: memory\.slots\.name/);
+    assert.match(body, /checkInSpokenUserName\(memory\.slots\.name, memoryGists\)/);
     assert.match(app.slice(0, at), /checkInTriedRef/);
     assert.doesNotMatch(body, /setPose|speak\(|markStarterChipsDone|setCaption/);
     assert.equal(/callActive|callStarting|showSetup|showNotice/.test(app.slice(close, close + 24)), false);

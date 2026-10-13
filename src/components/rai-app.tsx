@@ -86,7 +86,12 @@ import {
   shapeChartSpokenLine,
 } from "@/lib/chart";
 import { filterClockSpokenLine, resolveClockTurn, clockTimeZone } from "@/lib/clock";
-import { loadCheckInDate, saveCheckInDate, settleDailyCheckIn } from "@/lib/daily-checkin";
+import {
+  checkInSpokenUserName,
+  loadCheckInDate,
+  saveCheckInDate,
+  settleDailyCheckIn,
+} from "@/lib/daily-checkin";
 import { filterEchoedLine } from "@/lib/track";
 import { useChartStore } from "@/lib/chart-store";
 import { useHerMusicStore } from "@/lib/her-music-store";
@@ -774,6 +779,7 @@ function RaiReady() {
       if (callActiveRef.current || callStartingRef.current) return;
       const threadsNow = useChatStore.getState().threads;
       const memory = useMemoryStore.getState();
+      const memoryGists = memory.items.map((item) => item.text);
       const turn = settleDailyCheckIn(false, {
         timeZone: clockTimeZone(),
         lastDate: loadCheckInDate((key) => localStorage.getItem(key)),
@@ -781,8 +787,8 @@ function RaiReady() {
         callActive: false,
         birthdayCard: false,
         staleNotice: false,
-        memoryGists: memory.items.map((item) => item.text),
-        userName: memory.slots.name,
+        memoryGists,
+        userName: checkInSpokenUserName(memory.slots.name, memoryGists),
       });
       if (!turn.plan.post) return;
       const thread =

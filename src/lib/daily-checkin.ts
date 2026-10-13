@@ -144,6 +144,29 @@ export function checkInUserName(gist: string): string | null {
   return match?.[1] ?? null;
 }
 
+/**
+ * Profile name for the check-in. A slot copied from a pet, friend, or sibling
+ * fact is not the user — "Their cat's name is Miso" must not block Miso.
+ * A "my name is" / "user's name" gist still counts, and so does a profile
+ * name that no allowlisted fact explains.
+ */
+export function checkInSpokenUserName(
+  profileName: string | null | undefined,
+  gists: readonly string[],
+): string | null {
+  const profile = profileName?.trim() ?? "";
+  if (!profile) return null;
+  const key = profile.toLowerCase();
+  if (gists.some((gist) => checkInUserName(gist)?.toLowerCase() === key)) return profile;
+  const copied = gists.some((gist) => {
+    const cleaned = cleanGist(gist);
+    if (!cleaned || CHECKIN_STOP_RE.test(cleaned)) return false;
+    const named = namedFact(cleaned);
+    return Boolean(named && relation(named.subject) && named.name.toLowerCase() === key);
+  });
+  return copied ? null : profile;
+}
+
 function blockedNames(gists: readonly string[], profileName?: string | null): Set<string> {
   const names = new Set<string>();
   const profile = profileName?.trim();
