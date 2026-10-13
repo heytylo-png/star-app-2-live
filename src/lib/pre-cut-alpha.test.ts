@@ -122,11 +122,11 @@ const POSE_SHEET_SHA256: Record<string, string> = {
 /** The two smug clips (paste-15): animated AVIF, AV1 + alpha, 24 fps, no audio; pinned bytes. */
 const SMUG_CLIP_SHA256: Record<string, string> = {
   "rai/smug1085_in.avif": "0c2c6a4bb9ab5b995720b2026f8919dfe71632a3d19902fa3ac905c870ec5351",
-  "rai/smug1084_out.avif": "fec725ee33336a72fc9673cbc3fa5ba2df010a9dca25e358f13e93c6ddfa02a9",
+  "rai/smug1084_out.avif": "5538468fee0881a6dd3ff4aa8a7e11d17820b13e8c545990306eebaad271f875",
   "rai/wave1292_in.avif": "529468d3d14b27f62504be47f5ec83013f1c9cc9fc41f2e0c50ac5a4a5ae477e",
-  "rai/wave1320_out.avif": "e6752c6d86befcbcc7f4e937bd6462e28609198551b1012124cd1943696e35ab",
+  "rai/wave1320_out.avif": "84f0c4e8039bec8ecedeeda316e96bedad1afa644b3d3d3df9860b054fcc5108",
   "rai/pout1158_in.avif": "495b8d2ce309c6e3aae50f013182c0ef8159841fd4050f5c61c791a4da0eff1c",
-  "rai/pout1162_out.avif": "6ee7d79116beaf7133c8302f1018a633ca1e58db0b3ecbe8c2b0bb395d917077",
+  "rai/pout1162_out.avif": "414aee483ee5e3d76021456647072666f6c0795263dfaa54b7b744696f54fefb",
 };
 
 describe("smug clips (1085 in / 1084 out)", () => {
@@ -149,11 +149,11 @@ describe("bridge file cache keys (wave w11/w12, pout p2, talk t1)", () => {
   it("versions only the re-cut wave (w11 1292 + hold, w12 1320), pout (p2) and talk (t1) files; smug and idle URLs stay as they were", () => {
     assert.deepEqual(BRIDGE_FILE_VERSION, {
       "rai/wave1292_in.avif": "w11",
-      "rai/wave1320_out.avif": "w12",
+      "rai/wave1320_out.avif": "w13",
       "rai/wave1292_hold.webp": "w11",
-      "rai/smug1084_out.avif": "s1",
+      "rai/smug1084_out.avif": "s2",
       "rai/pout1158_in.avif": "p2",
-      "rai/pout1162_out.avif": "p3",
+      "rai/pout1162_out.avif": "p4",
       "rai/pout1158_hold.webp": "p2",
       "rai/talk1257_in.avif": "t1",
       "rai/talk1276_out.avif": "t3",
@@ -166,17 +166,17 @@ describe("bridge file cache keys (wave w11/w12, pout p2, talk t1)", () => {
     assert.match(SPRITES.poses.pout, /rai\/pout1158_hold\.webp\?v=p2$/);
     const [pin, pout] = poutClipUrls();
     assert.match(pin!, /rai\/pout1158_in\.avif\?v=p2$/);
-    assert.match(pout!, /rai\/pout1162_out\.avif\?v=p3$/);
+    assert.match(pout!, /rai\/pout1162_out\.avif\?v=p4$/);
     assert.match(SPRITES.poses.wave, /rai\/wave1292_hold\.webp\?v=w11$/);
     assert.equal(spriteNeedsWhitePunch(SPRITES.poses.wave), false);
     const [win, wout] = waveClipUrls();
     assert.match(win!, /rai\/wave1292_in\.avif\?v=w11$/);
-    assert.match(wout!, /rai\/wave1320_out\.avif\?v=w12$/);
+    assert.match(wout!, /rai\/wave1320_out\.avif\?v=w13$/);
     assert.match(SPRITES.poses.smug, new RegExp(`smug1085_hold\\.webp\\?v=${PRE_CUT_ALPHA_VERSION}$`));
     assert.match(SPRITES.poses.idle, new RegExp(`idle\\.png\\?v=${PRE_CUT_ALPHA_VERSION}$`));
     const [sin, sout] = smugClipUrls();
     assert.equal(sin!.includes("?"), false, sin);
-    assert.match(sout!, /rai\/smug1084_out\.avif\?v=s1$/);
+    assert.match(sout!, /rai\/smug1084_out\.avif\?v=s2$/);
   });
 });
 
