@@ -9,6 +9,7 @@ import {
   checkInBand,
   checkInGist,
   checkInLineIsInBand,
+  checkInMemoryLine,
   composeCheckInLine,
   loadCheckInDate,
   planDailyCheckIn,
@@ -93,21 +94,48 @@ describe("daily check-in", () => {
     );
   });
 
-  it("mentions one memory gist, and drops an off-hour gist", () => {
-    const line = composeCheckInLine(readLocalNow(MORNING, TZ), "2026-09-23", [
-      "Their name is Ada",
-      "They like quiet tea",
-    ]);
-    const gist = checkInGist(["Their name is Ada", "They like quiet tea"], "2026-09-23");
+  it("templates a name or a liking, and never pastes the raw gist", () => {
+    const gists = ["Their name is Ada", "They like Quiet Tea."];
+    const line = composeCheckInLine(readLocalNow(MORNING, TZ), "2026-09-23", gists);
+    const gist = checkInGist(gists, "2026-09-23");
     assert.ok(gist);
-    assert.equal(line.includes(gist!), true);
-    assert.equal(line.split(gist!).length - 1, 1);
+    const memory = checkInMemoryLine(gist!);
+    assert.ok(memory);
+    assert.equal(line, `${CHECKIN_LINES.morning.find((row) => line.startsWith(row))} ${memory}`);
+    assert.equal(line.includes(gist!), false);
+    assert.equal(line.toLowerCase().includes(gist!.toLowerCase()), false);
+    assert.equal(/i remember/i.test(line), false);
+    assert.equal(/\bTheir\b/.test(line), false);
+    assert.match(line, /^[A-Z].*[.!?]$/);
+    assert.equal(/\s{2,}/.test(line), false);
+    if (gist === "Their name is Ada") {
+      assert.equal(memory, "Tell Ada I said hi.");
+      assert.match(line, /Tell Ada I said hi\.$/);
+    } else {
+      assert.equal(memory, "Still into quiet tea?");
+      assert.match(line, /Still into quiet tea\?$/);
+      assert.equal(line.includes("Quiet"), false);
+    }
+    assert.equal((line.match(/Tell Ada I said hi\.|Still into quiet tea\?/g) ?? []).length, 1);
 
-    const banned = composeCheckInLine(readLocalNow(MORNING, TZ), "2026-09-23", [
+    assert.equal(checkInMemoryLine("best friend's name is Jo"), "Tell Jo I said hi.");
+    assert.equal(checkInMemoryLine("Name is ada from home"), "Tell Ada I said hi.");
+    assert.equal(checkInMemoryLine("THEY LIKE Rain"), "Still into rain?");
+  });
+
+  it("uses the plain time-of-day line when no template fits", () => {
+    for (const gist of [
       "late nights thinking about you",
-    ]);
-    assert.ok(CHECKIN_LINES.morning.includes(banned));
-    assert.equal(/late night/i.test(banned), false);
+      "The office is on the third floor",
+      "Their job: designer",
+      "They like late nights",
+    ]) {
+      const line = composeCheckInLine(readLocalNow(MORNING, TZ), "2026-09-23", [gist]);
+      assert.ok(CHECKIN_LINES.morning.includes(line), `${gist} -> ${line}`);
+      assert.equal(/i remember|their |office|designer|late night/i.test(line), false);
+      assert.equal(checkInMemoryLine(gist) == null || gist === "They like late nights", true);
+    }
+    assert.equal(checkInMemoryLine("They like late nights"), "Still into late nights?");
   });
 
   it("appends one chat beat and does not speak, pose, or restore the chips", () => {

@@ -86,14 +86,54 @@ function userMessages(threads: readonly CheckInThread[]): CheckInMessage[] {
   return out;
 }
 
-/** One stored fact, clipped. Empty when she has nothing to mention. */
+function cleanGist(gist: string): string {
+  return gist.replace(/\s+/g, " ").trim().replace(/[.?!]+$/g, "").trim();
+}
+
+/** One stored fact for the day. Empty when she has nothing to mention. */
 export function checkInGist(gists: readonly string[], date: string): string | null {
-  const clean = gists
-    .map((gist) => gist.replace(/\s+/g, " ").trim().replace(/[.?!]+$/g, "").trim())
-    .filter(Boolean);
+  const clean = gists.map(cleanGist).filter(Boolean);
   if (!clean.length) return null;
-  const gist = clean[rotate(`${date}:gist`, clean.length)]!;
-  return gist.length > 60 ? `${gist.slice(0, 59).trimEnd()}…` : gist;
+  return clean[rotate(`${date}:gist`, clean.length)]!;
+}
+
+const NAME_STOP = new Set(
+  "the person talking you user rai star idol she he they someone anyone their them".split(" "),
+);
+
+function properName(raw: string): string | null {
+  const name = raw.trim();
+  if (!/^[A-Za-z][\w'-]{1,24}$/.test(name)) return null;
+  if (NAME_STOP.has(name.toLowerCase())) return null;
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+/** A liking phrase, lowercased so it can sit inside her sentence. */
+function likePhrase(raw: string): string | null {
+  const phrase = cleanGist(raw).toLowerCase();
+  if (phrase.length < 2 || phrase.length > 48) return null;
+  if (!/^[a-z0-9]/.test(phrase)) return null;
+  return phrase;
+}
+
+/**
+ * A memory only when the gist matches a known shape.
+ * A name becomes "Tell Ada I said hi." A liking becomes "Still into quiet tea?"
+ * Anything else is left unsaid.
+ */
+export function checkInMemoryLine(gist: string): string | null {
+  const cleaned = cleanGist(gist);
+  if (!cleaned || /i remember/i.test(cleaned)) return null;
+  if (/^they like\b/i.test(cleaned)) {
+    const like = cleaned.match(/^they like\s+(.+)$/i);
+    const phrase = like?.[1] ? likePhrase(like[1]) : null;
+    return phrase ? `Still into ${phrase}?` : null;
+  }
+  const named =
+    cleaned.match(/^(?:.+\s)?name is\s+([A-Za-z][\w'-]{1,24})\b/i) ??
+    cleaned.match(/^(?:.+\s)?is named\s+([A-Za-z][\w'-]{1,24})\b/i);
+  const name = named?.[1] ? properName(named[1]) : null;
+  return name ? `Tell ${name} I said hi.` : null;
 }
 
 function bandLine(band: CheckInBand, date: string): string {
@@ -106,16 +146,13 @@ export function composeCheckInLine(now: ClockNow, date: string, gists: readonly 
   const band = checkInBand(now.hour);
   const base = bandLine(band, date);
   const opts = { now, recentText: "", askedTime: false as const };
-  const plain = filterClockSpokenLine(base, opts);
+  const plain = filterClockSpokenLine(base, opts) || base;
   const gist = checkInGist(gists, date);
-  if (!gist) return plain || base;
-  const withGist = `${base} I remember — ${gist}.`;
-  const filtered = filterClockSpokenLine(withGist, opts);
-  const kept =
-    filtered &&
-    filtered !== CLOCK_NEUTRAL_LINE &&
-    filtered.toLowerCase().includes(gist.slice(0, Math.min(12, gist.length)).toLowerCase());
-  return kept ? filtered : plain || base;
+  const memory = gist ? checkInMemoryLine(gist) : null;
+  if (!memory) return plain;
+  const filtered = filterClockSpokenLine(`${base} ${memory}`, opts);
+  const kept = filtered && filtered !== CLOCK_NEUTRAL_LINE && filtered.includes(memory);
+  return kept ? filtered : plain;
 }
 
 export function planDailyCheckIn(input: {
