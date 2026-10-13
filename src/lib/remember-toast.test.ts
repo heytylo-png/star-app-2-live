@@ -6,11 +6,13 @@ import { fileURLToPath } from "node:url";
 import {
   REMEMBER_TOAST_MS,
   birthdayToastLine,
+  loadRememberSeen,
   memorySaves,
   memoryToastLine,
   nextRememberToast,
   rememberToastExpired,
   rememberToastVisible,
+  saveRememberSeen,
 } from "./remember-toast.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -59,6 +61,30 @@ describe("remember toast copy", () => {
     assert.equal(otherDay.toast?.line, "Got it — your birthday.");
   });
 
+  it("ignores case and trailing punctuation, including after a reload", () => {
+    const storage = new Map<string, string>();
+    const read = (key: string) => storage.get(key) ?? null;
+    const write = (key: string, value: string) => {
+      storage.set(key, value);
+    };
+
+    const first = nextRememberToast(loadRememberSeen(read), { type: "memories", texts: ["They like night talks"] }, 1);
+    assert.equal(first.toast?.line, "Noted. They like night talks.");
+    saveRememberSeen(first.seen, write);
+
+    const cased = nextRememberToast(first.seen, { type: "memories", texts: ["THEY LIKE NIGHT TALKS"] }, 2);
+    assert.equal(cased.toast, null);
+    const dotted = nextRememberToast(first.seen, { type: "memories", texts: ["They like night talks."] }, 3);
+    assert.equal(dotted.toast, null);
+
+    const restored = loadRememberSeen(read);
+    assert.equal(nextRememberToast(restored, { type: "memories", texts: ["They like night talks"] }, 4).toast, null);
+    assert.equal(nextRememberToast(restored, { type: "memories", texts: ["they like night talks."] }, 5).toast, null);
+
+    const fresh = nextRememberToast(restored, { type: "memories", texts: ["Their name is Ada"] }, 6);
+    assert.equal(fresh.toast?.line, "Noted. Their name is Ada.");
+  });
+
   it("yields to the stale-build line and a call, and leaves after 3.5s", () => {
     const line = "Noted. They like night talks.";
     assert.equal(rememberToastVisible({ line, staleNotice: false, callActive: false }), true);
@@ -75,7 +101,9 @@ describe("remember toast copy", () => {
     const app = readFileSync(join(root, "src/components/rai-app.tsx"), "utf8");
     const at = app.indexOf("data-remember-toast");
     assert.ok(at > 0);
-    const pill = app.slice(at, at + 500);
+    const pill = app.slice(at, at + 800);
+    assert.match(pill, /h-11/);
+    assert.match(pill, /min-h-11/);
     assert.match(pill, /bg-\[rgba\(239,236,230,0\.85\)\]/);
     assert.match(pill, /text-\[#3f3b36\]/);
     assert.match(pill, /truncate/);
@@ -91,6 +119,8 @@ describe("remember toast copy", () => {
     assert.match(app, /callActive: callActive \|\| callStarting/);
     assert.match(app, /!showRemember/);
     assert.match(app, /memorySaves.subscribe/);
+    assert.match(app, /loadRememberSeen/);
+    assert.match(app, /saveRememberSeen/);
     assert.match(app, /type: "birthday"/);
   });
 });
@@ -111,7 +141,8 @@ describe("memory saves notify once", () => {
     const addFn = store.slice(addStart, store.indexOf("addMany: (texts) => {"));
     const duplicateAt = addFn.lastIndexOf("return null");
     const notifyAt = addFn.indexOf("memorySaves.notify(cleaned)");
-    assert.ok(duplicateAt > 0 && notifyAt > duplicateAt);
+    const similarAt = addFn.indexOf("isDuplicate(item.text, cleaned)");
+    assert.ok(similarAt > 0 && duplicateAt > similarAt && notifyAt > duplicateAt);
     assert.match(store, /if \(wrote\) saved.push\(wrote\)/);
   });
 });

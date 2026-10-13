@@ -69,11 +69,12 @@ export const useMemoryStore = create<MemoryState>()(
         const cleaned = normalizeFact(text);
         if (!cleaned) return null;
         const items = get().items;
-        if (items.some((item) => item.text.toLowerCase() === cleaned.toLowerCase())) return null;
-        const withoutSimilar = items.filter((item) => !isDuplicate(item.text, cleaned));
+        // Case, punctuation, and other near-copies are the same item. Do not
+        // write them again and do not toast.
+        if (items.some((item) => isDuplicate(item.text, cleaned))) return null;
         const nextItems = [
           { id: crypto.randomUUID(), text: cleaned, createdAt: Date.now() },
-          ...withoutSimilar,
+          ...items,
         ].slice(0, 80);
         set({ items: nextItems });
         memorySaves.notify(cleaned);

@@ -23,6 +23,31 @@ function cleanGist(value: string): string {
     .trim();
 }
 
+/**
+ * Toast identity. Case, extra spaces, and trailing punctuation are the same item.
+ */
+export function rememberGistKey(value: string): string {
+  return cleanGist(value).replace(/\p{P}+$/gu, "").replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+export const REMEMBER_SEEN_KEY = "star-rai-remember-seen";
+
+export function loadRememberSeen(read: (key: string) => string | null): Set<string> {
+  try {
+    const raw = read(REMEMBER_SEEN_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(parsed.filter((item): item is string => typeof item === "string" && item.length > 0));
+  } catch {
+    return new Set();
+  }
+}
+
+export function saveRememberSeen(seen: ReadonlySet<string>, write: (key: string, value: string) => void): void {
+  write(REMEMBER_SEEN_KEY, JSON.stringify([...seen]));
+}
+
 /** Short in-character line plus the gist. One line, no emoji. */
 export function memoryToastLine(gist: string): string {
   const body = cleanGist(gist).replace(/[.?!]+$/g, "").trim();
@@ -56,8 +81,9 @@ export function nextRememberToast(
   const fresh: string[] = [];
   for (const raw of event.texts) {
     const text = cleanGist(raw);
-    if (!text) continue;
-    const key = `memory:${text.toLowerCase()}`;
+    const gist = rememberGistKey(raw);
+    if (!text || !gist) continue;
+    const key = `memory:${gist}`;
     if (next.has(key)) continue;
     next.add(key);
     fresh.push(text);

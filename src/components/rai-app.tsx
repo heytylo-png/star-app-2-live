@@ -61,9 +61,11 @@ import {
 import { useMemoryStore } from "@/lib/memory-store";
 import {
   REMEMBER_TOAST_MS,
+  loadRememberSeen,
   memorySaves,
   nextRememberToast,
   rememberToastVisible,
+  saveRememberSeen,
   type RememberEvent,
   type RememberToast,
 } from "@/lib/remember-toast";
@@ -260,11 +262,19 @@ function RaiReady() {
   const [caption, setCaption] = useState("");
   const [hasSent, setHasSent] = useState(false);
   const [remember, setRemember] = useState<RememberToast | null>(null);
-  const seenRememberRef = useRef(new Set<string>());
+  const seenRememberRef = useRef<Set<string> | null>(null);
+  if (seenRememberRef.current === null) {
+    seenRememberRef.current =
+      typeof localStorage === "undefined" ? new Set() : loadRememberSeen((key) => localStorage.getItem(key));
+  }
   const offerRememberRef = useRef<(event: RememberEvent) => void>(() => {});
   offerRememberRef.current = (event) => {
-    const next = nextRememberToast(seenRememberRef.current, event, Date.now());
+    const seen = seenRememberRef.current ?? new Set<string>();
+    const next = nextRememberToast(seen, event, Date.now());
     seenRememberRef.current = next.seen;
+    if (next.seen.size !== seen.size && typeof localStorage !== "undefined") {
+      saveRememberSeen(next.seen, (key, value) => localStorage.setItem(key, value));
+    }
     if (next.toast) setRemember(next.toast);
   };
   const [emotion, setEmotion] = useState<EmotionId>(DEFAULT_EMOTION);
@@ -2071,10 +2081,12 @@ function RaiReady() {
               <button
                 type="button"
                 data-remember-toast=""
-                className="inline-block max-w-full truncate rounded-full border-0 bg-[rgba(239,236,230,0.85)] px-2 py-[3px] text-sm text-[#3f3b36]"
+                className="inline-flex h-11 min-h-11 max-w-full items-center justify-center border-0 bg-transparent p-0"
                 onClick={() => setRemember(null)}
               >
-                {remember?.line}
+                <span className="inline-block max-w-full truncate rounded-full bg-[rgba(239,236,230,0.85)] px-2 py-[3px] text-sm text-[#3f3b36]">
+                  {remember?.line}
+                </span>
               </button>
             </p>
           ) : null}
