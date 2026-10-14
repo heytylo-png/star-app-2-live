@@ -100,8 +100,7 @@ import {
   type SmugClip,
 } from "@/lib/pose-bridge";
 import {
-  WELCOME_1329_CLIP,
-  WELCOME_1330_CLIP,
+  WELCOME_CLIPS,
   WELCOME_CHECKIN_KEY,
   WelcomeGate,
   pickWelcomeClip,
@@ -1380,12 +1379,13 @@ export function Puppet({
       const a = bridgeCanvasWelcomeARef.current;
       const b = bridgeCanvasWelcomeBRef.current;
       if (!a || !b || !smugClipPlayerSupported()) return null;
-      const [aUrl, bUrl] = welcomeClipUrls();
+      // Only the picked clip loads (keys: [clip.key]); its URL sits on its own key's canvas.
+      const url = welcomeClipUrls()[WELCOME_CLIPS.indexOf(clip as (typeof WELCOME_CLIPS)[number])]!;
       try {
         welcomePlayerRef.current = SmugClipPlayer.for({
           canvases: { in: a, out: b },
-          urls: { in: aUrl!, out: bUrl! },
-          frames: { in: WELCOME_1329_CLIP.frames, out: WELCOME_1330_CLIP.frames },
+          urls: { in: url, out: url },
+          frames: { in: clip.frames, out: clip.frames },
           keys: [clip.key],
           box: WAVE_CLIP_BOX,
           keyOf: (file) => {
@@ -2016,7 +2016,7 @@ export function Puppet({
           data-rai-sheet="off"
           style={{ opacity: 1, zIndex: 60, transition: "none" }}
         />
-        {/* Welcome-back wave (1329 / 1330): lazy, idle -> idle, muted (welcome-wave.ts). */}
+        {/* Welcome-back clips (waves 1329 / 1330, hair flips 1334 / 1339 / 1340): lazy, idle -> idle, muted (welcome-wave.ts). */}
         <canvas
           key="pose-bridge-wca"
           ref={bridgeCanvasWelcomeARef}

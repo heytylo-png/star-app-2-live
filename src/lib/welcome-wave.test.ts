@@ -9,6 +9,9 @@ import { BRIDGE_FILE_VERSION, welcomeClipUrls } from "./rai.ts";
 import {
   WELCOME_1329_CLIP,
   WELCOME_1330_CLIP,
+  WELCOME_1334_CLIP,
+  WELCOME_1339_CLIP,
+  WELCOME_1340_CLIP,
   WELCOME_CLIPS,
   WELCOME_GAP_MS,
   WELCOME_PENDING_MAX_MS,
@@ -38,14 +41,21 @@ describe("welcome-back wave (TyLo 2026-10-13 10:08)", () => {
     assert.equal(WELCOME_1330_CLIP.file, "rai/welcome1330.avif");
     for (const c of WELCOME_CLIPS) {
       assert.equal(c.frames, 121);
-      assert.equal(BRIDGE_FILE_VERSION[c.file], "wb2");
-      assert.equal(parseClipFrame(`${c.file}?v=wb2#120`)?.clip, c);
+      const tag = /welcome13(29|30)/.test(c.file) ? "wb2" : "hf1";
+      assert.equal(BRIDGE_FILE_VERSION[c.file], tag);
+      assert.equal(parseClipFrame(`${c.file}?v=${tag}#120`)?.clip, c);
       assert.ok(!bridgeClips().includes(c));
       for (const list of Object.values(POSE_BRIDGE_PAIRS)) assert.ok(!list.some((f) => f.startsWith(c.file)));
     }
     assert.deepEqual(
       welcomeClipUrls().map((u) => u.replace(/^.*\/rai\//, "rai/")),
-      ["rai/welcome1329.avif?v=wb2", "rai/welcome1330.avif?v=wb2"],
+      [
+        "rai/welcome1329.avif?v=wb2",
+        "rai/welcome1330.avif?v=wb2",
+        "rai/welcome1334.avif?v=hf1",
+        "rai/welcome1339.avif?v=hf1",
+        "rai/welcome1340.avif?v=hf1",
+      ],
     );
     const sw = readFileSync(join(root, "public/sw.js"), "utf8");
     assert.doesNotMatch(sw, /welcome13/, "never precached");
@@ -82,11 +92,19 @@ describe("welcome-back wave (TyLo 2026-10-13 10:08)", () => {
   it("debug param and random pick", () => {
     assert.equal(welcomeDebugClip("?welcome=1329"), WELCOME_1329_CLIP);
     assert.equal(welcomeDebugClip("?v=x&welcome=1330"), WELCOME_1330_CLIP);
-    assert.equal(welcomeDebugClip("?welcome=1", () => 0.9), WELCOME_1330_CLIP);
+    assert.equal(welcomeDebugClip("?welcome=1334"), WELCOME_1334_CLIP);
+    assert.equal(welcomeDebugClip("?welcome=1339"), WELCOME_1339_CLIP);
+    assert.equal(welcomeDebugClip("?welcome=1340"), WELCOME_1340_CLIP);
+    assert.equal(welcomeDebugClip("?welcome=1", () => 0.3), WELCOME_1330_CLIP);
     assert.equal(welcomeDebugClip("?welcome=9"), null);
     assert.equal(welcomeDebugClip(""), null);
     assert.equal(pickWelcomeClip(() => 0.1), WELCOME_1329_CLIP);
-    assert.equal(pickWelcomeClip(() => 0.6), WELCOME_1330_CLIP);
+    assert.equal(pickWelcomeClip(() => 0.3), WELCOME_1330_CLIP);
+    assert.equal(pickWelcomeClip(() => 0.5), WELCOME_1334_CLIP);
+    assert.equal(pickWelcomeClip(() => 0.7), WELCOME_1339_CLIP);
+    assert.equal(pickWelcomeClip(() => 0.99), WELCOME_1340_CLIP);
+    assert.equal(pickWelcomeClip(() => 0), WELCOME_1329_CLIP);
+    assert.equal(WELCOME_CLIPS.length, 5, "the flips join the waves");
   });
 
   it("activity stamp round-trips through storage", () => {
