@@ -8,6 +8,9 @@ import {
   WAVE_OUT_CLIP,
   WELCOME_1329_CLIP,
   WELCOME_1330_CLIP,
+  WELCOME_1334_CLIP,
+  WELCOME_1339_CLIP,
+  WELCOME_1340_CLIP,
   POUT_HOLD_FILE,
   POUT_IN_CLIP,
   POUT_OUT_CLIP,
@@ -756,6 +759,10 @@ export const BRIDGE_FILE_VERSION: Readonly<Record<string, string>> = {
   // Welcome-back wave (TyLo 2026-10-13 10:08): 1329 / 1330, idle -> idle, muted, lazy (welcome-wave.ts).
   "rai/welcome1329.avif": "wb2",
   "rai/welcome1330.avif": "wb2",
+  // Welcome-back hair flip (TyLo 2026-10-14 7:46): 1334 / 1339 / 1340, same pipeline (bridge/wbpipe).
+  "rai/welcome1334.avif": "hf1",
+  "rai/welcome1339.avif": "hf1",
+  "rai/welcome1340.avif": "hf1",
   // Pout (1158 in / hold f48 / 1162 out): p1 = face skin re-matched to idle; p2 = face above the jaw only
   // (neck / under-chin shadow, jaw line, mouth line + lips keep their 49aa88b pixels), 2026-10-10.
   // Smug out s1 (TyLo 2026-10-12 22:21): 1084 f129-f144 eased into idle like 1276 t3 / pout p3 (flow morph of the whole
@@ -1054,9 +1061,9 @@ export function poutClipUrls(): string[] {
 }
 
 /** The two clips of the idle <-> wave beat: 1292 intro (f0-f120, all frames), 1320 rest (f0-f120, all frames). */
-/** The two welcome-back clips: [1329, 1330]. Lazy: only fetched when a welcome is due (welcome-wave.ts). */
+/** The welcome-back clips: [1329, 1330, 1334, 1339, 1340]. Lazy: only the picked one is fetched, when a welcome is due (welcome-wave.ts). */
 export function welcomeClipUrls(): string[] {
-  return [ASSET(WELCOME_1329_CLIP.file), ASSET(WELCOME_1330_CLIP.file)];
+  return [WELCOME_1329_CLIP, WELCOME_1330_CLIP, WELCOME_1334_CLIP, WELCOME_1339_CLIP, WELCOME_1340_CLIP].map((c) => ASSET(c.file));
 }
 
 export function waveClipUrls(): string[] {

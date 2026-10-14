@@ -16,10 +16,18 @@
  *
  * Pure (no DOM): the puppet owns the canvases and the player; this module decides when.
  */
-import { WELCOME_1329_CLIP, WELCOME_1330_CLIP, type SmugClip } from "./pose-bridge.ts";
+import {
+  WELCOME_1329_CLIP,
+  WELCOME_1330_CLIP,
+  WELCOME_1334_CLIP,
+  WELCOME_1339_CLIP,
+  WELCOME_1340_CLIP,
+  type SmugClip,
+} from "./pose-bridge.ts";
 
-export { WELCOME_1329_CLIP, WELCOME_1330_CLIP };
-export const WELCOME_CLIPS = [WELCOME_1329_CLIP, WELCOME_1330_CLIP] as const;
+export { WELCOME_1329_CLIP, WELCOME_1330_CLIP, WELCOME_1334_CLIP, WELCOME_1339_CLIP, WELCOME_1340_CLIP };
+/** The welcome pool: two waves (1329, 1330) and three hair flips (1334, 1339, 1340); one is picked per return. */
+export const WELCOME_CLIPS = [WELCOME_1329_CLIP, WELCOME_1330_CLIP, WELCOME_1334_CLIP, WELCOME_1339_CLIP, WELCOME_1340_CLIP] as const;
 
 /** A return after this much quiet gets the welcome. */
 export const WELCOME_GAP_MS = 6 * 60 * 60 * 1000;
@@ -36,18 +44,19 @@ export function welcomeDue(lastActivityMs: number | null, nowMs: number): boolea
   return nowMs - lastActivityMs >= WELCOME_GAP_MS;
 }
 
-/** `?welcome=1329|1330|1` -> the forced clip (random for 1), or null. */
+/** `?welcome=1329|1330|1334|1339|1340|1` -> the forced clip (random for 1), or null. */
 export function welcomeDebugClip(search: string, rand: () => number = Math.random): SmugClip | null {
   const v = new URLSearchParams(search).get("welcome")?.trim();
   if (!v) return null;
-  if (v === "1329") return WELCOME_1329_CLIP;
-  if (v === "1330") return WELCOME_1330_CLIP;
+  const forced = WELCOME_CLIPS.find((c) => c.file === `rai/welcome${v}.avif`);
+  if (forced) return forced;
   if (v === "1" || v === "random") return pickWelcomeClip(rand);
   return null;
 }
 
 export function pickWelcomeClip(rand: () => number = Math.random): SmugClip {
-  return rand() < 0.5 ? WELCOME_1329_CLIP : WELCOME_1330_CLIP;
+  const i = Math.min(WELCOME_CLIPS.length - 1, Math.max(0, Math.floor(rand() * WELCOME_CLIPS.length)));
+  return WELCOME_CLIPS[i]!;
 }
 
 export function readLastActivity(storage: Pick<Storage, "getItem"> | null): number | null {
