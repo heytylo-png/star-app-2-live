@@ -117,6 +117,17 @@ import { useSpotifyPlayback } from "@/lib/use-spotify-playback";
 import { birthdayCardVisible } from "@/lib/birthday-card";
 import { HEADER_STATUS_LEAD, headerLiveState } from "@/lib/header-status";
 import { chatOpenForTab, DEFAULT_SHELL_TAB, lastDiaryEntry, type ShellTab } from "@/lib/shell";
+import {
+  advanceDanceSheet,
+  danceHoldMs,
+  dancePlayerFromSpotify,
+  danceShouldSnapIdle,
+  lifeTrackPlaying,
+  namedPoseWins,
+  poseOnLifeStop,
+  stageImageDriver,
+  type DanceSheet,
+} from "@/lib/dance-fidget";
 import { stagePlace, stageSourceFor, type StagePlace } from "@/lib/stage-source";
 import { usePrefersReducedMotion } from "@/lib/use-reduced-motion";
 import { newId, STARTERS, type ChatMessage } from "@/lib/helix";
@@ -257,6 +268,8 @@ function RaiReady() {
   const lifeTabRef = useRef<HTMLButtonElement>(null);
   const chartTabRef = useRef<HTMLButtonElement>(null);
   const [deskPlaybackFailed, setDeskPlaybackFailed] = useState(false);
+  const [danceSheet, setDanceSheet] = useState<DanceSheet>("wave");
+  const [lifeIdleSnap, setLifeIdleSnap] = useState(false);
   const [trackedStage, setTrackedStage] = useState<StagePlace>(DEFAULT_SHELL_TAB);
   const reducedMotion = usePrefersReducedMotion();
   const onDeskFail = useCallback(() => setDeskPlaybackFailed(true), []);
@@ -628,6 +641,12 @@ function RaiReady() {
       { tab, open: chartMenuOpen, callActive: callBusy },
       { type: "select-tab", tab: next },
     );
+    if (tab === "life" && reduced.tab !== "life") {
+      setPose("idle");
+      poseRef.current = "idle";
+      setEmotion(DEFAULT_EMOTION);
+      setLifeIdleSnap(false);
+    }
     setTab(reduced.tab);
     setLifeMenuOpen(reduced.open);
     setChartMenuOpen(chartReduced.open);
@@ -1504,11 +1523,12 @@ function RaiReady() {
               setEmotion(streamed.emotion);
               // Named Smug / still on smug: never wink/think mid-hold. Exit is idle pose;
               // unpaired keys are handled by PoseBridge.exitInFlight.
-              const keep =
-                namedTurnRef.current === "smug" || poseRef.current === "smug"
-                  ? "smug"
-                  : streamed.pose;
+              const keep = poseOnLifeStop(
+                lifeTurn.kind,
+                namedTurnRef.current === "smug" || poseRef.current === "smug" ? "smug" : streamed.pose,
+              );
               setPose(keep);
+              if (lifeTurn.kind === "session_stop") setEmotion(DEFAULT_EMOTION);
               poseRef.current = keep;
               setBubbleLifeKind(lifeTurn.kind);
               markActLanded();
@@ -1548,11 +1568,12 @@ function RaiReady() {
         currentPose: poseAtTurnRef.current,
       });
       setEmotion(landed.emotion);
-      const keepLand =
-        namedTurnRef.current === "smug" || poseRef.current === "smug"
-          ? "smug"
-          : landed.pose;
+      const keepLand = poseOnLifeStop(
+        lifeTurn.kind,
+        namedTurnRef.current === "smug" || poseRef.current === "smug" ? "smug" : landed.pose,
+      );
       setPose(keepLand);
+      if (lifeTurn.kind === "session_stop") setEmotion(DEFAULT_EMOTION);
       poseRef.current = keepLand;
       setBubbleLifeKind(lifeTurn.kind);
       markActLanded();
@@ -1984,11 +2005,71 @@ function RaiReady() {
     }
   }
 
-  const desk = stageSourceFor({
+  const trackPlaying = lifeTrackPlaying(
+    slots.life,
+    dancePlayerFromSpotify({
+      reported: spotify.playbackReported,
+      paused: spotify.paused,
+      error: spotify.playbackError,
+      ended: spotify.playbackEnded,
+      buffering: spotify.playbackBuffering,
+    }),
+  );
+  const wasDancingRef = useRef(false);
+  useEffect(() => {
+    const playing = stageAt === "life" && trackPlaying;
+    if (danceShouldSnapIdle(wasDancingRef.current, stageAt, trackPlaying)) {
+      setPose("idle");
+      poseRef.current = "idle";
+      setEmotion(DEFAULT_EMOTION);
+      setLifeIdleSnap(stageAt === "life");
+    } else if (playing) {
+      setLifeIdleSnap(false);
+    } else if (stageAt !== "life") {
+      setLifeIdleSnap(false);
+    }
+    wasDancingRef.current = playing;
+  }, [stageAt, trackPlaying]);
+  const danceDriver = stageImageDriver({
     place: stageAt,
-    reducedMotion,
-    playbackFailed: deskPlaybackFailed,
+    trackPlaying,
+    namedPose: namedPoseWins(namedTurnRef.current, pose),
+    idleSnap: lifeIdleSnap,
+    deskIsLifeLook:
+      stageSourceFor({
+        place: "life",
+        reducedMotion,
+        playbackFailed: deskPlaybackFailed,
+      }).kind !== "png",
+    sheet: danceSheet,
+    bubble: Boolean(caption.trim()),
   });
+  const desk =
+    danceDriver.kind === "desk"
+      ? stageSourceFor({
+          place: stageAt,
+          reducedMotion,
+          playbackFailed: deskPlaybackFailed,
+        })
+      : stageSourceFor({ place: "chat" });
+  const stagePose = danceDriver.kind === "idle" ? "idle" : danceDriver.kind === "named" ? danceDriver.pose : pose;
+  const stageEmotion = danceDriver.kind === "idle" ? DEFAULT_EMOTION : emotion;
+  const stageTalking =
+    danceDriver.kind === "idle"
+      ? false
+      : idleMouthLineLive({
+          caption,
+          sending: audioTurn ? false : sending,
+          talking,
+          now: Date.now(),
+          chewUntil: audioTurn ? 0 : chewUntil,
+        });
+  useEffect(() => {
+    if (danceDriver.kind !== "dance") return;
+    const hold = danceHoldMs(Math.random());
+    const timer = window.setTimeout(() => setDanceSheet((current) => advanceDanceSheet(current)), hold);
+    return () => window.clearTimeout(timer);
+  }, [danceDriver.kind, danceSheet]);
 
   const slotFacts = formatMemoryFacts(slots);
   const hasSlots = Boolean(slotFacts);
@@ -2005,20 +2086,15 @@ function RaiReady() {
   return (
     <div className="relative h-dvh overflow-hidden bg-bg text-fg">
       <PresenceStage
-        pose={pose}
-        emotion={emotion}
-        talking={idleMouthLineLive({
-          caption,
-          sending: audioTurn ? false : sending,
-          talking,
-          now: Date.now(),
-          chewUntil: audioTurn ? 0 : chewUntil,
-        })}
-        audioMouth={audioMouth}
+        pose={stagePose}
+        emotion={stageEmotion}
+        talking={stageTalking}
+        audioMouth={danceDriver.kind === "idle" ? null : audioMouth}
         amplitude={amp}
         spokenLine={caption}
         className="absolute inset-0"
         desk={desk}
+        danceSheet={danceDriver.kind === "dance" ? danceDriver.sheet : null}
         onDeskFail={onDeskFail}
       />
 

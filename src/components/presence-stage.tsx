@@ -3,6 +3,7 @@ import { DeskLoop } from "@/components/desk-loop";
 import { Puppet } from "@/components/puppet";
 import { SpineStage } from "@/components/spine-stage";
 import { isSpineDemoEngine, parseRaiEngine, type RaiEngineId } from "@/lib/rai-engine";
+import type { DanceSheet } from "@/lib/dance-fidget";
 import type { EmotionId, PoseId } from "@/lib/rai";
 import type { IdleMouthFrame } from "@/lib/rai-motion";
 import type { StageSource } from "@/lib/stage-source";
@@ -19,6 +20,8 @@ type PresenceStageProps = {
   className?: string;
   /** Life desk clip. PNG (or omitted) keeps the official puppet. */
   desk?: StageSource;
+  /** One existing sheet, hard-cut. While set, the desk clip is not the driver. */
+  danceSheet?: DanceSheet | null;
   onDeskFail?: () => void;
 };
 
@@ -33,6 +36,7 @@ function readEngine(): RaiEngineId {
  */
 export function PresenceStage({
   desk,
+  danceSheet = null,
   onDeskFail,
   className,
   spokenLine,
@@ -50,7 +54,7 @@ export function PresenceStage({
   const body = isSpineDemoEngine(engine) ? (
     <SpineStage {...props} className={className} target={engine} />
   ) : (
-    <Puppet {...props} spokenLine={spokenLine} audioMouth={audioMouth} className={className} />
+    <Puppet {...props} spokenLine={spokenLine} audioMouth={audioMouth} danceSheet={danceSheet} className={className} />
   );
 
   return (

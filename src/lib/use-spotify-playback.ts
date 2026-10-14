@@ -36,6 +36,11 @@ export type SpotifyPlaybackState = {
   error: string | null;
   deviceId: string | null;
   paused: boolean;
+  /** False until the SDK has delivered a playback state. A fresh load stays false. */
+  playbackReported: boolean;
+  playbackError: boolean;
+  playbackEnded: boolean;
+  playbackBuffering: boolean;
   title: string;
   /** Spotify track uri (or id) for the title above. Empty when nothing is loaded. */
   trackId: string;
@@ -54,6 +59,10 @@ const EMPTY: SpotifyPlaybackState = {
   error: null,
   deviceId: null,
   paused: true,
+  playbackReported: false,
+  playbackError: false,
+  playbackEnded: false,
+  playbackBuffering: false,
   title: "",
   trackId: "",
   busy: false,
@@ -110,13 +119,30 @@ export function useSpotifyPlayback(opts: { onTrackChange?: (title: string) => vo
           setState((s) => ({ ...s, deviceId, error: null }));
         },
         onState: (playerState: SpotifyPlayerState | null) => {
-          if (!playerState) return;
+          if (!playerState) {
+            setState((s) => ({
+              ...s,
+              playbackReported: true,
+              paused: true,
+              playbackEnded: true,
+              playbackBuffering: false,
+            }));
+            return;
+          }
           const track = playerState.track_window.current_track;
           const title = track ? formatSpotifyTrackTitle(track) : "";
           const id = trackIdentity(track);
+          const duration = playerState.duration ?? 0;
+          const position = playerState.position ?? 0;
+          const ended = duration > 0 && position >= duration - 200 && playerState.paused;
+          const buffering = playerState.loading === true;
           setState((s) => ({
             ...s,
+            playbackReported: true,
             paused: playerState.paused,
+            playbackEnded: ended,
+            playbackBuffering: buffering,
+            playbackError: playerState.paused === false && !buffering ? false : s.playbackError,
             title: title || s.title,
             trackId: id || s.trackId,
           }));
@@ -133,7 +159,7 @@ export function useSpotifyPlayback(opts: { onTrackChange?: (title: string) => vo
           }));
         },
         onError: (message) => {
-          setState((s) => ({ ...s, error: message }));
+          setState((s) => ({ ...s, error: message, playbackReported: true, playbackError: true }));
         },
       });
     } catch (err) {
