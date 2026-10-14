@@ -22,6 +22,10 @@ export type SpotifySdkPlayer = {
 
 export type SpotifyPlayerState = {
   paused: boolean;
+  duration?: number;
+  position?: number;
+  /** True while the SDK is still filling the buffer. */
+  loading?: boolean;
   track_window: {
     current_track: SpotifyTrack | null;
   };

@@ -120,6 +120,7 @@ import { chatOpenForTab, DEFAULT_SHELL_TAB, lastDiaryEntry, type ShellTab } from
 import {
   advanceDanceSheet,
   danceHoldMs,
+  dancePlayerFromSpotify,
   danceShouldSnapIdle,
   lifeTrackPlaying,
   namedPoseWins,
@@ -2004,7 +2005,16 @@ function RaiReady() {
     }
   }
 
-  const trackPlaying = lifeTrackPlaying(slots.life);
+  const trackPlaying = lifeTrackPlaying(
+    slots.life,
+    dancePlayerFromSpotify({
+      reported: spotify.playbackReported,
+      paused: spotify.paused,
+      error: spotify.playbackError,
+      ended: spotify.playbackEnded,
+      buffering: spotify.playbackBuffering,
+    }),
+  );
   const wasDancingRef = useRef(false);
   useEffect(() => {
     const playing = stageAt === "life" && trackPlaying;

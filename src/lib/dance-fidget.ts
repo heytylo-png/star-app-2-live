@@ -45,12 +45,96 @@ export function advanceDanceSheet(current: DanceSheet | null): DanceSheet {
   return DANCE_SHEETS[(index + 1) % DANCE_SHEETS.length]!;
 }
 
-/** Session on and a real title. A stopped session keeps the title and does not dance. */
+/**
+ * What the player is doing right now. A saved title is not playback.
+ * `none` is a fresh load or no player at all.
+ */
+export type DancePlayerPhase = "playing" | "paused" | "buffering" | "ended" | "error" | "none";
+
+export type DancePlayer =
+  | { source: "none" }
+  | {
+      source: "spotify";
+      /** False until the SDK has delivered a state. A reload starts false. */
+      reported: boolean;
+      paused: boolean;
+      error: boolean;
+      ended: boolean;
+      buffering: boolean;
+    }
+  | {
+      source: "media";
+      paused: boolean;
+      ended: boolean;
+      error: boolean;
+      /** HTMLMediaElement.readyState. Below HAVE_FUTURE_DATA (3) while unpaused is buffering. */
+      readyState: number;
+    };
+
+export function dancePlayerFromSpotify(input: {
+  reported: boolean;
+  paused: boolean;
+  error?: boolean;
+  ended?: boolean;
+  buffering?: boolean;
+} | null): DancePlayer {
+  if (!input) return { source: "none" };
+  return {
+    source: "spotify",
+    reported: input.reported,
+    paused: input.paused,
+    error: Boolean(input.error),
+    ended: Boolean(input.ended),
+    buffering: Boolean(input.buffering),
+  };
+}
+
+/** An <audio> element. Not playing until it is unpaused, not ended, and has future data. */
+export function dancePlayerFromMedia(media: {
+  paused: boolean;
+  ended: boolean;
+  error: boolean;
+  readyState: number;
+} | null): DancePlayer {
+  if (!media) return { source: "none" };
+  return {
+    source: "media",
+    paused: media.paused,
+    ended: media.ended,
+    error: media.error,
+    readyState: media.readyState,
+  };
+}
+
+/** Audible only in `playing`. Everything else is idle. */
+export function dancePlayerPhase(player: DancePlayer | null | undefined): DancePlayerPhase {
+  if (!player || player.source === "none") return "none";
+  if (player.source === "spotify") {
+    if (!player.reported) return "none";
+    if (player.error) return "error";
+    if (player.ended) return "ended";
+    if (player.buffering) return "buffering";
+    if (player.paused) return "paused";
+    return "playing";
+  }
+  if (player.error) return "error";
+  if (player.ended) return "ended";
+  if (!player.paused && player.readyState < 3) return "buffering";
+  if (player.paused) return "paused";
+  return "playing";
+}
+
+/**
+ * Session title plus a player that is actually playing.
+ * A seeded title, a reload, or a quiet player does not dance.
+ */
 export function lifeTrackPlaying(
   life: { on?: boolean; now_playing?: string | null } | null | undefined,
+  player?: DancePlayer | null,
 ): boolean {
   if (!life?.on) return false;
-  return Boolean(life.now_playing?.replace(/\s+/g, " ").trim());
+  if (!life.now_playing?.replace(/\s+/g, " ").trim()) return false;
+  return dancePlayerPhase(player) === "playing";
 }
 
 /**

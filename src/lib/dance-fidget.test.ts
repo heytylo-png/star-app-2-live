@@ -9,6 +9,9 @@ import {
   DANCE_SHEETS,
   advanceDanceSheet,
   danceHoldMs,
+  dancePlayerFromMedia,
+  dancePlayerFromSpotify,
+  dancePlayerPhase,
   danceSheetFile,
   danceShouldSnapIdle,
   lifeTrackPlaying,
@@ -59,10 +62,12 @@ describe("Life dance fidgets", () => {
       sheet: "wave" as const,
       bubble: false,
     };
-    assert.equal(lifeTrackPlaying({ on: true, now_playing: "Super Shy" }), true);
-    assert.equal(lifeTrackPlaying({ on: true, now_playing: "  " }), false);
-    assert.equal(lifeTrackPlaying({ on: false, now_playing: "Super Shy" }), false);
-    assert.equal(lifeTrackPlaying(null), false);
+    const audible = dancePlayerFromSpotify({ reported: true, paused: false });
+    assert.equal(lifeTrackPlaying({ on: true, now_playing: "Super Shy" }, audible), true);
+    assert.equal(lifeTrackPlaying({ on: true, now_playing: "Super Shy" }), false);
+    assert.equal(lifeTrackPlaying({ on: true, now_playing: "  " }, audible), false);
+    assert.equal(lifeTrackPlaying({ on: false, now_playing: "Super Shy" }, audible), false);
+    assert.equal(lifeTrackPlaying(null, audible), false);
 
     const playing = stageImageDriver({ ...base, place: "life", trackPlaying: true });
     assert.deepEqual(playing, { kind: "dance", sheet: "wave" });
@@ -72,6 +77,41 @@ describe("Life dance fidgets", () => {
     assert.equal(stageImageDriver({ ...base, place: "chat", trackPlaying: true }).kind, "puppet");
     assert.equal(stageImageDriver({ ...base, place: "chat", trackPlaying: false }).kind, "puppet");
     assert.equal(stageImageDriver({ ...base, place: "call", trackPlaying: true }).kind, "puppet");
+  });
+
+  it("stays idle unless playback has actually started", () => {
+    const seeded = { on: true, now_playing: "Super Shy" };
+    const quiet = {
+      place: "life" as const,
+      namedPose: null,
+      idleSnap: false,
+      deskIsLifeLook: true,
+      sheet: "wave" as const,
+    };
+    const cases = [
+      ["fresh", dancePlayerFromSpotify({ reported: false, paused: false })],
+      ["no player", dancePlayerFromSpotify(null)],
+      ["paused", dancePlayerFromSpotify({ reported: true, paused: true })],
+      ["buffering", dancePlayerFromSpotify({ reported: true, paused: false, buffering: true })],
+      ["ended", dancePlayerFromSpotify({ reported: true, paused: true, ended: true })],
+      ["errored", dancePlayerFromSpotify({ reported: true, paused: false, error: true })],
+      ["media paused", dancePlayerFromMedia({ paused: true, ended: false, error: false, readyState: 4 })],
+      ["media buffering", dancePlayerFromMedia({ paused: false, ended: false, error: false, readyState: 1 })],
+      ["media ended", dancePlayerFromMedia({ paused: false, ended: true, error: false, readyState: 4 })],
+      ["media errored", dancePlayerFromMedia({ paused: false, ended: false, error: true, readyState: 0 })],
+      ["media missing", dancePlayerFromMedia(null)],
+    ] as const;
+    for (const [label, player] of cases) {
+      assert.notEqual(dancePlayerPhase(player), "playing", label);
+      assert.equal(lifeTrackPlaying(seeded, player), false, label);
+      assert.notEqual(stageImageDriver({ ...quiet, trackPlaying: lifeTrackPlaying(seeded, player) }).kind, "dance", label);
+    }
+    const mediaPlaying = dancePlayerFromMedia({ paused: false, ended: false, error: false, readyState: 4 });
+    assert.equal(dancePlayerPhase(mediaPlaying), "playing");
+    assert.equal(lifeTrackPlaying(seeded, mediaPlaying), true);
+    const spotifyPlaying = dancePlayerFromSpotify({ reported: true, paused: false });
+    assert.equal(dancePlayerPhase(spotifyPlaying), "playing");
+    assert.equal(stageImageDriver({ ...quiet, trackPlaying: lifeTrackPlaying(seeded, spotifyPlaying) }).kind, "dance");
   });
 
   it("lets a named pose win, then resumes the dance if the track is still playing", () => {
@@ -159,6 +199,8 @@ describe("Life dance fidgets", () => {
     assert.match(app, /danceHoldMs\(/);
     assert.match(app, /advanceDanceSheet\(/);
     assert.match(app, /lifeTrackPlaying\(/);
+    assert.match(app, /dancePlayerFromSpotify\(/);
+    assert.match(app, /playbackReported/);
     assert.match(app, /poseOnLifeStop\(/);
     assert.match(app, /danceShouldSnapIdle\(/);
     assert.match(puppet, /data-dance-fidget/);
