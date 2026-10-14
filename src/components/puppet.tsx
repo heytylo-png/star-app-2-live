@@ -11,6 +11,7 @@ import {
   loadHipClip,
   type ClipView,
 } from "@/lib/hip-clip";
+import type { DanceSheet } from "@/lib/dance-fidget";
 import {
   blinkPassInFlight,
   canIdleBlink,
@@ -156,6 +157,8 @@ type PuppetProps = {
    * A number (including 0, the rest frame) replaces the timer.
    */
   audioMouth?: IdleMouthFrame | null;
+  /** Life dance sheet. One image, hard cut. Null keeps the normal puppet. */
+  danceSheet?: DanceSheet | null;
   className?: string;
 };
 
@@ -300,6 +303,7 @@ export function Puppet({
   amplitude,
   spokenLine,
   audioMouth = null,
+  danceSheet = null,
   className,
 }: PuppetProps) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -1843,7 +1847,7 @@ export function Puppet({
       className={cn("rai-stage", !stageReady && "rai-stage-pending", className)}
       aria-hidden="true"
       data-rai-engine="png-puppet"
-      data-rai-pose={pose}
+      data-rai-pose={danceSheet ?? pose}
       data-rai-emotion={emotion}
       data-rai-talking={talking ? "1" : "0"}
       data-rai-blink={blinkShown > 0 && restingBlink ? "1" : "0"}
@@ -1876,7 +1880,7 @@ export function Puppet({
       data-rai-welcome={welcomeLabel}
       data-rai-talk-flap={talkOverlay ? talkOverlay.opacity.toFixed(3) : "0"}
     >
-      <div data-rai-rig className="rai-rig">
+      <div data-rai-rig className="rai-rig" data-dance={danceSheet ?? undefined}>
         {layers.map((layer) => {
           if (layer.role === "eyes" || isRetiredBlinkSrc(layer.src)) return null;
           const src = sheets[layer.src];
@@ -2041,6 +2045,18 @@ export function Puppet({
           data-rai-sheet="off"
           style={{ opacity: 1, zIndex: 60, transition: "none" }}
         />
+        {danceSheet ? (
+          <img
+            src={SPRITES.poses[danceSheet]}
+            alt=""
+            draggable={false}
+            decoding="sync"
+            className="rai-layer"
+            data-dance-fidget=""
+            data-rai-role="body"
+            style={{ opacity: 1, zIndex: 70, transition: "none" }}
+          />
+        ) : null}
         {/* Ahoge / hair tip proxy — rotates over the crown */}
         <span data-rai-ahoge className="rai-ahoge" />
       </div>

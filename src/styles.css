@@ -339,6 +339,16 @@
   }
 }
 
+/* Life dance: one existing sheet. Siblings (blink, bridges, ahoge) stay mounted and hidden. */
+.rai-rig[data-dance] > :not([data-dance-fidget]) {
+  visibility: hidden;
+}
+.rai-rig[data-dance] > [data-dance-fidget] {
+  visibility: visible;
+  opacity: 1;
+  transition: none;
+}
+
 .rai-layer {
   position: absolute;
   display: block;
