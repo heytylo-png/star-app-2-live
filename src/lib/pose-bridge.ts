@@ -122,13 +122,11 @@ export const TALK_CLIP_BOX = { x: 128, y: 0, w: 480, h: 1280 } as const;
 export const WELCOME_1329_CLIP: SmugClip = { pair: "welcome", key: "in", file: "rai/welcome1329.avif", frames: 121 };
 export const WELCOME_1330_CLIP: SmugClip = { pair: "welcome", key: "out", file: "rai/welcome1330.avif", frames: 121 };
 /**
- * Welcome-back hair flip (TyLo 2026-10-14 7:46, hf1): 1334 / 1339 (hand rises, hair flips at 2 s, mouth opens, arms down) and
- * 1340 (hand lifts the hair at 1 s, holds a strand at 2 s, mouth opens, arms down). Same registration and band as 1329 / 1330,
- * f0-f7 face ease-in from idle, f113-f120 face ease-out to idle. They share the welcome canvases (only one welcome clip loads).
+ * Welcome-back hair flip (TyLo 2026-10-14 4:22 PM, hf3; replaces the hf1 flips 1334 / 1339 / 1340): 1366, locked camera,
+ * idle glare -> hair flip -> idle glare (hair outline back on idle). Same registration and band as 1329 / 1330, f0-f7 face
+ * ease-in from idle, f113-f120 face ease-out to idle. It shares the welcome canvases (only one welcome clip loads).
  */
-export const WELCOME_1334_CLIP: SmugClip = { pair: "welcome", key: "in", file: "rai/welcome1334.avif", frames: 121 };
-export const WELCOME_1339_CLIP: SmugClip = { pair: "welcome", key: "out", file: "rai/welcome1339.avif", frames: 121 };
-export const WELCOME_1340_CLIP: SmugClip = { pair: "welcome", key: "in", file: "rai/welcome1340.avif", frames: 121 };
+export const WELCOME_1366_CLIP: SmugClip = { pair: "welcome", key: "in", file: "rai/welcome1366.avif", frames: 121 };
 
 /** Bridge frame id for frame `index` of a clip: `<file>#NNN`. */
 export function clipFrameFile(clip: SmugClip, index: number): string {
@@ -144,7 +142,7 @@ export function clipFrameFiles(clip: SmugClip): string[] {
 export function parseClipFrame(src: string): { clip: SmugClip; index: number } | null {
   const m = /([^/?#]+\.avif)(?:\?[^#]*)?#(\d{3})$/.exec(src);
   if (!m) return null;
-  const clip = [SMUG_IN_CLIP, SMUG_OUT_CLIP, WAVE_IN_CLIP, WAVE_OUT_CLIP, POUT_IN_CLIP, POUT_OUT_CLIP, TALK_IN_CLIP, TALK_OUT_CLIP, WELCOME_1329_CLIP, WELCOME_1330_CLIP, WELCOME_1334_CLIP, WELCOME_1339_CLIP, WELCOME_1340_CLIP].find(
+  const clip = [SMUG_IN_CLIP, SMUG_OUT_CLIP, WAVE_IN_CLIP, WAVE_OUT_CLIP, POUT_IN_CLIP, POUT_OUT_CLIP, TALK_IN_CLIP, TALK_OUT_CLIP, WELCOME_1329_CLIP, WELCOME_1330_CLIP, WELCOME_1366_CLIP].find(
     (c) => c.file.endsWith(`/${m[1]}`) || c.file === m[1],
   );
   if (!clip) return null;
