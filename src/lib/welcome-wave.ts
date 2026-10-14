@@ -19,15 +19,13 @@
 import {
   WELCOME_1329_CLIP,
   WELCOME_1330_CLIP,
-  WELCOME_1334_CLIP,
-  WELCOME_1339_CLIP,
-  WELCOME_1340_CLIP,
+  WELCOME_1366_CLIP,
   type SmugClip,
 } from "./pose-bridge.ts";
 
-export { WELCOME_1329_CLIP, WELCOME_1330_CLIP, WELCOME_1334_CLIP, WELCOME_1339_CLIP, WELCOME_1340_CLIP };
-/** The welcome pool: two waves (1329, 1330) and three hair flips (1334, 1339, 1340); one is picked per return. */
-export const WELCOME_CLIPS = [WELCOME_1329_CLIP, WELCOME_1330_CLIP, WELCOME_1334_CLIP, WELCOME_1339_CLIP, WELCOME_1340_CLIP] as const;
+export { WELCOME_1329_CLIP, WELCOME_1330_CLIP, WELCOME_1366_CLIP };
+/** The welcome pool: two waves (1329, 1330) and the hair flip (1366); one is picked per return. */
+export const WELCOME_CLIPS = [WELCOME_1329_CLIP, WELCOME_1330_CLIP, WELCOME_1366_CLIP] as const;
 
 /** A return after this much quiet gets the welcome. */
 export const WELCOME_GAP_MS = 6 * 60 * 60 * 1000;
@@ -44,7 +42,7 @@ export function welcomeDue(lastActivityMs: number | null, nowMs: number): boolea
   return nowMs - lastActivityMs >= WELCOME_GAP_MS;
 }
 
-/** `?welcome=1329|1330|1334|1339|1340|1` -> the forced clip (random for 1), or null. */
+/** `?welcome=1329|1330|1366|1` -> the forced clip (random for 1), or null. */
 export function welcomeDebugClip(search: string, rand: () => number = Math.random): SmugClip | null {
   const v = new URLSearchParams(search).get("welcome")?.trim();
   if (!v) return null;

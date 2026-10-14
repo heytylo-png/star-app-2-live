@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -9,9 +9,7 @@ import { BRIDGE_FILE_VERSION, welcomeClipUrls } from "./rai.ts";
 import {
   WELCOME_1329_CLIP,
   WELCOME_1330_CLIP,
-  WELCOME_1334_CLIP,
-  WELCOME_1339_CLIP,
-  WELCOME_1340_CLIP,
+  WELCOME_1366_CLIP,
   WELCOME_CLIPS,
   WELCOME_GAP_MS,
   WELCOME_PENDING_MAX_MS,
@@ -41,7 +39,7 @@ describe("welcome-back wave (TyLo 2026-10-13 10:08)", () => {
     assert.equal(WELCOME_1330_CLIP.file, "rai/welcome1330.avif");
     for (const c of WELCOME_CLIPS) {
       assert.equal(c.frames, 121);
-      const tag = /welcome13(29|30)/.test(c.file) ? "wb2" : "hf1";
+      const tag = /welcome13(29|30)/.test(c.file) ? "wb2" : "hf3";
       assert.equal(BRIDGE_FILE_VERSION[c.file], tag);
       assert.equal(parseClipFrame(`${c.file}?v=${tag}#120`)?.clip, c);
       assert.ok(!bridgeClips().includes(c));
@@ -52,9 +50,7 @@ describe("welcome-back wave (TyLo 2026-10-13 10:08)", () => {
       [
         "rai/welcome1329.avif?v=wb2",
         "rai/welcome1330.avif?v=wb2",
-        "rai/welcome1334.avif?v=hf1",
-        "rai/welcome1339.avif?v=hf1",
-        "rai/welcome1340.avif?v=hf1",
+        "rai/welcome1366.avif?v=hf3",
       ],
     );
     const sw = readFileSync(join(root, "public/sw.js"), "utf8");
@@ -92,19 +88,17 @@ describe("welcome-back wave (TyLo 2026-10-13 10:08)", () => {
   it("debug param and random pick", () => {
     assert.equal(welcomeDebugClip("?welcome=1329"), WELCOME_1329_CLIP);
     assert.equal(welcomeDebugClip("?v=x&welcome=1330"), WELCOME_1330_CLIP);
-    assert.equal(welcomeDebugClip("?welcome=1334"), WELCOME_1334_CLIP);
-    assert.equal(welcomeDebugClip("?welcome=1339"), WELCOME_1339_CLIP);
-    assert.equal(welcomeDebugClip("?welcome=1340"), WELCOME_1340_CLIP);
-    assert.equal(welcomeDebugClip("?welcome=1", () => 0.3), WELCOME_1330_CLIP);
+    assert.equal(welcomeDebugClip("?welcome=1366"), WELCOME_1366_CLIP);
+    assert.equal(welcomeDebugClip("?welcome=1334"), null, "hf1 flips are gone");
+    assert.equal(welcomeDebugClip("?welcome=1", () => 0.5), WELCOME_1330_CLIP);
     assert.equal(welcomeDebugClip("?welcome=9"), null);
     assert.equal(welcomeDebugClip(""), null);
     assert.equal(pickWelcomeClip(() => 0.1), WELCOME_1329_CLIP);
-    assert.equal(pickWelcomeClip(() => 0.3), WELCOME_1330_CLIP);
-    assert.equal(pickWelcomeClip(() => 0.5), WELCOME_1334_CLIP);
-    assert.equal(pickWelcomeClip(() => 0.7), WELCOME_1339_CLIP);
-    assert.equal(pickWelcomeClip(() => 0.99), WELCOME_1340_CLIP);
+    assert.equal(pickWelcomeClip(() => 0.5), WELCOME_1330_CLIP);
+    assert.equal(pickWelcomeClip(() => 0.99), WELCOME_1366_CLIP);
     assert.equal(pickWelcomeClip(() => 0), WELCOME_1329_CLIP);
-    assert.equal(WELCOME_CLIPS.length, 5, "the flips join the waves");
+    assert.equal(WELCOME_CLIPS.length, 3, "two waves + the 1366 hair flip");
+    for (const n of ["1334", "1339", "1340"]) assert.ok(!existsSync(join(root, "public/rai", `welcome${n}.avif`)), n);
   });
 
   it("activity stamp round-trips through storage", () => {

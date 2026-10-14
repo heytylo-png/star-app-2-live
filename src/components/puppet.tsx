@@ -2016,7 +2016,7 @@ export function Puppet({
           data-rai-sheet="off"
           style={{ opacity: 1, zIndex: 60, transition: "none" }}
         />
-        {/* Welcome-back clips (waves 1329 / 1330, hair flips 1334 / 1339 / 1340): lazy, idle -> idle, muted (welcome-wave.ts). */}
+        {/* Welcome-back clips (waves 1329 / 1330, hair flip 1366): lazy, idle -> idle, muted (welcome-wave.ts). */}
         <canvas
           key="pose-bridge-wca"
           ref={bridgeCanvasWelcomeARef}
