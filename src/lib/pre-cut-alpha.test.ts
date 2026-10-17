@@ -153,7 +153,7 @@ describe("bridge file cache keys (wave w11/w12, pout p2, talk t1)", () => {
       "rai/wave1292_hold.webp": "w11",
       "rai/welcome1329.avif": "wb2",
       "rai/welcome1330.avif": "wb2",
-      "rai/welcome1366.avif": "hf5",
+      "rai/welcome1366.avif": "hf6",
       "rai/smug1084_out.avif": "s2",
       "rai/pout1158_in.avif": "p2",
       "rai/pout1162_out.avif": "p4",
