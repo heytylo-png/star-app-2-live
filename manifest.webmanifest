@@ -2,7 +2,7 @@
   "name": "Star Rai",
   "short_name": "Star Rai",
   "description": "Star Rai presence — lean companion with puppet, chat, and voice.",
-  "start_url": "/star-app-2-live/?v=64eb034",
+  "start_url": "/star-app-2-live/?v=8e7f230",
   "scope": "/star-app-2-live/",
   "display": "standalone",
   "orientation": "portrait-primary",
