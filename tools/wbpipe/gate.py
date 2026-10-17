@@ -15,8 +15,14 @@ def gray_frames(p,w=360):
     return np.frombuffer(r,np.uint8).reshape(-1,h,w).astype(np.float32)
 def cadence(p):
     F=gray_frames(p); d=np.abs(np.diff(F,axis=0)).mean((1,2)); p90=float(np.percentile(d,90))
+    act=np.where(d>=0.25*p90)[0]; a0,a1=int(act.min()),int(act.max()); seg=d[a0:a1+1]; still=np.r_[d[:a0],d[a1+1:]]
+    # holds are judged inside the motion span only (still idle bookends are not held frames; 2026-10-17 fix: the first
+    # version counted them and would have failed the 1329 reference too)
     return dict(frames=len(F),distinct_poses=int(1+(d>=0.1*p90).sum()),near_dup=int((d<0.1*p90).sum()),median_diff=round(float(np.median(d)),3),
-                p90_diff=round(p90,3),period3=round(float(np.mean(d[2::3])/max(1e-6,np.mean(np.r_[d[0::3],d[1::3]]))),2))
+                p90_diff=round(p90,3),period3=round(float(np.mean(seg[2::3])/max(1e-6,np.mean(np.r_[seg[0::3],seg[1::3]]))),2),
+                motion_span=[a0+1,a1+1],holds_in_motion=int((seg<0.1*p90).sum()),motion_steps=len(seg),
+                period4=round(float(np.max([seg[i::4].mean() for i in range(4)])/np.median([seg[i::4].mean() for i in range(4)])),2),
+                motion_vs_still=round(float(np.median(seg)/max(1e-6,np.median(still) if len(still) else 1e-6)),1))
 R=dict(mp4=MP4,n=N)
 info=json.loads(subprocess.run(['ffprobe','-v','error','-show_entries','stream=index,codec_type,codec_name,width,height,r_frame_rate,nb_frames,duration','-of','json',MP4],capture_output=True).stdout)['streams']
 R['streams']=info
@@ -63,14 +69,17 @@ c=R['cadence'][N]; cam=R['camera']; reg=R['registration']; st=R['stage_top']
 xr=max(ref.get('first',{'xor':54133})['xor'],ref.get('last',{'xor':54690})['xor'])
 checks=dict(
   fps24=any(x.get('r_frame_rate')=='24/1' for x in info if x.get('codec_type')=='video'),
-  true_24fps=c['distinct_poses']>=0.85*c['frames'] and c['period3']<1.5,
+  true_24fps=c['holds_in_motion']<=0.1*c['motion_steps'] and c['period3']<1.5,
+  flip_motion=c['motion_vs_still']>=5,   # motion-span median step vs still-bookend breathing
   camera_locked=(cam['sole'][1]-cam['sole'][0])<=2 and (cam['shoe_width'][1]-cam['shoe_width'][0])<=3,
   feet_in_frame=cam['sole_margin_px']>=4 and cam['edge_touch_frames']==0,
   framed_larger=reg['s']<1.80,   # stage px per source px; old 1366 = 1.845 (finer scan reads 1.844); < 1.80 = clearly bigger in its frame
   hand_on_stage=bool(st['hand_top_min'] is None or st['hand_top_min'][1]>=0),
   gesture_present=bool(st['hand_top_min'] is not None and st['hand_top_min'][1]<330),   # a hand reaches head height (flip / wave); 1599 idle-only: 383
-  start_idle=B['first']['face']<=20 and B['first']['xor']<=1.2*xr,
-  end_idle=B['last']['face']<=20 and B['last']['xor']<=1.2*xr)
+  # face <= 25: visually-idle starts score 12.7-23 (old 1366 12.7/16.8, 1599 f0 17.2, 2026-10-17 export 21.4/22.9 = same face,
+  # small eye/mouth detail), non-idle 35-79 (1596 47.9/35.2, 1599 zoomed end 79); the build eases f0-7 / last 8 to the idle face.
+  start_idle=B['first']['face']<=25 and B['first']['xor']<=1.2*xr,
+  end_idle=B['last']['face']<=25 and B['last']['xor']<=1.2*xr)
 R['checks']=checks; R['pass']=all(checks.values())
 json.dump(R,open(f'{OUT}/gate.json','w'),indent=1,default=str)
 idx=np.linspace(0,len(fs)-1,13).round().astype(int); tw=W*292//H

@@ -43,14 +43,27 @@ def toward_idle(S,t):
     mm=(m*cv2.GaussianBlur(inner,(0,0),3))[...,None]; o=S.copy(); o[...,:3]=S[...,:3]*(1-mm)+face[...,:3]*mm
     return np.clip(np.rint(o),0,255).astype(np.uint8)
 def tw(k):
-    if k<8: return 1-(k/8.0)**2
+    if k<8:
+        u=k/8.0
+        return 1-u*u*(3-2*u) if os.environ.get('WB_BODY_EASE')=='1' else 1-(k/8.0)**2   # body morph: smoothstep (no step into f8)
     if k>=NF-8: return float(T[k-(NF-8)])
     return 0.0
 x=np.arange(720,dtype=np.float32); fx=np.clip((x-15)/7,0,1)*np.clip((671-15-x)/7,0,1); fx[672:]=0
 def edge(A):
     A=A.copy(); a=A[...,3].astype(np.float32)*fx[None]; a[1264:]=0; A[...,3]=np.rint(a).astype(np.uint8); A[A[...,3]==0,:3]=0; return A
+BODY=os.environ.get('WB_BODY_EASE')=='1'
+def body_toward_idle(S,t):
+    """optional (WB_BODY_EASE=1): whole-figure morph to idle (DIS flow warp both ways + dissolve, all four channels) with the
+    same weights as the face ease. For re-rendered sources whose shading/outline differ from idle; only use where the
+    eased frames are still (no motion to ghost)."""
+    if t<=0: return S
+    if t>=1-1e-9: return np.clip(np.rint(I),0,255).astype(np.uint8)
+    la=np.clip(L(S),0,255).astype(np.uint8); lb=np.clip(L(I),0,255).astype(np.uint8)
+    F=cv2.GaussianBlur(cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_MEDIUM).calc(la,lb,None),(0,0),3)
+    S=S.astype(np.float32); As=cv2.remap(S,GX-t*F[...,0],GY-t*F[...,1],cv2.INTER_CUBIC); Bs=cv2.remap(I,GX+(1-t)*F[...,0],GY+(1-t)*F[...,1],cv2.INTER_CUBIC)
+    o=(1-t)*As+t*Bs; o[...,3]=np.clip(o[...,3],0,255); return np.clip(np.rint(o),0,255).astype(np.uint8)
 def job(k):
-    S=stage1(k); S=toward_idle(S,tw(k)); Image.fromarray(edge(S),'RGBA').save(OUT%(N,k)); return k
+    S=stage1(k); S=body_toward_idle(S,tw(k)) if BODY else toward_idle(S,tw(k)); Image.fromarray(edge(S),'RGBA').save(OUT%(N,k)); return k
 if __name__=='__main__':
     os.makedirs(WORK+'ship',exist_ok=True)
     with Pool(8) as p: p.map(job,range(NF))
