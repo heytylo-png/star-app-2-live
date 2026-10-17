@@ -122,11 +122,12 @@ export const TALK_CLIP_BOX = { x: 128, y: 0, w: 480, h: 1280 } as const;
 export const WELCOME_1329_CLIP: SmugClip = { pair: "welcome", key: "in", file: "rai/welcome1329.avif", frames: 121 };
 export const WELCOME_1330_CLIP: SmugClip = { pair: "welcome", key: "out", file: "rai/welcome1330.avif", frames: 121 };
 /**
- * Welcome-back hair flip (TyLo 2026-10-14 4:22 PM, hf3; replaces the hf1 flips 1334 / 1339 / 1340): 1366, locked camera,
- * idle glare -> hair flip -> idle glare (hair outline back on idle). Same registration and band as 1329 / 1330, f0-f7 face
- * ease-in from idle, f113-f120 face ease-out to idle. It shares the welcome canvases (only one welcome clip loads).
+ * Welcome-back hair flip 1366 (hf5, TyLo 2026-10-17 re-export; hf3 2026-10-14 4:22 PM before it): true 24 fps, locked camera,
+ * idle glare -> hair flip -> idle glare, 145 frames (6.04 s). Same band as 1329 / 1330 (registration s 1.124 on the
+ * larger-framed source; feet and sole on idle). The re-render's shading differs from idle, so f0-f7 morph in from idle and
+ * f137-f144 morph out to idle over the whole figure (both spans are still). Shares the welcome canvases (one welcome clip loads).
  */
-export const WELCOME_1366_CLIP: SmugClip = { pair: "welcome", key: "in", file: "rai/welcome1366.avif", frames: 121 };
+export const WELCOME_1366_CLIP: SmugClip = { pair: "welcome", key: "in", file: "rai/welcome1366.avif", frames: 145 };
 
 /** Bridge frame id for frame `index` of a clip: `<file>#NNN`. */
 export function clipFrameFile(clip: SmugClip, index: number): string {

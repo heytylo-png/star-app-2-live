@@ -34,12 +34,13 @@ const manifest = JSON.parse(readFileSync(join(root, "src/lib/welcome-clip-edges.
 const idle = { restingIdle: true, talking: false, wantedIdle: true, reducedMotion: false };
 
 describe("welcome-back wave (TyLo 2026-10-13 10:08)", () => {
-  it("two separate 121-frame clips, tagged wb2, lazy (not a pose pair, not in the startup clips)", () => {
+  it("waves 121 frames (wb2), hair flip 145 frames (hf5), lazy (not a pose pair, not in the startup clips)", () => {
     assert.equal(WELCOME_1329_CLIP.file, "rai/welcome1329.avif");
     assert.equal(WELCOME_1330_CLIP.file, "rai/welcome1330.avif");
     for (const c of WELCOME_CLIPS) {
-      assert.equal(c.frames, 121);
-      const tag = /welcome13(29|30)/.test(c.file) ? "wb2" : "hf3";
+      const wave = /welcome13(29|30)/.test(c.file);
+      assert.equal(c.frames, wave ? 121 : 145);
+      const tag = wave ? "wb2" : "hf5";
       assert.equal(BRIDGE_FILE_VERSION[c.file], tag);
       assert.equal(parseClipFrame(`${c.file}?v=${tag}#120`)?.clip, c);
       assert.ok(!bridgeClips().includes(c));
@@ -50,7 +51,7 @@ describe("welcome-back wave (TyLo 2026-10-13 10:08)", () => {
       [
         "rai/welcome1329.avif?v=wb2",
         "rai/welcome1330.avif?v=wb2",
-        "rai/welcome1366.avif?v=hf3",
+        "rai/welcome1366.avif?v=hf5",
       ],
     );
     const sw = readFileSync(join(root, "public/sw.js"), "utf8");
