@@ -45,3 +45,9 @@ History: 1596 FAIL (starts mid-wave, hand on hip), 1599 FAIL (+18 % zoom-in, no 
   >= 0.9947. Mid-clip (f60) skin is 3-5 levels lighter than wb2 (wb2 used per-frame tone; this pipeline uses fixed gains, as hf3).
 - 145-frame dry run (1596, not shippable: fails the gate) through steps 2-6 with WB_WORK: 145 frames, eases f0-7 / f137-144,
   0 audio, edges 0/0/0, 1,650,816 B at crf 26/20 (true 24 fps costs bytes: raise crf_color to 28-30 if a clip lands over 1.8 MB).
+
+## Per-clip fixes (WB_FIX), hf7
+`WB_FIX=fixes/hf1366n.py python3 process.py 1366n` applies `fix(k, S)` after post + dark and before the face ease.
+`fixes/hf1366n.py` recolours the silver star earrings to idle's gold (per-frame tracked positions), shifts skin toward idle
+in float Lab on the wide skin mask (face zone / body), and optionally applies a shirt L LUT. Params: `fixes/hf1366n.json`
+(or `WB_FIX_PARAMS=<json>`; hf7 shipped with `fixes/hf1366n_shirt.json`). Fit with `fixes/fit_hf1366n.py`, shirt LUT test with `fixes/eval_f0.py`.

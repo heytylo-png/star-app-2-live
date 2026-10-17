@@ -28,8 +28,12 @@ def dark(A):
     X=A.astype(np.float32); w=skin_w(X)[...,None]; ch=np.zeros(X.shape[:2],np.float32); ch[CHEEK]=1; ch=cv2.GaussianBlur(ch,(0,0),4)[...,None]
     g=(1-ch)*np.array(G['skin'],np.float32)+ch*np.array(G['cheek'],np.float32)
     X[...,:3]=X[...,:3]*(1+w*(g-1)); return np.clip(np.rint(X),0,255).astype(np.uint8)
+FIX=None
+if os.environ.get('WB_FIX'):   # optional per-clip fix module (fix(k, S) -> S), after post + dark, before the face ease
+    import importlib.util as _iu; _sp=_iu.spec_from_file_location('wbfix',os.path.join('/workspace/bridge/wbpipe',os.environ['WB_FIX'])); FIX=_iu.module_from_spec(_sp); _sp.loader.exec_module(FIX)
 def stage1(k):
-    A=np.asarray(Image.open(CUT%(N,k,N,k)).convert('RGBA')); return dark(post(A))
+    A=np.asarray(Image.open(CUT%(N,k,N,k)).convert('RGBA')); S=dark(post(A))
+    return FIX.fix(k,S) if FIX else S
 GY,GX=np.mgrid[0:1280,0:720].astype(np.float32)
 m=np.zeros((1280,720),np.float32); cv2.ellipse(m,(360,205),(92,82),0,0,360,1,-1); m=cv2.GaussianBlur(m,(0,0),10)
 W=[0.25,0.6,0.9,1.0,0.85,0.6,0.35,0.12]; T=np.cumsum(W)/sum(W)
