@@ -3,12 +3,13 @@
  * glare and end on the idle glare. Play the whole clip when the user comes back after a while."
  *
  * - 1329: open-palm wave, face stays closer to the glare. 1330: open-palm wave, face softens more.
- * - On app open or resume, when the last user activity was >= 6 h ago, one of the two (random) plays in full,
+ * - On app open or resume, when the last user activity was >= 3 h ago (TyLo 2026-10-16: was 6 h), one clip of the pool
+ *   (1329, 1330, 1366; random) plays in full,
  *   idle -> idle, once per return. No chat line, no TTS (the AVIFs hold no audio track).
  * - Only on a resting idle stage (no bridge, no hold, not talking). A send that comes first defers it until the
  *   stage is idle again.
  * - Lazy: its player and files only start when a welcome is due (or the debug param asks), never at startup.
- * - Debug: `?welcome=1329` / `?welcome=1330` (or `?welcome=1`, random) plays it once on load whatever the gap.
+ * - Debug: `?welcome=1329` / `?welcome=1330` / `?welcome=1366` (or `?welcome=1`, random) plays it once on load whatever the gap.
  * - Never during a call (connecting or up): a call while it is pending drops it for that return; a call that starts
  *   while it is already playing lets the 5 s clip finish (CoS 356cdf5). Never on the same open as the daily check-in
  *   line, the call-ended card, the remember toast or the Reload notice (welcomeBlocker, read from the existing DOM /
@@ -27,8 +28,8 @@ export { WELCOME_1329_CLIP, WELCOME_1330_CLIP, WELCOME_1366_CLIP };
 /** The welcome pool: two waves (1329, 1330) and the hair flip (1366); one is picked per return. */
 export const WELCOME_CLIPS = [WELCOME_1329_CLIP, WELCOME_1330_CLIP, WELCOME_1366_CLIP] as const;
 
-/** A return after this much quiet gets the welcome. */
-export const WELCOME_GAP_MS = 6 * 60 * 60 * 1000;
+/** A return after this much quiet gets the welcome (3 h; TyLo 2026-10-16 9:26 PM, was 6 h). */
+export const WELCOME_GAP_MS = 3 * 60 * 60 * 1000;
 /** Last user activity (ms epoch), kept across visits. */
 export const WELCOME_ACTIVITY_KEY = "rai-last-activity-ms";
 /** A due welcome that never finds a resting idle stage within this long is dropped (no surprise wave much later). */

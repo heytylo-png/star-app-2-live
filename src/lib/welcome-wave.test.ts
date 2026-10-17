@@ -76,13 +76,39 @@ describe("welcome-back wave (TyLo 2026-10-13 10:08)", () => {
     }
   });
 
-  it("due only after >= 6 h of no activity; a first visit is not a return", () => {
+  it("due only after >= 3 h of no activity; a first visit is not a return", () => {
     const now = 1_800_000_000_000;
+    assert.equal(WELCOME_GAP_MS, 3 * 3_600_000);
+    assert.equal(welcomeDue(now - (2 * 3_600_000 + 59 * 60_000), now), false, "2h59m: no welcome");
+    assert.equal(welcomeDue(now - 3 * 3_600_000, now), true, "3h00m: welcome");
     assert.equal(welcomeDue(null, now), false);
     assert.equal(welcomeDue(now - WELCOME_GAP_MS + 1, now), false);
     assert.equal(welcomeDue(now - 5 * 60_000, now), false);
     assert.equal(welcomeDue(now - WELCOME_GAP_MS, now), true);
     assert.equal(welcomeDue(now - 7 * 3_600_000, now), true);
+  });
+
+  it("a due 3 h return is dropped by a pending / connecting call and by an open on a check-in day", () => {
+    const now = 1_800_000_000_000;
+    const due = welcomeDue(now - 3 * 3_600_000, now);
+    assert.equal(due, true);
+    const doc = (spans: string[]) => ({ querySelector: () => null, querySelectorAll: () => spans.map((t) => ({ textContent: t })) });
+    // Same wiring as the stage: arm when due, drop (clear) when a blocker shows up while pending.
+    const run = (page: ReturnType<typeof welcomePageFromDom>) => {
+      const g = new WelcomeGate();
+      g.arm(WELCOME_1366_CLIP, now);
+      if (welcomeBlocker(page)) g.clear();
+      g.tick(idle, now + 2000);
+      return g.tick(idle, now + 2000 + 2 * WELCOME_SETTLE_MS);
+    };
+    assert.equal(run(welcomePageFromDom(doc([]), false)), WELCOME_1366_CLIP, "no blocker: it plays");
+    assert.equal(welcomeBlocker(welcomePageFromDom(doc(["Allow microphone"]), false)), "call");
+    assert.equal(run(welcomePageFromDom(doc(["Allow microphone"]), false)), null, "connecting call drops it");
+    assert.equal(run(welcomePageFromDom(doc(["On call"]), false)), null, "call up drops it");
+    assert.equal(welcomeBlocker(welcomePageFromDom(doc([]), true)), "check-in");
+    assert.equal(run(welcomePageFromDom(doc([]), true)), null, "check-in day open drops it");
+    const puppet = readFileSync(join(root, "src/components/puppet.tsx"), "utf8");
+    assert.match(puppet, /log\(\["dropped"/, "the stage drops a pending welcome on a blocker");
   });
 
   it("debug param and random pick", () => {
