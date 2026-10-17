@@ -1361,8 +1361,8 @@ export function Puppet({
     [releaseSmugExit],
   );
 
-  // Welcome-back wave (TyLo 2026-10-13 10:08, welcome-wave.ts): on open / resume after >= 6 h of no user activity
-  // (or ?welcome=1329|1330), one clip plays in full from the resting idle back to idle. Lazy player; muted.
+  // Welcome-back clips (TyLo 2026-10-13 10:08, welcome-wave.ts): on open / resume after >= 3 h of no user activity
+  // (or ?welcome=1329|1330|1366), one clip plays in full from the resting idle back to idle. Lazy player; muted.
   useEffect(() => {
     const store = (() => {
       try {
