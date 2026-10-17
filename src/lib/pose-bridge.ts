@@ -122,10 +122,11 @@ export const TALK_CLIP_BOX = { x: 128, y: 0, w: 480, h: 1280 } as const;
 export const WELCOME_1329_CLIP: SmugClip = { pair: "welcome", key: "in", file: "rai/welcome1329.avif", frames: 121 };
 export const WELCOME_1330_CLIP: SmugClip = { pair: "welcome", key: "out", file: "rai/welcome1330.avif", frames: 121 };
 /**
- * Welcome-back hair flip 1366 (hf6, TyLo 2026-10-17 re-export; hf3 2026-10-14 4:22 PM before it): true 24 fps, locked camera,
+ * Welcome-back hair flip 1366 (hf7, TyLo 2026-10-17 re-export; hf3 2026-10-14 4:22 PM before it): true 24 fps, locked camera,
  * idle glare -> hair flip -> idle glare, 145 frames (6.04 s). Same band as 1329 / 1330 (registration s 1.124 on the
  * larger-framed source; feet and sole on idle). Face-only ease: f0-f7 in from idle, f137-f144 out to idle (TyLo 2026-10-17
- * 10:39: no whole-figure blend; the body pop at the ends from the re-render's shading is accepted). Shares the welcome canvases.
+ * 10:39: no whole-figure blend; the body pop at the ends from the re-render's shading is accepted). hf7: earrings recoloured to idle's gold stars
+ * on every frame, skin shifted to idle in Lab (wide skin mask, blush included), shirt L tone-matched to idle. Shares the welcome canvases.
  */
 export const WELCOME_1366_CLIP: SmugClip = { pair: "welcome", key: "in", file: "rai/welcome1366.avif", frames: 145 };
 
