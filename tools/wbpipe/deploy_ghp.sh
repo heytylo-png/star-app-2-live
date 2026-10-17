@@ -30,7 +30,7 @@ git add -A
 git -c user.name="Cursor Agent" -c user.email="cursoragent@cursor.com" commit -q -m "$MSG on $SHA
 
 Co-authored-by: heytylo-png <heytylo-png@users.noreply.github.com>"
-git push -q origin HEAD:gh-pages
+GH_BIN=$(command -v gh); git -c credential.https://github.com.helper= -c "credential.https://github.com.helper=!$GH_BIN auth git-credential" push -q origin HEAD:gh-pages   # gh moved to /usr/local/bin after the 2026-10-17 restore; never force
 GH=$(git rev-parse HEAD)
 echo "gh-pages $GH"
 for i in $(seq 1 40); do r=$(gh api repos/heytylo-png/star-app-2-live/pages/builds/latest --jq '.status + " " + .commit'); case "$r" in "built ${GH}"*) echo "$r"; break;; esac; sleep 8; done
