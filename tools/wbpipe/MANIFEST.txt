@@ -1,0 +1,5 @@
+Snapshot of box tooling (text only, no media). Restore: copy *.py/*.sh/*.json to /workspace/bridge/wbpipe/,
+engine/sweeplib.py cut_alpha_sweep.py sheets_1158_1162.py -> /workspace/f807/bridge/engine/, engine/sheets.py -> /workspace/f807/sweep/,
+live/* -> /workspace/f807/mouth/wire/ (live/gate1599_standalone.py: the standalone gate used for 1599, needs only idle.png).
+Sources for 1329/1330/1366 are in TyLo's zips (welcome-wave-1329.mp4, welcome-wave-1330.mp4, welcome-flip-1366.mp4) -> wbpipe/src/.
+Python deps: numpy scipy pillow opencv-python (cv2) playwright; ffmpeg with libaom-av1.
