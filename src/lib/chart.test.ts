@@ -47,12 +47,15 @@ describe("Chart v1 artifact", () => {
   });
 
   it("keeps her constants in the spec without changing the voice card", () => {
-    assert.match(CHART_V1_SOURCE, /her_sun: Libra/);
+    assert.match(CHART_V1_SOURCE, /her_sun: Virgo/);
+    assert.match(CHART_V1_SOURCE, /birth_date: 2004-09-03/);
+    assert.match(CHART_V1_SOURCE, /birth_place: Osaka/);
     assert.match(RAI_SYSTEM, /LORE USE/);
     assert.match(RAI_SYSTEM, /\{"line":/);
-    assert.equal(HER_CHART.her_sun, "Libra");
-    assert.equal(HER_CHART.birth_date, "2000-09-29");
-    assert.equal(HER_CHART.birth_place, "Fukuoka");
+    assert.equal(HER_CHART.her_sun, "Virgo");
+    assert.equal(HER_CHART.birth_date, "2004-09-03");
+    assert.equal(HER_CHART.birth_time, "03:33");
+    assert.equal(HER_CHART.birth_place, "Osaka");
   });
 });
 
@@ -140,7 +143,7 @@ describe("daily Chart fire", () => {
     assert.ok(first.factsBlock);
     assert.match(first.factsBlock!, /^CHART$/m);
     assert.match(first.factsBlock!, /^today_date: 2026-09-19$/m);
-    assert.match(first.factsBlock!, /^her_sun: Libra$/m);
+    assert.match(first.factsBlock!, /^her_sun: Virgo$/m);
     assert.match(first.factsBlock!, /^user_sun: Aries$/m);
     assert.match(first.factsBlock!, /Tint one line only/);
     assert.ok(CHART_TINT_POSES.includes(first.tintPose!));
@@ -224,7 +227,7 @@ describe("ask path + diary", () => {
     assert.equal(sign.kind, "ask_sign");
     assert.equal(sign.localOnly, true);
     const signAct = actForChartTurn(sign)!;
-    assert.match(signAct.line, /^Libra\./);
+    assert.match(signAct.line, /^Virgo\./);
     assert.ok(signAct.line.split(" ").length <= 8);
 
     const bday = resolveChartTurn({
@@ -233,7 +236,7 @@ describe("ask path + diary", () => {
       now: NOW,
       timeZone: TZ,
     });
-    assert.equal(actForChartTurn(bday)?.line, "Sept 29.");
+    assert.equal(actForChartTurn(bday)?.line, "Sept 3.");
 
     const origin = resolveChartTurn({
       userText: "where are you from",
@@ -242,8 +245,9 @@ describe("ask path + diary", () => {
       timeZone: TZ,
     });
     assert.equal(origin.kind, "ask_origin");
-    assert.match(actForChartTurn(origin)!.line, /^(Fukuoka|Osaka)\./);
-    assert.doesNotMatch(actForChartTurn(origin)!.line, /Fukuoka.*Osaka|Osaka.*Fukuoka/);
+    assert.match(actForChartTurn(origin)!.line, /^Osaka\./);
+    assert.match(actForChartTurn(origin)!.line, /States/);
+    assert.doesNotMatch(actForChartTurn(origin)!.line, /Fukuoka/);
   });
 
   it("asks for a birthday once on match/today with no date", () => {
@@ -319,7 +323,7 @@ describe("Grok request composition", () => {
     assert.match(system, /MEMORY FACTS\nname: Tylo/);
     assert.match(system, /^user_sun: Aries$/m);
     assert.match(system, /^chart_source: setup$/m);
-    assert.match(system, /^CHART\ntoday_date: 2026-09-19\nher_sun: Libra\nuser_sun: Aries$/m);
+    assert.match(system, /^CHART\ntoday_date: 2026-09-19\nher_sun: Virgo\nuser_sun: Aries$/m);
     const factsOnly = facts;
     assert.doesNotMatch(factsOnly, /her_sun|Fukuoka|03:33/);
     assert.doesNotMatch(factsOnly, /user_rising/);
@@ -356,7 +360,7 @@ describe("Grok request composition", () => {
     assert.match(block, /^CHART$/m);
     assert.match(block, /^ask: her-day$/m);
     assert.match(block, /^today_date: 2026-09-19$/m);
-    assert.match(block, /^her_sun: Libra$/m);
+    assert.match(block, /^her_sun: Virgo$/m);
     assert.match(block, /^sun_sign_today: Virgo$/m);
     assert.match(block, /HER day/);
     assert.match(block, /1-3 short lines/);
@@ -370,7 +374,7 @@ describe("Grok request composition", () => {
       localOnly: true,
       dateKey: "2026-09-19",
     });
-    assert.equal(act.line, "Sept 29.");
+    assert.equal(act.line, "Sept 3.");
     assert.equal(act.pose, "idle");
   });
 });
@@ -417,9 +421,12 @@ describe("chart ask path", () => {
     assert.equal(turn.kind, "daily");
     assert.equal(turn.lastTopic, undefined);
     assert.match(turn.factsBlock ?? "", /^diary: You sounded tired/m);
+    assert.match(turn.factsBlock ?? "", /next to my Virgo/);
+    assert.doesNotMatch(turn.factsBlock ?? "", /my Libra/i);
+    assert.match(turn.factsBlock ?? "", /^her_sun: Virgo$/m);
     assert.doesNotMatch(handoff.draft, /tired|diary/);
     const act = actForChartTurn(turn)!;
-    assert.equal(act.line, "Aries sun, Libra sky today. You'll want to pick a fight and then apologize.");
+    assert.equal(act.line, "Aries sun, Virgo sky today. You'll want to pick a fight and then apologize.");
     assert.doesNotMatch(act.line, /not a reading|one glance|quiet page|—/);
     assert.equal(isChartBannedLine(act.line), false);
 
@@ -533,14 +540,35 @@ describe("chart ask path", () => {
     assert.doesNotMatch(need, /setBirthOpen|birthOpen|ChartSetupCard/);
   });
 
+  it("rewrites a saved my Libra diary so it does not sit next to her_sun Virgo", () => {
+    const block = formatChartFactsBlock({
+      todayDate: "2026-09-19",
+      userSun: "Aries",
+      diaryNote: "You sounded tired. Your Aries sun was sitting next to my Libra. That's the whole page.",
+    });
+    assert.match(block, /^her_sun: Virgo$/m);
+    assert.match(block, /^diary: You sounded tired\. Your Aries sun was sitting next to my Virgo\. That's the whole page\.$/m);
+    assert.doesNotMatch(block, /my Libra/i);
+  });
+
+  it("leaves other my Libra text alone", () => {
+    const block = formatChartFactsBlock({
+      todayDate: "2026-09-19",
+      diaryNote: "I wrote about my libra boyfriend. Your Aries sun was sitting next to my Libra.",
+    });
+    assert.match(block, /my libra boyfriend/);
+    assert.match(block, /next to my Virgo/);
+    assert.doesNotMatch(block, /next to my Libra/i);
+  });
+
   it("filters banned chart phrasing and caps an essay to one beat", () => {
     const banned = shapeChartSpokenLine(
       "Your reading for today is a long natal wheel essay. Mercury is loud. Then another sentence.",
     );
-    assert.equal(banned, "Libra sky today. You'll want to pick a fight and then apologize.");
+    assert.equal(banned, "Virgo sky today. You'll want to pick a fight and then apologize.");
     assert.equal(
       shapeChartSpokenLine("Aries across Libra air, one glance, not a reading."),
-      "Libra sky today. You'll want to pick a fight and then apologize.",
+      "Virgo sky today. You'll want to pick a fight and then apologize.",
     );
     assert.equal(isChartBannedLine("the natal wheel says so"), true);
     assert.equal(isChartBannedLine("here is a planet list"), true);

@@ -9,11 +9,11 @@ const SKY = {
 };
 
 describe("her-day Grok path", () => {
-  it("composes a local her-day from natal Libra + sky", () => {
+  it("composes a local her-day from natal Virgo + sky", () => {
     const copy = localHerDay({ todayDate: "2026-09-19", sky: SKY });
     assert.equal(copy.source, "local");
     assert.equal(copy.heading, "Her day");
-    assert.equal(copy.natal, "Libra");
+    assert.equal(copy.natal, "Virgo");
     assert.equal(copy.skyLine, "Virgo sun · Gemini moon · Waning Crescent");
     assert.ok(copy.beats.length >= 1 && copy.beats.length <= 3);
   });
@@ -21,12 +21,12 @@ describe("her-day Grok path", () => {
   it("keeps a valid Grok line as her-day beats", () => {
     const local = localHerDay({ todayDate: "2026-09-19", sky: SKY });
     const grok = applyHerDayGrokRaw(
-      '{"emotion":"smug","pose":"think","line":"Virgo over my Libra air. Gemini moon — keep yours."}',
+      '{"emotion":"smug","pose":"think","line":"Virgo on my hour. Gemini moon — keep yours."}',
       local,
       SKY,
     );
     assert.equal(grok.source, "grok");
-    assert.equal(grok.natal, "Libra");
+    assert.equal(grok.natal, "Virgo");
     assert.ok(grok.beats.length >= 1 && grok.beats.length <= 3);
     assert.doesNotMatch(grok.beats.join(" "), /your reading for today is|Fukuoka|Aries/i);
     assert.equal(grok.beats.some((b) => isChartBannedLine(b)), false);

@@ -13,6 +13,7 @@
 import type { EmotionId, PoseId } from "./rai.ts";
 import { namedPoseFromText, parseAct } from "./rai.ts";
 import type { MemorySlotState } from "./memory-slots.ts";
+import { STAR_RAI, starRaiBirthdayLine, starRaiOriginLine } from "./star-rai-profile.ts";
 import {
   composeHerDay,
   computeSkyFacts,
@@ -22,14 +23,6 @@ import {
   type HerDayCopy,
   type SkyFacts,
 } from "./sky.ts";
-
-/** In-code only. Never serialize into MEMORY FACTS. */
-export const HER_CHART = {
-  birth_date: "2000-09-29",
-  birth_time: "03:33",
-  birth_place: "Fukuoka",
-  her_sun: "Libra",
-} as const;
 
 export const CHART_TZ_FALLBACK = "America/Chicago";
 
@@ -158,7 +151,7 @@ const NATAL_WHEEL_RE = /natal wheel/i;
 const ESSAY_RE = /\b(?:reading essay|compatibility essay|planet list)\b/i;
 
 const HER_SIGN_RE =
-  /\b(?:what(?:'s| is) your (?:sun )?sign|your (?:sun )?sign|your zodiac|are you an? libra|what sign are you)\b/i;
+  /\b(?:what(?:'s| is) your (?:sun )?sign|your (?:sun )?sign|your zodiac|are you an? (?:libra|virgo)|what sign are you)\b/i;
 
 const HER_BIRTHDAY_RE =
   /\b(?:when(?:'s| is) your birthday|your birthday|when were you born|what(?:'s| is) your birthday)\b/i;
@@ -177,9 +170,15 @@ const NEED_BIRTHDAY_RE =
 
 const SIGN_TEASES = [
   "Don't make it a topic.",
-  "Air. You're welcome.",
+  "Don't start.",
   "That's the glance.",
 ];
+
+/** Old diary pages said "next to my Libra". Only that phrase. Other "my Libra" text stays. */
+function rewriteStaleHerSun(text: string): string {
+  if (!text) return "";
+  return text.replace(/\bnext to my Libra\b/gi, `next to my ${HER_CHART.her_sun}`);
+}
 
 function clip(value: string, max: number): string {
   const t = value.replace(/\s+/g, " ").trim();
@@ -237,6 +236,18 @@ export function sunFromBirthDate(raw: string | undefined | null): SunSign | unde
   if (!parsed) return undefined;
   return sunFromMonthDay(parsed.month, parsed.day);
 }
+
+/**
+ * In-code only. Never serialize into MEMORY FACTS.
+ * Date, time, and place come from the profile. Sun is the tropical sign of that date.
+ * Declared after the sun table so module init does not touch SUN_RANGES early.
+ */
+export const HER_CHART = {
+  birth_date: STAR_RAI.birthday,
+  birth_time: STAR_RAI.birthTime,
+  birth_place: STAR_RAI.birthplace,
+  her_sun: sunFromBirthDate(STAR_RAI.birthday) ?? STAR_RAI.sunSign,
+} as const;
 
 export function parseMonthDay(
   raw: string | undefined | null,
@@ -356,7 +367,7 @@ export function isChartBannedLine(line: string): boolean {
   return READING_BAN_RE.test(line) || PLANET_RE.test(line) || NATAL_WHEEL_RE.test(line) || ESSAY_RE.test(line);
 }
 
-const CHART_BEAT_FALLBACK = "Libra sky today. You'll want to pick a fight and then apologize.";
+const CHART_BEAT_FALLBACK = `${HER_CHART.her_sun} sky today. You'll want to pick a fight and then apologize.`;
 const CHART_META_RE = /not a reading|one glance|quiet page/i;
 
 /** One spoken beat. A short line stays. An essay keeps its first sentence. */
@@ -378,10 +389,6 @@ export function pickChartTintPose(dateKey: string): ChartTintPose {
   return CHART_TINT_POSES[i]!;
 }
 
-export function pickOriginCity(dateKey: string): "Fukuoka" | "Osaka" {
-  return hashString(dateKey) % 2 === 0 ? "Fukuoka" : "Osaka";
-}
-
 export function pickSignTease(dateKey: string): string {
   return SIGN_TEASES[hashString(dateKey) % SIGN_TEASES.length]!;
 }
@@ -401,7 +408,7 @@ export function formatChartFactsBlock(opts: {
   const lines = ["CHART", `today_date: ${opts.todayDate}`, `her_sun: ${HER_CHART.her_sun}`];
   if (opts.userSun?.trim()) lines.push(`user_sun: ${opts.userSun.trim()}`);
   if (opts.lastTopic?.trim()) lines.push(`last_topic: ${clip(opts.lastTopic, 72)}`);
-  const diary = opts.diaryNote?.replace(/\s+/g, " ").trim();
+  const diary = rewriteStaleHerSun(opts.diaryNote?.replace(/\s+/g, " ").trim() ?? "");
   if (diary) lines.push(`diary: ${clip(diary, 280)}`);
   lines.push(...formatSkyFactLines(opts.sky));
   lines.push("");
@@ -515,7 +522,7 @@ export function composeDiaryEntry(opts: {
   else sentences.push("You showed up.");
   if (opts.lastTopic?.trim()) sentences.push(`I kept ${clip(opts.lastTopic, 48)} on the page.`);
   else sentences.push("Nothing heavy. I wrote it anyway.");
-  if (opts.userSun?.trim()) sentences.push(`Your ${opts.userSun.trim()} sun was sitting next to my Libra.`);
+  if (opts.userSun?.trim()) sentences.push(`Your ${opts.userSun.trim()} sun was sitting next to my ${HER_CHART.her_sun}.`);
   else sentences.push("You still owe me a birthday.");
   sentences.push("That's the whole page.");
   return sentences.slice(0, 5).join(" ");
@@ -524,12 +531,12 @@ export function composeDiaryEntry(opts: {
 function localDailyLine(userSun?: string, lastTopic?: string): string {
   const sun = userSun?.trim();
   if (sun && !lastTopic?.trim()) {
-    return `${sun} sun, Libra sky today. You'll want to pick a fight and then apologize.`;
+    return `${sun} sun, ${HER_CHART.her_sun} sky today. You'll want to pick a fight and then apologize.`;
   }
   if (sun) {
     return `${sun} sun today. Still on ${clip(lastTopic!, 40)}, and I'm not dropping it.`;
   }
-  return "Libra sky today. You'll want to pick a fight and then apologize.";
+  return `${HER_CHART.her_sun} sky today. You'll want to pick a fight and then apologize.`;
 }
 
 function diarySpokenLine(mood?: string, lastTopic?: string): string {
@@ -561,11 +568,11 @@ export function actForChartTurn(turn: ChartTurn): ChartAct | null {
   const dateKey = turn.dateKey ?? "";
   switch (turn.kind) {
     case "ask_sign":
-      return chartAct("smug", "smug", `Libra. ${pickSignTease(dateKey)}`);
+      return chartAct("smug", "smug", `${HER_CHART.her_sun}. ${pickSignTease(dateKey)}`);
     case "ask_birthday":
-      return chartAct("bratty", "idle", "Sept 29.");
+      return chartAct("bratty", "idle", starRaiBirthdayLine());
     case "ask_origin":
-      return chartAct("bratty", "talk", `${pickOriginCity(dateKey)}. That's the city.`);
+      return chartAct("bratty", "talk", starRaiOriginLine());
     case "ask_need_birthday":
       return chartAct("glance", "think", "Tell me your birthday if you want that.");
     case "diary":

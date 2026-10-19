@@ -169,7 +169,8 @@ describe("clock ask path + grok composition", () => {
     assert.match(system, /^hour: 1$/m);
     assert.match(system, /MEMORY FACTS\nname: Tylo/);
     assert.match(system, /Do not invent Fukuoka \/ Japan local/);
-    assert.doesNotMatch(system.slice(RAI_SYSTEM.length), /Osaka|03:33|Asia\/Tokyo|birth_place/);
+    const clock = system.slice(system.indexOf("\nCLOCK\n"));
+    assert.doesNotMatch(clock, /Osaka|03:33|Asia\/Tokyo|birth_place/);
   });
 
   it("answers the ask from the local brain with the real hour", () => {
