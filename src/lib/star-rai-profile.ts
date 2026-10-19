@@ -59,11 +59,35 @@ const BIRTH_YEAR = 2004;
 const BIRTH_MONTH = 9;
 const BIRTH_DAY = 3;
 
-/** Whole years since 2004-09-03, using the UTC calendar date of `now`. */
-export function starRaiAge(now: Date): number {
-  const year = now.getUTCFullYear();
-  const month = now.getUTCMonth() + 1;
-  const day = now.getUTCDate();
+/** Device IANA zone, else the same Chicago fallback Chart uses. Never UTC. */
+function deviceTimeZone(): string {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz && tz.trim()) return tz.trim();
+  } catch {
+    /* ignore */
+  }
+  return "America/Chicago";
+}
+
+function localCalendar(now: Date, timeZone?: string): { year: number; month: number; day: number } {
+  const tz = timeZone?.trim() || deviceTimeZone();
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const num = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((p) => p.type === type)?.value);
+  return { year: num("year"), month: num("month"), day: num("day") };
+}
+
+/**
+ * Whole years since 2004-09-03 on the device-local calendar, same zone as Chart.
+ * `timeZone` is for tests. Callers omit it and get the device zone.
+ */
+export function starRaiAge(now: Date, timeZone?: string): number {
+  const { year, month, day } = localCalendar(now, timeZone);
   let age = year - BIRTH_YEAR;
   if (month < BIRTH_MONTH || (month === BIRTH_MONTH && day < BIRTH_DAY)) age -= 1;
   return age;
@@ -115,31 +139,43 @@ export function starRaiPersonaBlock(now: Date = new Date()): string {
   ].join("\n");
 }
 
+/** The whole message, minus trailing punctuation. Not a substring search. */
+function profileQuestion(userText: string): string {
+  return userText.replace(/\s+/g, " ").trim().replace(/[.!?~]+$/g, "").trim().toLowerCase();
+}
+
 /**
  * Offline answer when they ask her about herself.
+ * The message has to be the question. "about me", "to do", "at your age",
+ * and "your personality is" are statements about them, not her bio.
  * Null leaves the pose-keyed local brain alone. No JSON, no stage directions.
  */
 export function profileLocalLine(userText: string, now: Date = new Date()): string | null {
-  const t = userText.replace(/\s+/g, " ").trim();
-  if (!t) return null;
-  if (/\b(?:favorite|favourite) dessert\b/i.test(t)) return "Tiramisu.";
-  if (/\b(?:favorite|favourite) (?:food|meal)\b|\bwhat do you eat\b/i.test(t)) {
+  const q = profileQuestion(userText);
+  if (!q) return null;
+  if (/\babout me\b/.test(q) || /\bto do\b/.test(q) || /\bat your age\b/.test(q) || /\byour personality is\b/.test(q)) {
+    return null;
+  }
+  if (/^(?:what(?:'s| is) your (?:favorite|favourite) dessert)$/.test(q)) return "Tiramisu.";
+  if (/^(?:what(?:'s| is) your (?:favorite|favourite) (?:food|meal)|what do you eat)$/.test(q)) {
     return "Tonkotsu ramen. Brussels sprouts on it.";
   }
-  if (/\b(?:favorite|favourite) music\b|\bwhat music do you like\b/i.test(t)) return "80s Japanese pop.";
-  if (/\bhow old are you\b|\bwhat(?:'s| is) your age\b|\byour age\b/i.test(t)) {
+  if (/^(?:what(?:'s| is) your (?:favorite|favourite) music|what music do you like)$/.test(q)) {
+    return "80s Japanese pop.";
+  }
+  if (/^(?:how old are you|what(?:'s| is) your age)$/.test(q)) {
     return `${starRaiAge(now)}. Don't make it a thing~`;
   }
-  if (/\bhow tall are you\b|\bwhat(?:'s| is) your height\b|\byour height\b/i.test(t)) {
+  if (/^(?:how tall are you|what(?:'s| is) your height)$/.test(q)) {
     return `5'8". Long legs. That's the whole answer.`;
   }
-  if (/\bwhat do you (?:hate|dislike)\b|\bwhat (?:don't|do not) you like\b|\byour dislikes\b|\bhow do you feel about clowns\b/i.test(t)) {
+  if (/^(?:what do you (?:hate|dislike)|what (?:don't|do not) you like|what are your dislikes|how do you feel about clowns)$/.test(q)) {
     return "Clowns. Smelly things. Cheap clothes. Open-ended questions.";
   }
-  if (/\bwhat do you (?:like|love)\b|\bwhat are you into\b|\byour likes\b/i.test(t)) {
+  if (/^(?:what do you (?:like|love)|what are you into|what are your likes)$/.test(q)) {
     return "Cats, beaches, martial arts. Honest people. Baggy clothes. Pick one.";
   }
-  if (/\bwhat are you like\b|\byour personality\b/i.test(t)) {
+  if (/^(?:what are you like|what(?:'s| is) your personality)$/.test(q)) {
     return "Bratty. Kind if you're straight with me.";
   }
   return null;

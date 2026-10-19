@@ -60,16 +60,24 @@ describe("Star Rai profile", () => {
     assert.match(doc, /\*\*Birthplace\*\*: Osaka, Japan/);
     assert.match(doc, /At age 12, the family moved to the United States/);
     assert.match(doc, /\*\*Skin\*\*: Tan with a warm tone/);
-    assert.match(doc, /black hair with an ahoge, tan skin, and sharp amber eyes/);
+    assert.match(doc, /black hair with an ahoge, and sharp amber eyes/);
+    assert.doesNotMatch(doc, /tan skin/i);
     assert.match(doc, /Star-shaped earrings/);
     assert.match(doc, /## Summary\nStar Rai is a Japanese-American woman born in Osaka at 3:33 AM on September 3, 2004\./);
   });
 
   it("computes age 22 on 2026-10-18 and 21 the day before her birthday", () => {
-    assert.equal(starRaiAge(ON_2026_10_18), 22);
-    assert.equal(starRaiAge(new Date(Date.UTC(2026, 8, 3))), 22);
-    assert.equal(starRaiAge(new Date(Date.UTC(2026, 8, 2))), 21);
-    assert.equal(starRaiAge(new Date(Date.UTC(2004, 8, 3))), 0);
+    assert.equal(starRaiAge(new Date(2026, 9, 18, 15)), 22);
+    assert.equal(starRaiAge(new Date(2004, 8, 3, 12)), 0);
+  });
+
+  it("ages on the device-local calendar: 21 on Sep 2, 22 on Sep 3", () => {
+    // Both instants are Sep 3 in UTC. Chicago (CDT, UTC-5) is still Sep 2 at 23:30.
+    const sep2Local = new Date("2026-09-03T04:30:00Z");
+    const sep3Local = new Date("2026-09-03T05:30:00Z");
+    assert.equal(starRaiAge(sep2Local, "America/Chicago"), 21);
+    assert.equal(starRaiAge(sep3Local, "America/Chicago"), 22);
+    assert.equal(starRaiAge(sep2Local, "UTC"), 22);
   });
 
   it("puts the key facts in the Grok persona, with the computed age", () => {
@@ -112,6 +120,15 @@ describe("Star Rai profile", () => {
     assert.match(profileLocalLine("what do you hate") ?? "", /Open-ended questions/);
     assert.match(profileLocalLine("what's your favorite food") ?? "", /Tonkotsu ramen/);
     assert.equal(profileLocalLine("I like cats"), null);
+    assert.equal(profileLocalLine("what do you like about me"), null);
+    assert.equal(profileLocalLine("what do you like to do on weekends"), null);
+    assert.equal(profileLocalLine("at your age you should know better"), null);
+    assert.equal(profileLocalLine("your personality is loud"), null);
+
+    const aboutMe = composeAct([{ role: "user", content: "what do you like about me" }], "", "idle");
+    assert.notEqual(aboutMe.line, "Cats, beaches, martial arts. Honest people. Baggy clothes. Pick one.");
+    const weekends = composeAct([{ role: "user", content: "what do you like to do on weekends" }], "", "idle");
+    assert.notEqual(weekends.line, "Cats, beaches, martial arts. Honest people. Baggy clothes. Pick one.");
 
     const act = composeAct([{ role: "user", content: "what are you like" }], "", "idle");
     assert.equal(act.line, "Bratty. Kind if you're straight with me.");

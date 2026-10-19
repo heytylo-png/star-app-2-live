@@ -174,6 +174,12 @@ const SIGN_TEASES = [
   "That's the glance.",
 ];
 
+/** Old diary pages said "my Libra". Her sun is Virgo. Don't put both in one CHART block. */
+function rewriteStaleHerSun(text: string): string {
+  if (!text) return "";
+  return text.replace(/\bmy Libra\b/gi, `my ${HER_CHART.her_sun}`);
+}
+
 function clip(value: string, max: number): string {
   const t = value.replace(/\s+/g, " ").trim();
   if (t.length <= max) return t;
@@ -402,7 +408,7 @@ export function formatChartFactsBlock(opts: {
   const lines = ["CHART", `today_date: ${opts.todayDate}`, `her_sun: ${HER_CHART.her_sun}`];
   if (opts.userSun?.trim()) lines.push(`user_sun: ${opts.userSun.trim()}`);
   if (opts.lastTopic?.trim()) lines.push(`last_topic: ${clip(opts.lastTopic, 72)}`);
-  const diary = opts.diaryNote?.replace(/\s+/g, " ").trim();
+  const diary = rewriteStaleHerSun(opts.diaryNote?.replace(/\s+/g, " ").trim() ?? "");
   if (diary) lines.push(`diary: ${clip(diary, 280)}`);
   lines.push(...formatSkyFactLines(opts.sky));
   lines.push("");

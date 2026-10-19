@@ -21,7 +21,7 @@ describe("her-day Grok path", () => {
   it("keeps a valid Grok line as her-day beats", () => {
     const local = localHerDay({ todayDate: "2026-09-19", sky: SKY });
     const grok = applyHerDayGrokRaw(
-      '{"emotion":"smug","pose":"think","line":"Virgo over my Libra air. Gemini moon — keep yours."}',
+      '{"emotion":"smug","pose":"think","line":"Virgo on my hour. Gemini moon — keep yours."}',
       local,
       SKY,
     );

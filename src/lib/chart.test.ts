@@ -421,6 +421,9 @@ describe("chart ask path", () => {
     assert.equal(turn.kind, "daily");
     assert.equal(turn.lastTopic, undefined);
     assert.match(turn.factsBlock ?? "", /^diary: You sounded tired/m);
+    assert.match(turn.factsBlock ?? "", /next to my Virgo/);
+    assert.doesNotMatch(turn.factsBlock ?? "", /my Libra/i);
+    assert.match(turn.factsBlock ?? "", /^her_sun: Virgo$/m);
     assert.doesNotMatch(handoff.draft, /tired|diary/);
     const act = actForChartTurn(turn)!;
     assert.equal(act.line, "Aries sun, Virgo sky today. You'll want to pick a fight and then apologize.");
@@ -535,6 +538,17 @@ describe("chart ask path", () => {
     const need = app.slice(needAt, needAt + 180);
     assert.match(need, /markAskedBirthday\(\)/);
     assert.doesNotMatch(need, /setBirthOpen|birthOpen|ChartSetupCard/);
+  });
+
+  it("rewrites a saved my Libra diary so it does not sit next to her_sun Virgo", () => {
+    const block = formatChartFactsBlock({
+      todayDate: "2026-09-19",
+      userSun: "Aries",
+      diaryNote: "You sounded tired. Your Aries sun was sitting next to my Libra. That's the whole page.",
+    });
+    assert.match(block, /^her_sun: Virgo$/m);
+    assert.match(block, /^diary: You sounded tired\. Your Aries sun was sitting next to my Virgo\. That's the whole page\.$/m);
+    assert.doesNotMatch(block, /my Libra/i);
   });
 
   it("filters banned chart phrasing and caps an essay to one beat", () => {
