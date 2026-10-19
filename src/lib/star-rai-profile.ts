@@ -17,7 +17,7 @@ export const STAR_RAI = {
     "Slim and athletic / lean. Long legs, narrow waist, lightly toned, modest proportions. Good posture with a ready, slightly tense stance.",
   hair: "Black, medium-length, somewhat messy, with a prominent single ahoge (cowlick).",
   eyes: "Sharp amber / orange-gold.",
-  skin: "Fair with a light warm tone.",
+  skin: "Tan with a warm tone.",
   earrings: "Star-shaped earrings.",
   markings: "No visible scars or markings in the primary school-uniform design.",
   uniform:

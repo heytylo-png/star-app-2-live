@@ -33,7 +33,7 @@ describe("Star Rai profile", () => {
     assert.match(STAR_RAI.build, /Slim and athletic/);
     assert.match(STAR_RAI.hair, /ahoge/);
     assert.match(STAR_RAI.eyes, /amber/);
-    assert.match(STAR_RAI.skin, /Fair/);
+    assert.match(STAR_RAI.skin, /Tan with a warm tone/);
     assert.match(STAR_RAI.earrings, /Star-shaped/);
     assert.match(STAR_RAI.uniform, /red bow/);
     assert.equal(STAR_RAI.yearsInOsaka, 12);
@@ -59,7 +59,8 @@ describe("Star Rai profile", () => {
     assert.match(doc, /\*\*Birth Time\*\*: 3:33 AM/);
     assert.match(doc, /\*\*Birthplace\*\*: Osaka, Japan/);
     assert.match(doc, /At age 12, the family moved to the United States/);
-    assert.match(doc, /Fair with a light warm tone/);
+    assert.match(doc, /\*\*Skin\*\*: Tan with a warm tone/);
+    assert.match(doc, /black hair with an ahoge, tan skin, and sharp amber eyes/);
     assert.match(doc, /Star-shaped earrings/);
     assert.match(doc, /## Summary\nStar Rai is a Japanese-American woman born in Osaka at 3:33 AM on September 3, 2004\./);
   });
@@ -78,6 +79,7 @@ describe("Star Rai profile", () => {
     assert.match(block, /2004-09-03 03:33 Osaka, Japan/);
     assert.match(block, /^Age: 22 \(computed from the birthday\)$/m);
     assert.match(block, /^Sun: Virgo$/m);
+    assert.match(block, /Tan with a warm tone/);
     assert.match(block, /Cats/);
     assert.match(block, /Beaches/);
     assert.match(block, /Martial arts/);
