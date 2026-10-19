@@ -174,10 +174,10 @@ const SIGN_TEASES = [
   "That's the glance.",
 ];
 
-/** Old diary pages said "my Libra". Her sun is Virgo. Don't put both in one CHART block. */
+/** Old diary pages said "next to my Libra". Only that phrase. Other "my Libra" text stays. */
 function rewriteStaleHerSun(text: string): string {
   if (!text) return "";
-  return text.replace(/\bmy Libra\b/gi, `my ${HER_CHART.her_sun}`);
+  return text.replace(/\bnext to my Libra\b/gi, `next to my ${HER_CHART.her_sun}`);
 }
 
 function clip(value: string, max: number): string {

@@ -119,6 +119,8 @@ describe("Star Rai profile", () => {
     assert.match(profileLocalLine("what do you hate") ?? "", /Cheap clothes/);
     assert.match(profileLocalLine("what do you hate") ?? "", /Open-ended questions/);
     assert.match(profileLocalLine("what's your favorite food") ?? "", /Tonkotsu ramen/);
+    assert.match(profileLocalLine("what\u2019s your favorite food") ?? "", /Tonkotsu ramen/);
+    assert.match(profileLocalLine("whats your favorite food") ?? "", /Tonkotsu ramen/);
     assert.equal(profileLocalLine("I like cats"), null);
     assert.equal(profileLocalLine("what do you like about me"), null);
     assert.equal(profileLocalLine("what do you like to do on weekends"), null);

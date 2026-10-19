@@ -141,7 +141,14 @@ export function starRaiPersonaBlock(now: Date = new Date()): string {
 
 /** The whole message, minus trailing punctuation. Not a substring search. */
 function profileQuestion(userText: string): string {
-  return userText.replace(/\s+/g, " ").trim().replace(/[.!?~]+$/g, "").trim().toLowerCase();
+  return userText
+    .replace(/\u2019/g, "'")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[.!?~]+$/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/\bwhats\b/g, "what's");
 }
 
 /**

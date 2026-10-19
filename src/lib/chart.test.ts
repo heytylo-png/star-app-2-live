@@ -551,6 +551,16 @@ describe("chart ask path", () => {
     assert.doesNotMatch(block, /my Libra/i);
   });
 
+  it("leaves other my Libra text alone", () => {
+    const block = formatChartFactsBlock({
+      todayDate: "2026-09-19",
+      diaryNote: "I wrote about my libra boyfriend. Your Aries sun was sitting next to my Libra.",
+    });
+    assert.match(block, /my libra boyfriend/);
+    assert.match(block, /next to my Virgo/);
+    assert.doesNotMatch(block, /next to my Libra/i);
+  });
+
   it("filters banned chart phrasing and caps an essay to one beat", () => {
     const banned = shapeChartSpokenLine(
       "Your reading for today is a long natal wheel essay. Mercury is loud. Then another sentence.",
