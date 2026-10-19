@@ -98,14 +98,14 @@ now_playing: lo-fi
 mood_tag: cozy
 ```
 
-Empty keys are omitted. `role` is sent only if they stated one (never a default cameraman). Meetup Chart (`date` / optional `time` / `place`) and Life (`now_playing` / `mood_tag`) are omitted unless a meetup or session actually filled them. Natal Chart v1 keys (`user_birth_date`, optional `user_birth_time` / `user_birth_place`, `user_sun`, `chart_source`) are omitted until first-launch setup (or a later birthday) fills them. `user_rising` is never sent. Her lore bio stays in the voice card under LORE USE — it is not a topic list.
+Empty keys are omitted. `role` is sent only if they stated one (never a default cameraman). Meetup Chart (`date` / optional `time` / `place`) and Life (`now_playing` / `mood_tag`) are omitted unless a meetup or session actually filled them. Natal Chart v1 keys (`user_birth_date`, optional `user_birth_time` / `user_birth_place`, `user_sun`, `chart_source`) are omitted until first-launch setup (or a later birthday) fills them. `user_rising` is never sent. Her bio is the PROFILE block (`docs/STAR_RAI_PROFILE.md`). LORE USE keeps it background, not a topic list.
 
 When Chart v1 **fires** (once per local day while Chat is already in use, or when they asked), a separate **CHART** block is appended after MEMORY FACTS. Cheap tropical sun/moon from **client-side** `astronomy-engine` (no Worker `/sky`, no paid horoscope API) fill extra keys when the ephemeris works — fail soft omits them:
 
 ```
 CHART
 today_date: 2026-09-19
-her_sun: Libra
+her_sun: Virgo
 user_sun: Aries
 last_topic: rough day
 sun_sign_today: Virgo
@@ -124,7 +124,7 @@ Sky keys are facts, not a topic. Do not invent Fukuoka local sky.
 
 1. Open the live app (after this ships: **https://heytylo-png.github.io/star-app-2-live/**) in Chrome.
 2. Stay on **Chat** (beige long-shot stage unchanged). Optional: Settings → paste xAI key.
-3. Tap **Chart**. You should see a sparse daily card over the stage: weekday/date, one short Star Rai theme line, Do / Don't chips, a dedicated **Her day** section (Libra natal + today’s sun/moon/phase + 1–3 first-person beats about *her* day), then labels for You / Her / Sun / Moon / Phase. Birth date/time/place is collapsed — not the first screen. No natal wheel. No “your reading for today is.”
+3. Tap **Chart**. You should see a sparse daily card over the stage: weekday/date, one short Star Rai theme line, Do / Don't chips, a dedicated **Her day** section (Virgo natal + today’s sun/moon/phase + 1–3 first-person beats about *her* day), then labels for You / Her / Sun / Moon / Phase. Birth date/time/place is collapsed — not the first screen. No natal wheel. No “your reading for today is.”
 4. Expand **Birth**, save a date if you want `user_sun`. Chart does not auto-post a reading into Chat. Her-day copy is local immediately; with a key it may refresh once per local day via Grok and fail soft.
 5. Back on **Chat**, send a normal line (or “horoscope today” if you skipped a birthday). With a key, Grok tints **one** line using the CHART/SKY facts. Without a key, local brain still tints. She must not list planets or invent Fukuoka sky.
 6. This path is **client-side** (`src/lib/sky.ts` + `astronomy-engine`). **No `wrangler deploy`.** The Worker under `worker/` remains the optional xAI CORS proxy only.

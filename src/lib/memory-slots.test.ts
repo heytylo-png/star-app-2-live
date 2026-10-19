@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import { extractMemCandidate } from "./brain.ts";
+import { starRaiPersonaBlock } from "./star-rai-profile.ts";
 import { MEMORY_SLOTS_CONTRACT, RAI_SYSTEM } from "./generated/star-rai-artifacts.ts";
 import {
   applySlotPatch,
@@ -332,25 +333,32 @@ describe("extractMemCandidate name memories", () => {
 });
 
 describe("composeGrokSystem", () => {
-  it("is voice card plus filled slots only", () => {
+  const now = new Date(Date.UTC(2026, 9, 18));
+
+  it("is voice card plus PROFILE plus filled slots only", () => {
     const facts = formatMemoryFacts({ name: "Tylo", last_choice: "wave" }, { relationship: "Familiar" });
-    const system = composeGrokSystem(RAI_SYSTEM, facts);
+    const profile = starRaiPersonaBlock(now);
+    const system = composeGrokSystem(RAI_SYSTEM, facts, now);
     assert.ok(system.startsWith(RAI_SYSTEM));
     assert.ok(system.endsWith(facts));
-    assert.equal(system, `${RAI_SYSTEM}\n\n${facts}`);
+    assert.equal(system, `${RAI_SYSTEM}\n\n${profile}\n\n${facts}`);
     assert.match(system, /STAR RAI — VOICE CARD/);
     assert.match(system, /MEMORY FACTS\nname: Tylo\nlast_choice: wave\nrelationship: Familiar/);
     assert.doesNotMatch(system, /Known facts about this person/);
     assert.doesNotMatch(system, /Tone: Keep some distance/);
-    const factsPart = system.slice(RAI_SYSTEM.length);
+    const factsPart = system.slice(system.lastIndexOf("MEMORY FACTS"));
     assert.doesNotMatch(factsPart, /Fukuoka|Osaka|Libra/);
+    assert.match(profile, /Osaka/);
+    assert.match(profile, /Virgo/);
+    assert.match(profile, /Age: 22/);
     assert.match(RAI_SYSTEM, /LORE USE/);
   });
 
   it("does not append a blank facts block", () => {
-    assert.equal(composeGrokSystem(RAI_SYSTEM, ""), RAI_SYSTEM);
-    assert.equal(composeGrokSystem(RAI_SYSTEM, "  "), RAI_SYSTEM);
-    assert.equal(composeGrokSystem(RAI_SYSTEM, null), RAI_SYSTEM);
+    const head = `${RAI_SYSTEM}\n\n${starRaiPersonaBlock(now)}`;
+    assert.equal(composeGrokSystem(RAI_SYSTEM, "", now), head);
+    assert.equal(composeGrokSystem(RAI_SYSTEM, "  ", now), head);
+    assert.equal(composeGrokSystem(RAI_SYSTEM, null, now), head);
   });
 });
 

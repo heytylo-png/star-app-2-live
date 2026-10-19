@@ -8,6 +8,7 @@
  */
 
 import { EclipticGeoMoon, MoonPhase, SunPosition } from "astronomy-engine";
+import { STAR_RAI } from "./star-rai-profile.ts";
 
 export const TROPICAL_SIGN_ORDER = [
   "Aries",
@@ -242,7 +243,7 @@ const DONT_BANK = [
 
 const HER_DAY_BANK = [
   "That's my hour. Yours stays the glance.",
-  "Sky moved. I'm still air.",
+  "Sky moved. I'm still here.",
   "Don't make me recap the sky. This is mine.",
   "Natal sits. Today isn't a speech.",
   "Quiet on my side. Not a report.",
@@ -263,16 +264,18 @@ function themeFromFacts(input: {
   moonSignToday?: string;
   moonPhase?: string;
   userSun?: string;
+  herSun?: string;
 }): string {
   const sun = input.sunSignToday?.trim();
   const moon = input.moonSignToday?.trim();
   const phase = input.moonPhase?.trim();
   const user = input.userSun?.trim();
+  const hers = input.herSun?.trim() || STAR_RAI.sunSign;
   const slot = hashString(input.seed) % 6;
 
   if (slot === 0 && sun && moon) return `${sun} sun, ${moon} moon. One beat.`;
   if (slot === 1 && phase) return `${phase}. Keep the glance short.`;
-  if (slot === 2 && user) return `${user} next to Libra air. Don't make it an essay.`;
+  if (slot === 2 && user) return `${user} next to ${hers}. Don't make it an essay.`;
   if (slot === 3 && moon) return `${moon} moon. I'm not listing the rest.`;
   if (slot === 4 && sun) return `${sun} overhead. You're still the topic.`;
   return pick(THEME_BANK, input.seed);
@@ -291,7 +294,7 @@ export type ComposeSkyDashboardInput = {
  * Opening Chart must not auto-post a reading to Chat. Fail soft if sky is missing.
  */
 export function composeSkyDashboard(input: ComposeSkyDashboardInput): SkyDashboard {
-  const herSun = input.herSun?.trim() || "Libra";
+  const herSun = input.herSun?.trim() || STAR_RAI.sunSign;
   const userSun = input.userSun?.trim();
   const sky = input.sky ?? null;
   const { weekday, dateLine } = skyDateParts(input.todayDate, input.weekday);
@@ -319,6 +322,7 @@ export function composeSkyDashboard(input: ComposeSkyDashboardInput): SkyDashboa
           moonSignToday: sky?.moonSignToday,
           moonPhase: sky?.moonPhase,
           userSun,
+          herSun,
         })
       : "Sky's quiet. Birthday still sits if you want it.",
     96,
@@ -364,13 +368,13 @@ function herBeatsFromFacts(input: {
 
   if (sun && sun !== herSun) {
     const leads = [
-      `${sun} over ${herSun} air. That's on me today.`,
+      `${sun} over ${herSun}. That's on me today.`,
       `${herSun} natal. ${sun} overhead — I'm not writing an essay.`,
       `${sun} sun on my hour. ${herSun} still sits.`,
     ] as const;
     beats.push(pick(leads, `${input.seed}|sun`));
   } else if (sun) {
-    beats.push(`${herSun} under ${sun}. Same air. Keep it short.`);
+    beats.push(`${herSun} under ${sun}. Same sign. Keep it short.`);
   } else {
     beats.push(`${herSun}. That's natal. Today still sits.`);
   }
@@ -398,7 +402,7 @@ export function composeHerDay(input: {
   herSun?: string;
   source?: HerDaySource;
 }): HerDayCopy {
-  const herSun = input.herSun?.trim() || "Libra";
+  const herSun = input.herSun?.trim() || STAR_RAI.sunSign;
   const sky = input.sky ?? null;
   const seed = [
     input.todayDate,
@@ -449,7 +453,7 @@ export function herDayFromBeats(
   beats: string[],
   input: { natal?: string; sky?: SkyFacts | null; source: HerDaySource },
 ): HerDayCopy {
-  const natal = input.natal?.trim() || "Libra";
+  const natal = input.natal?.trim() || STAR_RAI.sunSign;
   const copy: HerDayCopy = {
     heading: "Her day",
     natal,
