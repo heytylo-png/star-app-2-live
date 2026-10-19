@@ -100,7 +100,8 @@ describe("client-side ephemeris", () => {
     assert.equal(sky!.sunSignToday, "Virgo");
     assert.ok(sky!.moonSignToday);
     assert.ok(sky!.moonPhase);
-    assert.notEqual(sky!.sunSignToday, HER_CHART.her_sun);
+    // Sep 19 and her Sep 3 birthday are both tropical Virgo. Today's sky is still this instant.
+    assert.equal(sky!.sunSignToday, HER_CHART.her_sun);
     const lines = formatSkyFactLines(sky);
     assert.ok(lines.some((l) => l.startsWith("sun_sign_today:")));
     assert.doesNotMatch(lines.join("\n"), /Fukuoka|Osaka|Asia\/Tokyo|rising|03:33/i);
@@ -128,7 +129,7 @@ describe("CHART/SKY grok block", () => {
     assert.equal(withSky.kind, "daily");
     assert.match(withSky.factsBlock ?? "", /^CHART$/m);
     assert.match(withSky.factsBlock ?? "", /^today_date: 2026-09-19$/m);
-    assert.match(withSky.factsBlock ?? "", /^her_sun: Libra$/m);
+    assert.match(withSky.factsBlock ?? "", /^her_sun: Virgo$/m);
     assert.match(withSky.factsBlock ?? "", /^user_sun: Aries$/m);
     assert.match(withSky.factsBlock ?? "", /^sun_sign_today: Virgo$/m);
     assert.match(withSky.factsBlock ?? "", /^moon_sign_today: /m);
@@ -142,7 +143,7 @@ describe("CHART/SKY grok block", () => {
       userSun: "Aries",
       sky: null,
     });
-    assert.match(omitted, /^CHART\ntoday_date: 2026-09-19\nher_sun: Libra\nuser_sun: Aries\n\n/m);
+    assert.match(omitted, /^CHART\ntoday_date: 2026-09-19\nher_sun: Virgo\nuser_sun: Aries\n\n/m);
     assert.doesNotMatch(omitted, /sun_sign_today|moon_sign_today|moon_phase/);
 
     const forced = resolveChartTurn({
@@ -228,7 +229,7 @@ describe("sparse Chart dashboard copy", () => {
     assert.equal(dash.dontLine, undefined);
     assert.match(dash.theme, /quiet/i);
     assert.equal(dash.labels.some((l) => l.key === "sun" || l.key === "moon"), false);
-    assert.equal(dash.labels.find((l) => l.key === "her")?.value, "Libra");
+    assert.equal(dash.labels.find((l) => l.key === "her")?.value, "Virgo");
     assert.equal(dash.labels.some((l) => l.key === "you"), false);
   });
 });
@@ -240,14 +241,14 @@ describe("her day copy", () => {
     moonPhase: "Waning Crescent" as const,
   };
 
-  it("describes Star Rai's day from natal Libra + today's sky, not user_sun", () => {
+  it("describes Star Rai's day from natal Virgo + today's sky, not user_sun", () => {
     const her = composeHerDay({
       todayDate: "2026-09-19",
       herSun: HER_CHART.her_sun,
       sky,
     });
     assert.equal(her.heading, "Her day");
-    assert.equal(her.natal, "Libra");
+    assert.equal(her.natal, "Virgo");
     assert.equal(her.source, "local");
     assert.equal(her.skyLine, "Virgo sun · Gemini moon · Waning Crescent");
     assert.ok(her.beats.length >= 1 && her.beats.length <= 3);
@@ -273,10 +274,10 @@ describe("her day copy", () => {
 
   it("fails soft when sky is missing and never dumps bio", () => {
     const her = composeHerDay({ todayDate: "2026-09-19", sky: null });
-    assert.equal(her.natal, "Libra");
+    assert.equal(her.natal, "Virgo");
     assert.equal(her.skyLine, undefined);
     assert.ok(her.beats.length >= 1);
-    assert.match(her.beats.join(" "), /Libra/);
+    assert.match(her.beats.join(" "), /Virgo/);
     assert.doesNotMatch(her.beats.join(" "), /Fukuoka|03:33|mercury/i);
   });
 

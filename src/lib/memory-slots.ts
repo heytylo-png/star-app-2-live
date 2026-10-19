@@ -15,6 +15,7 @@ import {
   type LifeSlots,
 } from "./life.ts";
 import { namedPoseFromText, type PoseId } from "./rai.ts";
+import { starRaiPersonaBlock } from "./star-rai-profile.ts";
 
 export type { LifeMoodTag, LifeSlots } from "./life.ts";
 
@@ -480,9 +481,14 @@ export function formatMemoryFacts(
   return `MEMORY FACTS\n${lines.join("\n")}`;
 }
 
-/** Voice card first; filled slots only after it. */
-export function composeGrokSystem(voiceCard: string, factsBlock?: string | null): string {
+/** Voice card, then PROFILE, then filled slots only. */
+export function composeGrokSystem(
+  voiceCard: string,
+  factsBlock?: string | null,
+  now: Date = new Date(),
+): string {
+  const head = `${voiceCard}\n\n${starRaiPersonaBlock(now)}`;
   const extra = factsBlock?.trim();
-  if (!extra) return voiceCard;
-  return `${voiceCard}\n\n${extra}`;
+  if (!extra) return head;
+  return `${head}\n\n${extra}`;
 }

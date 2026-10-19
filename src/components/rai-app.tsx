@@ -67,6 +67,7 @@ import {
   subscribeSmugReleaseLanded,
 } from "@/lib/pose-phase";
 import { useMemoryStore } from "@/lib/memory-store";
+import { starRaiShortBio } from "@/lib/star-rai-profile";
 import {
   REMEMBER_TOAST_MS,
   emptyRememberQueue,
@@ -2547,6 +2548,9 @@ function RaiReady() {
             </Button>
           </div>
           <div className="space-y-5 overflow-y-auto p-4">
+            <p data-star-rai-bio className="text-xs leading-relaxed text-muted">
+              {starRaiShortBio()}
+            </p>
             <div>
               <label htmlFor="grok-key" className="text-sm font-medium">
                 Grok / xAI key

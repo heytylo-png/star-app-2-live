@@ -12,6 +12,7 @@ import {
   type ResolveSpokenPoseOpts,
 } from "./rai.ts";
 import { extractName } from "./memory-slots.ts";
+import { profileLocalLine } from "./star-rai-profile.ts";
 import { filterEchoedLine, isBareGreeting, localTrackAct } from "./track.ts";
 
 export type BrainMessage = { role: "user" | "assistant"; content: string };
@@ -210,6 +211,17 @@ export function composeAct(
     const mem = extractMemCandidate(lastUser);
     const act: BrainAct = { emotion: chartAct.emotion, line: chartAct.line };
     if (chartAct.pose) act.pose = chartAct.pose;
+    if (mem?.length) act.mem = mem;
+    return finish(tintSpokenAct(act, tintCtx));
+  }
+
+  const profileLine =
+    !preferChart && !preferClock && !preferLife && (!chartTurn || chartTurn.kind === "none")
+      ? profileLocalLine(lastUser)
+      : null;
+  if (profileLine) {
+    const mem = extractMemCandidate(lastUser);
+    const act: BrainAct = { emotion: "bratty", line: profileLine };
     if (mem?.length) act.mem = mem;
     return finish(tintSpokenAct(act, tintCtx));
   }
