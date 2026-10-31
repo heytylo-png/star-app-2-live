@@ -1,0 +1,4372 @@
+{
+  "name": "star_rai_tripo_hairalt_v3_5_1_runtime_variant_A",
+  "note": "variant A: v3.5 joints + the v3.4 tip hitRadius (back_a_05 5.1, back_b_05 8.0, back_center_05 17.5, layer_b_04 10.6 mm); everything else = the v3.5 B spring_runtime | v3.5.1: chain-link rest offsets recomputed on the v3.5 joints",
+  "bones_json": "star_rai_tripo_hairalt_v3_5_1_blender_bones.json",
+  "bones_json_sha256": "9b18498bf5486da8afd73fdcadfacaa3fefa219b7ec278d1dbe06860af5e2e20",
+  "spring_runtime": {
+    "format": "VRMC_springBone-1.0 style (proposal for CAD bones JSON); units native Tripo metres (x 1.6554 = 1.62 m world)",
+    "source": {
+      "cad_bones_json": "/workspace/blendbro/out/hairalt_rig_v3_2_on_v3_3/inputs/star_rai_tripo_hairalt_v3_2_blender_bones.json",
+      "cad_bones_sha256": "466ad026e2530fb7f478f917ef752cbf314c64dbe0e4f749289221cea39ce63c",
+      "rig_blend": "/workspace/blendbro/out/hairalt_rig_v3_2_on_v3_3/head_hair_alt_v3_3_rigged_hairalt_v3_2.blend",
+      "mesh": "hair_alt_long_v3_3",
+      "sim_report": "/workspace/blendbro/out/hairalt_rig_v3_2_on_v3_3/motion/spring_motion_vcaA3fit.json"
+    },
+    "specVersion": "1.0",
+    "colliders": [
+      {
+        "name": "collider_neck",
+        "node": "neck",
+        "shape": {
+          "capsule": {
+            "offset": [
+              0.0,
+              0.023444,
+              -0.005663
+            ],
+            "tail": [
+              0.0,
+              0.03752,
+              -0.006347
+            ],
+            "radius": 0.021
+          }
+        }
+      },
+      {
+        "name": "collider_upper_back_left",
+        "node": "upper_chest",
+        "shape": {
+          "capsule": {
+            "offset": [
+              0.0,
+              -0.02037,
+              -0.010262
+            ],
+            "tail": [
+              0.02,
+              -0.024189,
+              -0.012961
+            ],
+            "radius": 0.03
+          }
+        }
+      },
+      {
+        "name": "collider_upper_back_right",
+        "node": "upper_chest",
+        "shape": {
+          "capsule": {
+            "offset": [
+              0.0,
+              -0.02037,
+              -0.010262
+            ],
+            "tail": [
+              -0.02,
+              -0.024189,
+              -0.012961
+            ],
+            "radius": 0.03
+          }
+        }
+      },
+      {
+        "name": "collider_shoulder_top_inner_left",
+        "node": "upper_chest",
+        "shape": {
+          "capsule": {
+            "offset": [
+              0.025,
+              0.006666,
+              0.002502
+            ],
+            "tail": [
+              0.04,
+              -0.001314,
+              0.010694
+            ],
+            "radius": 0.03
+          }
+        }
+      },
+      {
+        "name": "collider_shoulder_top_inner_right",
+        "node": "upper_chest",
+        "shape": {
+          "capsule": {
+            "offset": [
+              -0.025,
+              0.006666,
+              0.002502
+            ],
+            "tail": [
+              -0.04,
+              -0.001314,
+              0.010694
+            ],
+            "radius": 0.03
+          }
+        }
+      },
+      {
+        "name": "collider_shoulder_top_outer_left",
+        "node": "upper_chest",
+        "shape": {
+          "capsule": {
+            "offset": [
+              0.035,
+              0.010457,
+              0.012375
+            ],
+            "tail": [
+              0.055,
+              0.003943,
+              0.011445
+            ],
+            "radius": 0.02
+          }
+        }
+      },
+      {
+        "name": "collider_shoulder_top_outer_right",
+        "node": "upper_chest",
+        "shape": {
+          "capsule": {
+            "offset": [
+              -0.035,
+              0.010457,
+              0.012375
+            ],
+            "tail": [
+              -0.055,
+              0.003943,
+              0.011445
+            ],
+            "radius": 0.02
+          }
+        }
+      },
+      {
+        "name": "collider_shoulder_left",
+        "node": "upper_arm_left",
+        "shape": {
+          "capsule": {
+            "offset": [
+              -0.006772,
+              0.005391,
+              0.015862
+            ],
+            "tail": [
+              -0.006894,
+              0.045375,
+              0.015242
+            ],
+            "radius": 0.0344
+          }
+        }
+      },
+      {
+        "name": "collider_shoulder_right",
+        "node": "upper_arm_right",
+        "shape": {
+          "capsule": {
+            "offset": [
+              0.005851,
+              0.004618,
+              0.013627
+            ],
+            "tail": [
+              0.005719,
+              0.044601,
+              0.014278
+            ],
+            "radius": 0.0344
+          }
+        }
+      },
+      {
+        "name": "collider_upper_trap_left",
+        "node": "upper_chest",
+        "shape": {
+          "capsule": {
+            "offset": [
+              0.03,
+              0.02593,
+              -0.026204
+            ],
+            "tail": [
+              0.04,
+              0.0136,
+              -0.027557
+            ],
+            "radius": 0.025
+          }
+        }
+      },
+      {
+        "name": "collider_upper_trap_right",
+        "node": "upper_chest",
+        "shape": {
+          "capsule": {
+            "offset": [
+              -0.03,
+              0.02593,
+              -0.026204
+            ],
+            "tail": [
+              -0.04,
+              0.0136,
+              -0.027557
+            ],
+            "radius": 0.025
+          }
+        }
+      },
+      {
+        "name": "collider_neck_shoulder_left",
+        "node": "upper_chest",
+        "shape": {
+          "capsule": {
+            "offset": [
+              0.0325,
+              0.032023,
+              -0.000477
+            ],
+            "tail": [
+              0.0425,
+              0.040735,
+              -0.02258
+            ],
+            "radius": 0.008
+          }
+        }
+      },
+      {
+        "name": "collider_neck_shoulder_right",
+        "node": "upper_chest",
+        "shape": {
+          "capsule": {
+            "offset": [
+              -0.0325,
+              0.032023,
+              -0.000477
+            ],
+            "tail": [
+              -0.0425,
+              0.040735,
+              -0.02258
+            ],
+            "radius": 0.008
+          }
+        }
+      },
+      {
+        "name": "collider_upper_trap_inner_left",
+        "node": "upper_chest",
+        "shape": {
+          "capsule": {
+            "offset": [
+              0.015,
+              0.025642,
+              -0.040402
+            ],
+            "tail": [
+              0.02,
+              0.03988,
+              -0.03666
+            ],
+            "radius": 0.008
+          }
+        }
+      },
+      {
+        "name": "collider_upper_trap_inner_right",
+        "node": "upper_chest",
+        "shape": {
+          "capsule": {
+            "offset": [
+              -0.015,
+              0.025642,
+              -0.040402
+            ],
+            "tail": [
+              -0.02,
+              0.03988,
+              -0.03666
+            ],
+            "radius": 0.008
+          }
+        }
+      }
+    ],
+    "colliderGroups": [
+      {
+        "name": "body_upper",
+        "colliders": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ]
+      }
+    ],
+    "springs": [
+      {
+        "name": "hairalt_ahoge",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_ahoge_01",
+            "stiffness": 4.8472,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.009,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -60,
+                60
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -45,
+                26
+              ]
+            }
+          },
+          {
+            "node": "hairalt_ahoge_02",
+            "stiffness": 5.2707,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.009,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -23,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_ahoge_03",
+            "stiffness": 5.283,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.009,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_ahoge_04",
+            "stiffness": 4.3543,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.009,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                30
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hairalt_back_center_left",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_back_center_01_left",
+            "stiffness": 2.5497,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.026,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -4,
+                60
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -22,
+                10
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_center_02_left",
+            "stiffness": 2.5911,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.026,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                0,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                5
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_center_03_left",
+            "stiffness": 2.5687,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.026,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                0,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                5
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_center_04_left",
+            "stiffness": 2.5538,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.026,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                0,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                5
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_center_05_left",
+            "stiffness": 2.5684,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.0175,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -2,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                5
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hairalt_back_center_right",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_back_center_01_right",
+            "stiffness": 2.5113,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.026,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -3,
+                60
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -10,
+                22
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_center_02_right",
+            "stiffness": 2.5113,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.026,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                0,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -5,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_center_03_right",
+            "stiffness": 2.5687,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.026,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                0,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -5,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_center_04_right",
+            "stiffness": 2.5538,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.026,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                0,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -5,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_center_05_right",
+            "stiffness": 2.5684,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.0175,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -2,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -5,
+                30
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hairalt_back_a_left",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_back_a_01_left",
+            "stiffness": 2.2418,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.013,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -4,
+                60
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -45,
+                7
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_a_02_left",
+            "stiffness": 2.2394,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.013,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                0,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                2
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_a_03_left",
+            "stiffness": 2.3112,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.013,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -2,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                2
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_a_04_left",
+            "stiffness": 2.314,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.013,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -28,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                0
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_a_05_left",
+            "stiffness": 1.8097,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.0051,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                0
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hairalt_back_a_right",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_back_a_01_right",
+            "stiffness": 2.2356,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.012,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -4,
+                60
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -7,
+                45
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_a_02_right",
+            "stiffness": 2.227,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.012,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                0,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -2,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_a_03_right",
+            "stiffness": 2.3134,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.012,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -2,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -2,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_a_04_right",
+            "stiffness": 2.2801,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.012,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -33,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                0,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_a_05_right",
+            "stiffness": 1.5645,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.0051,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                0,
+                30
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hairalt_back_b_left",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_back_b_01_left",
+            "stiffness": 2.2513,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.018,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -4,
+                60
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -45,
+                10
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_b_02_left",
+            "stiffness": 2.2694,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.018,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                0,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                5
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_b_03_left",
+            "stiffness": 2.2995,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.018,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -2,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                4
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_b_04_left",
+            "stiffness": 2.2789,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.018,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -1,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                5
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_b_05_left",
+            "stiffness": 2.8546,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.008,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                5
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hairalt_back_b_right",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_back_b_01_right",
+            "stiffness": 2.2476,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.017,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -4,
+                60
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -10,
+                45
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_b_02_right",
+            "stiffness": 2.2452,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.017,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                0,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -5,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_b_03_right",
+            "stiffness": 2.3054,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.017,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -2,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -4,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_b_04_right",
+            "stiffness": 2.2841,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.017,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -1,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -5,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_back_b_05_right",
+            "stiffness": 2.6798,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.008,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -5,
+                30
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hairalt_bang_center",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_bang_center_01",
+            "stiffness": 1.6679,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.015,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -60,
+                4
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -45,
+                45
+              ]
+            }
+          },
+          {
+            "node": "hairalt_bang_center_02",
+            "stiffness": 1.6655,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.015,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                0
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_bang_center_03",
+            "stiffness": 1.6776,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.015,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                1
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                30
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hairalt_bang_left",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_bang_01_left",
+            "stiffness": 1.5838,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.018,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -5,
+                60
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -45,
+                1
+              ]
+            }
+          },
+          {
+            "node": "hairalt_bang_02_left",
+            "stiffness": 1.5874,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.018,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                6
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                0
+              ]
+            }
+          },
+          {
+            "node": "hairalt_bang_03_left",
+            "stiffness": 1.607,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.018,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                5
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                0
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hairalt_bang_right",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_bang_01_right",
+            "stiffness": 1.552,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.018,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -5,
+                60
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -1,
+                45
+              ]
+            }
+          },
+          {
+            "node": "hairalt_bang_02_right",
+            "stiffness": 1.5602,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.018,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                6
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                0,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_bang_03_right",
+            "stiffness": 1.5841,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.018,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                5
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                0,
+                30
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hairalt_layer_a_left",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_layer_a_01_left",
+            "stiffness": 1.8733,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.014,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -14,
+                60
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -45,
+                5
+              ]
+            }
+          },
+          {
+            "node": "hairalt_layer_a_02_left",
+            "stiffness": 1.8697,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.014,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                0,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                0
+              ]
+            }
+          },
+          {
+            "node": "hairalt_layer_a_03_left",
+            "stiffness": 1.6995,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.014,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -25,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                0
+              ]
+            }
+          },
+          {
+            "node": "hairalt_layer_a_04_left",
+            "stiffness": 1.8346,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.014,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                30
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hairalt_layer_a_right",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_layer_a_01_right",
+            "stiffness": 1.8691,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.014,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -14,
+                60
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -5,
+                45
+              ]
+            }
+          },
+          {
+            "node": "hairalt_layer_a_02_right",
+            "stiffness": 1.8697,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.014,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                0,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                0,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_layer_a_03_right",
+            "stiffness": 1.6995,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.014,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -25,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                0,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_layer_a_04_right",
+            "stiffness": 1.8964,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.014,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                30
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hairalt_layer_b_left",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_layer_b_01_left",
+            "stiffness": 2.0966,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.015,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -9,
+                60
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -45,
+                0
+              ]
+            }
+          },
+          {
+            "node": "hairalt_layer_b_02_left",
+            "stiffness": 2.0631,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.015,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -3,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                0
+              ]
+            }
+          },
+          {
+            "node": "hairalt_layer_b_03_left",
+            "stiffness": 1.8846,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.015,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -14,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                0
+              ]
+            }
+          },
+          {
+            "node": "hairalt_layer_b_04_left",
+            "stiffness": 2.0,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.0106,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                17
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hairalt_layer_b_right",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_layer_b_01_right",
+            "stiffness": 2.0982,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.015,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -9,
+                60
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                0,
+                45
+              ]
+            }
+          },
+          {
+            "node": "hairalt_layer_b_02_right",
+            "stiffness": 2.0631,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.015,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -3,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                0,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_layer_b_03_right",
+            "stiffness": 1.8846,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.015,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -14,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                0,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_layer_b_04_right",
+            "stiffness": 2.0,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.0106,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -17,
+                30
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hairalt_side_a_left",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_side_a_01_left",
+            "stiffness": 1.6978,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.013,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -1,
+                60
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -45,
+                6
+              ]
+            }
+          },
+          {
+            "node": "hairalt_side_a_02_left",
+            "stiffness": 1.7666,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.013,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                0
+              ]
+            }
+          },
+          {
+            "node": "hairalt_side_a_03_left",
+            "stiffness": 1.6934,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.013,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                22
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                0
+              ]
+            }
+          },
+          {
+            "node": "hairalt_side_a_04_left",
+            "stiffness": 1.6991,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.013,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                6
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hairalt_side_a_right",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_side_a_01_right",
+            "stiffness": 1.6071,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.013,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -1,
+                60
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -6,
+                45
+              ]
+            }
+          },
+          {
+            "node": "hairalt_side_a_02_right",
+            "stiffness": 1.5733,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.013,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                0,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_side_a_03_right",
+            "stiffness": 1.6934,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.013,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                22
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                0,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_side_a_04_right",
+            "stiffness": 1.6991,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.013,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -6,
+                30
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hairalt_side_b_left",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_side_b_01_left",
+            "stiffness": 2.1026,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.014,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -2,
+                60
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -45,
+                4
+              ]
+            }
+          },
+          {
+            "node": "hairalt_side_b_02_left",
+            "stiffness": 2.2059,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.014,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -23,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                0
+              ]
+            }
+          },
+          {
+            "node": "hairalt_side_b_03_left",
+            "stiffness": 2.148,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.014,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                20
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                0
+              ]
+            }
+          },
+          {
+            "node": "hairalt_side_b_04_left",
+            "stiffness": 2.1508,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.014,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                30
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hairalt_side_b_right",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_side_b_01_right",
+            "stiffness": 2.0066,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.014,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -2,
+                60
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -4,
+                45
+              ]
+            }
+          },
+          {
+            "node": "hairalt_side_b_02_right",
+            "stiffness": 2.0097,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.014,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -23,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                0,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_side_b_03_right",
+            "stiffness": 2.148,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.014,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                20
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                0,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_side_b_04_right",
+            "stiffness": 2.1508,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.014,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -35,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                30
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hairalt_side_c_left",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_side_c_01_left",
+            "stiffness": 1.7127,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.012,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -8,
+                60
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -45,
+                13
+              ]
+            }
+          },
+          {
+            "node": "hairalt_side_c_02_left",
+            "stiffness": 1.7698,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.012,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                0,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                0
+              ]
+            }
+          },
+          {
+            "node": "hairalt_side_c_03_left",
+            "stiffness": 1.6723,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.012,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -22,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -30,
+                0
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "hairalt_side_c_right",
+        "colliderGroups": [
+          0
+        ],
+        "center": "head",
+        "joints": [
+          {
+            "node": "hairalt_side_c_01_right",
+            "stiffness": 1.5608,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.012,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -8,
+                60
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                -13,
+                45
+              ]
+            }
+          },
+          {
+            "node": "hairalt_side_c_02_right",
+            "stiffness": 1.5489,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.012,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                0,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                0,
+                30
+              ]
+            }
+          },
+          {
+            "node": "hairalt_side_c_03_right",
+            "stiffness": 1.6723,
+            "dragForce": 0.6,
+            "gravityPower": 0.0,
+            "gravityDir": [
+              0,
+              -1,
+              0
+            ],
+            "hitRadius": 0.012,
+            "limits_deg(local XYZ, clamp after verlet)": {
+              "x": [
+                -22,
+                35
+              ],
+              "y": [
+                -10,
+                10
+              ],
+              "z": [
+                0,
+                30
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "extensions": {
+      "STAR_hairalt_chain_links": {
+        "note": "VRM 1.0 has no chain-to-chain constraint; runtime must apply this after the per-joint verlet + collision pass, then re-run collision and Limit Rotation per chain.",
+        "mode": "vector offset in head space",
+        "tolerance_native_m": 0.002,
+        "weight": 1,
+        "iterations": 3,
+        "contact_aware": "if a joint (or an ancestor in its chain) touched a collider this step, it does not move; its partner takes the full correction; if both touched, skip",
+        "stiffness_normalisation": "stiffness = 2.0 x bone_length / median_bone_length (ahoge chain x3); dragForce 0.6",
+        "links": [
+          {
+            "set": "back",
+            "a": "hairalt_back_a_01_left",
+            "b": "hairalt_back_b_01_left",
+            "rest_offset_head_space_native_m": [
+              -0.007634,
+              0.002499,
+              -0.007142
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_a_02_left",
+            "b": "hairalt_back_b_02_left",
+            "rest_offset_head_space_native_m": [
+              -0.010122,
+              0.008479,
+              -0.018126
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_a_03_left",
+            "b": "hairalt_back_b_03_left",
+            "rest_offset_head_space_native_m": [
+              -0.010152,
+              0.0076,
+              -0.023561
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_a_04_left",
+            "b": "hairalt_back_b_04_left",
+            "rest_offset_head_space_native_m": [
+              -0.011871,
+              0.005794,
+              -0.029038
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_a_05_left",
+            "b": "hairalt_back_b_05_left",
+            "rest_offset_head_space_native_m": [
+              0.0028,
+              -0.030507,
+              -0.057328
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_b_01_left",
+            "b": "hairalt_back_center_01_left",
+            "rest_offset_head_space_native_m": [
+              -0.012599,
+              0.000635,
+              -0.012887
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_b_02_left",
+            "b": "hairalt_back_center_02_left",
+            "rest_offset_head_space_native_m": [
+              -0.021279,
+              -0.00502,
+              -0.021652
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_b_03_left",
+            "b": "hairalt_back_center_03_left",
+            "rest_offset_head_space_native_m": [
+              -0.025374,
+              -0.011947,
+              -0.021928
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_b_04_left",
+            "b": "hairalt_back_center_04_left",
+            "rest_offset_head_space_native_m": [
+              -0.02977,
+              -0.020445,
+              -0.020747
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_b_05_left",
+            "b": "hairalt_back_center_05_left",
+            "rest_offset_head_space_native_m": [
+              -0.023828,
+              -0.01775,
+              0.000785
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_center_01_left",
+            "b": "hairalt_back_center_01_right",
+            "rest_offset_head_space_native_m": [
+              -0.026235,
+              -0.001316,
+              -0.000409
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_center_02_left",
+            "b": "hairalt_back_center_02_right",
+            "rest_offset_head_space_native_m": [
+              -0.047154,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_center_03_left",
+            "b": "hairalt_back_center_03_right",
+            "rest_offset_head_space_native_m": [
+              -0.051198,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_center_04_left",
+            "b": "hairalt_back_center_04_right",
+            "rest_offset_head_space_native_m": [
+              -0.053626,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_center_05_left",
+            "b": "hairalt_back_center_05_right",
+            "rest_offset_head_space_native_m": [
+              -0.039934,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_center_01_right",
+            "b": "hairalt_back_b_01_right",
+            "rest_offset_head_space_native_m": [
+              -0.013943,
+              -0.001536,
+              0.011391
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_center_02_right",
+            "b": "hairalt_back_b_02_right",
+            "rest_offset_head_space_native_m": [
+              -0.023092,
+              0.001408,
+              0.020382
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_center_03_right",
+            "b": "hairalt_back_b_03_right",
+            "rest_offset_head_space_native_m": [
+              -0.025776,
+              0.008091,
+              0.021765
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_center_04_right",
+            "b": "hairalt_back_b_04_right",
+            "rest_offset_head_space_native_m": [
+              -0.031229,
+              0.017988,
+              0.01989
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_center_05_right",
+            "b": "hairalt_back_b_05_right",
+            "rest_offset_head_space_native_m": [
+              -0.024558,
+              0.018785,
+              0.000688
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_b_01_right",
+            "b": "hairalt_back_a_01_right",
+            "rest_offset_head_space_native_m": [
+              -0.007244,
+              -0.005154,
+              0.006009
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_b_02_right",
+            "b": "hairalt_back_a_02_right",
+            "rest_offset_head_space_native_m": [
+              -0.00955,
+              -0.012271,
+              0.018888
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_b_03_right",
+            "b": "hairalt_back_a_03_right",
+            "rest_offset_head_space_native_m": [
+              -0.008919,
+              -0.011488,
+              0.023848
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_b_04_right",
+            "b": "hairalt_back_a_04_right",
+            "rest_offset_head_space_native_m": [
+              -0.009423,
+              -0.010497,
+              0.028994
+            ]
+          },
+          {
+            "set": "back",
+            "a": "hairalt_back_b_05_right",
+            "b": "hairalt_back_a_05_right",
+            "rest_offset_head_space_native_m": [
+              0.00242,
+              0.029363,
+              0.053891
+            ]
+          },
+          {
+            "set": "layer",
+            "a": "hairalt_layer_a_01_left",
+            "b": "hairalt_layer_b_01_left",
+            "rest_offset_head_space_native_m": [
+              -0.010187,
+              -0.00394,
+              -0.018178
+            ]
+          },
+          {
+            "set": "layer",
+            "a": "hairalt_layer_a_02_left",
+            "b": "hairalt_layer_b_02_left",
+            "rest_offset_head_space_native_m": [
+              -0.011859,
+              -0.008257,
+              -0.017385
+            ]
+          },
+          {
+            "set": "layer",
+            "a": "hairalt_layer_a_03_left",
+            "b": "hairalt_layer_b_03_left",
+            "rest_offset_head_space_native_m": [
+              -0.002547,
+              -0.008958,
+              -0.016013
+            ]
+          },
+          {
+            "set": "layer",
+            "a": "hairalt_layer_a_04_left",
+            "b": "hairalt_layer_b_04_left",
+            "rest_offset_head_space_native_m": [
+              -0.001757,
+              -0.001846,
+              -0.007781
+            ]
+          },
+          {
+            "set": "layer",
+            "a": "hairalt_layer_a_01_right",
+            "b": "hairalt_layer_b_01_right",
+            "rest_offset_head_space_native_m": [
+              0.010187,
+              -0.00394,
+              -0.018178
+            ]
+          },
+          {
+            "set": "layer",
+            "a": "hairalt_layer_a_02_right",
+            "b": "hairalt_layer_b_02_right",
+            "rest_offset_head_space_native_m": [
+              0.011859,
+              -0.008257,
+              -0.017385
+            ]
+          },
+          {
+            "set": "layer",
+            "a": "hairalt_layer_a_03_right",
+            "b": "hairalt_layer_b_03_right",
+            "rest_offset_head_space_native_m": [
+              0.002547,
+              -0.008958,
+              -0.016013
+            ]
+          },
+          {
+            "set": "layer",
+            "a": "hairalt_layer_a_04_right",
+            "b": "hairalt_layer_b_04_right",
+            "rest_offset_head_space_native_m": [
+              0.005292,
+              0.001295,
+              -0.009239
+            ]
+          },
+          {
+            "set": "layerback",
+            "a": "hairalt_layer_a_01_left",
+            "b": "hairalt_back_a_01_left",
+            "rest_offset_head_space_native_m": [
+              -0.020887,
+              0.068831,
+              0.032557
+            ]
+          },
+          {
+            "set": "layerback",
+            "a": "hairalt_layer_a_02_left",
+            "b": "hairalt_back_a_02_left",
+            "rest_offset_head_space_native_m": [
+              -0.00036,
+              0.072066,
+              0.012655
+            ]
+          },
+          {
+            "set": "layerback",
+            "a": "hairalt_layer_a_03_left",
+            "b": "hairalt_back_a_04_left",
+            "rest_offset_head_space_native_m": [
+              0.005852,
+              0.011354,
+              -0.008355
+            ]
+          },
+          {
+            "set": "layerback",
+            "a": "hairalt_layer_a_04_left",
+            "b": "hairalt_back_a_05_left",
+            "rest_offset_head_space_native_m": [
+              -0.003765,
+              0.01,
+              -0.021344
+            ]
+          },
+          {
+            "set": "layerback",
+            "a": "hairalt_layer_b_01_left",
+            "b": "hairalt_back_b_01_left",
+            "rest_offset_head_space_native_m": [
+              -0.018334,
+              0.075269,
+              0.043593
+            ]
+          },
+          {
+            "set": "layerback",
+            "a": "hairalt_layer_b_02_left",
+            "b": "hairalt_back_b_02_left",
+            "rest_offset_head_space_native_m": [
+              0.001377,
+              0.088802,
+              0.011914
+            ]
+          },
+          {
+            "set": "layerback",
+            "a": "hairalt_layer_b_03_left",
+            "b": "hairalt_back_b_04_left",
+            "rest_offset_head_space_native_m": [
+              -0.003472,
+              0.026107,
+              -0.02138
+            ]
+          },
+          {
+            "set": "layerback",
+            "a": "hairalt_layer_b_04_left",
+            "b": "hairalt_back_b_05_left",
+            "rest_offset_head_space_native_m": [
+              0.000792,
+              -0.018661,
+              -0.070891
+            ]
+          },
+          {
+            "set": "layerback",
+            "a": "hairalt_layer_a_01_right",
+            "b": "hairalt_back_a_01_right",
+            "rest_offset_head_space_native_m": [
+              0.016846,
+              0.063959,
+              0.029519
+            ]
+          },
+          {
+            "set": "layerback",
+            "a": "hairalt_layer_a_02_right",
+            "b": "hairalt_back_a_02_right",
+            "rest_offset_head_space_native_m": [
+              -0.000881,
+              0.064661,
+              0.012147
+            ]
+          },
+          {
+            "set": "layerback",
+            "a": "hairalt_layer_a_03_right",
+            "b": "hairalt_back_a_04_right",
+            "rest_offset_head_space_native_m": [
+              -0.004863,
+              0.004194,
+              -0.009256
+            ]
+          },
+          {
+            "set": "layerback",
+            "a": "hairalt_layer_a_04_right",
+            "b": "hairalt_back_a_05_right",
+            "rest_offset_head_space_native_m": [
+              0.00619,
+              0.013033,
+              -0.024766
+            ]
+          },
+          {
+            "set": "layerback",
+            "a": "hairalt_layer_b_01_right",
+            "b": "hairalt_back_b_01_right",
+            "rest_offset_head_space_native_m": [
+              0.013903,
+              0.073053,
+              0.041687
+            ]
+          },
+          {
+            "set": "layerback",
+            "a": "hairalt_layer_b_02_right",
+            "b": "hairalt_back_b_02_right",
+            "rest_offset_head_space_native_m": [
+              -0.00319,
+              0.08519,
+              0.010644
+            ]
+          },
+          {
+            "set": "layerback",
+            "a": "hairalt_layer_b_03_right",
+            "b": "hairalt_back_b_04_right",
+            "rest_offset_head_space_native_m": [
+              0.002013,
+              0.02365,
+              -0.022237
+            ]
+          },
+          {
+            "set": "layerback",
+            "a": "hairalt_layer_b_04_right",
+            "b": "hairalt_back_b_05_right",
+            "rest_offset_head_space_native_m": [
+              -0.001522,
+              -0.017626,
+              -0.069418
+            ]
+          },
+          {
+            "set": "layerback2",
+            "a": "hairalt_layer_b_01_left",
+            "b": "hairalt_back_a_01_left",
+            "rest_offset_head_space_native_m": [
+              -0.0107,
+              0.072771,
+              0.050735
+            ]
+          },
+          {
+            "set": "layerback2",
+            "a": "hairalt_layer_b_02_left",
+            "b": "hairalt_back_a_02_left",
+            "rest_offset_head_space_native_m": [
+              0.011499,
+              0.080323,
+              0.03004
+            ]
+          },
+          {
+            "set": "layerback2",
+            "a": "hairalt_layer_b_03_left",
+            "b": "hairalt_back_a_04_left",
+            "rest_offset_head_space_native_m": [
+              0.008399,
+              0.020312,
+              0.007658
+            ]
+          },
+          {
+            "set": "layerback2",
+            "a": "hairalt_layer_b_04_left",
+            "b": "hairalt_back_a_05_left",
+            "rest_offset_head_space_native_m": [
+              -0.002008,
+              0.011846,
+              -0.013563
+            ]
+          },
+          {
+            "set": "layerback2",
+            "a": "hairalt_layer_a_01_left",
+            "b": "hairalt_back_b_01_left",
+            "rest_offset_head_space_native_m": [
+              -0.028521,
+              0.07133,
+              0.025416
+            ]
+          },
+          {
+            "set": "layerback2",
+            "a": "hairalt_layer_a_02_left",
+            "b": "hairalt_back_b_02_left",
+            "rest_offset_head_space_native_m": [
+              -0.010482,
+              0.080545,
+              -0.00547
+            ]
+          },
+          {
+            "set": "layerback2",
+            "a": "hairalt_layer_a_03_left",
+            "b": "hairalt_back_b_04_left",
+            "rest_offset_head_space_native_m": [
+              -0.006019,
+              0.017148,
+              -0.037393
+            ]
+          },
+          {
+            "set": "layerback2",
+            "a": "hairalt_layer_a_04_left",
+            "b": "hairalt_back_b_05_left",
+            "rest_offset_head_space_native_m": [
+              -0.000965,
+              -0.020507,
+              -0.078672
+            ]
+          },
+          {
+            "set": "layerback2",
+            "a": "hairalt_layer_b_01_right",
+            "b": "hairalt_back_a_01_right",
+            "rest_offset_head_space_native_m": [
+              0.006659,
+              0.067899,
+              0.047696
+            ]
+          },
+          {
+            "set": "layerback2",
+            "a": "hairalt_layer_b_02_right",
+            "b": "hairalt_back_a_02_right",
+            "rest_offset_head_space_native_m": [
+              -0.01274,
+              0.072918,
+              0.029532
+            ]
+          },
+          {
+            "set": "layerback2",
+            "a": "hairalt_layer_b_03_right",
+            "b": "hairalt_back_a_04_right",
+            "rest_offset_head_space_native_m": [
+              -0.00741,
+              0.013153,
+              0.006757
+            ]
+          },
+          {
+            "set": "layerback2",
+            "a": "hairalt_layer_b_04_right",
+            "b": "hairalt_back_a_05_right",
+            "rest_offset_head_space_native_m": [
+              0.000898,
+              0.011737,
+              -0.015527
+            ]
+          },
+          {
+            "set": "layerback2",
+            "a": "hairalt_layer_a_01_right",
+            "b": "hairalt_back_b_01_right",
+            "rest_offset_head_space_native_m": [
+              0.02409,
+              0.069113,
+              0.02351
+            ]
+          },
+          {
+            "set": "layerback2",
+            "a": "hairalt_layer_a_02_right",
+            "b": "hairalt_back_b_02_right",
+            "rest_offset_head_space_native_m": [
+              0.008669,
+              0.076932,
+              -0.006741
+            ]
+          },
+          {
+            "set": "layerback2",
+            "a": "hairalt_layer_a_03_right",
+            "b": "hairalt_back_b_04_right",
+            "rest_offset_head_space_native_m": [
+              0.00456,
+              0.014692,
+              -0.03825
+            ]
+          },
+          {
+            "set": "layerback2",
+            "a": "hairalt_layer_a_04_right",
+            "b": "hairalt_back_b_05_right",
+            "rest_offset_head_space_native_m": [
+              0.00377,
+              -0.01633,
+              -0.078657
+            ]
+          },
+          {
+            "set": "side",
+            "a": "hairalt_side_a_01_left",
+            "b": "hairalt_side_b_01_left",
+            "rest_offset_head_space_native_m": [
+              0.00853,
+              -0.00554,
+              -0.011165
+            ]
+          },
+          {
+            "set": "side",
+            "a": "hairalt_side_a_02_left",
+            "b": "hairalt_side_b_02_left",
+            "rest_offset_head_space_native_m": [
+              0.007045,
+              -0.017099,
+              -0.016075
+            ]
+          },
+          {
+            "set": "side",
+            "a": "hairalt_side_a_03_left",
+            "b": "hairalt_side_b_03_left",
+            "rest_offset_head_space_native_m": [
+              0.001214,
+              -0.026943,
+              -0.01743
+            ]
+          },
+          {
+            "set": "side",
+            "a": "hairalt_side_a_04_left",
+            "b": "hairalt_side_b_04_left",
+            "rest_offset_head_space_native_m": [
+              0.00179,
+              -0.036947,
+              -0.017054
+            ]
+          },
+          {
+            "set": "side",
+            "a": "hairalt_side_b_01_left",
+            "b": "hairalt_side_c_01_left",
+            "rest_offset_head_space_native_m": [
+              -0.008649,
+              0.013395,
+              -0.006396
+            ]
+          },
+          {
+            "set": "side",
+            "a": "hairalt_side_b_02_left",
+            "b": "hairalt_side_c_02_left",
+            "rest_offset_head_space_native_m": [
+              -0.002684,
+              0.031473,
+              -0.019338
+            ]
+          },
+          {
+            "set": "side",
+            "a": "hairalt_side_b_03_left",
+            "b": "hairalt_side_c_02_left",
+            "rest_offset_head_space_native_m": [
+              0.000395,
+              0.077551,
+              -0.011126
+            ]
+          },
+          {
+            "set": "side",
+            "a": "hairalt_side_b_04_left",
+            "b": "hairalt_side_c_03_left",
+            "rest_offset_head_space_native_m": [
+              0.012145,
+              0.089783,
+              -0.012674
+            ]
+          },
+          {
+            "set": "side",
+            "a": "hairalt_side_a_01_right",
+            "b": "hairalt_side_b_01_right",
+            "rest_offset_head_space_native_m": [
+              -0.007724,
+              -0.006493,
+              -0.012384
+            ]
+          },
+          {
+            "set": "side",
+            "a": "hairalt_side_a_02_right",
+            "b": "hairalt_side_b_02_right",
+            "rest_offset_head_space_native_m": [
+              -0.007045,
+              -0.017099,
+              -0.016075
+            ]
+          },
+          {
+            "set": "side",
+            "a": "hairalt_side_a_03_right",
+            "b": "hairalt_side_b_03_right",
+            "rest_offset_head_space_native_m": [
+              -0.001214,
+              -0.026943,
+              -0.01743
+            ]
+          },
+          {
+            "set": "side",
+            "a": "hairalt_side_a_04_right",
+            "b": "hairalt_side_b_04_right",
+            "rest_offset_head_space_native_m": [
+              -0.00179,
+              -0.036947,
+              -0.017054
+            ]
+          },
+          {
+            "set": "side",
+            "a": "hairalt_side_b_01_right",
+            "b": "hairalt_side_c_01_right",
+            "rest_offset_head_space_native_m": [
+              0.008705,
+              0.01371,
+              -0.007526
+            ]
+          },
+          {
+            "set": "side",
+            "a": "hairalt_side_b_02_right",
+            "b": "hairalt_side_c_02_right",
+            "rest_offset_head_space_native_m": [
+              0.002684,
+              0.031473,
+              -0.019338
+            ]
+          },
+          {
+            "set": "side",
+            "a": "hairalt_side_b_03_right",
+            "b": "hairalt_side_c_02_right",
+            "rest_offset_head_space_native_m": [
+              -0.000395,
+              0.077551,
+              -0.011126
+            ]
+          },
+          {
+            "set": "side",
+            "a": "hairalt_side_b_04_right",
+            "b": "hairalt_side_c_03_right",
+            "rest_offset_head_space_native_m": [
+              -0.012145,
+              0.089783,
+              -0.012674
+            ]
+          },
+          {
+            "set": "bang",
+            "a": "hairalt_bang_01_left",
+            "b": "hairalt_side_a_01_left",
+            "rest_offset_head_space_native_m": [
+              0.010198,
+              0.004854,
+              -0.013014
+            ]
+          },
+          {
+            "set": "bang",
+            "a": "hairalt_bang_02_left",
+            "b": "hairalt_side_a_03_left",
+            "rest_offset_head_space_native_m": [
+              0.018129,
+              -0.033622,
+              -0.023156
+            ]
+          },
+          {
+            "set": "bang",
+            "a": "hairalt_bang_03_left",
+            "b": "hairalt_side_a_04_left",
+            "rest_offset_head_space_native_m": [
+              0.012207,
+              -0.035769,
+              -0.023533
+            ]
+          },
+          {
+            "set": "bang",
+            "a": "hairalt_bang_01_right",
+            "b": "hairalt_side_a_01_right",
+            "rest_offset_head_space_native_m": [
+              -0.011862,
+              0.004153,
+              -0.015393
+            ]
+          },
+          {
+            "set": "bang",
+            "a": "hairalt_bang_02_right",
+            "b": "hairalt_side_a_03_right",
+            "rest_offset_head_space_native_m": [
+              -0.017793,
+              -0.031552,
+              -0.025987
+            ]
+          },
+          {
+            "set": "bang",
+            "a": "hairalt_bang_03_right",
+            "b": "hairalt_side_a_04_right",
+            "rest_offset_head_space_native_m": [
+              -0.013707,
+              -0.034125,
+              -0.025806
+            ]
+          },
+          {
+            "set": "bang",
+            "a": "hairalt_bang_center_01",
+            "b": "hairalt_bang_01_left",
+            "rest_offset_head_space_native_m": [
+              0.022764,
+              0.005873,
+              -0.011631
+            ]
+          },
+          {
+            "set": "bang",
+            "a": "hairalt_bang_center_02",
+            "b": "hairalt_bang_02_left",
+            "rest_offset_head_space_native_m": [
+              0.036994,
+              0.00835,
+              -0.019639
+            ]
+          },
+          {
+            "set": "bang",
+            "a": "hairalt_bang_center_03",
+            "b": "hairalt_bang_03_left",
+            "rest_offset_head_space_native_m": [
+              0.040703,
+              0.009874,
+              -0.017954
+            ]
+          },
+          {
+            "set": "bang",
+            "a": "hairalt_bang_center_01",
+            "b": "hairalt_bang_01_right",
+            "rest_offset_head_space_native_m": [
+              -0.023954,
+              0.004464,
+              -0.008176
+            ]
+          },
+          {
+            "set": "bang",
+            "a": "hairalt_bang_center_02",
+            "b": "hairalt_bang_02_right",
+            "rest_offset_head_space_native_m": [
+              -0.035758,
+              0.00628,
+              -0.016809
+            ]
+          },
+          {
+            "set": "bang",
+            "a": "hairalt_bang_center_03",
+            "b": "hairalt_bang_03_right",
+            "rest_offset_head_space_native_m": [
+              -0.038063,
+              0.00823,
+              -0.015681
+            ]
+          },
+          {
+            "set": "ahoge",
+            "a": "hairalt_ahoge_01",
+            "b": "hairalt_back_center_01_left",
+            "rest_offset_head_space_native_m": [
+              0.035742,
+              -0.02038,
+              -0.063636
+            ]
+          },
+          {
+            "set": "ahoge",
+            "a": "hairalt_ahoge_02",
+            "b": "hairalt_back_center_02_left",
+            "rest_offset_head_space_native_m": [
+              0.076132,
+              -0.045683,
+              -0.127502
+            ]
+          },
+          {
+            "set": "ahoge",
+            "a": "hairalt_ahoge_03",
+            "b": "hairalt_back_center_04_left",
+            "rest_offset_head_space_native_m": [
+              0.091404,
+              -0.125165,
+              -0.159964
+            ]
+          },
+          {
+            "set": "ahoge",
+            "a": "hairalt_ahoge_04",
+            "b": "hairalt_back_center_05_left",
+            "rest_offset_head_space_native_m": [
+              0.073317,
+              -0.151972,
+              -0.139844
+            ]
+          },
+          {
+            "set": "ahoge",
+            "a": "hairalt_ahoge_01",
+            "b": "hairalt_back_center_01_right",
+            "rest_offset_head_space_native_m": [
+              0.009507,
+              -0.021696,
+              -0.064045
+            ]
+          },
+          {
+            "set": "ahoge",
+            "a": "hairalt_ahoge_02",
+            "b": "hairalt_back_center_02_right",
+            "rest_offset_head_space_native_m": [
+              0.028978,
+              -0.045683,
+              -0.127502
+            ]
+          },
+          {
+            "set": "ahoge",
+            "a": "hairalt_ahoge_03",
+            "b": "hairalt_back_center_04_right",
+            "rest_offset_head_space_native_m": [
+              0.037778,
+              -0.125165,
+              -0.159964
+            ]
+          },
+          {
+            "set": "ahoge",
+            "a": "hairalt_ahoge_04",
+            "b": "hairalt_back_center_05_right",
+            "rest_offset_head_space_native_m": [
+              0.033383,
+              -0.151972,
+              -0.139844
+            ]
+          },
+          {
+            "set": "ahoge",
+            "a": "hairalt_ahoge_01",
+            "b": "hairalt_side_c_01_right",
+            "rest_offset_head_space_native_m": [
+              -0.011663,
+              -0.023241,
+              -0.022271
+            ]
+          },
+          {
+            "set": "ahoge",
+            "a": "hairalt_ahoge_02",
+            "b": "hairalt_side_c_02_right",
+            "rest_offset_head_space_native_m": [
+              -0.003391,
+              -0.035156,
+              -0.058393
+            ]
+          },
+          {
+            "set": "ahoge",
+            "a": "hairalt_ahoge_03",
+            "b": "hairalt_side_c_02_right",
+            "rest_offset_head_space_native_m": [
+              0.008645,
+              -0.003697,
+              -0.076947
+            ]
+          },
+          {
+            "set": "ahoge",
+            "a": "hairalt_ahoge_04",
+            "b": "hairalt_side_c_03_right",
+            "rest_offset_head_space_native_m": [
+              -0.012925,
+              -0.010267,
+              -0.073125
+            ]
+          },
+          {
+            "set": "ahoge",
+            "a": "hairalt_ahoge_01",
+            "b": "hairalt_side_c_01_left",
+            "rest_offset_head_space_native_m": [
+              0.056015,
+              -0.020492,
+              -0.020998
+            ]
+          },
+          {
+            "set": "ahoge",
+            "a": "hairalt_ahoge_02",
+            "b": "hairalt_side_c_02_left",
+            "rest_offset_head_space_native_m": [
+              0.108501,
+              -0.035156,
+              -0.058393
+            ]
+          },
+          {
+            "set": "ahoge",
+            "a": "hairalt_ahoge_03",
+            "b": "hairalt_side_c_02_left",
+            "rest_offset_head_space_native_m": [
+              0.120537,
+              -0.003697,
+              -0.076947
+            ]
+          },
+          {
+            "set": "ahoge",
+            "a": "hairalt_ahoge_04",
+            "b": "hairalt_side_c_03_left",
+            "rest_offset_head_space_native_m": [
+              0.119625,
+              -0.010267,
+              -0.073125
+            ]
+          }
+        ],
+        "rest_offset_convention": "R_head_rest^T @ (tail(b)-tail(a)), native m; recomputed on v3.5 joints in v3.5.1"
+      },
+      "STAR_hairalt_limits": {
+        "note": "per-joint local Euler clamp after the verlet step (Blender LIMIT_ROTATION limits_suggested, LOCAL space, roll 0)"
+      }
+    }
+  },
+  "rest_margins": {
+    "hairalt_ahoge_01": {
+      "hitRadius_mm": 9.0,
+      "margin_mm": 104.6,
+      "point": "head",
+      "collider": "neck",
+      "point_clear_mm": 113.6,
+      "rest_safe": true
+    },
+    "hairalt_ahoge_02": {
+      "hitRadius_mm": 9.0,
+      "margin_mm": 134.65,
+      "point": "head",
+      "collider": "neck",
+      "point_clear_mm": 143.65,
+      "rest_safe": true
+    },
+    "hairalt_ahoge_03": {
+      "hitRadius_mm": 9.0,
+      "margin_mm": 128.37,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 137.37,
+      "rest_safe": true
+    },
+    "hairalt_ahoge_04": {
+      "hitRadius_mm": 9.0,
+      "margin_mm": 98.76,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 107.76,
+      "rest_safe": true
+    },
+    "hairalt_back_center_01_left": {
+      "hitRadius_mm": 26.0,
+      "margin_mm": 88.55,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 114.55,
+      "rest_safe": true
+    },
+    "hairalt_back_center_02_left": {
+      "hitRadius_mm": 26.0,
+      "margin_mm": 66.71,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 92.71,
+      "rest_safe": true
+    },
+    "hairalt_back_center_03_left": {
+      "hitRadius_mm": 26.0,
+      "margin_mm": 31.33,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 57.33,
+      "rest_safe": true
+    },
+    "hairalt_back_center_04_left": {
+      "hitRadius_mm": 26.0,
+      "margin_mm": 12.59,
+      "point": "tail",
+      "collider": "upper_trap_left",
+      "point_clear_mm": 38.59,
+      "rest_safe": true
+    },
+    "hairalt_back_center_05_left": {
+      "hitRadius_mm": 17.5,
+      "margin_mm": 0.01,
+      "point": "tail",
+      "collider": "upper_trap_left",
+      "point_clear_mm": 17.51,
+      "rest_safe": true
+    },
+    "hairalt_back_center_01_right": {
+      "hitRadius_mm": 26.0,
+      "margin_mm": 87.59,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 113.59,
+      "rest_safe": true
+    },
+    "hairalt_back_center_02_right": {
+      "hitRadius_mm": 26.0,
+      "margin_mm": 66.71,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 92.71,
+      "rest_safe": true
+    },
+    "hairalt_back_center_03_right": {
+      "hitRadius_mm": 26.0,
+      "margin_mm": 31.33,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 57.33,
+      "rest_safe": true
+    },
+    "hairalt_back_center_04_right": {
+      "hitRadius_mm": 26.0,
+      "margin_mm": 12.59,
+      "point": "tail",
+      "collider": "upper_trap_right",
+      "point_clear_mm": 38.59,
+      "rest_safe": true
+    },
+    "hairalt_back_center_05_right": {
+      "hitRadius_mm": 17.5,
+      "margin_mm": 0.01,
+      "point": "tail",
+      "collider": "upper_trap_right",
+      "point_clear_mm": 17.51,
+      "rest_safe": true
+    },
+    "hairalt_back_a_01_left": {
+      "hitRadius_mm": 13.0,
+      "margin_mm": 101.27,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 114.27,
+      "rest_safe": true
+    },
+    "hairalt_back_a_02_left": {
+      "hitRadius_mm": 13.0,
+      "margin_mm": 75.66,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 88.66,
+      "rest_safe": true
+    },
+    "hairalt_back_a_03_left": {
+      "hitRadius_mm": 13.0,
+      "margin_mm": 44.11,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 57.11,
+      "rest_safe": true
+    },
+    "hairalt_back_a_04_left": {
+      "hitRadius_mm": 13.0,
+      "margin_mm": 21.23,
+      "point": "tail",
+      "collider": "shoulder_left",
+      "point_clear_mm": 34.23,
+      "rest_safe": true
+    },
+    "hairalt_back_a_05_left": {
+      "hitRadius_mm": 5.1,
+      "margin_mm": 8.25,
+      "point": "tail",
+      "collider": "upper_trap_left",
+      "point_clear_mm": 13.35,
+      "rest_safe": true
+    },
+    "hairalt_back_a_01_right": {
+      "hitRadius_mm": 12.0,
+      "margin_mm": 98.47,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 110.47,
+      "rest_safe": true
+    },
+    "hairalt_back_a_02_right": {
+      "hitRadius_mm": 12.0,
+      "margin_mm": 71.13,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 83.13,
+      "rest_safe": true
+    },
+    "hairalt_back_a_03_right": {
+      "hitRadius_mm": 12.0,
+      "margin_mm": 40.1,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 52.1,
+      "rest_safe": true
+    },
+    "hairalt_back_a_04_right": {
+      "hitRadius_mm": 12.0,
+      "margin_mm": 15.27,
+      "point": "tail",
+      "collider": "shoulder_right",
+      "point_clear_mm": 27.27,
+      "rest_safe": true
+    },
+    "hairalt_back_a_05_right": {
+      "hitRadius_mm": 5.1,
+      "margin_mm": 7.58,
+      "point": "tail",
+      "collider": "neck_shoulder_right",
+      "point_clear_mm": 12.68,
+      "rest_safe": true
+    },
+    "hairalt_back_b_01_left": {
+      "hitRadius_mm": 18.0,
+      "margin_mm": 96.96,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 114.96,
+      "rest_safe": true
+    },
+    "hairalt_back_b_02_left": {
+      "hitRadius_mm": 18.0,
+      "margin_mm": 77.28,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 95.28,
+      "rest_safe": true
+    },
+    "hairalt_back_b_03_left": {
+      "hitRadius_mm": 18.0,
+      "margin_mm": 44.75,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 62.75,
+      "rest_safe": true
+    },
+    "hairalt_back_b_04_left": {
+      "hitRadius_mm": 18.0,
+      "margin_mm": 28.53,
+      "point": "tail",
+      "collider": "upper_trap_left",
+      "point_clear_mm": 46.53,
+      "rest_safe": true
+    },
+    "hairalt_back_b_05_left": {
+      "hitRadius_mm": 8.0,
+      "margin_mm": 8.1,
+      "point": "tail",
+      "collider": "upper_trap_left",
+      "point_clear_mm": 16.1,
+      "rest_safe": true
+    },
+    "hairalt_back_b_01_right": {
+      "hitRadius_mm": 17.0,
+      "margin_mm": 96.67,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 113.67,
+      "rest_safe": true
+    },
+    "hairalt_back_b_02_right": {
+      "hitRadius_mm": 17.0,
+      "margin_mm": 76.21,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 93.21,
+      "rest_safe": true
+    },
+    "hairalt_back_b_03_right": {
+      "hitRadius_mm": 17.0,
+      "margin_mm": 43.67,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 60.67,
+      "rest_safe": true
+    },
+    "hairalt_back_b_04_right": {
+      "hitRadius_mm": 17.0,
+      "margin_mm": 28.43,
+      "point": "tail",
+      "collider": "upper_trap_right",
+      "point_clear_mm": 45.43,
+      "rest_safe": true
+    },
+    "hairalt_back_b_05_right": {
+      "hitRadius_mm": 8.0,
+      "margin_mm": 7.13,
+      "point": "tail",
+      "collider": "upper_trap_right",
+      "point_clear_mm": 15.13,
+      "rest_safe": true
+    },
+    "hairalt_bang_center_01": {
+      "hitRadius_mm": 15.0,
+      "margin_mm": 100.21,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 115.21,
+      "rest_safe": true
+    },
+    "hairalt_bang_center_02": {
+      "hitRadius_mm": 15.0,
+      "margin_mm": 83.5,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 98.5,
+      "rest_safe": true
+    },
+    "hairalt_bang_center_03": {
+      "hitRadius_mm": 15.0,
+      "margin_mm": 56.67,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 71.67,
+      "rest_safe": true
+    },
+    "hairalt_bang_01_left": {
+      "hitRadius_mm": 18.0,
+      "margin_mm": 98.42,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 116.42,
+      "rest_safe": true
+    },
+    "hairalt_bang_02_left": {
+      "hitRadius_mm": 18.0,
+      "margin_mm": 79.43,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 97.43,
+      "rest_safe": true
+    },
+    "hairalt_bang_03_left": {
+      "hitRadius_mm": 18.0,
+      "margin_mm": 54.02,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 72.02,
+      "rest_safe": true
+    },
+    "hairalt_bang_01_right": {
+      "hitRadius_mm": 18.0,
+      "margin_mm": 99.27,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 117.27,
+      "rest_safe": true
+    },
+    "hairalt_bang_02_right": {
+      "hitRadius_mm": 18.0,
+      "margin_mm": 79.59,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 97.59,
+      "rest_safe": true
+    },
+    "hairalt_bang_03_right": {
+      "hitRadius_mm": 18.0,
+      "margin_mm": 53.95,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 71.95,
+      "rest_safe": true
+    },
+    "hairalt_layer_a_01_left": {
+      "hitRadius_mm": 14.0,
+      "margin_mm": 50.63,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 64.63,
+      "rest_safe": true
+    },
+    "hairalt_layer_a_02_left": {
+      "hitRadius_mm": 14.0,
+      "margin_mm": 30.24,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 44.24,
+      "rest_safe": true
+    },
+    "hairalt_layer_a_03_left": {
+      "hitRadius_mm": 14.0,
+      "margin_mm": 8.87,
+      "point": "tail",
+      "collider": "shoulder_left",
+      "point_clear_mm": 22.87,
+      "rest_safe": true
+    },
+    "hairalt_layer_a_04_left": {
+      "hitRadius_mm": 14.0,
+      "margin_mm": 2.99,
+      "point": "tail",
+      "collider": "neck_shoulder_left",
+      "point_clear_mm": 16.99,
+      "rest_safe": true
+    },
+    "hairalt_layer_a_01_right": {
+      "hitRadius_mm": 14.0,
+      "margin_mm": 50.63,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 64.63,
+      "rest_safe": true
+    },
+    "hairalt_layer_a_02_right": {
+      "hitRadius_mm": 14.0,
+      "margin_mm": 30.24,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 44.24,
+      "rest_safe": true
+    },
+    "hairalt_layer_a_03_right": {
+      "hitRadius_mm": 14.0,
+      "margin_mm": 8.87,
+      "point": "tail",
+      "collider": "shoulder_right",
+      "point_clear_mm": 22.87,
+      "rest_safe": true
+    },
+    "hairalt_layer_a_04_right": {
+      "hitRadius_mm": 14.0,
+      "margin_mm": 2.3,
+      "point": "tail",
+      "collider": "shoulder_right",
+      "point_clear_mm": 16.3,
+      "rest_safe": true
+    },
+    "hairalt_layer_b_01_left": {
+      "hitRadius_mm": 15.0,
+      "margin_mm": 48.53,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 63.53,
+      "rest_safe": true
+    },
+    "hairalt_layer_b_02_left": {
+      "hitRadius_mm": 15.0,
+      "margin_mm": 27.48,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 42.48,
+      "rest_safe": true
+    },
+    "hairalt_layer_b_03_left": {
+      "hitRadius_mm": 15.0,
+      "margin_mm": 1.36,
+      "point": "tail",
+      "collider": "shoulder_left",
+      "point_clear_mm": 16.36,
+      "rest_safe": true
+    },
+    "hairalt_layer_b_04_left": {
+      "hitRadius_mm": 10.6,
+      "margin_mm": 0.08,
+      "point": "tail",
+      "collider": "neck_shoulder_left",
+      "point_clear_mm": 10.68,
+      "rest_safe": true
+    },
+    "hairalt_layer_b_01_right": {
+      "hitRadius_mm": 15.0,
+      "margin_mm": 48.53,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 63.53,
+      "rest_safe": true
+    },
+    "hairalt_layer_b_02_right": {
+      "hitRadius_mm": 15.0,
+      "margin_mm": 27.48,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 42.48,
+      "rest_safe": true
+    },
+    "hairalt_layer_b_03_right": {
+      "hitRadius_mm": 15.0,
+      "margin_mm": 1.36,
+      "point": "tail",
+      "collider": "shoulder_right",
+      "point_clear_mm": 16.36,
+      "rest_safe": true
+    },
+    "hairalt_layer_b_04_right": {
+      "hitRadius_mm": 10.6,
+      "margin_mm": 0.08,
+      "point": "tail",
+      "collider": "neck_shoulder_right",
+      "point_clear_mm": 10.68,
+      "rest_safe": true
+    },
+    "hairalt_side_a_01_left": {
+      "hitRadius_mm": 13.0,
+      "margin_mm": 104.71,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 117.71,
+      "rest_safe": true
+    },
+    "hairalt_side_a_02_left": {
+      "hitRadius_mm": 13.0,
+      "margin_mm": 84.08,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 97.08,
+      "rest_safe": true
+    },
+    "hairalt_side_a_03_left": {
+      "hitRadius_mm": 13.0,
+      "margin_mm": 56.17,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 69.17,
+      "rest_safe": true
+    },
+    "hairalt_side_a_04_left": {
+      "hitRadius_mm": 13.0,
+      "margin_mm": 34.26,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 47.26,
+      "rest_safe": true
+    },
+    "hairalt_side_a_01_right": {
+      "hitRadius_mm": 13.0,
+      "margin_mm": 104.37,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 117.37,
+      "rest_safe": true
+    },
+    "hairalt_side_a_02_right": {
+      "hitRadius_mm": 13.0,
+      "margin_mm": 84.08,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 97.08,
+      "rest_safe": true
+    },
+    "hairalt_side_a_03_right": {
+      "hitRadius_mm": 13.0,
+      "margin_mm": 56.17,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 69.17,
+      "rest_safe": true
+    },
+    "hairalt_side_a_04_right": {
+      "hitRadius_mm": 13.0,
+      "margin_mm": 34.26,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 47.26,
+      "rest_safe": true
+    },
+    "hairalt_side_b_01_left": {
+      "hitRadius_mm": 14.0,
+      "margin_mm": 97.51,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 111.51,
+      "rest_safe": true
+    },
+    "hairalt_side_b_02_left": {
+      "hitRadius_mm": 14.0,
+      "margin_mm": 67.23,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 81.23,
+      "rest_safe": true
+    },
+    "hairalt_side_b_03_left": {
+      "hitRadius_mm": 14.0,
+      "margin_mm": 33.48,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 47.48,
+      "rest_safe": true
+    },
+    "hairalt_side_b_04_left": {
+      "hitRadius_mm": 14.0,
+      "margin_mm": 13.47,
+      "point": "tail",
+      "collider": "shoulder_left",
+      "point_clear_mm": 27.47,
+      "rest_safe": true
+    },
+    "hairalt_side_b_01_right": {
+      "hitRadius_mm": 14.0,
+      "margin_mm": 96.0,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 110.0,
+      "rest_safe": true
+    },
+    "hairalt_side_b_02_right": {
+      "hitRadius_mm": 14.0,
+      "margin_mm": 67.23,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 81.23,
+      "rest_safe": true
+    },
+    "hairalt_side_b_03_right": {
+      "hitRadius_mm": 14.0,
+      "margin_mm": 33.48,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 47.48,
+      "rest_safe": true
+    },
+    "hairalt_side_b_04_right": {
+      "hitRadius_mm": 14.0,
+      "margin_mm": 13.47,
+      "point": "tail",
+      "collider": "shoulder_right",
+      "point_clear_mm": 27.47,
+      "rest_safe": true
+    },
+    "hairalt_side_c_01_left": {
+      "hitRadius_mm": 12.0,
+      "margin_mm": 108.18,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 120.18,
+      "rest_safe": true
+    },
+    "hairalt_side_c_02_left": {
+      "hitRadius_mm": 12.0,
+      "margin_mm": 89.39,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 101.39,
+      "rest_safe": true
+    },
+    "hairalt_side_c_03_left": {
+      "hitRadius_mm": 12.0,
+      "margin_mm": 66.23,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 78.23,
+      "rest_safe": true
+    },
+    "hairalt_side_c_01_right": {
+      "hitRadius_mm": 12.0,
+      "margin_mm": 106.27,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 118.27,
+      "rest_safe": true
+    },
+    "hairalt_side_c_02_right": {
+      "hitRadius_mm": 12.0,
+      "margin_mm": 89.39,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 101.39,
+      "rest_safe": true
+    },
+    "hairalt_side_c_03_right": {
+      "hitRadius_mm": 12.0,
+      "margin_mm": 66.23,
+      "point": "tail",
+      "collider": "neck",
+      "point_clear_mm": 78.23,
+      "rest_safe": true
+    }
+  },
+  "base_v3_5_sha256": "83380e2928f777568a5a25b2caf420f20cd2056e06ad928e8f4fea6304b6fb6d"
+}
