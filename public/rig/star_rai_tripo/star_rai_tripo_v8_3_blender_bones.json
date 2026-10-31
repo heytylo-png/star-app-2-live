@@ -1,0 +1,1367 @@
+{
+  "name": "StarRai_star_rai_tripo",
+  "units": "metres",
+  "up_axis": "Z",
+  "facing": "-Y",
+  "side_convention": "_left = character left = +X",
+  "scale": "native Tripo, 1.0 (mesh 0.979 m incl. hair)",
+  "version": "v8.3",
+  "hair_fit_mesh": "head_hair_clean_v2_2.glb",
+  "hair_fit_mesh_sha256": "d573426bce18a229a5707088368b6d94a01bbcad3e4381a6c996a8e5772c8d37",
+  "hair_fit_mesh_scale": 1.6554,
+  "snap_to_ribbons": true,
+  "radii_from": "pre-snap",
+  "height_m": 0.3915,
+  "sole_to_skull_m": 0.95,
+  "bones": [
+    {
+      "name": "pelvis",
+      "head": [
+        0.0,
+        -0.004433,
+        0.558493
+      ],
+      "tail": [
+        0.0,
+        0.0022,
+        0.5145
+      ],
+      "parent": null,
+      "type": "bone"
+    },
+    {
+      "name": "hip_attachment",
+      "head": [
+        0.0,
+        -0.00178,
+        0.540896
+      ],
+      "tail": [
+        0.0,
+        -0.00178,
+        0.540896
+      ],
+      "parent": "hip",
+      "type": "attachment"
+    },
+    {
+      "name": "hip",
+      "head": [
+        0.0,
+        -0.004433,
+        0.558493
+      ],
+      "tail": [
+        0.0,
+        -0.02546,
+        0.600246
+      ],
+      "parent": "pelvis",
+      "type": "bone"
+    },
+    {
+      "name": "lower_waist",
+      "head": [
+        0.0,
+        -0.02546,
+        0.600246
+      ],
+      "tail": [
+        0.0,
+        -0.028087,
+        0.649261
+      ],
+      "parent": "hip",
+      "type": "bone"
+    },
+    {
+      "name": "waist",
+      "head": [
+        0.0,
+        -0.028087,
+        0.649261
+      ],
+      "tail": [
+        0.0,
+        -0.025873,
+        0.691014
+      ],
+      "parent": "lower_waist",
+      "type": "bone"
+    },
+    {
+      "name": "mid_chest",
+      "head": [
+        0.0,
+        -0.025873,
+        0.691014
+      ],
+      "tail": [
+        0.0,
+        -0.002594,
+        0.740028
+      ],
+      "parent": "waist",
+      "type": "bone"
+    },
+    {
+      "name": "upper_chest",
+      "head": [
+        0.0,
+        -0.002594,
+        0.740028
+      ],
+      "tail": [
+        0.0,
+        -0.004,
+        0.7836
+      ],
+      "parent": "mid_chest",
+      "type": "bone"
+    },
+    {
+      "name": "thigh_left",
+      "head": [
+        0.0407,
+        0.0019,
+        0.5149
+      ],
+      "tail": [
+        0.0455,
+        -0.0018,
+        0.2945
+      ],
+      "parent": "pelvis",
+      "type": "bone"
+    },
+    {
+      "name": "knee_left",
+      "head": [
+        0.0455,
+        -0.0018,
+        0.2945
+      ],
+      "tail": [
+        0.0455,
+        -0.0018,
+        0.2945
+      ],
+      "parent": "thigh_left",
+      "type": "attachment"
+    },
+    {
+      "name": "shin_left",
+      "head": [
+        0.0455,
+        -0.0018,
+        0.2945
+      ],
+      "tail": [
+        0.039,
+        0.01,
+        0.095
+      ],
+      "parent": "thigh_left",
+      "type": "bone"
+    },
+    {
+      "name": "ankle_left",
+      "head": [
+        0.039,
+        0.01,
+        0.095
+      ],
+      "tail": [
+        0.039,
+        0.01,
+        0.095
+      ],
+      "parent": "shin_left",
+      "type": "attachment"
+    },
+    {
+      "name": "foot_left",
+      "head": [
+        0.039,
+        0.01,
+        0.095
+      ],
+      "tail": [
+        0.02898,
+        -0.074686,
+        0.005747
+      ],
+      "parent": "shin_left",
+      "type": "bone"
+    },
+    {
+      "name": "thigh_right",
+      "head": [
+        -0.0398,
+        0.0025,
+        0.514
+      ],
+      "tail": [
+        -0.044,
+        -0.0027,
+        0.2948
+      ],
+      "parent": "pelvis",
+      "type": "bone"
+    },
+    {
+      "name": "knee_right",
+      "head": [
+        -0.044,
+        -0.0027,
+        0.2948
+      ],
+      "tail": [
+        -0.044,
+        -0.0027,
+        0.2948
+      ],
+      "parent": "thigh_right",
+      "type": "attachment"
+    },
+    {
+      "name": "shin_right",
+      "head": [
+        -0.044,
+        -0.0027,
+        0.2948
+      ],
+      "tail": [
+        -0.039,
+        0.011,
+        0.095
+      ],
+      "parent": "thigh_right",
+      "type": "bone"
+    },
+    {
+      "name": "ankle_right",
+      "head": [
+        -0.039,
+        0.011,
+        0.095
+      ],
+      "tail": [
+        -0.039,
+        0.011,
+        0.095
+      ],
+      "parent": "shin_right",
+      "type": "attachment"
+    },
+    {
+      "name": "foot_right",
+      "head": [
+        -0.039,
+        0.011,
+        0.095
+      ],
+      "tail": [
+        -0.028733,
+        -0.074623,
+        0.005655
+      ],
+      "parent": "shin_right",
+      "type": "bone"
+    },
+    {
+      "name": "shoulder_left",
+      "head": [
+        0.0626,
+        0.0091,
+        0.7359
+      ],
+      "tail": [
+        0.0626,
+        0.0091,
+        0.7359
+      ],
+      "parent": "upper_chest",
+      "type": "attachment"
+    },
+    {
+      "name": "upper_arm_left",
+      "head": [
+        0.0626,
+        0.0091,
+        0.7359
+      ],
+      "tail": [
+        0.1889,
+        0.0218,
+        0.743
+      ],
+      "parent": "shoulder_left",
+      "type": "bone"
+    },
+    {
+      "name": "elbow_left",
+      "head": [
+        0.1889,
+        0.0218,
+        0.743
+      ],
+      "tail": [
+        0.1889,
+        0.0218,
+        0.743
+      ],
+      "parent": "upper_arm_left",
+      "type": "attachment"
+    },
+    {
+      "name": "lower_arm_left",
+      "head": [
+        0.1889,
+        0.0218,
+        0.743
+      ],
+      "tail": [
+        0.3424,
+        0.0159,
+        0.7384
+      ],
+      "parent": "upper_arm_left",
+      "type": "bone"
+    },
+    {
+      "name": "wrist_left",
+      "head": [
+        0.3424,
+        0.0159,
+        0.7384
+      ],
+      "tail": [
+        0.3424,
+        0.0159,
+        0.7384
+      ],
+      "parent": "lower_arm_left",
+      "type": "attachment"
+    },
+    {
+      "name": "hand_left",
+      "head": [
+        0.3424,
+        0.0159,
+        0.7384
+      ],
+      "tail": [
+        0.4417,
+        0.0128,
+        0.738
+      ],
+      "parent": "lower_arm_left",
+      "type": "bone"
+    },
+    {
+      "name": "shoulder_right",
+      "head": [
+        -0.0628,
+        0.0095,
+        0.7385
+      ],
+      "tail": [
+        -0.0628,
+        0.0095,
+        0.7385
+      ],
+      "parent": "upper_chest",
+      "type": "attachment"
+    },
+    {
+      "name": "upper_arm_right",
+      "head": [
+        -0.0628,
+        0.0095,
+        0.7385
+      ],
+      "tail": [
+        -0.1895,
+        0.0232,
+        0.7416
+      ],
+      "parent": "shoulder_right",
+      "type": "bone"
+    },
+    {
+      "name": "elbow_right",
+      "head": [
+        -0.1895,
+        0.0232,
+        0.7416
+      ],
+      "tail": [
+        -0.1895,
+        0.0232,
+        0.7416
+      ],
+      "parent": "upper_arm_right",
+      "type": "attachment"
+    },
+    {
+      "name": "lower_arm_right",
+      "head": [
+        -0.1895,
+        0.0232,
+        0.7416
+      ],
+      "tail": [
+        -0.3432,
+        0.0152,
+        0.7386
+      ],
+      "parent": "upper_arm_right",
+      "type": "bone"
+    },
+    {
+      "name": "wrist_right",
+      "head": [
+        -0.3432,
+        0.0152,
+        0.7386
+      ],
+      "tail": [
+        -0.3432,
+        0.0152,
+        0.7386
+      ],
+      "parent": "lower_arm_right",
+      "type": "attachment"
+    },
+    {
+      "name": "hand_right",
+      "head": [
+        -0.3432,
+        0.0152,
+        0.7386
+      ],
+      "tail": [
+        -0.442,
+        0.0116,
+        0.7395
+      ],
+      "parent": "lower_arm_right",
+      "type": "bone"
+    },
+    {
+      "name": "neck",
+      "head": [
+        0.0,
+        -0.004,
+        0.7836
+      ],
+      "tail": [
+        0.0,
+        0.001266,
+        0.8302
+      ],
+      "parent": "upper_chest",
+      "type": "bone"
+    },
+    {
+      "name": "neck_attachment",
+      "head": [
+        0.0,
+        0.001266,
+        0.8302
+      ],
+      "tail": [
+        0.0,
+        0.001266,
+        0.8302
+      ],
+      "parent": "upper_chest",
+      "type": "attachment"
+    },
+    {
+      "name": "head",
+      "head": [
+        0.0,
+        0.001266,
+        0.8302
+      ],
+      "tail": [
+        0.0,
+        0.005,
+        0.95
+      ],
+      "parent": "neck",
+      "type": "bone"
+    },
+    {
+      "name": "hair_ahoge_01",
+      "head": [
+        -0.005115,
+        0.034865,
+        0.961395
+      ],
+      "tail": [
+        -0.00705,
+        -0.014927,
+        0.963738
+      ],
+      "parent": "head",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -60,
+        "max_x": 48,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -45,
+        "max_z": 8,
+        "inward_x_sign": "+x",
+        "first_contact_deg": {
+          "x+": null,
+          "x-": null,
+          "z+": 11,
+          "z-": null
+        },
+        "collision_radius_m": 0.0085
+      }
+    },
+    {
+      "name": "hair_ahoge_02",
+      "head": [
+        -0.00705,
+        -0.014927,
+        0.963738
+      ],
+      "tail": [
+        -0.031881,
+        -0.046158,
+        0.976901
+      ],
+      "parent": "hair_ahoge_01",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -35,
+        "max_x": 35,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -30,
+        "max_z": 30,
+        "collision_radius_m": 0.0085
+      }
+    },
+    {
+      "name": "hair_ahoge_03",
+      "head": [
+        -0.031881,
+        -0.046158,
+        0.976901
+      ],
+      "tail": [
+        -0.073422,
+        -0.044714,
+        0.918826
+      ],
+      "parent": "hair_ahoge_02",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -35,
+        "max_x": 35,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -30,
+        "max_z": 30,
+        "collision_radius_m": 0.0085
+      }
+    },
+    {
+      "name": "hair_bang_center_01",
+      "head": [
+        0.00193,
+        -0.069636,
+        0.93011
+      ],
+      "tail": [
+        0.001711,
+        -0.078027,
+        0.897709
+      ],
+      "parent": "head",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -60,
+        "max_x": 0,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -45,
+        "max_z": 45,
+        "inward_x_sign": "+x",
+        "first_contact_deg": {
+          "x+": 5,
+          "x-": null,
+          "z+": null,
+          "z-": null
+        },
+        "collision_radius_m": 0.0115,
+        "head_margin_deg": 6.0,
+        "clump_head_gap_mm": 0.95
+      }
+    },
+    {
+      "name": "hair_bang_center_02",
+      "head": [
+        0.001711,
+        -0.078027,
+        0.897709
+      ],
+      "tail": [
+        -0.001136,
+        -0.062888,
+        0.869142
+      ],
+      "parent": "hair_bang_center_01",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -35,
+        "max_x": 3,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -12,
+        "max_z": 30,
+        "collision_radius_m": 0.0115
+      }
+    },
+    {
+      "name": "hair_bang_01_left",
+      "head": [
+        0.0306,
+        -0.0577,
+        0.92
+      ],
+      "tail": [
+        0.032487,
+        -0.06279,
+        0.89815
+      ],
+      "parent": "head",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -60,
+        "max_x": 0,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -45,
+        "max_z": 1,
+        "inward_x_sign": "+x",
+        "first_contact_deg": {
+          "x+": 6,
+          "x-": null,
+          "z+": 7,
+          "z-": null
+        },
+        "collision_radius_m": 0.0084,
+        "head_margin_deg": 6.0,
+        "clump_head_gap_mm": 0.99
+      }
+    },
+    {
+      "name": "hair_bang_02_left",
+      "head": [
+        0.032487,
+        -0.06279,
+        0.89815
+      ],
+      "tail": [
+        0.035119,
+        -0.049337,
+        0.87
+      ],
+      "parent": "hair_bang_01_left",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -35,
+        "max_x": 3,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -30,
+        "max_z": 2,
+        "collision_radius_m": 0.0084
+      }
+    },
+    {
+      "name": "hair_side_01_left",
+      "head": [
+        0.0579,
+        -0.0133,
+        0.895
+      ],
+      "tail": [
+        0.054547,
+        -0.006066,
+        0.863442
+      ],
+      "parent": "head",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -60,
+        "max_x": 1,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -45,
+        "max_z": 2,
+        "inward_x_sign": "+x",
+        "first_contact_deg": {
+          "x+": 4,
+          "x-": null,
+          "z+": 5,
+          "z-": null
+        },
+        "collision_radius_m": 0.0109
+      }
+    },
+    {
+      "name": "hair_side_02_left",
+      "head": [
+        0.054547,
+        -0.006066,
+        0.863442
+      ],
+      "tail": [
+        0.051842,
+        0.001453,
+        0.831638
+      ],
+      "parent": "hair_side_01_left",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -5,
+        "max_x": 4,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -3,
+        "max_z": 0,
+        "collision_radius_m": 0.0109
+      }
+    },
+    {
+      "name": "hair_side_03_left",
+      "head": [
+        0.051842,
+        0.001453,
+        0.831638
+      ],
+      "tail": [
+        0.048831,
+        0.004053,
+        0.804954
+      ],
+      "parent": "hair_side_02_left",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -6,
+        "max_x": 35,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -30,
+        "max_z": 4,
+        "collision_radius_m": 0.0109
+      }
+    },
+    {
+      "name": "hair_bang_01_right",
+      "head": [
+        -0.03475,
+        -0.061922,
+        0.922723
+      ],
+      "tail": [
+        -0.037102,
+        -0.064997,
+        0.899702
+      ],
+      "parent": "head",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -60,
+        "max_x": 0,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -2,
+        "max_z": 45,
+        "inward_x_sign": "+x",
+        "first_contact_deg": {
+          "x+": 9,
+          "x-": null,
+          "z+": null,
+          "z-": 8
+        },
+        "collision_radius_m": 0.0103,
+        "head_margin_deg": 6.0,
+        "clump_head_gap_mm": 1.01
+      }
+    },
+    {
+      "name": "hair_bang_02_right",
+      "head": [
+        -0.037102,
+        -0.064997,
+        0.899702
+      ],
+      "tail": [
+        -0.033959,
+        -0.057304,
+        0.878728
+      ],
+      "parent": "hair_bang_01_right",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -35,
+        "max_x": 3,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": 0,
+        "max_z": 30,
+        "collision_radius_m": 0.0103
+      }
+    },
+    {
+      "name": "hair_side_01_right",
+      "head": [
+        -0.0579,
+        -0.0133,
+        0.895
+      ],
+      "tail": [
+        -0.054547,
+        -0.006066,
+        0.863442
+      ],
+      "parent": "head",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -60,
+        "max_x": 1,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -2,
+        "max_z": 45,
+        "inward_x_sign": "+x",
+        "first_contact_deg": {
+          "x+": 4,
+          "x-": null,
+          "z+": null,
+          "z-": 5
+        },
+        "collision_radius_m": 0.0115
+      }
+    },
+    {
+      "name": "hair_side_02_right",
+      "head": [
+        -0.054547,
+        -0.006066,
+        0.863442
+      ],
+      "tail": [
+        -0.053193,
+        0.011523,
+        0.832186
+      ],
+      "parent": "hair_side_01_right",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -5,
+        "max_x": 4,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -6,
+        "max_z": 3,
+        "collision_radius_m": 0.0115
+      }
+    },
+    {
+      "name": "hair_side_03_right",
+      "head": [
+        -0.053193,
+        0.011523,
+        0.832186
+      ],
+      "tail": [
+        -0.05118,
+        0.006409,
+        0.806265
+      ],
+      "parent": "hair_side_02_right",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -6,
+        "max_x": 35,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -4,
+        "max_z": 30,
+        "collision_radius_m": 0.0115
+      }
+    },
+    {
+      "name": "hair_back_center_01",
+      "head": [
+        0.0,
+        0.0643,
+        0.885
+      ],
+      "tail": [
+        -0.000233,
+        0.065533,
+        0.852333
+      ],
+      "parent": "head",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -5,
+        "max_x": 30,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -45,
+        "max_z": 45,
+        "inward_x_sign": "-x",
+        "first_contact_deg": {
+          "x+": null,
+          "x-": 8,
+          "z+": null,
+          "z-": null
+        },
+        "collision_radius_m": 0.012,
+        "head_margin_deg": 3,
+        "clump_head_gap_mm": 5.03,
+        "contact_method": "mesh-parity"
+      }
+    },
+    {
+      "name": "hair_back_center_02",
+      "head": [
+        -0.000233,
+        0.065533,
+        0.852333
+      ],
+      "tail": [
+        -0.001415,
+        0.07226,
+        0.819667
+      ],
+      "parent": "hair_back_center_01",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": 0,
+        "max_x": 17,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -30,
+        "max_z": 30,
+        "collision_radius_m": 0.012,
+        "contact_method": "mesh-parity, ancestors at limit"
+      }
+    },
+    {
+      "name": "hair_back_center_03",
+      "head": [
+        -0.001415,
+        0.07226,
+        0.819667
+      ],
+      "tail": [
+        -0.008561,
+        0.069733,
+        0.782884
+      ],
+      "parent": "hair_back_center_02",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -1,
+        "max_x": 9,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -30,
+        "max_z": 30,
+        "collision_radius_m": 0.012,
+        "contact_method": "mesh-parity, ancestors at limit"
+      }
+    },
+    {
+      "name": "hair_back_01_left",
+      "head": [
+        0.052716,
+        0.049442,
+        0.882342
+      ],
+      "tail": [
+        0.049233,
+        0.045267,
+        0.8521
+      ],
+      "parent": "head",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -13,
+        "max_x": 30,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -45,
+        "max_z": 2,
+        "inward_x_sign": "-x",
+        "first_contact_deg": {
+          "x+": null,
+          "x-": 31,
+          "z+": 25,
+          "z-": null
+        },
+        "collision_radius_m": 0.012,
+        "head_margin_deg": 6.0,
+        "clump_head_gap_mm": -0.78
+      }
+    },
+    {
+      "name": "hair_back_02_left",
+      "head": [
+        0.049233,
+        0.045267,
+        0.8521
+      ],
+      "tail": [
+        0.048111,
+        0.046219,
+        0.8192
+      ],
+      "parent": "hair_back_01_left",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -35,
+        "max_x": 26,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -30,
+        "max_z": 30,
+        "collision_radius_m": 0.012,
+        "contact_method": "mesh-parity, ancestors at limit"
+      }
+    },
+    {
+      "name": "hair_back_03_left",
+      "head": [
+        0.048111,
+        0.046219,
+        0.8192
+      ],
+      "tail": [
+        0.06367,
+        0.05594,
+        0.791087
+      ],
+      "parent": "hair_back_02_left",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -35,
+        "max_x": 20,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -10,
+        "max_z": 20,
+        "collision_radius_m": 0.012,
+        "contact_method": "mesh-parity, ancestors at limit"
+      }
+    },
+    {
+      "name": "hair_back_01_right",
+      "head": [
+        -0.054875,
+        0.045817,
+        0.882178
+      ],
+      "tail": [
+        -0.057736,
+        0.044341,
+        0.854941
+      ],
+      "parent": "head",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -13,
+        "max_x": 30,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -2,
+        "max_z": 45,
+        "inward_x_sign": "-x",
+        "first_contact_deg": {
+          "x+": null,
+          "x-": 31,
+          "z+": null,
+          "z-": 22
+        },
+        "collision_radius_m": 0.012,
+        "head_margin_deg": 6.0,
+        "clump_head_gap_mm": -0.78
+      }
+    },
+    {
+      "name": "hair_back_02_right",
+      "head": [
+        -0.057736,
+        0.044341,
+        0.854941
+      ],
+      "tail": [
+        -0.063584,
+        0.050724,
+        0.828871
+      ],
+      "parent": "hair_back_01_right",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -35,
+        "max_x": 26,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -30,
+        "max_z": 30,
+        "collision_radius_m": 0.012,
+        "contact_method": "mesh-parity, ancestors at limit"
+      }
+    },
+    {
+      "name": "hair_back_03_right",
+      "head": [
+        -0.063584,
+        0.050724,
+        0.828871
+      ],
+      "tail": [
+        -0.062719,
+        0.054405,
+        0.790836
+      ],
+      "parent": "hair_back_02_right",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -35,
+        "max_x": 20,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -20,
+        "max_z": 10,
+        "collision_radius_m": 0.012,
+        "contact_method": "mesh-parity, ancestors at limit"
+      }
+    },
+    {
+      "name": "hair_stray_01_left",
+      "head": [
+        0.003354,
+        0.035363,
+        0.961167
+      ],
+      "tail": [
+        0.013872,
+        0.007609,
+        0.964259
+      ],
+      "parent": "head",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -26,
+        "max_x": 60,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -28,
+        "max_z": 45,
+        "inward_x_sign": "-x",
+        "first_contact_deg": {
+          "x+": null,
+          "x-": 29,
+          "z+": null,
+          "z-": 31
+        },
+        "collision_radius_m": 0.0079
+      }
+    },
+    {
+      "name": "hair_stray_02_left",
+      "head": [
+        0.013872,
+        0.007609,
+        0.964259
+      ],
+      "tail": [
+        0.033364,
+        -0.07667,
+        0.928659
+      ],
+      "parent": "hair_stray_01_left",
+      "type": "bone",
+      "group": "hair",
+      "limits_suggested": {
+        "space": "LOCAL",
+        "units": "deg",
+        "use_limit_x": true,
+        "min_x": -35,
+        "max_x": 35,
+        "use_limit_y": true,
+        "min_y": -10,
+        "max_y": 10,
+        "use_limit_z": true,
+        "min_z": -30,
+        "max_z": 23,
+        "collision_radius_m": 0.0079
+      }
+    }
+  ]
+}
