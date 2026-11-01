@@ -1,0 +1,130 @@
+{
+ "commit_exists": "commit",
+ "commit_full_sha": "8513fffa818c17e98bb47edee76c11a4d678ff3b",
+ "study_dir_tree_at_commit": "96f7455d1abb4294ed9b74f59b89db682531398d",
+ "study_dir_diff_vs_commit_empty": true,
+ "study_dir_untracked": "",
+ "committed_files": {
+  "n": 38,
+  "n_ok": 38,
+  "bad": []
+ },
+ "study_manifest_sha256": "1c97bd95a2ceaa08d676eec3df20b4a40b9f0a7d0d7831fb67810ff3b34bd910",
+ "approved_manifest_file_sha256": "93d2801e1191a3f8328c3ae5520acb1db35bbc315888825b7c4ba3973a6ac9c3",
+ "inputs": [
+  {
+   "path": "LICENSE.ASSETS.md",
+   "bytes": 6962,
+   "sha256": "f6089cba01cb570a24712b41ab8a586ccd3cc5ef53dc266ca50b95c288956d2c",
+   "blob_sha1": "f3ede1fc3318f8d794e2cb51924186c62f02f71a",
+   "approved_sha256": "f6089cba01cb570a24712b41ab8a586ccd3cc5ef53dc266ca50b95c288956d2c",
+   "approved_bytes": 6962,
+   "approved_blob": "f3ede1fc3318f8d794e2cb51924186c62f02f71a",
+   "ok_vs_approved": true,
+   "ok_vs_study_manifest": true
+  },
+  {
+   "path": "LICENSE.md",
+   "bytes": 3188,
+   "sha256": "5cefb60680cb9efd4550a2e65d719021cfbec9dad3658481d11d48ae863ce04d",
+   "blob_sha1": "88cf832acc18dd64fd27ff2efb84625718bf2201",
+   "approved_sha256": "5cefb60680cb9efd4550a2e65d719021cfbec9dad3658481d11d48ae863ce04d",
+   "approved_bytes": 3188,
+   "approved_blob": "88cf832acc18dd64fd27ff2efb84625718bf2201",
+   "ok_vs_approved": true,
+   "ok_vs_study_manifest": true
+  },
+  {
+   "path": "src/mpfb/data/3dobjs/base.obj",
+   "bytes": 1749303,
+   "sha256": "8e761e6624b8f54536409135d1636da63b32486a90d4897f84e121d144f6fb4c",
+   "blob_sha1": "d26635e9326e3cca30778fd7b9c00062b03cce09",
+   "approved_sha256": "8e761e6624b8f54536409135d1636da63b32486a90d4897f84e121d144f6fb4c",
+   "approved_bytes": 1749303,
+   "approved_blob": "d26635e9326e3cca30778fd7b9c00062b03cce09",
+   "ok_vs_approved": true,
+   "ok_vs_study_manifest": true
+  },
+  {
+   "path": "src/mpfb/data/rigs/rigify/rig.human.json",
+   "bytes": 257096,
+   "sha256": "6c3e61576d299d4acfbe45789d69738608ae0559d382f4a0e9e598a82379be7f",
+   "blob_sha1": "90911ccdc5dcb4fc227e2b7a972bf4fd00b540fd",
+   "approved_sha256": "6c3e61576d299d4acfbe45789d69738608ae0559d382f4a0e9e598a82379be7f",
+   "approved_bytes": 257096,
+   "approved_blob": "90911ccdc5dcb4fc227e2b7a972bf4fd00b540fd",
+   "ok_vs_approved": true,
+   "ok_vs_study_manifest": true
+  },
+  {
+   "path": "src/mpfb/data/rigs/rigify/rig.human_toes.json",
+   "bytes": 287189,
+   "sha256": "970f19f9e426528052a0f8bfc2cd6f1eea627aa607517ff4e43ae88d96488846",
+   "blob_sha1": "150a96b450f35d6283044041fde9fee8b072f4b0",
+   "approved_sha256": "970f19f9e426528052a0f8bfc2cd6f1eea627aa607517ff4e43ae88d96488846",
+   "approved_bytes": 287189,
+   "approved_blob": "150a96b450f35d6283044041fde9fee8b072f4b0",
+   "ok_vs_approved": true,
+   "ok_vs_study_manifest": true
+  },
+  {
+   "path": "src/mpfb/data/rigs/rigify/weights.human_toes.json",
+   "bytes": 5965933,
+   "sha256": "edcbca3323b03080fe750caa292c673ecbacdd200ebf0062d00d3b425e13a999",
+   "blob_sha1": "1931ed762e4e44258fe6dcc3202e73bdeb22169c",
+   "approved_sha256": "edcbca3323b03080fe750caa292c673ecbacdd200ebf0062d00d3b425e13a999",
+   "approved_bytes": 5965933,
+   "approved_blob": "1931ed762e4e44258fe6dcc3202e73bdeb22169c",
+   "ok_vs_approved": true,
+   "ok_vs_study_manifest": true
+  },
+  {
+   "path": "src/mpfb/data/rigs/standard/rig.default.json",
+   "bytes": 126355,
+   "sha256": "8b949de35c2dd70dbb5094e57a8586c3b9a9f650775a293212581a8f67be6797",
+   "blob_sha1": "85900f3ac30228f403eadb10cb370f2f99f41263",
+   "approved_sha256": "8b949de35c2dd70dbb5094e57a8586c3b9a9f650775a293212581a8f67be6797",
+   "approved_bytes": 126355,
+   "approved_blob": "85900f3ac30228f403eadb10cb370f2f99f41263",
+   "ok_vs_approved": true,
+   "ok_vs_study_manifest": true
+  },
+  {
+   "path": "src/mpfb/data/rigs/standard/rig.game_engine.json",
+   "bytes": 40936,
+   "sha256": "b324ddb4b707721c19630bfadb87c3e3b38eed3b6e4590bb3cead43ea918f799",
+   "blob_sha1": "e0903a1bc1ed7aae1516b1a8d0fe3085bbc6e5f0",
+   "approved_sha256": "b324ddb4b707721c19630bfadb87c3e3b38eed3b6e4590bb3cead43ea918f799",
+   "approved_bytes": 40936,
+   "approved_blob": "e0903a1bc1ed7aae1516b1a8d0fe3085bbc6e5f0",
+   "ok_vs_approved": true,
+   "ok_vs_study_manifest": true
+  },
+  {
+   "path": "src/mpfb/data/rigs/standard/weights.default.json",
+   "bytes": 5034981,
+   "sha256": "154b866774a8c2b055a8e86419f22a87b76c60440fdcb70bcb78345f00924e89",
+   "blob_sha1": "1328020289b65b019f0881841bf40418c315fef7",
+   "approved_sha256": "154b866774a8c2b055a8e86419f22a87b76c60440fdcb70bcb78345f00924e89",
+   "approved_bytes": 5034981,
+   "approved_blob": "1328020289b65b019f0881841bf40418c315fef7",
+   "ok_vs_approved": true,
+   "ok_vs_study_manifest": true
+  },
+  {
+   "path": "src/mpfb/data/rigs/standard/weights.game_engine.json",
+   "bytes": 3026778,
+   "sha256": "9f4a773e74ce5ba08415b4f30070338e9f75bae5971b5075b10cd6b9caa58473",
+   "blob_sha1": "c9366e4bfe5d1af69c66ebdf4065874b996af6b1",
+   "approved_sha256": "9f4a773e74ce5ba08415b4f30070338e9f75bae5971b5075b10cd6b9caa58473",
+   "approved_bytes": 3026778,
+   "approved_blob": "c9366e4bfe5d1af69c66ebdf4065874b996af6b1",
+   "ok_vs_approved": true,
+   "ok_vs_study_manifest": true
+  }
+ ],
+ "inputs_n": 10,
+ "inputs_all_ok": true,
+ "inputs_total_bytes": 16498721,
+ "input_key_sets_equal": true
+}

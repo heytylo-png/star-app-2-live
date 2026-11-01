@@ -1,0 +1,6 @@
+vs_committed files 26 PASS 23 (byte 21 ) FAIL 2 NV 1 extra ['log_02_joints_hierarchy.txt', 'log_03_coordinates_foot.txt', 'log_04_weights_stats.txt', 'log_05_weight_falloff.txt', 'log_06_compare_star_rai.txt', 'log_07_rig_differences.txt']
+  NOT VERIFIABLE hash_prior_snapshot_comparison.json not produced by any study script (manual snapshot at original task start); frozen criteria: not compared None None None
+  PASS hash_verification_after.json numeric within frozen tolerance (or env-excluded fields only) 0 0.0 none
+  PASS hash_verification_before.json numeric within frozen tolerance (or env-excluded fields only) 0 0.0 none
+  FAIL joints_default.csv above frozen tolerance 1 0.0 >1e-4 or non-numeric
+  FAIL weight_falloff_summary.json above frozen tolerance 1 1.9999999989472883e-09 <=1e-6

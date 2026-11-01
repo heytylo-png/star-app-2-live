@@ -1,0 +1,112 @@
+{
+ "default": {
+  "n_bones": 163,
+  "roots": [
+   "root"
+  ],
+  "max_depth": 16,
+  "connect_checked": 0,
+  "connect_head_ne_parent_tail": 0,
+  "strategy_counts": {
+   "head:CUBE": 113,
+   "tail:VERTEX": 47,
+   "tail:CUBE": 103,
+   "tail:MEAN": 13,
+   "head:VERTEX": 37,
+   "head:MEAN": 13
+  },
+  "recompute_error_all": {
+   "n": 326,
+   "median_m": 0.031163677637980735,
+   "p95_m": 0.05926589413554247,
+   "max_m": 0.06244750008744283
+  }
+ },
+ "game_engine": {
+  "n_bones": 53,
+  "roots": [
+   "Root"
+  ],
+  "max_depth": 11,
+  "connect_checked": 0,
+  "connect_head_ne_parent_tail": 0,
+  "strategy_counts": {
+   "head:CUBE": 53,
+   "tail:MEAN": 1,
+   "tail:CUBE": 52
+  },
+  "recompute_error_all": {
+   "n": 106,
+   "median_m": 0.05535110340662179,
+   "p95_m": 0.06157852566088368,
+   "max_m": 0.8183050000000002
+  }
+ },
+ "rigify_human": {
+  "n_bones": 185,
+  "roots": [
+   "DEF-elbow-helper.L",
+   "DEF-elbow-helper.R",
+   "DEF-knee-helper.L",
+   "DEF-knee-helper.R",
+   "MCH-breast-parent",
+   "spine"
+  ],
+  "max_depth": 12,
+  "connect_checked": 76,
+  "connect_head_ne_parent_tail": 0,
+  "strategy_counts": {
+   "head:CUBE": 74,
+   "tail:VERTEX": 84,
+   "tail:MEAN": 32,
+   "head:VERTEX": 85,
+   "head:MEAN": 24,
+   "tail:CUBE": 67,
+   "head:XYZ": 2,
+   "tail:XYZ": 2
+  },
+  "recompute_error_all": {
+   "n": 370,
+   "median_m": 0.010779421366659532,
+   "p95_m": 0.059134349630734995,
+   "max_m": 0.062313231715864455
+  }
+ },
+ "rigify_human_toes": {
+  "n_bones": 213,
+  "roots": [
+   "DEF-elbow-helper.L",
+   "DEF-elbow-helper.R",
+   "DEF-knee-helper.L",
+   "DEF-knee-helper.R",
+   "MCH-breast-parent",
+   "spine"
+  ],
+  "max_depth": 12,
+  "connect_checked": 94,
+  "connect_head_ne_parent_tail": 0,
+  "strategy_counts": {
+   "head:CUBE": 102,
+   "tail:VERTEX": 84,
+   "tail:MEAN": 32,
+   "head:VERTEX": 85,
+   "head:MEAN": 24,
+   "tail:CUBE": 95,
+   "head:XYZ": 2,
+   "tail:XYZ": 2
+  },
+  "recompute_error_all": {
+   "n": 426,
+   "median_m": 0.012754658736237667,
+   "p95_m": 0.05905345731041086,
+   "max_m": 0.062313231715864455
+  }
+ },
+ "_cube_groups": {
+  "n_groups": 125,
+  "verts_per_group_set": [
+   8
+  ],
+  "mean_vs_bbox_centre_max_dist_m": 0.00010789896894781021
+ }
+}

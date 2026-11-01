@@ -1,0 +1,4 @@
+command: MPFB2_ROOT=/workspace/research/reflib_v1/mpfb2 MPFB2_OUT=/workspace/blendbro/out/mpfb2_l1_repro_v1/run1/outputs PYTHONDONTWRITEBYTECODE=1 bash repo/research/reflib_v1/mpfb2_study/scripts/run_all.sh
+start: 2026-11-01T10:38:29,186824515-06:00
+end: 2026-11-01T10:38:31,054867045-06:00
+exit_status: 0

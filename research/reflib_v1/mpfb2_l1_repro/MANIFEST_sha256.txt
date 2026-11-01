@@ -1,0 +1,66 @@
+# MANIFEST_sha256.txt — MPFB2 L1 raw-input reproduction (Issue #179). Paths relative to research/reflib_v1/mpfb2_l1_repro/. Format: sha256  bytes  path  status
+# MANIFEST_sha256.txt itself is not listed; its SHA-256 is reported in the GitHub handoff comment.
+
+## INCLUDED (committed)
+46f768f4b0e974dcade13121b52d8414468bcf81f970c3996a8d89f02024aefb  4172  COMPARISON_CRITERIA_FROZEN.md  INCLUDED
+ea38c1170eea896e70b4614c4c05cb7e9d3b0c4601de2a2980c0f7ce4a67a888  20739  REPORT.md  INCLUDED
+1fab15d0d4726a03504f66d96929b029f75fb47c773dc52c32f72ff537adf667  60956  claims_frozen.json  INCLUDED
+e9141dd1d571e83ddbc23d0ce96b11393208d956190e860a2f92fb24faf881ed  207  logs/criteria_frozen_sha256.txt  INCLUDED
+f33f9253681750be34e768e3d145262d8d6623fe0539357350728e614dca2246  639  logs/protected_snapshot_README.txt  INCLUDED
+ead845041a266909abed0b4fae87329265009d989a5bb08a3a2b6d60ee50c5ab  25672  logs/protected_snapshot_after_REDACTED.txt  INCLUDED
+ead845041a266909abed0b4fae87329265009d989a5bb08a3a2b6d60ee50c5ab  25672  logs/protected_snapshot_before_REDACTED.txt  INCLUDED
+076b8ade80580c993b6e6e6cff8c318e467dedf2812e574b96b27c6d696d2627  5266  logs/step1_inputs_commit_verification.json  INCLUDED
+89591aba486ed0de9e4d88a4b9cb291b7e6f4a02b4b516b79403a79700778e41  1996  logs/step2_environment.txt  INCLUDED
+6a86b862921ce7b5a0104386a7380509c790572953fc954cddfb13ac98b63f39  12152  logs/step5_compare_run1_vs_committed.json  INCLUDED
+75f3968c8b9fe11549d9c750199c343b87bacfcadf52692d5aba76e9616a1159  12152  logs/step5_compare_run2_vs_committed.json  INCLUDED
+82473fc0a361d69ab262d3c2ef8a7e7758b057166fe1fff7fe3d25d9230fd9a2  12822  logs/step5_determinism_run1_vs_run2.json  INCLUDED
+b4c1980cd76bd87292f6f6064f9f04d6dfa7757502d7626efb71b2cc6f1dd3ab  12966  logs/step5_negative_control.json  INCLUDED
+b2a4a63f14a77423af3c63a4e9f054f17cb18393fd278acc3bb735578969a5ae  798  logs/step5_negative_control.txt  INCLUDED
+3141806cb5312ca52fbc9e7d5f05ec2624fc11b0aef1a4ae3a21526c36335fae  43376  logs/step6_claims_check_run1.json  INCLUDED
+142886702983a87d8712942e8317002795510f968a6ef84a083d19887ad2183b  1533  logs/step7_claude_discrepancy_check.json  INCLUDED
+30cd0886668c7aaaeced6a5df8eb47a69299e63a87c7c976f413dfc94ab64498  306  run1/command.txt  INCLUDED
+fb3042837d03c6681cd8220db8a73553816cfdcbea716c36d58f6ff17f86e1f6  20472  run1/hash_verification_after.json  INCLUDED
+a6d0ae37def14c11b77d440f4fd6bbf3f0463d5402e2ecd2376b5dec38d3c2be  20473  run1/hash_verification_before.json  INCLUDED
+7fd43f27d75e53493c74bf9ebe969d3ce95dcaa03c9eae67b7496adc5473e42a  218  run1/hash_verification_compare.json  INCLUDED
+5f3c1d5594c13ac70e7eafd4f01e79df79d893327b5305142fd0de55ae009173  2390  run1/output_inventory_ls.txt  INCLUDED
+a5eaacc7b7d5c57e74b10891bbb3561896e9bb0c61d5c868aec6a07fdefcc96f  2905  run1/output_sha256.txt  INCLUDED
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  0  run1/run_all.stderr.txt  INCLUDED
+c0b6ee5a79414c9cf27b3a9da96bec39b4183476454546e5bf73d08462abb509  466  run1/run_all.stdout.txt  INCLUDED
+4d93f008fbf87455f5651ac773084cd4a9370a34e156785b23dc6a7546cd7ee3  2178  run1/text_logs/log_02_joints_hierarchy.txt  INCLUDED
+a01e269dd6c3c6912752b9355cacc411874a72073f8b1fe839e8013abec7ebcd  8904  run1/text_logs/log_03_coordinates_foot.txt  INCLUDED
+3e3d6ce9839bb7ba6fac72a044673ded2264721401c44d2a499a929a9101c9cd  6057  run1/text_logs/log_04_weights_stats.txt  INCLUDED
+dcd972ff50713b8dc193540014b018ee78faa1894e3f3aa3e8820c39274cb371  2358  run1/text_logs/log_05_weight_falloff.txt  INCLUDED
+7447e10bd870df670fcbcedcc5346f2d383005504516ca5cae41b3cb42ba161b  5344  run1/text_logs/log_06_compare_star_rai.txt  INCLUDED
+a0b44ecf709ce33f6e3889ce46779ae4d9a1715cf1033d8efcfc848eafe508ae  3997  run1/text_logs/log_07_rig_differences.txt  INCLUDED
+445d67d68c9d1a7022b0ae553895b81c6e1c5436a86256df8911101d8646d086  42  run1/timing.txt  INCLUDED
+af1b8d14d7cc323afbb067304ea50ac5a544d1fb6b0a8eaaa417192a931140d8  306  run2/command.txt  INCLUDED
+c9d0f1695d9ba2e14868bc73760ed72bc8f91363bcdd86a8bd64cca5509f324e  20472  run2/hash_verification_after.json  INCLUDED
+2f6e14b0b00e63f14ed23d3f5db72b7172b0431bbc242c48728135c1e641b5f1  20473  run2/hash_verification_before.json  INCLUDED
+7fd43f27d75e53493c74bf9ebe969d3ce95dcaa03c9eae67b7496adc5473e42a  218  run2/hash_verification_compare.json  INCLUDED
+49f89757b23a6106134f970cb457764dda13637fd2222ee5308b84c5030f5b90  2390  run2/output_inventory_ls.txt  INCLUDED
+374aa9f84c26855ef88b693714592a869c61d071cd7cf1fb4dcb086ef2e2a0f1  2905  run2/output_sha256.txt  INCLUDED
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  0  run2/run_all.stderr.txt  INCLUDED
+c0b6ee5a79414c9cf27b3a9da96bec39b4183476454546e5bf73d08462abb509  466  run2/run_all.stdout.txt  INCLUDED
+4d93f008fbf87455f5651ac773084cd4a9370a34e156785b23dc6a7546cd7ee3  2178  run2/text_logs/log_02_joints_hierarchy.txt  INCLUDED
+a01e269dd6c3c6912752b9355cacc411874a72073f8b1fe839e8013abec7ebcd  8904  run2/text_logs/log_03_coordinates_foot.txt  INCLUDED
+3e3d6ce9839bb7ba6fac72a044673ded2264721401c44d2a499a929a9101c9cd  6057  run2/text_logs/log_04_weights_stats.txt  INCLUDED
+dcd972ff50713b8dc193540014b018ee78faa1894e3f3aa3e8820c39274cb371  2358  run2/text_logs/log_05_weight_falloff.txt  INCLUDED
+7447e10bd870df670fcbcedcc5346f2d383005504516ca5cae41b3cb42ba161b  5344  run2/text_logs/log_06_compare_star_rai.txt  INCLUDED
+a0b44ecf709ce33f6e3889ce46779ae4d9a1715cf1033d8efcfc848eafe508ae  3997  run2/text_logs/log_07_rig_differences.txt  INCLUDED
+73f7eed60c56d26dd1ed9663ea94643c04bd200bc5e3cdc4fc9936140f65e761  42  run2/timing.txt  INCLUDED
+bf1d5b7f913249d850bdc6d90ca217085361db63526112ee273588bae93a8485  813  scripts/snapshot.sh  INCLUDED
+7165b9c33b4cd111c0f2e5b39224b64ba15c70f184c8045974be0f6502a0651f  3876  scripts/step1_verify_inputs_and_commit.py  INCLUDED
+40c9887ea4001dc2a34447ea6bd6ad8c9edcc02f1655f9f04c849bc695a7bc61  1322  scripts/step2_capture_env.sh  INCLUDED
+8bd211026cbcc692c72e35cd7278df96026b6168c05db3298208a94ea4cfe932  1165  scripts/step3_run_pipeline.sh  INCLUDED
+de4ccbabed984e588a27466ebcb9c92c4a9519e7637aeb2fad29f08d4fd576fb  6992  scripts/step5_compare.py  INCLUDED
+e2394ef52885b818d2fb9354946c3806fa063c22af0783ac2f4bcccdc71e81ed  1995  scripts/step6_check_claims.py  INCLUDED
+d4ecca7373305ecd8d637e0bcd42eaadcd8003e3e40ffb08630c05cad3f999f2  1787  scripts/step7_claude_discrepancy_check.py  INCLUDED
+
+## INPUTS used (NOT committed; not redistributed) — verified, see logs/step1_inputs_commit_verification.json and REPORT.md §2
+(10 approved MPFB2 files under /workspace/research/reflib_v1/mpfb2/; SHA-256 values listed in REPORT.md §2)
+
+## EXCLUDED by design
+MPFB2 asset files; extracted meshes; regenerated duplicates of 23 byte-identical output tables (hashes in run*/output_sha256.txt); Star Rai files; Seed-san material; unredacted protected snapshots (on box only).
+
+## UNAVAILABLE / NOT VERIFIABLE
+hash_prior_snapshot_comparison.json reproduction (no producing script); original log_*.txt (not committed by study); upstream provenance of inputs (no retrieval allowed); Star Rai v10 bone JSON (not committed anywhere).

@@ -1,0 +1,122 @@
+{
+ "v83": {
+  "header": {
+   "units": "metres",
+   "up": "Z",
+   "facing": "-Y",
+   "side": "_left = character left = +X",
+   "height_m": 0.3915,
+   "sole_to_skull_m": 0.95
+  },
+  "left_bones_x_positive": true,
+  "right_bones_x_negative": true,
+  "foot_tail_forward_is_minus_y": true,
+  "head_tail_z_equals_sole_to_skull": true,
+  "min_bone_z": 0.005655,
+  "mm_file_is_1000x_of_m_file": true
+ },
+ "v10": {
+  "header": {
+   "height_mm": 66.0,
+   "ankle_to_head_mm": 211.65
+  },
+  "left_bones_x_negative": true,
+  "right_bones_x_positive": true,
+  "foot_tail_forward_is_plus_y": true,
+  "foot_tail_z_mm": -88.0,
+  "ankle_to_head_tail_mm": 211.65,
+  "ankle_to_head_matches_header": true,
+  "sole_plane_z_mm_from_foot_tail": -88.0
+ },
+ "mapping_det": {
+  "v83": 1.0,
+  "v10": 1.0
+ },
+ "v83_vs_v10_known_nonuniform": "v8.3 foot tail z is 6 mm above sole (z=0 INFERRED) whereas v10 foot tail IS the sole (-88 mm): sole references differ by construction; documented, not corrected"
+}
+{
+ "sole_z": -0.81676,
+ "body_top_z": 0.84913,
+ "S_body_top_m": 1.66589,
+ "S_joint_head2_m": 1.6571949999999998,
+ "S_default_pos_m": 1.6615741813278198
+}
+{
+ "v83_S_m": 0.95,
+ "v83_sole_z": 0.0,
+ "v10_S_m": 0.23765,
+ "v10_sole_z_m": -0.088
+}
+ratio,mpfb2_mesh_bodytop,mpfb2_mesh_cubes,mpfb2_default_position,starrai_v8_3,starrai_v10,pose_independent
+thigh/shin,1.1036,1.1036,0.9677,1.1027,0.8545,yes
+upper_arm/forearm,1.0057,1.0057,1.0148,0.8273,1.0,yes
+leg(hip-ankle)/S,0.4808,0.4833,0.4818,0.4421,0.4292,yes
+arm(shoulder-wrist)/leg(hip-ankle),0.5199,0.5199,0.5587,0.6664,0.5961,yes (3D lengths)
+ankle_height_over_sole/S,0.0432,0.0434,0.041,0.1,0.1094,yes
+half_shoulder_width(|x|)/S,0.1007,0.1012,0.1023,0.0659,0.0854,no (arm/clavicle pose-dependent; shoulder joint x depends on A/T pose)
+half_hip_spacing(|x|)/S,0.0662,0.0666,0.061,0.0428,0.0421,yes
+stature_over_head_length,10.925,11.5763,11.2156,7.926,7.0624,yes
+head_length/S,0.0915,0.0864,0.0892,0.1262,0.1416,yes
+stature_S_m,1.6659,1.6572,1.6616,0.95,0.2377,yes
+thigh/leg(hip-ankle),0.5259,0.5259,0.4927,0.525,0.4608,yes
+upper_arm_len/leg,0.2842,0.2842,0.3024,0.3027,0.298,yes
+forearm_len/leg,0.2825,0.2825,0.298,0.3659,0.298,yes
+shoulder_width(2|x|)/leg,0.4188,0.4188,0.4248,0.2981,0.398,yes
+hip_spacing(2|x|)/leg,0.2756,0.2756,0.2533,0.1938,0.1961,yes
+leg_splay_from_vertical_deg,7.8406,7.8406,5.6786,0.232,0.0,pose measure
+arm_angle_from_down_deg(shoulder->wrist),47.8612,47.8612,47.0383,90.5118,11.31,pose measure
+
+landmark,mpfb2_mesh_bodytop:z/S,mpfb2_mesh_bodytop:|x|/S,mpfb2_mesh_bodytop:fwd_of_ankle/S,mpfb2_mesh_cubes:z/S,mpfb2_mesh_cubes:|x|/S,mpfb2_mesh_cubes:fwd_of_ankle/S,mpfb2_default_position:z/S,mpfb2_default_position:|x|/S,mpfb2_default_position:fwd_of_ankle/S,starrai_v8_3:z/S,starrai_v8_3:|x|/S,starrai_v8_3:fwd_of_ankle/S,starrai_v10:z/S,starrai_v10:|x|/S,starrai_v10:fwd_of_ankle/S
+hip,0.5195,0.0662,0.0079,0.5222,0.0666,0.008,0.5204,0.061,-0.0107,0.542,0.0428,0.0085,0.5386,0.0421,-0.0
+knee,0.2685,0.0949,0.0198,0.2699,0.0954,0.0199,0.2851,0.0858,0.0088,0.31,0.0479,0.0124,0.3408,0.0421,-0.0
+ankle,0.0432,0.1318,-0.0,0.0434,0.1325,-0.0,0.041,0.1087,-0.0,0.1,0.0411,-0.0,0.1094,0.0421,-0.0
+toe_tip,0.0099,0.1299,0.1156,0.0099,0.1306,0.1162,0.0066,0.1093,0.11,0.006,0.0305,0.0891,0.0,0.0421,0.1094
+shoulder,0.8052,0.1007,0.0093,0.8094,0.1012,0.0094,0.7938,0.1023,-0.002,0.7746,0.0659,0.0009,0.7911,0.0854,-0.0
+elbow,0.7,0.1878,0.0085,0.7036,0.1888,0.0085,0.6851,0.1994,-0.0015,0.7821,0.1988,-0.0124,0.6656,0.1105,-0.0
+wrist,0.6375,0.2588,0.106,0.6408,0.2602,0.1065,0.6103,0.2728,0.0967,0.7773,0.3604,-0.0062,0.5402,0.1356,-0.0
+hand_tip,0.5685,0.2872,0.1815,0.5715,0.2887,0.1825,0.5372,0.3051,0.1743,0.7768,0.4649,-0.0029,0.4884,0.146,-0.0
+neck_base,0.8439,0.0,0.0046,0.8483,0.0,0.0047,0.8502,0.0,-0.0106,0.8248,0.0,0.0147,,,
+skull_base,0.909,0.0,0.0102,0.9137,0.0,0.0102,0.9109,0.0,0.013,0.8739,0.0,0.0092,0.8584,0.0,-0.0
+skull_top,1.0,0.0,0.0005,1.0,0.0,0.0055,1.0,0.0,0.0088,1.0,0.0,0.0053,1.0,0.0,-0.0
+
+{
+ "mpfb2_default_foot_L_pitch_deg": 27.233150334889686,
+ "mpfb2_game_engine_foot_l_pitch_deg": 27.233136195283283,
+ "starrai_v8_3_foot_left_pitch_deg": 46.30513387041238,
+ "starrai_v10_foot_left_pitch_deg": 45.0,
+ "starrai_v8_3_foot_length_horizontal_over_S": 0.08976496855709025,
+ "starrai_v10_foot_length_horizontal_over_S": 0.10940458657689879,
+ "mpfb2_ankle_to_toe_horizontal_over_S_bodytop": 0.11561517861294004,
+ "starrai_v8_3_ankle_above_sole_over_S": 0.1,
+ "starrai_v10_ankle_above_sole_over_S": 0.10940458657689878,
+ "mpfb2_ankle_above_sole_over_S_bodytop": 0.043205133592253996,
+ "note": "Star Rai foot tail is a bone tail, MPFB2 foot.L tail is 'MEAN' of two vertices near the ball; pitch is ankle->bone tail in both. v10 sole plane assumed flat (z=-88 at tail)."
+}
+{
+ "landmarks": [
+  "hip",
+  "knee",
+  "ankle",
+  "shoulder",
+  "elbow",
+  "wrist",
+  "hand_tip",
+  "skull_base",
+  "skull_top"
+ ],
+ "z_scale": 3.8566587619579464,
+ "z_shift_m": 0.42299052155162775,
+ "max_resid_m": 0.20679809734791732,
+ "rms_resid_m": 0.10656418561813936,
+ "per_landmark_resid_m": {
+  "hip": 0.062356872029945554,
+  "knee": 0.10149391021792215,
+  "ankle": 0.08887767831023508,
+  "shoulder": 0.07275639774742237,
+  "elbow": -0.0493109354758563,
+  "wrist": -0.15967826869913493,
+  "hand_tip": -0.20679809734791732,
+  "skull_base": 0.04016293793874948,
+  "skull_top": 0.05013950527863442
+ }
+}

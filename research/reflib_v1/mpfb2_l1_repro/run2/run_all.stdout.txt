@@ -1,0 +1,20 @@
+before inputs_all_ok True manifest_ok True n_protected 68
+== 02_joints_hierarchy
+== 03_coordinates_foot
+== 04_weights_stats
+== 05_weight_falloff
+== 06_compare_star_rai
+== 07_rig_differences
+after inputs_all_ok True manifest_ok True n_protected 68
+{
+ "inputs_unchanged_hash_and_mtime": true,
+ "protected_files": 68,
+ "protected_changed": [],
+ "prefixes_found": {
+  "eab1839c": true,
+  "5d373125": true,
+  "235767bf": true,
+  "40b6ae02": true,
+  "6a6ac337": true
+ }
+}

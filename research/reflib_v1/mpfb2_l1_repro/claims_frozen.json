@@ -1,0 +1,3027 @@
+{
+ "frozen_note": "Written before the pipeline was first run and before any comparison. Claim = value quoted in committed REPORT.md; check = regenerated value under same rounding.",
+ "claims": [
+  {
+   "id": "c01",
+   "desc": "body height 1.6659 m",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "body_extent_rig_space_m",
+    "height_z"
+   ],
+   "kind": "round",
+   "quoted": 1.6659,
+   "decimals": 4,
+   "scale": 1.0
+  },
+  {
+   "id": "c02",
+   "desc": "19,158 vertices",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "body_vertices",
+    "n_vertices_total"
+   ],
+   "kind": "exact",
+   "quoted": 19158,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c03",
+   "desc": "18,486 faces",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "body_vertices",
+    "n_faces"
+   ],
+   "kind": "exact",
+   "quoted": 18486,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c04",
+   "desc": "body = exactly 0..13379",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "body_vertices",
+    "body_is_exactly_0_to_13379"
+   ],
+   "kind": "exact",
+   "quoted": true,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c05",
+   "desc": "13,380 body vertices",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "body_vertices",
+    "body_group_vertex_count"
+   ],
+   "kind": "exact",
+   "quoted": 13380,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c06",
+   "desc": "13,378 body faces",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "body_vertices",
+    "body_faces"
+   ],
+   "kind": "exact",
+   "quoted": 13378,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c07",
+   "desc": "125 joint cube groups",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "body_vertices",
+    "joint_groups"
+   ],
+   "kind": "exact",
+   "quoted": 125,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c08",
+   "desc": "1000 joint vertices",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "body_vertices",
+    "joint_vertices"
+   ],
+   "kind": "exact",
+   "quoted": 1000,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c09",
+   "desc": "joint vertices shared with body = 0",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "body_vertices",
+    "joint_vertices_shared_with_body"
+   ],
+   "kind": "exact",
+   "quoted": 0,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c10",
+   "desc": "conversion is proper rotation",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "conversion",
+    "is_proper_rotation"
+   ],
+   "kind": "exact",
+   "quoted": true,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c11",
+   "desc": "conversion det +1",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "conversion",
+    "matrix_det"
+   ],
+   "kind": "round",
+   "quoted": 1.0,
+   "decimals": 6,
+   "scale": 1.0
+  },
+  {
+   "id": "c12",
+   "desc": "joint-ground z = -0.8183 m",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "frames",
+    "joint_ground_z_in_mesh_frame"
+   ],
+   "kind": "round",
+   "quoted": -0.8183,
+   "decimals": 4,
+   "scale": 1.0
+  },
+  {
+   "id": "c13_default",
+   "desc": "L bones x>0 / count default",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "side_convention",
+    "default",
+    "L_head_x_pos"
+   ],
+   "kind": "exact",
+   "quoted": 62,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c14_default",
+   "desc": "R bones x<0 default",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "side_convention",
+    "default",
+    "R_head_x_neg"
+   ],
+   "kind": "exact",
+   "quoted": 62,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c13_game_engine",
+   "desc": "L bones x>0 / count game_engine",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "side_convention",
+    "game_engine",
+    "L_head_x_pos"
+   ],
+   "kind": "exact",
+   "quoted": 23,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c14_game_engine",
+   "desc": "R bones x<0 game_engine",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "side_convention",
+    "game_engine",
+    "R_head_x_neg"
+   ],
+   "kind": "exact",
+   "quoted": 23,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c13_rigify_human",
+   "desc": "L bones x>0 / count rigify_human",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "side_convention",
+    "rigify_human",
+    "L_head_x_pos"
+   ],
+   "kind": "exact",
+   "quoted": 47,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c14_rigify_human",
+   "desc": "R bones x<0 rigify_human",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "side_convention",
+    "rigify_human",
+    "R_head_x_neg"
+   ],
+   "kind": "exact",
+   "quoted": 47,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c15",
+   "desc": "toe end is -Y vs ankle",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "front_axis",
+    "toe_end_is_neg_y_vs_ankle"
+   ],
+   "kind": "exact",
+   "quoted": true,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c20_default_n",
+   "desc": "n ends default",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "default",
+    "recompute_error_all",
+    "n"
+   ],
+   "kind": "exact",
+   "quoted": 326,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c21_default_median_m",
+   "desc": "median_m cm default",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "default",
+    "recompute_error_all",
+    "median_m"
+   ],
+   "kind": "round",
+   "quoted": 3.1,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c21_default_p95_m",
+   "desc": "p95_m cm default",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "default",
+    "recompute_error_all",
+    "p95_m"
+   ],
+   "kind": "round",
+   "quoted": 5.9,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c21_default_max_m",
+   "desc": "max_m cm default",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "default",
+    "recompute_error_all",
+    "max_m"
+   ],
+   "kind": "round",
+   "quoted": 6.2,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c20_game_engine_n",
+   "desc": "n ends game_engine",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "game_engine",
+    "recompute_error_all",
+    "n"
+   ],
+   "kind": "exact",
+   "quoted": 106,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c21_game_engine_median_m",
+   "desc": "median_m cm game_engine",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "game_engine",
+    "recompute_error_all",
+    "median_m"
+   ],
+   "kind": "round",
+   "quoted": 5.5,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c21_game_engine_p95_m",
+   "desc": "p95_m cm game_engine",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "game_engine",
+    "recompute_error_all",
+    "p95_m"
+   ],
+   "kind": "round",
+   "quoted": 6.2,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c21_game_engine_max_m",
+   "desc": "max_m cm game_engine",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "game_engine",
+    "recompute_error_all",
+    "max_m"
+   ],
+   "kind": "round",
+   "quoted": 81.8,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c20_rigify_human_n",
+   "desc": "n ends rigify_human",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human",
+    "recompute_error_all",
+    "n"
+   ],
+   "kind": "exact",
+   "quoted": 370,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c21_rigify_human_median_m",
+   "desc": "median_m cm rigify_human",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human",
+    "recompute_error_all",
+    "median_m"
+   ],
+   "kind": "round",
+   "quoted": 1.1,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c21_rigify_human_p95_m",
+   "desc": "p95_m cm rigify_human",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human",
+    "recompute_error_all",
+    "p95_m"
+   ],
+   "kind": "round",
+   "quoted": 5.9,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c21_rigify_human_max_m",
+   "desc": "max_m cm rigify_human",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human",
+    "recompute_error_all",
+    "max_m"
+   ],
+   "kind": "round",
+   "quoted": 6.2,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c20_rigify_human_toes_n",
+   "desc": "n ends rigify_human_toes",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "recompute_error_all",
+    "n"
+   ],
+   "kind": "exact",
+   "quoted": 426,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c21_rigify_human_toes_median_m",
+   "desc": "median_m cm rigify_human_toes",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "recompute_error_all",
+    "median_m"
+   ],
+   "kind": "round",
+   "quoted": 1.3,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c21_rigify_human_toes_p95_m",
+   "desc": "p95_m cm rigify_human_toes",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "recompute_error_all",
+    "p95_m"
+   ],
+   "kind": "round",
+   "quoted": 5.9,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c21_rigify_human_toes_max_m",
+   "desc": "max_m cm rigify_human_toes",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "recompute_error_all",
+    "max_m"
+   ],
+   "kind": "round",
+   "quoted": 6.2,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c22a",
+   "desc": "default CUBE count 216",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    [
+     "default",
+     "strategy_counts",
+     "head:CUBE"
+    ],
+    [
+     "default",
+     "strategy_counts",
+     "tail:CUBE"
+    ]
+   ],
+   "kind": "sum_exact",
+   "quoted": 216,
+   "decimals": null,
+   "scale": 1
+  },
+  {
+   "id": "c22b",
+   "desc": "default VERTEX count 84",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    [
+     "default",
+     "strategy_counts",
+     "head:VERTEX"
+    ],
+    [
+     "default",
+     "strategy_counts",
+     "tail:VERTEX"
+    ]
+   ],
+   "kind": "sum_exact",
+   "quoted": 84,
+   "decimals": null,
+   "scale": 1
+  },
+  {
+   "id": "c22c",
+   "desc": "default MEAN count 26",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    [
+     "default",
+     "strategy_counts",
+     "head:MEAN"
+    ],
+    [
+     "default",
+     "strategy_counts",
+     "tail:MEAN"
+    ]
+   ],
+   "kind": "sum_exact",
+   "quoted": 26,
+   "decimals": null,
+   "scale": 1
+  },
+  {
+   "id": "c23a",
+   "desc": "default VERTEX head median 0.96 cm",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "default",
+    "recompute_error_by_strategy",
+    "head:VERTEX",
+    "median_m"
+   ],
+   "kind": "round",
+   "quoted": 0.96,
+   "decimals": 2,
+   "scale": 100.0
+  },
+  {
+   "id": "c23b",
+   "desc": "default VERTEX tail median 0.95 cm",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "default",
+    "recompute_error_by_strategy",
+    "tail:VERTEX",
+    "median_m"
+   ],
+   "kind": "round",
+   "quoted": 0.95,
+   "decimals": 2,
+   "scale": 100.0
+  },
+  {
+   "id": "c23c",
+   "desc": "hand/finger median 5.8 cm",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "default",
+    "recompute_error_by_region",
+    "hand_fingers",
+    "median_m"
+   ],
+   "kind": "round",
+   "quoted": 5.8,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c23d",
+   "desc": "other bones median 1.7 cm",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "default",
+    "recompute_error_by_region",
+    "other",
+    "median_m"
+   ],
+   "kind": "round",
+   "quoted": 1.7,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c24",
+   "desc": "mean vs bbox cube centre <=0.11 mm",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "_cube_groups",
+    "mean_vs_bbox_centre_max_dist_m"
+   ],
+   "kind": "max_le",
+   "quoted": 0.00011,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_default_n_bones",
+   "desc": "n_bones default",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "default",
+    "n_bones"
+   ],
+   "kind": "exact",
+   "quoted": 163,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_default_n_roots",
+   "desc": "n_roots default",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "default",
+    "n_roots"
+   ],
+   "kind": "exact",
+   "quoted": 1,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_default_max_depth",
+   "desc": "max_depth default",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "default",
+    "max_depth"
+   ],
+   "kind": "exact",
+   "quoted": 16,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_default_n_leaf",
+   "desc": "n_leaf default",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "default",
+    "n_leaf"
+   ],
+   "kind": "exact",
+   "quoted": 49,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_default_n_use_connect",
+   "desc": "n_use_connect default",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "default",
+    "n_use_connect"
+   ],
+   "kind": "exact",
+   "quoted": 0,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c31_default_nocycle",
+   "desc": "no cycle default",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "default",
+    "cycle"
+   ],
+   "kind": "exact",
+   "quoted": false,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c32_default_nomissingparent",
+   "desc": "no missing parent default",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "default",
+    "missing_parent"
+   ],
+   "kind": "exact",
+   "quoted": [],
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_game_engine_n_bones",
+   "desc": "n_bones game_engine",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "game_engine",
+    "n_bones"
+   ],
+   "kind": "exact",
+   "quoted": 53,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_game_engine_n_roots",
+   "desc": "n_roots game_engine",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "game_engine",
+    "n_roots"
+   ],
+   "kind": "exact",
+   "quoted": 1,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_game_engine_max_depth",
+   "desc": "max_depth game_engine",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "game_engine",
+    "max_depth"
+   ],
+   "kind": "exact",
+   "quoted": 11,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_game_engine_n_leaf",
+   "desc": "n_leaf game_engine",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "game_engine",
+    "n_leaf"
+   ],
+   "kind": "exact",
+   "quoted": 13,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_game_engine_n_use_connect",
+   "desc": "n_use_connect game_engine",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "game_engine",
+    "n_use_connect"
+   ],
+   "kind": "exact",
+   "quoted": 0,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c31_game_engine_nocycle",
+   "desc": "no cycle game_engine",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "game_engine",
+    "cycle"
+   ],
+   "kind": "exact",
+   "quoted": false,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c32_game_engine_nomissingparent",
+   "desc": "no missing parent game_engine",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "game_engine",
+    "missing_parent"
+   ],
+   "kind": "exact",
+   "quoted": [],
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_rigify_human_n_bones",
+   "desc": "n_bones rigify_human",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human",
+    "n_bones"
+   ],
+   "kind": "exact",
+   "quoted": 185,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_rigify_human_n_roots",
+   "desc": "n_roots rigify_human",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human",
+    "n_roots"
+   ],
+   "kind": "exact",
+   "quoted": 6,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_rigify_human_max_depth",
+   "desc": "max_depth rigify_human",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human",
+    "max_depth"
+   ],
+   "kind": "exact",
+   "quoted": 12,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_rigify_human_n_leaf",
+   "desc": "n_leaf rigify_human",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human",
+    "n_leaf"
+   ],
+   "kind": "exact",
+   "quoted": 85,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_rigify_human_n_use_connect",
+   "desc": "n_use_connect rigify_human",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human",
+    "n_use_connect"
+   ],
+   "kind": "exact",
+   "quoted": 76,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c31_rigify_human_nocycle",
+   "desc": "no cycle rigify_human",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human",
+    "cycle"
+   ],
+   "kind": "exact",
+   "quoted": false,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c32_rigify_human_nomissingparent",
+   "desc": "no missing parent rigify_human",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human",
+    "missing_parent"
+   ],
+   "kind": "exact",
+   "quoted": [],
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_rigify_human_toes_n_bones",
+   "desc": "n_bones rigify_human_toes",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "n_bones"
+   ],
+   "kind": "exact",
+   "quoted": 213,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_rigify_human_toes_n_roots",
+   "desc": "n_roots rigify_human_toes",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "n_roots"
+   ],
+   "kind": "exact",
+   "quoted": 6,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_rigify_human_toes_max_depth",
+   "desc": "max_depth rigify_human_toes",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "max_depth"
+   ],
+   "kind": "exact",
+   "quoted": 12,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_rigify_human_toes_n_leaf",
+   "desc": "n_leaf rigify_human_toes",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "n_leaf"
+   ],
+   "kind": "exact",
+   "quoted": 93,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c30_rigify_human_toes_n_use_connect",
+   "desc": "n_use_connect rigify_human_toes",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "n_use_connect"
+   ],
+   "kind": "exact",
+   "quoted": 94,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c31_rigify_human_toes_nocycle",
+   "desc": "no cycle rigify_human_toes",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "cycle"
+   ],
+   "kind": "exact",
+   "quoted": false,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c32_rigify_human_toes_nomissingparent",
+   "desc": "no missing parent rigify_human_toes",
+   "file": "outputs/joints_hierarchy_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "missing_parent"
+   ],
+   "kind": "exact",
+   "quoted": [],
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c40",
+   "desc": "default foot.L pitch default_position 27.2",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "foot_bones",
+    "default_rig_foot.L_default",
+    "pitch_deg_below_horizontal"
+   ],
+   "kind": "round",
+   "quoted": 27.2,
+   "decimals": 1,
+   "scale": 1.0
+  },
+  {
+   "id": "c41",
+   "desc": "default foot.L pitch recomputed 25.2",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "foot_bones",
+    "default_rig_foot.L_recomputed",
+    "pitch_deg_below_horizontal"
+   ],
+   "kind": "round",
+   "quoted": 25.2,
+   "decimals": 1,
+   "scale": 1.0
+  },
+  {
+   "id": "c42",
+   "desc": "game_engine foot_l pitch default 27.2",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "foot_bones",
+    "game_engine_foot_l_default",
+    "pitch_deg_below_horizontal"
+   ],
+   "kind": "round",
+   "quoted": 27.2,
+   "decimals": 1,
+   "scale": 1.0
+  },
+  {
+   "id": "c43",
+   "desc": "game_engine foot_l pitch recomputed 28.2",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "foot_bones",
+    "game_engine_foot_l_recomputed",
+    "pitch_deg_below_horizontal"
+   ],
+   "kind": "round",
+   "quoted": 28.2,
+   "decimals": 1,
+   "scale": 1.0
+  },
+  {
+   "id": "c44",
+   "desc": "game_engine foot_l length 0.132",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "foot_bones",
+    "game_engine_foot_l_default",
+    "length_m"
+   ],
+   "kind": "round",
+   "quoted": 0.132,
+   "decimals": 3,
+   "scale": 1.0
+  },
+  {
+   "id": "c45",
+   "desc": "ball_l pitch -2.7",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "foot_bones",
+    "game_engine_ball_l_default",
+    "pitch_deg_below_horizontal"
+   ],
+   "kind": "round",
+   "quoted": -2.7,
+   "decimals": 1,
+   "scale": 1.0
+  },
+  {
+   "id": "c46",
+   "desc": "288 lowest foot vertices",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "sole_plane",
+    "n_lowest_used"
+   ],
+   "kind": "exact",
+   "quoted": 288,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c47",
+   "desc": "sole slope 0.52 deg",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "sole_plane",
+    "slope_deg_heel_to_toe_along_foot_axis"
+   ],
+   "kind": "round",
+   "quoted": 0.52,
+   "decimals": 2,
+   "scale": 1.0
+  },
+  {
+   "id": "c48",
+   "desc": "extent along foot 0.232 m",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "sole_plane",
+    "extent_along_axis_m"
+   ],
+   "kind": "round",
+   "quoted": 0.232,
+   "decimals": 3,
+   "scale": 1.0
+  },
+  {
+   "id": "c49",
+   "desc": "ankle height recomputed 6.75 cm",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "sole_plane",
+    "ankle_height_above_sole_m_recomputed_joint"
+   ],
+   "kind": "round",
+   "quoted": 6.75,
+   "decimals": 2,
+   "scale": 100.0
+  },
+  {
+   "id": "c50",
+   "desc": "ankle height default_position 6.37 cm",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "sole_plane",
+    "ankle_height_above_sole_m_default_position"
+   ],
+   "kind": "round",
+   "quoted": 6.37,
+   "decimals": 2,
+   "scale": 100.0
+  },
+  {
+   "id": "c51",
+   "desc": "ankle above lowest vertex 7.20 cm",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "sole_plane",
+    "ankle_height_above_lowest_body_vertex_m_recomputed"
+   ],
+   "kind": "round",
+   "quoted": 7.2,
+   "decimals": 2,
+   "scale": 100.0
+  },
+  {
+   "id": "c52",
+   "desc": "all-vertex min z -0.8449",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "sole_plane",
+    "all_vertex_min_z"
+   ],
+   "kind": "round",
+   "quoted": -0.8449,
+   "decimals": 4,
+   "scale": 1.0
+  },
+  {
+   "id": "c53",
+   "desc": "tail ratio game_engine default 0.046",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "foot_tail_height_vs_sole",
+    "game_engine_foot_l_default",
+    "tail_height_over_ankle_height"
+   ],
+   "kind": "round",
+   "quoted": 0.046,
+   "decimals": 3,
+   "scale": 1.0
+  },
+  {
+   "id": "c54",
+   "desc": "tail ratio game_engine recomputed 0.015",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "foot_tail_height_vs_sole",
+    "game_engine_foot_l_recomputed",
+    "tail_height_over_ankle_height"
+   ],
+   "kind": "round",
+   "quoted": 0.015,
+   "decimals": 3,
+   "scale": 1.0
+  },
+  {
+   "id": "c55",
+   "desc": "tail-on-sole pitch 28.8",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "foot_tail_height_vs_sole",
+    "game_engine_foot_l_default",
+    "pitch_deg_if_tail_were_on_sole"
+   ],
+   "kind": "round",
+   "quoted": 28.8,
+   "decimals": 1,
+   "scale": 1.0
+  },
+  {
+   "id": "c56",
+   "desc": "tail-on-sole pitch 29.0",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "foot_tail_height_vs_sole",
+    "game_engine_foot_l_recomputed",
+    "pitch_deg_if_tail_were_on_sole"
+   ],
+   "kind": "round",
+   "quoted": 29.0,
+   "decimals": 1,
+   "scale": 1.0
+  },
+  {
+   "id": "c57",
+   "desc": "default foot.L tail-on-sole 46-48 (lo 46.6)",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "foot_tail_height_vs_sole",
+    "default_foot.L_recomputed",
+    "pitch_deg_if_tail_were_on_sole"
+   ],
+   "kind": "range",
+   "quoted": [
+    46,
+    48
+   ],
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c58",
+   "desc": "default foot.L tail-on-sole (hi 47.7)",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "foot_tail_height_vs_sole",
+    "default_foot.L_default",
+    "pitch_deg_if_tail_were_on_sole"
+   ],
+   "kind": "range",
+   "quoted": [
+    46,
+    48
+   ],
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c59",
+   "desc": "game_engine tail 1-3 mm above sole (default 2.96)",
+   "file": "outputs/coordinates_foot.json",
+   "path": [
+    "foot_tail_height_vs_sole",
+    "game_engine_foot_l_default",
+    "tail_height_above_sole_m"
+   ],
+   "kind": "range",
+   "quoted": [
+    0.001,
+    0.003
+   ],
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c60_default_nb",
+   "desc": "bones with weights default",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "default",
+    "n_bones_in_weight_file"
+   ],
+   "kind": "exact",
+   "quoted": 163,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c61_default_ne",
+   "desc": "entries default",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "default",
+    "n_entries"
+   ],
+   "kind": "exact",
+   "quoted": 58388,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c62_default_lt",
+   "desc": "entries<0.01 default",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "default",
+    "n_entries_below_0p01"
+   ],
+   "kind": "exact",
+   "quoted": 6332,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c63_default_vc",
+   "desc": "vertices covered default",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "default",
+    "vertices_with_weights"
+   ],
+   "kind": "exact",
+   "quoted": 19158,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c64_default_mi",
+   "desc": "mean influences default",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "default",
+    "influences_body_vertices",
+    "mean"
+   ],
+   "kind": "round",
+   "quoted": 3.06,
+   "decimals": 2,
+   "scale": 1.0
+  },
+  {
+   "id": "c65_default_mx",
+   "desc": "max influences default",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "default",
+    "influences_body_vertices",
+    "max"
+   ],
+   "kind": "exact",
+   "quoted": 8,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c66_default_p1",
+   "desc": "% single influence default",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "default",
+    "pct_body_vertices_single_influence"
+   ],
+   "kind": "round",
+   "quoted": 16.2,
+   "decimals": 1,
+   "scale": 1.0
+  },
+  {
+   "id": "c67_default_p4",
+   "desc": "% <=4 influences default",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "default",
+    "pct_body_vertices_le4_influences"
+   ],
+   "kind": "round",
+   "quoted": 80.3,
+   "decimals": 1,
+   "scale": 1.0
+  },
+  {
+   "id": "c68_default_dup",
+   "desc": "no duplicate vertex/bone pairs default",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "default",
+    "duplicate_vertex_bone_pairs"
+   ],
+   "kind": "exact",
+   "quoted": 0,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c69_default_nonpos",
+   "desc": "no nonpositive weights default",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "default",
+    "n_entries_nonpositive"
+   ],
+   "kind": "exact",
+   "quoted": 0,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c60_game_engine_nb",
+   "desc": "bones with weights game_engine",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "game_engine",
+    "n_bones_in_weight_file"
+   ],
+   "kind": "exact",
+   "quoted": 53,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c61_game_engine_ne",
+   "desc": "entries game_engine",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "game_engine",
+    "n_entries"
+   ],
+   "kind": "exact",
+   "quoted": 36416,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c62_game_engine_lt",
+   "desc": "entries<0.01 game_engine",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "game_engine",
+    "n_entries_below_0p01"
+   ],
+   "kind": "exact",
+   "quoted": 2983,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c63_game_engine_vc",
+   "desc": "vertices covered game_engine",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "game_engine",
+    "vertices_with_weights"
+   ],
+   "kind": "exact",
+   "quoted": 19158,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c64_game_engine_mi",
+   "desc": "mean influences game_engine",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "game_engine",
+    "influences_body_vertices",
+    "mean"
+   ],
+   "kind": "round",
+   "quoted": 1.85,
+   "decimals": 2,
+   "scale": 1.0
+  },
+  {
+   "id": "c65_game_engine_mx",
+   "desc": "max influences game_engine",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "game_engine",
+    "influences_body_vertices",
+    "max"
+   ],
+   "kind": "exact",
+   "quoted": 6,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c66_game_engine_p1",
+   "desc": "% single influence game_engine",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "game_engine",
+    "pct_body_vertices_single_influence"
+   ],
+   "kind": "round",
+   "quoted": 49.2,
+   "decimals": 1,
+   "scale": 1.0
+  },
+  {
+   "id": "c67_game_engine_p4",
+   "desc": "% <=4 influences game_engine",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "game_engine",
+    "pct_body_vertices_le4_influences"
+   ],
+   "kind": "round",
+   "quoted": 95.5,
+   "decimals": 1,
+   "scale": 1.0
+  },
+  {
+   "id": "c68_game_engine_dup",
+   "desc": "no duplicate vertex/bone pairs game_engine",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "game_engine",
+    "duplicate_vertex_bone_pairs"
+   ],
+   "kind": "exact",
+   "quoted": 0,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c69_game_engine_nonpos",
+   "desc": "no nonpositive weights game_engine",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "game_engine",
+    "n_entries_nonpositive"
+   ],
+   "kind": "exact",
+   "quoted": 0,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c60_rigify_human_toes_nb",
+   "desc": "bones with weights rigify_human_toes",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "n_bones_in_weight_file"
+   ],
+   "kind": "exact",
+   "quoted": 207,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c61_rigify_human_toes_ne",
+   "desc": "entries rigify_human_toes",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "n_entries"
+   ],
+   "kind": "exact",
+   "quoted": 65101,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c62_rigify_human_toes_lt",
+   "desc": "entries<0.01 rigify_human_toes",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "n_entries_below_0p01"
+   ],
+   "kind": "exact",
+   "quoted": 10373,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c63_rigify_human_toes_vc",
+   "desc": "vertices covered rigify_human_toes",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "vertices_with_weights"
+   ],
+   "kind": "exact",
+   "quoted": 19142,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c64_rigify_human_toes_mi",
+   "desc": "mean influences rigify_human_toes",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "influences_body_vertices",
+    "mean"
+   ],
+   "kind": "round",
+   "quoted": 3.44,
+   "decimals": 2,
+   "scale": 1.0
+  },
+  {
+   "id": "c65_rigify_human_toes_mx",
+   "desc": "max influences rigify_human_toes",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "influences_body_vertices",
+    "max"
+   ],
+   "kind": "exact",
+   "quoted": 11,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c66_rigify_human_toes_p1",
+   "desc": "% single influence rigify_human_toes",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "pct_body_vertices_single_influence"
+   ],
+   "kind": "round",
+   "quoted": 11.0,
+   "decimals": 1,
+   "scale": 1.0
+  },
+  {
+   "id": "c67_rigify_human_toes_p4",
+   "desc": "% <=4 influences rigify_human_toes",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "pct_body_vertices_le4_influences"
+   ],
+   "kind": "round",
+   "quoted": 74.3,
+   "decimals": 1,
+   "scale": 1.0
+  },
+  {
+   "id": "c68_rigify_human_toes_dup",
+   "desc": "no duplicate vertex/bone pairs rigify_human_toes",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "duplicate_vertex_bone_pairs"
+   ],
+   "kind": "exact",
+   "quoted": 0,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c69_rigify_human_toes_nonpos",
+   "desc": "no nonpositive weights rigify_human_toes",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "n_entries_nonpositive"
+   ],
+   "kind": "exact",
+   "quoted": 0,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c70",
+   "desc": "default weight sum range min ~0.9998",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "default",
+    "weight_sum_per_vertex",
+    "min"
+   ],
+   "kind": "round",
+   "quoted": 0.9998,
+   "decimals": 4,
+   "scale": 1.0
+  },
+  {
+   "id": "c71",
+   "desc": "rigify weight sum max ~1.0000857",
+   "file": "outputs/weights_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "weight_sum_per_vertex",
+    "max"
+   ],
+   "kind": "round",
+   "quoted": 1.0000857,
+   "decimals": 7,
+   "scale": 1.0
+  },
+  {
+   "id": "c80_default_shoulder_t10",
+   "desc": "t10 cm default shoulder",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "shoulder_l",
+    "t10_m"
+   ],
+   "kind": "round",
+   "quoted": -8.1,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c81_default_shoulder_t90",
+   "desc": "t90 cm default shoulder",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "shoulder_l",
+    "t90_m"
+   ],
+   "kind": "round",
+   "quoted": 7.3,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c82_default_shoulder_w",
+   "desc": "width cm default shoulder",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "shoulder_l",
+    "blend_width_10_90_m"
+   ],
+   "kind": "round",
+   "quoted": 15.4,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c83_default_shoulder_t50",
+   "desc": "t50 cm default shoulder",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "shoulder_l",
+    "t50_m"
+   ],
+   "kind": "round",
+   "quoted": 0.2,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c84_default_shoulder_nv",
+   "desc": "verts partial default shoulder",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "shoulder_l",
+    "n_vertices_partial_0p1_0p9"
+   ],
+   "kind": "exact",
+   "quoted": 158,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c80_default_elbow_t10",
+   "desc": "t10 cm default elbow",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "elbow_l",
+    "t10_m"
+   ],
+   "kind": "round",
+   "quoted": -4.5,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c81_default_elbow_t90",
+   "desc": "t90 cm default elbow",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "elbow_l",
+    "t90_m"
+   ],
+   "kind": "round",
+   "quoted": 2.6,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c82_default_elbow_w",
+   "desc": "width cm default elbow",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "elbow_l",
+    "blend_width_10_90_m"
+   ],
+   "kind": "round",
+   "quoted": 7.1,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c83_default_elbow_t50",
+   "desc": "t50 cm default elbow",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "elbow_l",
+    "t50_m"
+   ],
+   "kind": "round",
+   "quoted": -0.1,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c84_default_elbow_nv",
+   "desc": "verts partial default elbow",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "elbow_l",
+    "n_vertices_partial_0p1_0p9"
+   ],
+   "kind": "exact",
+   "quoted": 88,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c80_default_hip_t10",
+   "desc": "t10 cm default hip",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "hip_l",
+    "t10_m"
+   ],
+   "kind": "round",
+   "quoted": -8.4,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c81_default_hip_t90",
+   "desc": "t90 cm default hip",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "hip_l",
+    "t90_m"
+   ],
+   "kind": "round",
+   "quoted": 11.9,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c82_default_hip_w",
+   "desc": "width cm default hip",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "hip_l",
+    "blend_width_10_90_m"
+   ],
+   "kind": "round",
+   "quoted": 20.3,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c83_default_hip_t50",
+   "desc": "t50 cm default hip",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "hip_l",
+    "t50_m"
+   ],
+   "kind": "round",
+   "quoted": 1.3,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c84_default_hip_nv",
+   "desc": "verts partial default hip",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "hip_l",
+    "n_vertices_partial_0p1_0p9"
+   ],
+   "kind": "exact",
+   "quoted": 170,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c80_default_knee_t10",
+   "desc": "t10 cm default knee",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "knee_l",
+    "t10_m"
+   ],
+   "kind": "round",
+   "quoted": -3.5,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c81_default_knee_t90",
+   "desc": "t90 cm default knee",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "knee_l",
+    "t90_m"
+   ],
+   "kind": "round",
+   "quoted": 5.6,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c82_default_knee_w",
+   "desc": "width cm default knee",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "knee_l",
+    "blend_width_10_90_m"
+   ],
+   "kind": "round",
+   "quoted": 9.1,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c83_default_knee_t50",
+   "desc": "t50 cm default knee",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "knee_l",
+    "t50_m"
+   ],
+   "kind": "round",
+   "quoted": 2.0,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c84_default_knee_nv",
+   "desc": "verts partial default knee",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "knee_l",
+    "n_vertices_partial_0p1_0p9"
+   ],
+   "kind": "exact",
+   "quoted": 96,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c80_game_engine_shoulder_t10",
+   "desc": "t10 cm game_engine shoulder",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "shoulder_l",
+    "t10_m"
+   ],
+   "kind": "round",
+   "quoted": -8.1,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c81_game_engine_shoulder_t90",
+   "desc": "t90 cm game_engine shoulder",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "shoulder_l",
+    "t90_m"
+   ],
+   "kind": "round",
+   "quoted": 7.3,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c82_game_engine_shoulder_w",
+   "desc": "width cm game_engine shoulder",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "shoulder_l",
+    "blend_width_10_90_m"
+   ],
+   "kind": "round",
+   "quoted": 15.4,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c83_game_engine_shoulder_t50",
+   "desc": "t50 cm game_engine shoulder",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "shoulder_l",
+    "t50_m"
+   ],
+   "kind": "round",
+   "quoted": 0.2,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c84_game_engine_shoulder_nv",
+   "desc": "verts partial game_engine shoulder",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "shoulder_l",
+    "n_vertices_partial_0p1_0p9"
+   ],
+   "kind": "exact",
+   "quoted": 158,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c80_game_engine_elbow_t10",
+   "desc": "t10 cm game_engine elbow",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "elbow_l",
+    "t10_m"
+   ],
+   "kind": "round",
+   "quoted": -4.5,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c81_game_engine_elbow_t90",
+   "desc": "t90 cm game_engine elbow",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "elbow_l",
+    "t90_m"
+   ],
+   "kind": "round",
+   "quoted": 2.6,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c82_game_engine_elbow_w",
+   "desc": "width cm game_engine elbow",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "elbow_l",
+    "blend_width_10_90_m"
+   ],
+   "kind": "round",
+   "quoted": 7.1,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c83_game_engine_elbow_t50",
+   "desc": "t50 cm game_engine elbow",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "elbow_l",
+    "t50_m"
+   ],
+   "kind": "round",
+   "quoted": -0.1,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c84_game_engine_elbow_nv",
+   "desc": "verts partial game_engine elbow",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "elbow_l",
+    "n_vertices_partial_0p1_0p9"
+   ],
+   "kind": "exact",
+   "quoted": 88,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c80_game_engine_hip_t10",
+   "desc": "t10 cm game_engine hip",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "hip_l",
+    "t10_m"
+   ],
+   "kind": "round",
+   "quoted": -8.4,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c81_game_engine_hip_t90",
+   "desc": "t90 cm game_engine hip",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "hip_l",
+    "t90_m"
+   ],
+   "kind": "round",
+   "quoted": 11.9,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c82_game_engine_hip_w",
+   "desc": "width cm game_engine hip",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "hip_l",
+    "blend_width_10_90_m"
+   ],
+   "kind": "round",
+   "quoted": 20.3,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c83_game_engine_hip_t50",
+   "desc": "t50 cm game_engine hip",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "hip_l",
+    "t50_m"
+   ],
+   "kind": "round",
+   "quoted": 1.3,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c84_game_engine_hip_nv",
+   "desc": "verts partial game_engine hip",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "hip_l",
+    "n_vertices_partial_0p1_0p9"
+   ],
+   "kind": "exact",
+   "quoted": 170,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c80_game_engine_knee_t10",
+   "desc": "t10 cm game_engine knee",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "knee_l",
+    "t10_m"
+   ],
+   "kind": "round",
+   "quoted": -3.5,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c81_game_engine_knee_t90",
+   "desc": "t90 cm game_engine knee",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "knee_l",
+    "t90_m"
+   ],
+   "kind": "round",
+   "quoted": 5.6,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c82_game_engine_knee_w",
+   "desc": "width cm game_engine knee",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "knee_l",
+    "blend_width_10_90_m"
+   ],
+   "kind": "round",
+   "quoted": 9.1,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c83_game_engine_knee_t50",
+   "desc": "t50 cm game_engine knee",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "knee_l",
+    "t50_m"
+   ],
+   "kind": "round",
+   "quoted": 2.0,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c84_game_engine_knee_nv",
+   "desc": "verts partial game_engine knee",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "game_engine",
+    "knee_l",
+    "n_vertices_partial_0p1_0p9"
+   ],
+   "kind": "exact",
+   "quoted": 96,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c80_rigify_human_toes_shoulder_t10",
+   "desc": "t10 cm rigify_human_toes shoulder",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "shoulder_l",
+    "t10_m"
+   ],
+   "kind": "round",
+   "quoted": -0.6,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c81_rigify_human_toes_shoulder_t90",
+   "desc": "t90 cm rigify_human_toes shoulder",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "shoulder_l",
+    "t90_m"
+   ],
+   "kind": "round",
+   "quoted": 7.7,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c82_rigify_human_toes_shoulder_w",
+   "desc": "width cm rigify_human_toes shoulder",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "shoulder_l",
+    "blend_width_10_90_m"
+   ],
+   "kind": "round",
+   "quoted": 8.4,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c83_rigify_human_toes_shoulder_t50",
+   "desc": "t50 cm rigify_human_toes shoulder",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "shoulder_l",
+    "t50_m"
+   ],
+   "kind": "round",
+   "quoted": 4.3,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c84_rigify_human_toes_shoulder_nv",
+   "desc": "verts partial rigify_human_toes shoulder",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "shoulder_l",
+    "n_vertices_partial_0p1_0p9"
+   ],
+   "kind": "exact",
+   "quoted": 168,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c80_rigify_human_toes_elbow_t10",
+   "desc": "t10 cm rigify_human_toes elbow",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "elbow_l",
+    "t10_m"
+   ],
+   "kind": "round",
+   "quoted": -4.4,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c81_rigify_human_toes_elbow_t90",
+   "desc": "t90 cm rigify_human_toes elbow",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "elbow_l",
+    "t90_m"
+   ],
+   "kind": "round",
+   "quoted": 5.8,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c82_rigify_human_toes_elbow_w",
+   "desc": "width cm rigify_human_toes elbow",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "elbow_l",
+    "blend_width_10_90_m"
+   ],
+   "kind": "round",
+   "quoted": 10.1,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c83_rigify_human_toes_elbow_t50",
+   "desc": "t50 cm rigify_human_toes elbow",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "elbow_l",
+    "t50_m"
+   ],
+   "kind": "round",
+   "quoted": 2.2,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c84_rigify_human_toes_elbow_nv",
+   "desc": "verts partial rigify_human_toes elbow",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "elbow_l",
+    "n_vertices_partial_0p1_0p9"
+   ],
+   "kind": "exact",
+   "quoted": 90,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c80_rigify_human_toes_hip_t10",
+   "desc": "t10 cm rigify_human_toes hip",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "hip_l",
+    "t10_m"
+   ],
+   "kind": "round",
+   "quoted": 0.9,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c81_rigify_human_toes_hip_t90",
+   "desc": "t90 cm rigify_human_toes hip",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "hip_l",
+    "t90_m"
+   ],
+   "kind": "round",
+   "quoted": 14.9,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c82_rigify_human_toes_hip_w",
+   "desc": "width cm rigify_human_toes hip",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "hip_l",
+    "blend_width_10_90_m"
+   ],
+   "kind": "round",
+   "quoted": 14.0,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c83_rigify_human_toes_hip_t50",
+   "desc": "t50 cm rigify_human_toes hip",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "hip_l",
+    "t50_m"
+   ],
+   "kind": "round",
+   "quoted": 9.3,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c84_rigify_human_toes_hip_nv",
+   "desc": "verts partial rigify_human_toes hip",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "hip_l",
+    "n_vertices_partial_0p1_0p9"
+   ],
+   "kind": "exact",
+   "quoted": 111,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c80_rigify_human_toes_knee_t10",
+   "desc": "t10 cm rigify_human_toes knee",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "knee_l",
+    "t10_m"
+   ],
+   "kind": "round",
+   "quoted": 0.5,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c81_rigify_human_toes_knee_t90",
+   "desc": "t90 cm rigify_human_toes knee",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "knee_l",
+    "t90_m"
+   ],
+   "kind": "round",
+   "quoted": 6.6,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c82_rigify_human_toes_knee_w",
+   "desc": "width cm rigify_human_toes knee",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "knee_l",
+    "blend_width_10_90_m"
+   ],
+   "kind": "round",
+   "quoted": 6.1,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c83_rigify_human_toes_knee_t50",
+   "desc": "t50 cm rigify_human_toes knee",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "knee_l",
+    "t50_m"
+   ],
+   "kind": "round",
+   "quoted": 3.5,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c84_rigify_human_toes_knee_nv",
+   "desc": "verts partial rigify_human_toes knee",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "rigify_human_toes",
+    "knee_l",
+    "n_vertices_partial_0p1_0p9"
+   ],
+   "kind": "exact",
+   "quoted": 59,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c85",
+   "desc": "default knee_r t10 -2.3 cm",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "knee_r",
+    "t10_m"
+   ],
+   "kind": "round",
+   "quoted": -2.3,
+   "decimals": 1,
+   "scale": 100.0
+  },
+  {
+   "id": "c86",
+   "desc": "default shoulder pct partial 38.8",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "shoulder_l",
+    "pct_partial"
+   ],
+   "kind": "round",
+   "quoted": 38.8,
+   "decimals": 1,
+   "scale": 1.0
+  },
+  {
+   "id": "c87",
+   "desc": "default hip pct partial 54.5",
+   "file": "outputs/weight_falloff_summary.json",
+   "path": [
+    "default",
+    "hip_l",
+    "pct_partial"
+   ],
+   "kind": "round",
+   "quoted": 54.5,
+   "decimals": 1,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_00",
+   "desc": "ratio thigh/shin mpfb2_mesh_bodytop",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "thigh/shin",
+    "mpfb2_mesh_bodytop"
+   ],
+   "kind": "round",
+   "quoted": 1.1,
+   "decimals": 2,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_01",
+   "desc": "ratio thigh/shin mpfb2_default_position",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "thigh/shin",
+    "mpfb2_default_position"
+   ],
+   "kind": "round",
+   "quoted": 0.97,
+   "decimals": 2,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_02",
+   "desc": "ratio thigh/shin starrai_v8_3",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "thigh/shin",
+    "starrai_v8_3"
+   ],
+   "kind": "round",
+   "quoted": 1.1,
+   "decimals": 2,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_03",
+   "desc": "ratio thigh/shin starrai_v10",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "thigh/shin",
+    "starrai_v10"
+   ],
+   "kind": "round",
+   "quoted": 0.85,
+   "decimals": 2,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_04",
+   "desc": "ratio head_length/S starrai_v8_3",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "head_length/S",
+    "starrai_v8_3"
+   ],
+   "kind": "round",
+   "quoted": 0.126,
+   "decimals": 3,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_05",
+   "desc": "ratio head_length/S starrai_v10",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "head_length/S",
+    "starrai_v10"
+   ],
+   "kind": "round",
+   "quoted": 0.142,
+   "decimals": 3,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_06",
+   "desc": "ratio leg(hip-ankle)/S starrai_v8_3",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "leg(hip-ankle)/S",
+    "starrai_v8_3"
+   ],
+   "kind": "round",
+   "quoted": 0.442,
+   "decimals": 3,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_07",
+   "desc": "ratio leg(hip-ankle)/S starrai_v10",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "leg(hip-ankle)/S",
+    "starrai_v10"
+   ],
+   "kind": "round",
+   "quoted": 0.429,
+   "decimals": 3,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_08",
+   "desc": "ratio ankle_height_over_sole/S starrai_v8_3",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "ankle_height_over_sole/S",
+    "starrai_v8_3"
+   ],
+   "kind": "round",
+   "quoted": 0.1,
+   "decimals": 3,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_09",
+   "desc": "ratio ankle_height_over_sole/S starrai_v10",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "ankle_height_over_sole/S",
+    "starrai_v10"
+   ],
+   "kind": "round",
+   "quoted": 0.109,
+   "decimals": 3,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_10",
+   "desc": "ratio upper_arm/forearm starrai_v8_3",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "upper_arm/forearm",
+    "starrai_v8_3"
+   ],
+   "kind": "round",
+   "quoted": 0.83,
+   "decimals": 2,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_11",
+   "desc": "ratio upper_arm/forearm starrai_v10",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "upper_arm/forearm",
+    "starrai_v10"
+   ],
+   "kind": "round",
+   "quoted": 1.0,
+   "decimals": 2,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_12",
+   "desc": "ratio upper_arm/forearm mpfb2_mesh_bodytop",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "upper_arm/forearm",
+    "mpfb2_mesh_bodytop"
+   ],
+   "kind": "round",
+   "quoted": 1.01,
+   "decimals": 2,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_13",
+   "desc": "ratio arm(shoulder-wrist)/leg(hip-ankle) starrai_v8_3",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "arm(shoulder-wrist)/leg(hip-ankle)",
+    "starrai_v8_3"
+   ],
+   "kind": "round",
+   "quoted": 0.67,
+   "decimals": 2,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_14",
+   "desc": "ratio arm(shoulder-wrist)/leg(hip-ankle) starrai_v10",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "arm(shoulder-wrist)/leg(hip-ankle)",
+    "starrai_v10"
+   ],
+   "kind": "round",
+   "quoted": 0.6,
+   "decimals": 2,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_15",
+   "desc": "ratio hip_spacing(2|x|)/leg mpfb2_mesh_bodytop",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "hip_spacing(2|x|)/leg",
+    "mpfb2_mesh_bodytop"
+   ],
+   "kind": "round",
+   "quoted": 0.276,
+   "decimals": 3,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_16",
+   "desc": "ratio hip_spacing(2|x|)/leg mpfb2_default_position",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "hip_spacing(2|x|)/leg",
+    "mpfb2_default_position"
+   ],
+   "kind": "round",
+   "quoted": 0.253,
+   "decimals": 3,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_17",
+   "desc": "ratio hip_spacing(2|x|)/leg starrai_v8_3",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "hip_spacing(2|x|)/leg",
+    "starrai_v8_3"
+   ],
+   "kind": "round",
+   "quoted": 0.194,
+   "decimals": 3,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_18",
+   "desc": "ratio hip_spacing(2|x|)/leg starrai_v10",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "hip_spacing(2|x|)/leg",
+    "starrai_v10"
+   ],
+   "kind": "round",
+   "quoted": 0.196,
+   "decimals": 3,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_19",
+   "desc": "ratio stature_S_m mpfb2_mesh_bodytop",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "stature_S_m",
+    "mpfb2_mesh_bodytop"
+   ],
+   "kind": "round",
+   "quoted": 1.666,
+   "decimals": 3,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_20",
+   "desc": "ratio stature_S_m starrai_v8_3",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "stature_S_m",
+    "starrai_v8_3"
+   ],
+   "kind": "round",
+   "quoted": 0.95,
+   "decimals": 3,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_21",
+   "desc": "ratio stature_S_m starrai_v10",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "stature_S_m",
+    "starrai_v10"
+   ],
+   "kind": "round",
+   "quoted": 0.2377,
+   "decimals": 4,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_22",
+   "desc": "ratio stature_over_head_length starrai_v8_3",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "stature_over_head_length",
+    "starrai_v8_3"
+   ],
+   "kind": "round",
+   "quoted": 7.9,
+   "decimals": 1,
+   "scale": 1.0
+  },
+  {
+   "id": "c90_23",
+   "desc": "ratio stature_over_head_length starrai_v10",
+   "file": "outputs/compare_ratios.csv",
+   "path": [
+    "@csv",
+    "stature_over_head_length",
+    "starrai_v10"
+   ],
+   "kind": "round",
+   "quoted": 7.1,
+   "decimals": 1,
+   "scale": 1.0
+  },
+  {
+   "id": "c91",
+   "desc": "v8.3 foot pitch 46.3",
+   "file": "outputs/compare_star_rai.json",
+   "path": [
+    "foot",
+    "starrai_v8_3_foot_left_pitch_deg"
+   ],
+   "kind": "round",
+   "quoted": 46.3,
+   "decimals": 1,
+   "scale": 1.0
+  },
+  {
+   "id": "c92",
+   "desc": "v10 foot pitch 45.0",
+   "file": "outputs/compare_star_rai.json",
+   "path": [
+    "foot",
+    "starrai_v10_foot_left_pitch_deg"
+   ],
+   "kind": "round",
+   "quoted": 45.0,
+   "decimals": 1,
+   "scale": 1.0
+  },
+  {
+   "id": "c93",
+   "desc": "v8.3 axis: left x>0",
+   "file": "outputs/compare_star_rai.json",
+   "path": [
+    "axis_mapping_evidence",
+    "v83",
+    "left_bones_x_positive"
+   ],
+   "kind": "exact",
+   "quoted": true,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c94",
+   "desc": "v8.3 mm file is 1000x m",
+   "file": "outputs/compare_star_rai.json",
+   "path": [
+    "axis_mapping_evidence",
+    "v83",
+    "mm_file_is_1000x_of_m_file"
+   ],
+   "kind": "exact",
+   "quoted": true,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c95",
+   "desc": "v10 ankle->head 211.65 matches header",
+   "file": "outputs/compare_star_rai.json",
+   "path": [
+    "axis_mapping_evidence",
+    "v10",
+    "ankle_to_head_matches_header"
+   ],
+   "kind": "exact",
+   "quoted": true,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c96",
+   "desc": "v10 left bones x<0",
+   "file": "outputs/compare_star_rai.json",
+   "path": [
+    "axis_mapping_evidence",
+    "v10",
+    "left_bones_x_negative"
+   ],
+   "kind": "exact",
+   "quoted": true,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c97",
+   "desc": "v8.3->v10 uniform affine z max resid 0.21 m",
+   "file": "outputs/compare_star_rai.json",
+   "path": [
+    "v10_to_v83_uniform_fit",
+    "max_resid_m"
+   ],
+   "kind": "round",
+   "quoted": 0.21,
+   "decimals": 2,
+   "scale": 1.0
+  },
+  {
+   "id": "c98",
+   "desc": "rig bone counts default 163",
+   "file": "outputs/rig_differences.json",
+   "path": [
+    "bone_counts",
+    "default"
+   ],
+   "kind": "exact",
+   "quoted": 163,
+   "decimals": null,
+   "scale": 1.0
+  },
+  {
+   "id": "c99",
+   "desc": "rig bone counts game_engine 53",
+   "file": "outputs/rig_differences.json",
+   "path": [
+    "bone_counts",
+    "game_engine"
+   ],
+   "kind": "exact",
+   "quoted": 53,
+   "decimals": null,
+   "scale": 1.0
+  }
+ ]
+}

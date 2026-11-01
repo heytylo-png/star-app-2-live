@@ -1,0 +1,1769 @@
+{
+ "n": 219,
+ "n_pass": 219,
+ "n_fail": 0,
+ "n_nv": 0,
+ "claims": [
+  {
+   "id": "c01",
+   "desc": "body height 1.6659 m",
+   "quoted": 1.6659,
+   "regenerated_raw": 1.66589,
+   "regenerated_at_report_precision": 1.6659,
+   "status": "PASS"
+  },
+  {
+   "id": "c02",
+   "desc": "19,158 vertices",
+   "quoted": 19158,
+   "regenerated_raw": 19158,
+   "regenerated_at_report_precision": 19158,
+   "status": "PASS"
+  },
+  {
+   "id": "c03",
+   "desc": "18,486 faces",
+   "quoted": 18486,
+   "regenerated_raw": 18486,
+   "regenerated_at_report_precision": 18486,
+   "status": "PASS"
+  },
+  {
+   "id": "c04",
+   "desc": "body = exactly 0..13379",
+   "quoted": true,
+   "regenerated_raw": true,
+   "regenerated_at_report_precision": true,
+   "status": "PASS"
+  },
+  {
+   "id": "c05",
+   "desc": "13,380 body vertices",
+   "quoted": 13380,
+   "regenerated_raw": 13380,
+   "regenerated_at_report_precision": 13380,
+   "status": "PASS"
+  },
+  {
+   "id": "c06",
+   "desc": "13,378 body faces",
+   "quoted": 13378,
+   "regenerated_raw": 13378,
+   "regenerated_at_report_precision": 13378,
+   "status": "PASS"
+  },
+  {
+   "id": "c07",
+   "desc": "125 joint cube groups",
+   "quoted": 125,
+   "regenerated_raw": 125,
+   "regenerated_at_report_precision": 125,
+   "status": "PASS"
+  },
+  {
+   "id": "c08",
+   "desc": "1000 joint vertices",
+   "quoted": 1000,
+   "regenerated_raw": 1000,
+   "regenerated_at_report_precision": 1000,
+   "status": "PASS"
+  },
+  {
+   "id": "c09",
+   "desc": "joint vertices shared with body = 0",
+   "quoted": 0,
+   "regenerated_raw": 0,
+   "regenerated_at_report_precision": 0,
+   "status": "PASS"
+  },
+  {
+   "id": "c10",
+   "desc": "conversion is proper rotation",
+   "quoted": true,
+   "regenerated_raw": true,
+   "regenerated_at_report_precision": true,
+   "status": "PASS"
+  },
+  {
+   "id": "c11",
+   "desc": "conversion det +1",
+   "quoted": 1.0,
+   "regenerated_raw": 1.0,
+   "regenerated_at_report_precision": 1.0,
+   "status": "PASS"
+  },
+  {
+   "id": "c12",
+   "desc": "joint-ground z = -0.8183 m",
+   "quoted": -0.8183,
+   "regenerated_raw": -0.8183050000000002,
+   "regenerated_at_report_precision": -0.8183,
+   "status": "PASS"
+  },
+  {
+   "id": "c13_default",
+   "desc": "L bones x>0 / count default",
+   "quoted": 62,
+   "regenerated_raw": 62,
+   "regenerated_at_report_precision": 62,
+   "status": "PASS"
+  },
+  {
+   "id": "c14_default",
+   "desc": "R bones x<0 default",
+   "quoted": 62,
+   "regenerated_raw": 62,
+   "regenerated_at_report_precision": 62,
+   "status": "PASS"
+  },
+  {
+   "id": "c13_game_engine",
+   "desc": "L bones x>0 / count game_engine",
+   "quoted": 23,
+   "regenerated_raw": 23,
+   "regenerated_at_report_precision": 23,
+   "status": "PASS"
+  },
+  {
+   "id": "c14_game_engine",
+   "desc": "R bones x<0 game_engine",
+   "quoted": 23,
+   "regenerated_raw": 23,
+   "regenerated_at_report_precision": 23,
+   "status": "PASS"
+  },
+  {
+   "id": "c13_rigify_human",
+   "desc": "L bones x>0 / count rigify_human",
+   "quoted": 47,
+   "regenerated_raw": 47,
+   "regenerated_at_report_precision": 47,
+   "status": "PASS"
+  },
+  {
+   "id": "c14_rigify_human",
+   "desc": "R bones x<0 rigify_human",
+   "quoted": 47,
+   "regenerated_raw": 47,
+   "regenerated_at_report_precision": 47,
+   "status": "PASS"
+  },
+  {
+   "id": "c15",
+   "desc": "toe end is -Y vs ankle",
+   "quoted": true,
+   "regenerated_raw": true,
+   "regenerated_at_report_precision": true,
+   "status": "PASS"
+  },
+  {
+   "id": "c20_default_n",
+   "desc": "n ends default",
+   "quoted": 326,
+   "regenerated_raw": 326,
+   "regenerated_at_report_precision": 326,
+   "status": "PASS"
+  },
+  {
+   "id": "c21_default_median_m",
+   "desc": "median_m cm default",
+   "quoted": 3.1,
+   "regenerated_raw": 0.031163677637980735,
+   "regenerated_at_report_precision": 3.1,
+   "status": "PASS"
+  },
+  {
+   "id": "c21_default_p95_m",
+   "desc": "p95_m cm default",
+   "quoted": 5.9,
+   "regenerated_raw": 0.05926589413554247,
+   "regenerated_at_report_precision": 5.9,
+   "status": "PASS"
+  },
+  {
+   "id": "c21_default_max_m",
+   "desc": "max_m cm default",
+   "quoted": 6.2,
+   "regenerated_raw": 0.06244750008744283,
+   "regenerated_at_report_precision": 6.2,
+   "status": "PASS"
+  },
+  {
+   "id": "c20_game_engine_n",
+   "desc": "n ends game_engine",
+   "quoted": 106,
+   "regenerated_raw": 106,
+   "regenerated_at_report_precision": 106,
+   "status": "PASS"
+  },
+  {
+   "id": "c21_game_engine_median_m",
+   "desc": "median_m cm game_engine",
+   "quoted": 5.5,
+   "regenerated_raw": 0.05535110340662179,
+   "regenerated_at_report_precision": 5.5,
+   "status": "PASS"
+  },
+  {
+   "id": "c21_game_engine_p95_m",
+   "desc": "p95_m cm game_engine",
+   "quoted": 6.2,
+   "regenerated_raw": 0.06157852566088368,
+   "regenerated_at_report_precision": 6.2,
+   "status": "PASS"
+  },
+  {
+   "id": "c21_game_engine_max_m",
+   "desc": "max_m cm game_engine",
+   "quoted": 81.8,
+   "regenerated_raw": 0.8183050000000002,
+   "regenerated_at_report_precision": 81.8,
+   "status": "PASS"
+  },
+  {
+   "id": "c20_rigify_human_n",
+   "desc": "n ends rigify_human",
+   "quoted": 370,
+   "regenerated_raw": 370,
+   "regenerated_at_report_precision": 370,
+   "status": "PASS"
+  },
+  {
+   "id": "c21_rigify_human_median_m",
+   "desc": "median_m cm rigify_human",
+   "quoted": 1.1,
+   "regenerated_raw": 0.010779421366659532,
+   "regenerated_at_report_precision": 1.1,
+   "status": "PASS"
+  },
+  {
+   "id": "c21_rigify_human_p95_m",
+   "desc": "p95_m cm rigify_human",
+   "quoted": 5.9,
+   "regenerated_raw": 0.059134349630734995,
+   "regenerated_at_report_precision": 5.9,
+   "status": "PASS"
+  },
+  {
+   "id": "c21_rigify_human_max_m",
+   "desc": "max_m cm rigify_human",
+   "quoted": 6.2,
+   "regenerated_raw": 0.062313231715864455,
+   "regenerated_at_report_precision": 6.2,
+   "status": "PASS"
+  },
+  {
+   "id": "c20_rigify_human_toes_n",
+   "desc": "n ends rigify_human_toes",
+   "quoted": 426,
+   "regenerated_raw": 426,
+   "regenerated_at_report_precision": 426,
+   "status": "PASS"
+  },
+  {
+   "id": "c21_rigify_human_toes_median_m",
+   "desc": "median_m cm rigify_human_toes",
+   "quoted": 1.3,
+   "regenerated_raw": 0.012754658736237667,
+   "regenerated_at_report_precision": 1.3,
+   "status": "PASS"
+  },
+  {
+   "id": "c21_rigify_human_toes_p95_m",
+   "desc": "p95_m cm rigify_human_toes",
+   "quoted": 5.9,
+   "regenerated_raw": 0.05905345731041086,
+   "regenerated_at_report_precision": 5.9,
+   "status": "PASS"
+  },
+  {
+   "id": "c21_rigify_human_toes_max_m",
+   "desc": "max_m cm rigify_human_toes",
+   "quoted": 6.2,
+   "regenerated_raw": 0.062313231715864455,
+   "regenerated_at_report_precision": 6.2,
+   "status": "PASS"
+  },
+  {
+   "id": "c22a",
+   "desc": "default CUBE count 216",
+   "quoted": 216,
+   "regenerated_raw": 216,
+   "regenerated_at_report_precision": 216,
+   "status": "PASS"
+  },
+  {
+   "id": "c22b",
+   "desc": "default VERTEX count 84",
+   "quoted": 84,
+   "regenerated_raw": 84,
+   "regenerated_at_report_precision": 84,
+   "status": "PASS"
+  },
+  {
+   "id": "c22c",
+   "desc": "default MEAN count 26",
+   "quoted": 26,
+   "regenerated_raw": 26,
+   "regenerated_at_report_precision": 26,
+   "status": "PASS"
+  },
+  {
+   "id": "c23a",
+   "desc": "default VERTEX head median 0.96 cm",
+   "quoted": 0.96,
+   "regenerated_raw": 0.00963043118402831,
+   "regenerated_at_report_precision": 0.96,
+   "status": "PASS"
+  },
+  {
+   "id": "c23b",
+   "desc": "default VERTEX tail median 0.95 cm",
+   "quoted": 0.95,
+   "regenerated_raw": 0.009536131501364502,
+   "regenerated_at_report_precision": 0.95,
+   "status": "PASS"
+  },
+  {
+   "id": "c23c",
+   "desc": "hand/finger median 5.8 cm",
+   "quoted": 5.8,
+   "regenerated_raw": 0.05786815469980232,
+   "regenerated_at_report_precision": 5.8,
+   "status": "PASS"
+  },
+  {
+   "id": "c23d",
+   "desc": "other bones median 1.7 cm",
+   "quoted": 1.7,
+   "regenerated_raw": 0.016754683177856708,
+   "regenerated_at_report_precision": 1.7,
+   "status": "PASS"
+  },
+  {
+   "id": "c24",
+   "desc": "mean vs bbox cube centre <=0.11 mm",
+   "quoted": 0.00011,
+   "regenerated_raw": 0.00010789896894781021,
+   "regenerated_at_report_precision": 0.00010789896894781021,
+   "status": "PASS"
+  },
+  {
+   "id": "c30_default_n_bones",
+   "desc": "n_bones default",
+   "quoted": 163,
+   "regenerated_raw": 163,
+   "regenerated_at_report_precision": 163,
+   "status": "PASS"
+  },
+  {
+   "id": "c30_default_n_roots",
+   "desc": "n_roots default",
+   "quoted": 1,
+   "regenerated_raw": 1,
+   "regenerated_at_report_precision": 1,
+   "status": "PASS"
+  },
+  {
+   "id": "c30_default_max_depth",
+   "desc": "max_depth default",
+   "quoted": 16,
+   "regenerated_raw": 16,
+   "regenerated_at_report_precision": 16,
+   "status": "PASS"
+  },
+  {
+   "id": "c30_default_n_leaf",
+   "desc": "n_leaf default",
+   "quoted": 49,
+   "regenerated_raw": 49,
+   "regenerated_at_report_precision": 49,
+   "status": "PASS"
+  },
+  {
+   "id": "c30_default_n_use_connect",
+   "desc": "n_use_connect default",
+   "quoted": 0,
+   "regenerated_raw": 0,
+   "regenerated_at_report_precision": 0,
+   "status": "PASS"
+  },
+  {
+   "id": "c31_default_nocycle",
+   "desc": "no cycle default",
+   "quoted": false,
+   "regenerated_raw": false,
+   "regenerated_at_report_precision": false,
+   "status": "PASS"
+  },
+  {
+   "id": "c32_default_nomissingparent",
+   "desc": "no missing parent default",
+   "quoted": [],
+   "regenerated_raw": [],
+   "regenerated_at_report_precision": [],
+   "status": "PASS"
+  },
+  {
+   "id": "c30_game_engine_n_bones",
+   "desc": "n_bones game_engine",
+   "quoted": 53,
+   "regenerated_raw": 53,
+   "regenerated_at_report_precision": 53,
+   "status": "PASS"
+  },
+  {
+   "id": "c30_game_engine_n_roots",
+   "desc": "n_roots game_engine",
+   "quoted": 1,
+   "regenerated_raw": 1,
+   "regenerated_at_report_precision": 1,
+   "status": "PASS"
+  },
+  {
+   "id": "c30_game_engine_max_depth",
+   "desc": "max_depth game_engine",
+   "quoted": 11,
+   "regenerated_raw": 11,
+   "regenerated_at_report_precision": 11,
+   "status": "PASS"
+  },
+  {
+   "id": "c30_game_engine_n_leaf",
+   "desc": "n_leaf game_engine",
+   "quoted": 13,
+   "regenerated_raw": 13,
+   "regenerated_at_report_precision": 13,
+   "status": "PASS"
+  },
+  {
+   "id": "c30_game_engine_n_use_connect",
+   "desc": "n_use_connect game_engine",
+   "quoted": 0,
+   "regenerated_raw": 0,
+   "regenerated_at_report_precision": 0,
+   "status": "PASS"
+  },
+  {
+   "id": "c31_game_engine_nocycle",
+   "desc": "no cycle game_engine",
+   "quoted": false,
+   "regenerated_raw": false,
+   "regenerated_at_report_precision": false,
+   "status": "PASS"
+  },
+  {
+   "id": "c32_game_engine_nomissingparent",
+   "desc": "no missing parent game_engine",
+   "quoted": [],
+   "regenerated_raw": [],
+   "regenerated_at_report_precision": [],
+   "status": "PASS"
+  },
+  {
+   "id": "c30_rigify_human_n_bones",
+   "desc": "n_bones rigify_human",
+   "quoted": 185,
+   "regenerated_raw": 185,
+   "regenerated_at_report_precision": 185,
+   "status": "PASS"
+  },
+  {
+   "id": "c30_rigify_human_n_roots",
+   "desc": "n_roots rigify_human",
+   "quoted": 6,
+   "regenerated_raw": 6,
+   "regenerated_at_report_precision": 6,
+   "status": "PASS"
+  },
+  {
+   "id": "c30_rigify_human_max_depth",
+   "desc": "max_depth rigify_human",
+   "quoted": 12,
+   "regenerated_raw": 12,
+   "regenerated_at_report_precision": 12,
+   "status": "PASS"
+  },
+  {
+   "id": "c30_rigify_human_n_leaf",
+   "desc": "n_leaf rigify_human",
+   "quoted": 85,
+   "regenerated_raw": 85,
+   "regenerated_at_report_precision": 85,
+   "status": "PASS"
+  },
+  {
+   "id": "c30_rigify_human_n_use_connect",
+   "desc": "n_use_connect rigify_human",
+   "quoted": 76,
+   "regenerated_raw": 76,
+   "regenerated_at_report_precision": 76,
+   "status": "PASS"
+  },
+  {
+   "id": "c31_rigify_human_nocycle",
+   "desc": "no cycle rigify_human",
+   "quoted": false,
+   "regenerated_raw": false,
+   "regenerated_at_report_precision": false,
+   "status": "PASS"
+  },
+  {
+   "id": "c32_rigify_human_nomissingparent",
+   "desc": "no missing parent rigify_human",
+   "quoted": [],
+   "regenerated_raw": [],
+   "regenerated_at_report_precision": [],
+   "status": "PASS"
+  },
+  {
+   "id": "c30_rigify_human_toes_n_bones",
+   "desc": "n_bones rigify_human_toes",
+   "quoted": 213,
+   "regenerated_raw": 213,
+   "regenerated_at_report_precision": 213,
+   "status": "PASS"
+  },
+  {
+   "id": "c30_rigify_human_toes_n_roots",
+   "desc": "n_roots rigify_human_toes",
+   "quoted": 6,
+   "regenerated_raw": 6,
+   "regenerated_at_report_precision": 6,
+   "status": "PASS"
+  },
+  {
+   "id": "c30_rigify_human_toes_max_depth",
+   "desc": "max_depth rigify_human_toes",
+   "quoted": 12,
+   "regenerated_raw": 12,
+   "regenerated_at_report_precision": 12,
+   "status": "PASS"
+  },
+  {
+   "id": "c30_rigify_human_toes_n_leaf",
+   "desc": "n_leaf rigify_human_toes",
+   "quoted": 93,
+   "regenerated_raw": 93,
+   "regenerated_at_report_precision": 93,
+   "status": "PASS"
+  },
+  {
+   "id": "c30_rigify_human_toes_n_use_connect",
+   "desc": "n_use_connect rigify_human_toes",
+   "quoted": 94,
+   "regenerated_raw": 94,
+   "regenerated_at_report_precision": 94,
+   "status": "PASS"
+  },
+  {
+   "id": "c31_rigify_human_toes_nocycle",
+   "desc": "no cycle rigify_human_toes",
+   "quoted": false,
+   "regenerated_raw": false,
+   "regenerated_at_report_precision": false,
+   "status": "PASS"
+  },
+  {
+   "id": "c32_rigify_human_toes_nomissingparent",
+   "desc": "no missing parent rigify_human_toes",
+   "quoted": [],
+   "regenerated_raw": [],
+   "regenerated_at_report_precision": [],
+   "status": "PASS"
+  },
+  {
+   "id": "c40",
+   "desc": "default foot.L pitch default_position 27.2",
+   "quoted": 27.2,
+   "regenerated_raw": 27.233150334889686,
+   "regenerated_at_report_precision": 27.2,
+   "status": "PASS"
+  },
+  {
+   "id": "c41",
+   "desc": "default foot.L pitch recomputed 25.2",
+   "quoted": 25.2,
+   "regenerated_raw": 25.19657221234331,
+   "regenerated_at_report_precision": 25.2,
+   "status": "PASS"
+  },
+  {
+   "id": "c42",
+   "desc": "game_engine foot_l pitch default 27.2",
+   "quoted": 27.2,
+   "regenerated_raw": 27.233136195283283,
+   "regenerated_at_report_precision": 27.2,
+   "status": "PASS"
+  },
+  {
+   "id": "c43",
+   "desc": "game_engine foot_l pitch recomputed 28.2",
+   "quoted": 28.2,
+   "regenerated_raw": 28.2293834881745,
+   "regenerated_at_report_precision": 28.2,
+   "status": "PASS"
+  },
+  {
+   "id": "c44",
+   "desc": "game_engine foot_l length 0.132",
+   "quoted": 0.132,
+   "regenerated_raw": 0.1315034005528056,
+   "regenerated_at_report_precision": 0.132,
+   "status": "PASS"
+  },
+  {
+   "id": "c45",
+   "desc": "ball_l pitch -2.7",
+   "quoted": -2.7,
+   "regenerated_raw": -2.6585551204998445,
+   "regenerated_at_report_precision": -2.7,
+   "status": "PASS"
+  },
+  {
+   "id": "c46",
+   "desc": "288 lowest foot vertices",
+   "quoted": 288,
+   "regenerated_raw": 288,
+   "regenerated_at_report_precision": 288,
+   "status": "PASS"
+  },
+  {
+   "id": "c47",
+   "desc": "sole slope 0.52 deg",
+   "quoted": 0.52,
+   "regenerated_raw": 0.5213383115681737,
+   "regenerated_at_report_precision": 0.52,
+   "status": "PASS"
+  },
+  {
+   "id": "c48",
+   "desc": "extent along foot 0.232 m",
+   "quoted": 0.232,
+   "regenerated_raw": 0.23201590961023588,
+   "regenerated_at_report_precision": 0.232,
+   "status": "PASS"
+  },
+  {
+   "id": "c49",
+   "desc": "ankle height recomputed 6.75 cm",
+   "quoted": 6.75,
+   "regenerated_raw": 0.06751273082792197,
+   "regenerated_at_report_precision": 6.75,
+   "status": "PASS"
+  },
+  {
+   "id": "c50",
+   "desc": "ankle height default_position 6.37 cm",
+   "quoted": 6.37,
+   "regenerated_raw": 0.06368574419080653,
+   "regenerated_at_report_precision": 6.37,
+   "status": "PASS"
+  },
+  {
+   "id": "c51",
+   "desc": "ankle above lowest vertex 7.20 cm",
+   "quoted": 7.2,
+   "regenerated_raw": 0.07197500000000001,
+   "regenerated_at_report_precision": 7.2,
+   "status": "PASS"
+  },
+  {
+   "id": "c52",
+   "desc": "all-vertex min z -0.8449",
+   "quoted": -0.8449,
+   "regenerated_raw": -0.8448800000000001,
+   "regenerated_at_report_precision": -0.8449,
+   "status": "PASS"
+  },
+  {
+   "id": "c53",
+   "desc": "tail ratio game_engine default 0.046",
+   "quoted": 0.046,
+   "regenerated_raw": 0.04608401789170684,
+   "regenerated_at_report_precision": 0.046,
+   "status": "PASS"
+  },
+  {
+   "id": "c54",
+   "desc": "tail ratio game_engine recomputed 0.015",
+   "quoted": 0.015,
+   "regenerated_raw": 0.015361721833623002,
+   "regenerated_at_report_precision": 0.015,
+   "status": "PASS"
+  },
+  {
+   "id": "c55",
+   "desc": "tail-on-sole pitch 28.8",
+   "quoted": 28.8,
+   "regenerated_raw": 28.815115044798926,
+   "regenerated_at_report_precision": 28.8,
+   "status": "PASS"
+  },
+  {
+   "id": "c56",
+   "desc": "tail-on-sole pitch 29.0",
+   "quoted": 29.0,
+   "regenerated_raw": 29.00817122290655,
+   "regenerated_at_report_precision": 29.0,
+   "status": "PASS"
+  },
+  {
+   "id": "c57",
+   "desc": "default foot.L tail-on-sole 46-48 (lo 46.6)",
+   "quoted": [
+    46,
+    48
+   ],
+   "regenerated_raw": 46.62177605316638,
+   "regenerated_at_report_precision": 46.62177605316638,
+   "status": "PASS"
+  },
+  {
+   "id": "c58",
+   "desc": "default foot.L tail-on-sole (hi 47.7)",
+   "quoted": [
+    46,
+    48
+   ],
+   "regenerated_raw": 47.731365172243194,
+   "regenerated_at_report_precision": 47.731365172243194,
+   "status": "PASS"
+  },
+  {
+   "id": "c59",
+   "desc": "game_engine tail 1-3 mm above sole (default 2.96)",
+   "quoted": [
+    0.001,
+    0.003
+   ],
+   "regenerated_raw": 0.0029641728206935003,
+   "regenerated_at_report_precision": 0.0029641728206935003,
+   "status": "PASS"
+  },
+  {
+   "id": "c60_default_nb",
+   "desc": "bones with weights default",
+   "quoted": 163,
+   "regenerated_raw": 163,
+   "regenerated_at_report_precision": 163,
+   "status": "PASS"
+  },
+  {
+   "id": "c61_default_ne",
+   "desc": "entries default",
+   "quoted": 58388,
+   "regenerated_raw": 58388,
+   "regenerated_at_report_precision": 58388,
+   "status": "PASS"
+  },
+  {
+   "id": "c62_default_lt",
+   "desc": "entries<0.01 default",
+   "quoted": 6332,
+   "regenerated_raw": 6332,
+   "regenerated_at_report_precision": 6332,
+   "status": "PASS"
+  },
+  {
+   "id": "c63_default_vc",
+   "desc": "vertices covered default",
+   "quoted": 19158,
+   "regenerated_raw": 19158,
+   "regenerated_at_report_precision": 19158,
+   "status": "PASS"
+  },
+  {
+   "id": "c64_default_mi",
+   "desc": "mean influences default",
+   "quoted": 3.06,
+   "regenerated_raw": 3.0579222720478327,
+   "regenerated_at_report_precision": 3.06,
+   "status": "PASS"
+  },
+  {
+   "id": "c65_default_mx",
+   "desc": "max influences default",
+   "quoted": 8,
+   "regenerated_raw": 8,
+   "regenerated_at_report_precision": 8,
+   "status": "PASS"
+  },
+  {
+   "id": "c66_default_p1",
+   "desc": "% single influence default",
+   "quoted": 16.2,
+   "regenerated_raw": 16.203288490284006,
+   "regenerated_at_report_precision": 16.2,
+   "status": "PASS"
+  },
+  {
+   "id": "c67_default_p4",
+   "desc": "% <=4 influences default",
+   "quoted": 80.3,
+   "regenerated_raw": 80.3288490284006,
+   "regenerated_at_report_precision": 80.3,
+   "status": "PASS"
+  },
+  {
+   "id": "c68_default_dup",
+   "desc": "no duplicate vertex/bone pairs default",
+   "quoted": 0,
+   "regenerated_raw": 0,
+   "regenerated_at_report_precision": 0,
+   "status": "PASS"
+  },
+  {
+   "id": "c69_default_nonpos",
+   "desc": "no nonpositive weights default",
+   "quoted": 0,
+   "regenerated_raw": 0,
+   "regenerated_at_report_precision": 0,
+   "status": "PASS"
+  },
+  {
+   "id": "c60_game_engine_nb",
+   "desc": "bones with weights game_engine",
+   "quoted": 53,
+   "regenerated_raw": 53,
+   "regenerated_at_report_precision": 53,
+   "status": "PASS"
+  },
+  {
+   "id": "c61_game_engine_ne",
+   "desc": "entries game_engine",
+   "quoted": 36416,
+   "regenerated_raw": 36416,
+   "regenerated_at_report_precision": 36416,
+   "status": "PASS"
+  },
+  {
+   "id": "c62_game_engine_lt",
+   "desc": "entries<0.01 game_engine",
+   "quoted": 2983,
+   "regenerated_raw": 2983,
+   "regenerated_at_report_precision": 2983,
+   "status": "PASS"
+  },
+  {
+   "id": "c63_game_engine_vc",
+   "desc": "vertices covered game_engine",
+   "quoted": 19158,
+   "regenerated_raw": 19158,
+   "regenerated_at_report_precision": 19158,
+   "status": "PASS"
+  },
+  {
+   "id": "c64_game_engine_mi",
+   "desc": "mean influences game_engine",
+   "quoted": 1.85,
+   "regenerated_raw": 1.847982062780269,
+   "regenerated_at_report_precision": 1.85,
+   "status": "PASS"
+  },
+  {
+   "id": "c65_game_engine_mx",
+   "desc": "max influences game_engine",
+   "quoted": 6,
+   "regenerated_raw": 6,
+   "regenerated_at_report_precision": 6,
+   "status": "PASS"
+  },
+  {
+   "id": "c66_game_engine_p1",
+   "desc": "% single influence game_engine",
+   "quoted": 49.2,
+   "regenerated_raw": 49.237668161434975,
+   "regenerated_at_report_precision": 49.2,
+   "status": "PASS"
+  },
+  {
+   "id": "c67_game_engine_p4",
+   "desc": "% <=4 influences game_engine",
+   "quoted": 95.5,
+   "regenerated_raw": 95.4559043348281,
+   "regenerated_at_report_precision": 95.5,
+   "status": "PASS"
+  },
+  {
+   "id": "c68_game_engine_dup",
+   "desc": "no duplicate vertex/bone pairs game_engine",
+   "quoted": 0,
+   "regenerated_raw": 0,
+   "regenerated_at_report_precision": 0,
+   "status": "PASS"
+  },
+  {
+   "id": "c69_game_engine_nonpos",
+   "desc": "no nonpositive weights game_engine",
+   "quoted": 0,
+   "regenerated_raw": 0,
+   "regenerated_at_report_precision": 0,
+   "status": "PASS"
+  },
+  {
+   "id": "c60_rigify_human_toes_nb",
+   "desc": "bones with weights rigify_human_toes",
+   "quoted": 207,
+   "regenerated_raw": 207,
+   "regenerated_at_report_precision": 207,
+   "status": "PASS"
+  },
+  {
+   "id": "c61_rigify_human_toes_ne",
+   "desc": "entries rigify_human_toes",
+   "quoted": 65101,
+   "regenerated_raw": 65101,
+   "regenerated_at_report_precision": 65101,
+   "status": "PASS"
+  },
+  {
+   "id": "c62_rigify_human_toes_lt",
+   "desc": "entries<0.01 rigify_human_toes",
+   "quoted": 10373,
+   "regenerated_raw": 10373,
+   "regenerated_at_report_precision": 10373,
+   "status": "PASS"
+  },
+  {
+   "id": "c63_rigify_human_toes_vc",
+   "desc": "vertices covered rigify_human_toes",
+   "quoted": 19142,
+   "regenerated_raw": 19142,
+   "regenerated_at_report_precision": 19142,
+   "status": "PASS"
+  },
+  {
+   "id": "c64_rigify_human_toes_mi",
+   "desc": "mean influences rigify_human_toes",
+   "quoted": 3.44,
+   "regenerated_raw": 3.4433482810164424,
+   "regenerated_at_report_precision": 3.44,
+   "status": "PASS"
+  },
+  {
+   "id": "c65_rigify_human_toes_mx",
+   "desc": "max influences rigify_human_toes",
+   "quoted": 11,
+   "regenerated_raw": 11,
+   "regenerated_at_report_precision": 11,
+   "status": "PASS"
+  },
+  {
+   "id": "c66_rigify_human_toes_p1",
+   "desc": "% single influence rigify_human_toes",
+   "quoted": 11.0,
+   "regenerated_raw": 10.971599402092675,
+   "regenerated_at_report_precision": 11.0,
+   "status": "PASS"
+  },
+  {
+   "id": "c67_rigify_human_toes_p4",
+   "desc": "% <=4 influences rigify_human_toes",
+   "quoted": 74.3,
+   "regenerated_raw": 74.2899850523169,
+   "regenerated_at_report_precision": 74.3,
+   "status": "PASS"
+  },
+  {
+   "id": "c68_rigify_human_toes_dup",
+   "desc": "no duplicate vertex/bone pairs rigify_human_toes",
+   "quoted": 0,
+   "regenerated_raw": 0,
+   "regenerated_at_report_precision": 0,
+   "status": "PASS"
+  },
+  {
+   "id": "c69_rigify_human_toes_nonpos",
+   "desc": "no nonpositive weights rigify_human_toes",
+   "quoted": 0,
+   "regenerated_raw": 0,
+   "regenerated_at_report_precision": 0,
+   "status": "PASS"
+  },
+  {
+   "id": "c70",
+   "desc": "default weight sum range min ~0.9998",
+   "quoted": 0.9998,
+   "regenerated_raw": 0.9998000171035528,
+   "regenerated_at_report_precision": 0.9998,
+   "status": "PASS"
+  },
+  {
+   "id": "c71",
+   "desc": "rigify weight sum max ~1.0000857",
+   "quoted": 1.0000857,
+   "regenerated_raw": 1.0000857050666958,
+   "regenerated_at_report_precision": 1.0000857,
+   "status": "PASS"
+  },
+  {
+   "id": "c80_default_shoulder_t10",
+   "desc": "t10 cm default shoulder",
+   "quoted": -8.1,
+   "regenerated_raw": -0.08087272480787439,
+   "regenerated_at_report_precision": -8.1,
+   "status": "PASS"
+  },
+  {
+   "id": "c81_default_shoulder_t90",
+   "desc": "t90 cm default shoulder",
+   "quoted": 7.3,
+   "regenerated_raw": 0.07349820542662086,
+   "regenerated_at_report_precision": 7.3,
+   "status": "PASS"
+  },
+  {
+   "id": "c82_default_shoulder_w",
+   "desc": "width cm default shoulder",
+   "quoted": 15.4,
+   "regenerated_raw": 0.15437093023449525,
+   "regenerated_at_report_precision": 15.4,
+   "status": "PASS"
+  },
+  {
+   "id": "c83_default_shoulder_t50",
+   "desc": "t50 cm default shoulder",
+   "quoted": 0.2,
+   "regenerated_raw": 0.0016096710851810844,
+   "regenerated_at_report_precision": 0.2,
+   "status": "PASS"
+  },
+  {
+   "id": "c84_default_shoulder_nv",
+   "desc": "verts partial default shoulder",
+   "quoted": 158,
+   "regenerated_raw": 158,
+   "regenerated_at_report_precision": 158,
+   "status": "PASS"
+  },
+  {
+   "id": "c80_default_elbow_t10",
+   "desc": "t10 cm default elbow",
+   "quoted": -4.5,
+   "regenerated_raw": -0.044957042764896434,
+   "regenerated_at_report_precision": -4.5,
+   "status": "PASS"
+  },
+  {
+   "id": "c81_default_elbow_t90",
+   "desc": "t90 cm default elbow",
+   "quoted": 2.6,
+   "regenerated_raw": 0.026429765216672965,
+   "regenerated_at_report_precision": 2.6,
+   "status": "PASS"
+  },
+  {
+   "id": "c82_default_elbow_w",
+   "desc": "width cm default elbow",
+   "quoted": 7.1,
+   "regenerated_raw": 0.0713868079815694,
+   "regenerated_at_report_precision": 7.1,
+   "status": "PASS"
+  },
+  {
+   "id": "c83_default_elbow_t50",
+   "desc": "t50 cm default elbow",
+   "quoted": -0.1,
+   "regenerated_raw": -0.0005482648066735653,
+   "regenerated_at_report_precision": -0.1,
+   "status": "PASS"
+  },
+  {
+   "id": "c84_default_elbow_nv",
+   "desc": "verts partial default elbow",
+   "quoted": 88,
+   "regenerated_raw": 88,
+   "regenerated_at_report_precision": 88,
+   "status": "PASS"
+  },
+  {
+   "id": "c80_default_hip_t10",
+   "desc": "t10 cm default hip",
+   "quoted": -8.4,
+   "regenerated_raw": -0.08378810229407824,
+   "regenerated_at_report_precision": -8.4,
+   "status": "PASS"
+  },
+  {
+   "id": "c81_default_hip_t90",
+   "desc": "t90 cm default hip",
+   "quoted": 11.9,
+   "regenerated_raw": 0.11919012728302636,
+   "regenerated_at_report_precision": 11.9,
+   "status": "PASS"
+  },
+  {
+   "id": "c82_default_hip_w",
+   "desc": "width cm default hip",
+   "quoted": 20.3,
+   "regenerated_raw": 0.2029782295771046,
+   "regenerated_at_report_precision": 20.3,
+   "status": "PASS"
+  },
+  {
+   "id": "c83_default_hip_t50",
+   "desc": "t50 cm default hip",
+   "quoted": 1.3,
+   "regenerated_raw": 0.01344860656800861,
+   "regenerated_at_report_precision": 1.3,
+   "status": "PASS"
+  },
+  {
+   "id": "c84_default_hip_nv",
+   "desc": "verts partial default hip",
+   "quoted": 170,
+   "regenerated_raw": 170,
+   "regenerated_at_report_precision": 170,
+   "status": "PASS"
+  },
+  {
+   "id": "c80_default_knee_t10",
+   "desc": "t10 cm default knee",
+   "quoted": -3.5,
+   "regenerated_raw": -0.0351922340724415,
+   "regenerated_at_report_precision": -3.5,
+   "status": "PASS"
+  },
+  {
+   "id": "c81_default_knee_t90",
+   "desc": "t90 cm default knee",
+   "quoted": 5.6,
+   "regenerated_raw": 0.056135830887947116,
+   "regenerated_at_report_precision": 5.6,
+   "status": "PASS"
+  },
+  {
+   "id": "c82_default_knee_w",
+   "desc": "width cm default knee",
+   "quoted": 9.1,
+   "regenerated_raw": 0.09132806496038862,
+   "regenerated_at_report_precision": 9.1,
+   "status": "PASS"
+  },
+  {
+   "id": "c83_default_knee_t50",
+   "desc": "t50 cm default knee",
+   "quoted": 2.0,
+   "regenerated_raw": 0.020248890227304486,
+   "regenerated_at_report_precision": 2.0,
+   "status": "PASS"
+  },
+  {
+   "id": "c84_default_knee_nv",
+   "desc": "verts partial default knee",
+   "quoted": 96,
+   "regenerated_raw": 96,
+   "regenerated_at_report_precision": 96,
+   "status": "PASS"
+  },
+  {
+   "id": "c80_game_engine_shoulder_t10",
+   "desc": "t10 cm game_engine shoulder",
+   "quoted": -8.1,
+   "regenerated_raw": -0.08087272506572797,
+   "regenerated_at_report_precision": -8.1,
+   "status": "PASS"
+  },
+  {
+   "id": "c81_game_engine_shoulder_t90",
+   "desc": "t90 cm game_engine shoulder",
+   "quoted": 7.3,
+   "regenerated_raw": 0.07349814816707101,
+   "regenerated_at_report_precision": 7.3,
+   "status": "PASS"
+  },
+  {
+   "id": "c82_game_engine_shoulder_w",
+   "desc": "width cm game_engine shoulder",
+   "quoted": 15.4,
+   "regenerated_raw": 0.15437087323279897,
+   "regenerated_at_report_precision": 15.4,
+   "status": "PASS"
+  },
+  {
+   "id": "c83_game_engine_shoulder_t50",
+   "desc": "t50 cm game_engine shoulder",
+   "quoted": 0.2,
+   "regenerated_raw": 0.0016096716538286596,
+   "regenerated_at_report_precision": 0.2,
+   "status": "PASS"
+  },
+  {
+   "id": "c84_game_engine_shoulder_nv",
+   "desc": "verts partial game_engine shoulder",
+   "quoted": 158,
+   "regenerated_raw": 158,
+   "regenerated_at_report_precision": 158,
+   "status": "PASS"
+  },
+  {
+   "id": "c80_game_engine_elbow_t10",
+   "desc": "t10 cm game_engine elbow",
+   "quoted": -4.5,
+   "regenerated_raw": -0.044957042764896434,
+   "regenerated_at_report_precision": -4.5,
+   "status": "PASS"
+  },
+  {
+   "id": "c81_game_engine_elbow_t90",
+   "desc": "t90 cm game_engine elbow",
+   "quoted": 2.6,
+   "regenerated_raw": 0.026429765216672965,
+   "regenerated_at_report_precision": 2.6,
+   "status": "PASS"
+  },
+  {
+   "id": "c82_game_engine_elbow_w",
+   "desc": "width cm game_engine elbow",
+   "quoted": 7.1,
+   "regenerated_raw": 0.0713868079815694,
+   "regenerated_at_report_precision": 7.1,
+   "status": "PASS"
+  },
+  {
+   "id": "c83_game_engine_elbow_t50",
+   "desc": "t50 cm game_engine elbow",
+   "quoted": -0.1,
+   "regenerated_raw": -0.0005482648066735653,
+   "regenerated_at_report_precision": -0.1,
+   "status": "PASS"
+  },
+  {
+   "id": "c84_game_engine_elbow_nv",
+   "desc": "verts partial game_engine elbow",
+   "quoted": 88,
+   "regenerated_raw": 88,
+   "regenerated_at_report_precision": 88,
+   "status": "PASS"
+  },
+  {
+   "id": "c80_game_engine_hip_t10",
+   "desc": "t10 cm game_engine hip",
+   "quoted": -8.4,
+   "regenerated_raw": -0.08378809966523307,
+   "regenerated_at_report_precision": -8.4,
+   "status": "PASS"
+  },
+  {
+   "id": "c81_game_engine_hip_t90",
+   "desc": "t90 cm game_engine hip",
+   "quoted": 11.9,
+   "regenerated_raw": 0.11919012777213546,
+   "regenerated_at_report_precision": 11.9,
+   "status": "PASS"
+  },
+  {
+   "id": "c82_game_engine_hip_w",
+   "desc": "width cm game_engine hip",
+   "quoted": 20.3,
+   "regenerated_raw": 0.20297822743736854,
+   "regenerated_at_report_precision": 20.3,
+   "status": "PASS"
+  },
+  {
+   "id": "c83_game_engine_hip_t50",
+   "desc": "t50 cm game_engine hip",
+   "quoted": 1.3,
+   "regenerated_raw": 0.013448606798661382,
+   "regenerated_at_report_precision": 1.3,
+   "status": "PASS"
+  },
+  {
+   "id": "c84_game_engine_hip_nv",
+   "desc": "verts partial game_engine hip",
+   "quoted": 170,
+   "regenerated_raw": 170,
+   "regenerated_at_report_precision": 170,
+   "status": "PASS"
+  },
+  {
+   "id": "c80_game_engine_knee_t10",
+   "desc": "t10 cm game_engine knee",
+   "quoted": -3.5,
+   "regenerated_raw": -0.0351922340724415,
+   "regenerated_at_report_precision": -3.5,
+   "status": "PASS"
+  },
+  {
+   "id": "c81_game_engine_knee_t90",
+   "desc": "t90 cm game_engine knee",
+   "quoted": 5.6,
+   "regenerated_raw": 0.056135831582112015,
+   "regenerated_at_report_precision": 5.6,
+   "status": "PASS"
+  },
+  {
+   "id": "c82_game_engine_knee_w",
+   "desc": "width cm game_engine knee",
+   "quoted": 9.1,
+   "regenerated_raw": 0.09132806565455351,
+   "regenerated_at_report_precision": 9.1,
+   "status": "PASS"
+  },
+  {
+   "id": "c83_game_engine_knee_t50",
+   "desc": "t50 cm game_engine knee",
+   "quoted": 2.0,
+   "regenerated_raw": 0.020248890227304486,
+   "regenerated_at_report_precision": 2.0,
+   "status": "PASS"
+  },
+  {
+   "id": "c84_game_engine_knee_nv",
+   "desc": "verts partial game_engine knee",
+   "quoted": 96,
+   "regenerated_raw": 96,
+   "regenerated_at_report_precision": 96,
+   "status": "PASS"
+  },
+  {
+   "id": "c80_rigify_human_toes_shoulder_t10",
+   "desc": "t10 cm rigify_human_toes shoulder",
+   "quoted": -0.6,
+   "regenerated_raw": -0.006471798718647741,
+   "regenerated_at_report_precision": -0.6,
+   "status": "PASS"
+  },
+  {
+   "id": "c81_rigify_human_toes_shoulder_t90",
+   "desc": "t90 cm rigify_human_toes shoulder",
+   "quoted": 7.7,
+   "regenerated_raw": 0.07722050848572896,
+   "regenerated_at_report_precision": 7.7,
+   "status": "PASS"
+  },
+  {
+   "id": "c82_rigify_human_toes_shoulder_w",
+   "desc": "width cm rigify_human_toes shoulder",
+   "quoted": 8.4,
+   "regenerated_raw": 0.0836923072043767,
+   "regenerated_at_report_precision": 8.4,
+   "status": "PASS"
+  },
+  {
+   "id": "c83_rigify_human_toes_shoulder_t50",
+   "desc": "t50 cm rigify_human_toes shoulder",
+   "quoted": 4.3,
+   "regenerated_raw": 0.042515423380722894,
+   "regenerated_at_report_precision": 4.3,
+   "status": "PASS"
+  },
+  {
+   "id": "c84_rigify_human_toes_shoulder_nv",
+   "desc": "verts partial rigify_human_toes shoulder",
+   "quoted": 168,
+   "regenerated_raw": 168,
+   "regenerated_at_report_precision": 168,
+   "status": "PASS"
+  },
+  {
+   "id": "c80_rigify_human_toes_elbow_t10",
+   "desc": "t10 cm rigify_human_toes elbow",
+   "quoted": -4.4,
+   "regenerated_raw": -0.04351293105088036,
+   "regenerated_at_report_precision": -4.4,
+   "status": "PASS"
+  },
+  {
+   "id": "c81_rigify_human_toes_elbow_t90",
+   "desc": "t90 cm rigify_human_toes elbow",
+   "quoted": 5.8,
+   "regenerated_raw": 0.05781728209757438,
+   "regenerated_at_report_precision": 5.8,
+   "status": "PASS"
+  },
+  {
+   "id": "c82_rigify_human_toes_elbow_w",
+   "desc": "width cm rigify_human_toes elbow",
+   "quoted": 10.1,
+   "regenerated_raw": 0.10133021314845474,
+   "regenerated_at_report_precision": 10.1,
+   "status": "PASS"
+  },
+  {
+   "id": "c83_rigify_human_toes_elbow_t50",
+   "desc": "t50 cm rigify_human_toes elbow",
+   "quoted": 2.2,
+   "regenerated_raw": 0.021890103563672072,
+   "regenerated_at_report_precision": 2.2,
+   "status": "PASS"
+  },
+  {
+   "id": "c84_rigify_human_toes_elbow_nv",
+   "desc": "verts partial rigify_human_toes elbow",
+   "quoted": 90,
+   "regenerated_raw": 90,
+   "regenerated_at_report_precision": 90,
+   "status": "PASS"
+  },
+  {
+   "id": "c80_rigify_human_toes_hip_t10",
+   "desc": "t10 cm rigify_human_toes hip",
+   "quoted": 0.9,
+   "regenerated_raw": 0.009118519689269328,
+   "regenerated_at_report_precision": 0.9,
+   "status": "PASS"
+  },
+  {
+   "id": "c81_rigify_human_toes_hip_t90",
+   "desc": "t90 cm rigify_human_toes hip",
+   "quoted": 14.9,
+   "regenerated_raw": 0.14873462174807878,
+   "regenerated_at_report_precision": 14.9,
+   "status": "PASS"
+  },
+  {
+   "id": "c82_rigify_human_toes_hip_w",
+   "desc": "width cm rigify_human_toes hip",
+   "quoted": 14.0,
+   "regenerated_raw": 0.13961610205880945,
+   "regenerated_at_report_precision": 14.0,
+   "status": "PASS"
+  },
+  {
+   "id": "c83_rigify_human_toes_hip_t50",
+   "desc": "t50 cm rigify_human_toes hip",
+   "quoted": 9.3,
+   "regenerated_raw": 0.09342743411505537,
+   "regenerated_at_report_precision": 9.3,
+   "status": "PASS"
+  },
+  {
+   "id": "c84_rigify_human_toes_hip_nv",
+   "desc": "verts partial rigify_human_toes hip",
+   "quoted": 111,
+   "regenerated_raw": 111,
+   "regenerated_at_report_precision": 111,
+   "status": "PASS"
+  },
+  {
+   "id": "c80_rigify_human_toes_knee_t10",
+   "desc": "t10 cm rigify_human_toes knee",
+   "quoted": 0.5,
+   "regenerated_raw": 0.005428283811110894,
+   "regenerated_at_report_precision": 0.5,
+   "status": "PASS"
+  },
+  {
+   "id": "c81_rigify_human_toes_knee_t90",
+   "desc": "t90 cm rigify_human_toes knee",
+   "quoted": 6.6,
+   "regenerated_raw": 0.0659579695464624,
+   "regenerated_at_report_precision": 6.6,
+   "status": "PASS"
+  },
+  {
+   "id": "c82_rigify_human_toes_knee_w",
+   "desc": "width cm rigify_human_toes knee",
+   "quoted": 6.1,
+   "regenerated_raw": 0.0605296857353515,
+   "regenerated_at_report_precision": 6.1,
+   "status": "PASS"
+  },
+  {
+   "id": "c83_rigify_human_toes_knee_t50",
+   "desc": "t50 cm rigify_human_toes knee",
+   "quoted": 3.5,
+   "regenerated_raw": 0.03542784735995914,
+   "regenerated_at_report_precision": 3.5,
+   "status": "PASS"
+  },
+  {
+   "id": "c84_rigify_human_toes_knee_nv",
+   "desc": "verts partial rigify_human_toes knee",
+   "quoted": 59,
+   "regenerated_raw": 59,
+   "regenerated_at_report_precision": 59,
+   "status": "PASS"
+  },
+  {
+   "id": "c85",
+   "desc": "default knee_r t10 -2.3 cm",
+   "quoted": -2.3,
+   "regenerated_raw": -0.02337194466942402,
+   "regenerated_at_report_precision": -2.3,
+   "status": "PASS"
+  },
+  {
+   "id": "c86",
+   "desc": "default shoulder pct partial 38.8",
+   "quoted": 38.8,
+   "regenerated_raw": 38.82063882063882,
+   "regenerated_at_report_precision": 38.8,
+   "status": "PASS"
+  },
+  {
+   "id": "c87",
+   "desc": "default hip pct partial 54.5",
+   "quoted": 54.5,
+   "regenerated_raw": 54.48717948717948,
+   "regenerated_at_report_precision": 54.5,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_00",
+   "desc": "ratio thigh/shin mpfb2_mesh_bodytop",
+   "quoted": 1.1,
+   "regenerated_raw": 1.1036,
+   "regenerated_at_report_precision": 1.1,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_01",
+   "desc": "ratio thigh/shin mpfb2_default_position",
+   "quoted": 0.97,
+   "regenerated_raw": 0.9677,
+   "regenerated_at_report_precision": 0.97,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_02",
+   "desc": "ratio thigh/shin starrai_v8_3",
+   "quoted": 1.1,
+   "regenerated_raw": 1.1027,
+   "regenerated_at_report_precision": 1.1,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_03",
+   "desc": "ratio thigh/shin starrai_v10",
+   "quoted": 0.85,
+   "regenerated_raw": 0.8545,
+   "regenerated_at_report_precision": 0.85,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_04",
+   "desc": "ratio head_length/S starrai_v8_3",
+   "quoted": 0.126,
+   "regenerated_raw": 0.1262,
+   "regenerated_at_report_precision": 0.126,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_05",
+   "desc": "ratio head_length/S starrai_v10",
+   "quoted": 0.142,
+   "regenerated_raw": 0.1416,
+   "regenerated_at_report_precision": 0.142,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_06",
+   "desc": "ratio leg(hip-ankle)/S starrai_v8_3",
+   "quoted": 0.442,
+   "regenerated_raw": 0.4421,
+   "regenerated_at_report_precision": 0.442,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_07",
+   "desc": "ratio leg(hip-ankle)/S starrai_v10",
+   "quoted": 0.429,
+   "regenerated_raw": 0.4292,
+   "regenerated_at_report_precision": 0.429,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_08",
+   "desc": "ratio ankle_height_over_sole/S starrai_v8_3",
+   "quoted": 0.1,
+   "regenerated_raw": 0.1,
+   "regenerated_at_report_precision": 0.1,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_09",
+   "desc": "ratio ankle_height_over_sole/S starrai_v10",
+   "quoted": 0.109,
+   "regenerated_raw": 0.1094,
+   "regenerated_at_report_precision": 0.109,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_10",
+   "desc": "ratio upper_arm/forearm starrai_v8_3",
+   "quoted": 0.83,
+   "regenerated_raw": 0.8273,
+   "regenerated_at_report_precision": 0.83,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_11",
+   "desc": "ratio upper_arm/forearm starrai_v10",
+   "quoted": 1.0,
+   "regenerated_raw": 1.0,
+   "regenerated_at_report_precision": 1.0,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_12",
+   "desc": "ratio upper_arm/forearm mpfb2_mesh_bodytop",
+   "quoted": 1.01,
+   "regenerated_raw": 1.0057,
+   "regenerated_at_report_precision": 1.01,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_13",
+   "desc": "ratio arm(shoulder-wrist)/leg(hip-ankle) starrai_v8_3",
+   "quoted": 0.67,
+   "regenerated_raw": 0.6664,
+   "regenerated_at_report_precision": 0.67,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_14",
+   "desc": "ratio arm(shoulder-wrist)/leg(hip-ankle) starrai_v10",
+   "quoted": 0.6,
+   "regenerated_raw": 0.5961,
+   "regenerated_at_report_precision": 0.6,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_15",
+   "desc": "ratio hip_spacing(2|x|)/leg mpfb2_mesh_bodytop",
+   "quoted": 0.276,
+   "regenerated_raw": 0.2756,
+   "regenerated_at_report_precision": 0.276,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_16",
+   "desc": "ratio hip_spacing(2|x|)/leg mpfb2_default_position",
+   "quoted": 0.253,
+   "regenerated_raw": 0.2533,
+   "regenerated_at_report_precision": 0.253,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_17",
+   "desc": "ratio hip_spacing(2|x|)/leg starrai_v8_3",
+   "quoted": 0.194,
+   "regenerated_raw": 0.1938,
+   "regenerated_at_report_precision": 0.194,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_18",
+   "desc": "ratio hip_spacing(2|x|)/leg starrai_v10",
+   "quoted": 0.196,
+   "regenerated_raw": 0.1961,
+   "regenerated_at_report_precision": 0.196,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_19",
+   "desc": "ratio stature_S_m mpfb2_mesh_bodytop",
+   "quoted": 1.666,
+   "regenerated_raw": 1.6659,
+   "regenerated_at_report_precision": 1.666,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_20",
+   "desc": "ratio stature_S_m starrai_v8_3",
+   "quoted": 0.95,
+   "regenerated_raw": 0.95,
+   "regenerated_at_report_precision": 0.95,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_21",
+   "desc": "ratio stature_S_m starrai_v10",
+   "quoted": 0.2377,
+   "regenerated_raw": 0.2377,
+   "regenerated_at_report_precision": 0.2377,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_22",
+   "desc": "ratio stature_over_head_length starrai_v8_3",
+   "quoted": 7.9,
+   "regenerated_raw": 7.926,
+   "regenerated_at_report_precision": 7.9,
+   "status": "PASS"
+  },
+  {
+   "id": "c90_23",
+   "desc": "ratio stature_over_head_length starrai_v10",
+   "quoted": 7.1,
+   "regenerated_raw": 7.0624,
+   "regenerated_at_report_precision": 7.1,
+   "status": "PASS"
+  },
+  {
+   "id": "c91",
+   "desc": "v8.3 foot pitch 46.3",
+   "quoted": 46.3,
+   "regenerated_raw": 46.30513387041238,
+   "regenerated_at_report_precision": 46.3,
+   "status": "PASS"
+  },
+  {
+   "id": "c92",
+   "desc": "v10 foot pitch 45.0",
+   "quoted": 45.0,
+   "regenerated_raw": 45.0,
+   "regenerated_at_report_precision": 45.0,
+   "status": "PASS"
+  },
+  {
+   "id": "c93",
+   "desc": "v8.3 axis: left x>0",
+   "quoted": true,
+   "regenerated_raw": true,
+   "regenerated_at_report_precision": true,
+   "status": "PASS"
+  },
+  {
+   "id": "c94",
+   "desc": "v8.3 mm file is 1000x m",
+   "quoted": true,
+   "regenerated_raw": true,
+   "regenerated_at_report_precision": true,
+   "status": "PASS"
+  },
+  {
+   "id": "c95",
+   "desc": "v10 ankle->head 211.65 matches header",
+   "quoted": true,
+   "regenerated_raw": true,
+   "regenerated_at_report_precision": true,
+   "status": "PASS"
+  },
+  {
+   "id": "c96",
+   "desc": "v10 left bones x<0",
+   "quoted": true,
+   "regenerated_raw": true,
+   "regenerated_at_report_precision": true,
+   "status": "PASS"
+  },
+  {
+   "id": "c97",
+   "desc": "v8.3->v10 uniform affine z max resid 0.21 m",
+   "quoted": 0.21,
+   "regenerated_raw": 0.20679809734791732,
+   "regenerated_at_report_precision": 0.21,
+   "status": "PASS"
+  },
+  {
+   "id": "c98",
+   "desc": "rig bone counts default 163",
+   "quoted": 163,
+   "regenerated_raw": 163,
+   "regenerated_at_report_precision": 163,
+   "status": "PASS"
+  },
+  {
+   "id": "c99",
+   "desc": "rig bone counts game_engine 53",
+   "quoted": 53,
+   "regenerated_raw": 53,
+   "regenerated_at_report_precision": 53,
+   "status": "PASS"
+  }
+ ]
+}

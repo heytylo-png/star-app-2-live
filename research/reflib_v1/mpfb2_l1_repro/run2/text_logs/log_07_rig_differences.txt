@@ -1,0 +1,158 @@
+{
+ "bone_counts": {
+  "default": 163,
+  "game_engine": 53,
+  "rigify_human": 185,
+  "rigify_human_toes": 213
+ },
+ "category_counts": {
+  "default": {
+   "spine/neck/head/root": 12,
+   "arm": 12,
+   "face": 59,
+   "fingers/hand": 40,
+   "toes/foot": 30,
+   "leg": 10
+  },
+  "game_engine": {
+   "spine/neck/head/root": 6,
+   "toes/foot": 4,
+   "fingers/hand": 34,
+   "arm": 6,
+   "leg": 3
+  },
+  "rigify_human": {
+   "arm": 10,
+   "leg": 12,
+   "spine/neck/head/root": 10,
+   "face": 107,
+   "fingers/hand": 40,
+   "toes/foot": 6
+  },
+  "rigify_human_toes": {
+   "arm": 10,
+   "leg": 12,
+   "spine/neck/head/root": 10,
+   "face": 107,
+   "fingers/hand": 40,
+   "toes/foot": 34
+  }
+ },
+ "joint_cubes_used": {
+  "default": 120,
+  "game_engine": 69,
+  "rigify_human": 74,
+  "rigify_human_toes": 112
+ },
+ "joint_cube_overlap": {
+  "game_engine_subset_of_default": false,
+  "game_engine_only": [
+   "joint-ground",
+   "joint-l-foot-1",
+   "joint-r-foot-1"
+  ],
+  "default_not_in_game_engine": 54,
+  "rigify_human_toes_not_in_default": [
+   "joint-l-foot-1",
+   "joint-l-foot-2",
+   "joint-r-foot-1",
+   "joint-r-foot-2"
+  ],
+  "obj_has_cubes": 125
+ },
+ "depth": {
+  "default": {
+   "max_depth": 16,
+   "mean_depth": 10.349693251533742
+  },
+  "game_engine": {
+   "max_depth": 11,
+   "mean_depth": 7.566037735849057
+  },
+  "rigify_human": {
+   "max_depth": 12,
+   "mean_depth": 8.064864864864864
+  },
+  "rigify_human_toes": {
+   "max_depth": 12,
+   "mean_depth": 7.784037558685446
+  }
+ },
+ "chain_verification": {
+  "default_upperarm02_parent": "upperarm01.L",
+  "default_lowerarm01_parent": "upperarm02.L",
+  "default_spine_parent_chain_from_head": [
+   "head",
+   "neck03",
+   "neck02",
+   "neck01",
+   "spine01",
+   "spine02",
+   "spine03",
+   "spine04",
+   "spine05",
+   "root"
+  ],
+  "game_engine_head_parent_chain": [
+   "head",
+   "neck_01",
+   "spine_03",
+   "spine_02",
+   "spine_01",
+   "pelvis",
+   "Root"
+  ],
+  "default_upperleg01_chain": [
+   "lowerleg02.L",
+   "lowerleg01.L",
+   "upperleg02.L",
+   "upperleg01.L",
+   "pelvis.L",
+   "root"
+  ],
+  "game_engine_calf_chain": [
+   "calf_l",
+   "thigh_l",
+   "pelvis",
+   "Root"
+  ]
+ },
+ "weights_files": {
+  "default": {
+   "n_bones": 163,
+   "n_entries": 58388,
+   "mean_infl_body": 3.0579222720478327,
+   "max_infl_body": 8,
+   "pct_single": 16.203288490284006,
+   "pct_le4": 80.3288490284006,
+   "n_unweighted_vertices": 0,
+   "size_bytes": 5034981
+  },
+  "game_engine": {
+   "n_bones": 53,
+   "n_entries": 36416,
+   "mean_infl_body": 1.847982062780269,
+   "max_infl_body": 6,
+   "pct_single": 49.237668161434975,
+   "pct_le4": 95.4559043348281,
+   "n_unweighted_vertices": 0,
+   "size_bytes": 3026778
+  },
+  "rigify_human_toes": {
+   "n_bones": 207,
+   "n_entries": 65101,
+   "mean_infl_body": 3.4433482810164424,
+   "max_infl_body": 11,
+   "pct_single": 10.971599402092675,
+   "pct_le4": 74.2899850523169,
+   "n_unweighted_vertices": 16,
+   "size_bytes": 5965933
+  }
+ },
+ "game_engine_bones_with_no_default_bone_sharing_head_cube": [
+  "Root",
+  "ball_l",
+  "ball_r"
+ ]
+}
+{'n_bones_human': 185, 'n_bones_human_toes': 213, 'only_in_toes': ['toe1-1.L', 'toe1-1.R', 'toe1-2.L', 'toe1-2.R', 'toe2-1.L', 'toe2-1.R', 'toe2-2.L', 'toe2-2.R', 'toe2-3.L', 'toe2-3.R', 'toe3-1.L', 'toe3-1.R', 'toe3-2.L', 'toe3-2.R', 'toe3-3.L', 'toe3-3.R', 'toe4-1.L', 'toe4-1.R', 'toe4-2.L', 'toe4-2.R', 'toe4-3.L', 'toe4-3.R', 'toe5-1.L', 'toe5-1.R', 'toe5-2.L', 'toe5-2.R', 'toe5-3.L', 'toe5-3.R'], 'only_in_human': [], 'n_shared_bones_with_different_json': 0, 'collections': 22, 'rigify_types': {'basic.raw_copy': 11, 'basic.super_copy': 11, 'skin.stretchy_chain': 21, None: 85, 'skin.basic_chain': 24, 'skin.glue': 11, 'face.skin_eye': 2, 'limbs.super_finger': 10, 'face.skin_jaw': 1, 'limbs.super_palm': 2, 'spines.basic_spine': 1, 'spines.super_head': 1, 'limbs.super_limb': 4, 'face.basic_tongue': 1}, 'constraint_types': {'ARMATURE': 5, 'TRANSFORM': 18, 'COPY_TRANSFORMS': 4}, 'n_roots_parent_empty': 6, 'n_with_offset': 3, 'n_bones_with_constraints': 11}

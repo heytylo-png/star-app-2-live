@@ -1,0 +1,35 @@
+date_local: 2026-11-01T10:36:54-06:00
+tz: CST
+uname: Linux grok-bot-vm-430909539 6.12.94+ #1 SMP PREEMPT_DYNAMIC Mon Oct 26 15:07:58 UTC 2026 x86_64 GNU/Linux
+PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
+VERSION_ID="13"
+python3: Python 3.13.5 at /usr/bin/python3
+python_full: 3.13.5 (main, Aug 10 2026, 12:06:59) [GCC 14.2.0]
+platform: Linux-6.12.94+-x86_64-with-glibc2.41 x86_64
+numpy: 2.5.4
+scipy: 1.18.1 (installed; NOT imported by study scripts unless listed below)
+pandas: 3.0.6 (installed; NOT imported by study scripts unless listed below)
+bash: GNU bash, version 5.2.37(1)-release (x86_64-pc-linux-gnu)
+git: git version 2.47.3
+sha256sum: sha256sum (GNU coreutils) 9.7
+LANG=C.UTF-8 LC_ALL=C.UTF-8 PYTHONHASHSEED=<unset>
+--- imports used by study scripts (grep) ---
+      7 from common import *
+      5 import sys, os, collections
+      1 import sys, os, stat, json, datetime
+      1 import sys, os, re, collections
+      1 import re as _re
+      1 import numpy as np
+      1 import json, os, hashlib, re, math
+      1 import csv
+--- study script SHA-256 ---
+0ef802f09c4fce58ee7cef1a9417084b9ef5c64736b3ef7c55115d0bcea45196  scripts/00_verify_hashes.py
+746c10e4010f51a78e9cda997cb2423e8861f694b4bd6844d3a69e732d824790  scripts/02_joints_hierarchy.py
+68739c7a0205875b34859b2ff1d05caf16638f5d8a96c5906cd1190d3e489145  scripts/03_coordinates_foot.py
+a0578738f7c60682a54a1e3c91cb2c5e9803ccf67f89bcc13bbc64e2bd223d48  scripts/04_weights_stats.py
+bc4634b008a57a7511ffdd0997f6543ad79fc2bb5ec489286d4c5dd35a496faa  scripts/05_weight_falloff.py
+c988929b71ef7247be40017da6e06d5250c72b083be7ef864ada3c6d003b78b1  scripts/06_compare_star_rai.py
+6ec303532fc2eb510d66c063ec13feb927274c6434961f1d9fc26f936c242f20  scripts/07_rig_differences.py
+7fbceeddccf78d155567e8fd0281a129d7fd42ab9bbca856c1eaa40cc5c56863  scripts/common.py
+5b1c87d6e43f421f1063a4a49993a6d19f971126ba539326ffe0295b23e9e21f  scripts/protected_paths.txt
+96ce5b0c86cd25785043b9b143ac9fd784843f05abf1fedf4d68acdd202010fb  scripts/run_all.sh
