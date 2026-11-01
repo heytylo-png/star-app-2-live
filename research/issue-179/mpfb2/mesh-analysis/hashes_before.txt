@@ -1,0 +1,10 @@
+f6089cba01cb570a24712b41ab8a586ccd3cc5ef53dc266ca50b95c288956d2c  LICENSE.ASSETS.md
+5cefb60680cb9efd4550a2e65d719021cfbec9dad3658481d11d48ae863ce04d  LICENSE.md
+8e761e6624b8f54536409135d1636da63b32486a90d4897f84e121d144f6fb4c  src/mpfb/data/3dobjs/base.obj
+6c3e61576d299d4acfbe45789d69738608ae0559d382f4a0e9e598a82379be7f  src/mpfb/data/rigs/rigify/rig.human.json
+970f19f9e426528052a0f8bfc2cd6f1eea627aa607517ff4e43ae88d96488846  src/mpfb/data/rigs/rigify/rig.human_toes.json
+edcbca3323b03080fe750caa292c673ecbacdd200ebf0062d00d3b425e13a999  src/mpfb/data/rigs/rigify/weights.human_toes.json
+8b949de35c2dd70dbb5094e57a8586c3b9a9f650775a293212581a8f67be6797  src/mpfb/data/rigs/standard/rig.default.json
+b324ddb4b707721c19630bfadb87c3e3b38eed3b6e4590bb3cead43ea918f799  src/mpfb/data/rigs/standard/rig.game_engine.json
+154b866774a8c2b055a8e86419f22a87b76c60440fdcb70bcb78345f00924e89  src/mpfb/data/rigs/standard/weights.default.json
+9f4a773e74ce5ba08415b4f30070338e9f75bae5971b5075b10cd6b9caa58473  src/mpfb/data/rigs/standard/weights.game_engine.json

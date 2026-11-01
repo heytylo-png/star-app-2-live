@@ -1,0 +1,1229 @@
+rig,bone,end,strategy,cube_name,vertex_idx
+default,breast.L,head,CUBE,joint-spine-1,
+default,breast.L,tail,VERTEX,,8451
+default,breast.R,head,CUBE,joint-spine-1,
+default,breast.R,tail,VERTEX,,1779
+default,clavicle.L,head,CUBE,joint-l-clavicle,
+default,clavicle.L,tail,CUBE,joint-l-scapula,
+default,clavicle.R,head,CUBE,joint-r-clavicle,
+default,clavicle.R,tail,CUBE,joint-r-scapula,
+default,eye.L,head,CUBE,joint-l-eye,
+default,eye.L,tail,CUBE,joint-l-eye-target,
+default,eye.R,head,CUBE,joint-r-eye,
+default,eye.R,tail,CUBE,joint-r-eye-target,
+default,finger1-1.L,head,CUBE,joint-l-finger-1-1,
+default,finger1-1.L,tail,CUBE,joint-l-finger-1-2,
+default,finger1-1.R,head,CUBE,joint-r-finger-1-1,
+default,finger1-1.R,tail,CUBE,joint-r-finger-1-2,
+default,finger1-2.L,head,CUBE,joint-l-finger-1-2,
+default,finger1-2.L,tail,CUBE,joint-l-finger-1-3,
+default,finger1-2.R,head,CUBE,joint-r-finger-1-2,
+default,finger1-2.R,tail,CUBE,joint-r-finger-1-3,
+default,finger1-3.L,head,CUBE,joint-l-finger-1-3,
+default,finger1-3.L,tail,CUBE,joint-l-finger-1-4,
+default,finger1-3.R,head,CUBE,joint-r-finger-1-3,
+default,finger1-3.R,tail,CUBE,joint-r-finger-1-4,
+default,finger2-1.L,head,CUBE,joint-l-finger-2-1,
+default,finger2-1.L,tail,CUBE,joint-l-finger-2-2,
+default,finger2-1.R,head,CUBE,joint-r-finger-2-1,
+default,finger2-1.R,tail,CUBE,joint-r-finger-2-2,
+default,finger2-2.L,head,CUBE,joint-l-finger-2-2,
+default,finger2-2.L,tail,CUBE,joint-l-finger-2-3,
+default,finger2-2.R,head,CUBE,joint-r-finger-2-2,
+default,finger2-2.R,tail,CUBE,joint-r-finger-2-3,
+default,finger2-3.L,head,CUBE,joint-l-finger-2-3,
+default,finger2-3.L,tail,CUBE,joint-l-finger-2-4,
+default,finger2-3.R,head,CUBE,joint-r-finger-2-3,
+default,finger2-3.R,tail,CUBE,joint-r-finger-2-4,
+default,finger3-1.L,head,CUBE,joint-l-finger-3-1,
+default,finger3-1.L,tail,CUBE,joint-l-finger-3-2,
+default,finger3-1.R,head,CUBE,joint-r-finger-3-1,
+default,finger3-1.R,tail,CUBE,joint-r-finger-3-2,
+default,finger3-2.L,head,CUBE,joint-l-finger-3-2,
+default,finger3-2.L,tail,CUBE,joint-l-finger-3-3,
+default,finger3-2.R,head,CUBE,joint-r-finger-3-2,
+default,finger3-2.R,tail,CUBE,joint-r-finger-3-3,
+default,finger3-3.L,head,CUBE,joint-l-finger-3-3,
+default,finger3-3.L,tail,CUBE,joint-l-finger-3-4,
+default,finger3-3.R,head,CUBE,joint-r-finger-3-3,
+default,finger3-3.R,tail,CUBE,joint-r-finger-3-4,
+default,finger4-1.L,head,CUBE,joint-l-finger-4-1,
+default,finger4-1.L,tail,CUBE,joint-l-finger-4-2,
+default,finger4-1.R,head,CUBE,joint-r-finger-4-1,
+default,finger4-1.R,tail,CUBE,joint-r-finger-4-2,
+default,finger4-2.L,head,CUBE,joint-l-finger-4-2,
+default,finger4-2.L,tail,CUBE,joint-l-finger-4-3,
+default,finger4-2.R,head,CUBE,joint-r-finger-4-2,
+default,finger4-2.R,tail,CUBE,joint-r-finger-4-3,
+default,finger4-3.L,head,CUBE,joint-l-finger-4-3,
+default,finger4-3.L,tail,CUBE,joint-l-finger-4-4,
+default,finger4-3.R,head,CUBE,joint-r-finger-4-3,
+default,finger4-3.R,tail,CUBE,joint-r-finger-4-4,
+default,finger5-1.L,head,CUBE,joint-l-finger-5-1,
+default,finger5-1.L,tail,CUBE,joint-l-finger-5-2,
+default,finger5-1.R,head,CUBE,joint-r-finger-5-1,
+default,finger5-1.R,tail,CUBE,joint-r-finger-5-2,
+default,finger5-2.L,head,CUBE,joint-l-finger-5-2,
+default,finger5-2.L,tail,CUBE,joint-l-finger-5-3,
+default,finger5-2.R,head,CUBE,joint-r-finger-5-2,
+default,finger5-2.R,tail,CUBE,joint-r-finger-5-3,
+default,finger5-3.L,head,CUBE,joint-l-finger-5-3,
+default,finger5-3.L,tail,CUBE,joint-l-finger-5-4,
+default,finger5-3.R,head,CUBE,joint-r-finger-5-3,
+default,finger5-3.R,tail,CUBE,joint-r-finger-5-4,
+default,foot.L,head,CUBE,joint-l-ankle,
+default,foot.L,tail,MEAN,,"[11535, 12923]"
+default,foot.R,head,CUBE,joint-r-ankle,
+default,foot.R,tail,MEAN,,"[4917, 6326]"
+default,head,head,CUBE,joint-head,
+default,head,tail,CUBE,joint-head-2,
+default,jaw,head,CUBE,joint-mouth,
+default,jaw,tail,VERTEX,,991
+default,levator02.L,head,VERTEX,,11679
+default,levator02.L,tail,VERTEX,,6960
+default,levator02.R,head,VERTEX,,5062
+default,levator02.R,tail,VERTEX,,184
+default,levator03.L,head,VERTEX,,6960
+default,levator03.L,tail,VERTEX,,11925
+default,levator03.R,head,VERTEX,,184
+default,levator03.R,tail,VERTEX,,5321
+default,levator04.L,head,VERTEX,,11925
+default,levator04.L,tail,VERTEX,,10407
+default,levator04.R,head,VERTEX,,5321
+default,levator04.R,tail,VERTEX,,3739
+default,levator05.L,head,VERTEX,,10407
+default,levator05.L,tail,VERTEX,,7159
+default,levator05.R,head,VERTEX,,3739
+default,levator05.R,tail,VERTEX,,399
+default,levator06.L,head,VERTEX,,7062
+default,levator06.L,tail,VERTEX,,11685
+default,levator06.R,head,VERTEX,,295
+default,levator06.R,tail,VERTEX,,5069
+default,lowerarm01.L,head,CUBE,joint-l-elbow,
+default,lowerarm01.L,tail,MEAN,,"[8390, 9206]"
+default,lowerarm01.R,head,CUBE,joint-r-elbow,
+default,lowerarm01.R,tail,MEAN,,"[1718, 2538]"
+default,lowerarm02.L,head,MEAN,,"[8390, 9206]"
+default,lowerarm02.L,tail,CUBE,joint-l-hand,
+default,lowerarm02.R,head,MEAN,,"[1718, 2538]"
+default,lowerarm02.R,tail,CUBE,joint-r-hand,
+default,lowerleg01.L,head,CUBE,joint-l-knee,
+default,lowerleg01.L,tail,MEAN,,"[11243, 16708]"
+default,lowerleg01.R,head,CUBE,joint-r-knee,
+default,lowerleg01.R,tail,MEAN,,"[4625, 15404]"
+default,lowerleg02.L,head,MEAN,,"[11243, 16708]"
+default,lowerleg02.L,tail,CUBE,joint-l-ankle,
+default,lowerleg02.R,head,MEAN,,"[4625, 15404]"
+default,lowerleg02.R,tail,CUBE,joint-r-ankle,
+default,metacarpal1.L,head,CUBE,joint-l-hand-3,
+default,metacarpal1.L,tail,CUBE,joint-l-finger-2-1,
+default,metacarpal1.R,head,CUBE,joint-r-hand-3,
+default,metacarpal1.R,tail,CUBE,joint-r-finger-2-1,
+default,metacarpal2.L,head,CUBE,joint-l-hand-3,
+default,metacarpal2.L,tail,CUBE,joint-l-finger-3-1,
+default,metacarpal2.R,head,CUBE,joint-r-hand-3,
+default,metacarpal2.R,tail,CUBE,joint-r-finger-3-1,
+default,metacarpal3.L,head,CUBE,joint-l-hand-2,
+default,metacarpal3.L,tail,CUBE,joint-l-finger-4-1,
+default,metacarpal3.R,head,CUBE,joint-r-hand-2,
+default,metacarpal3.R,tail,CUBE,joint-r-finger-4-1,
+default,metacarpal4.L,head,CUBE,joint-l-hand-2,
+default,metacarpal4.L,tail,CUBE,joint-l-finger-5-1,
+default,metacarpal4.R,head,CUBE,joint-r-hand-2,
+default,metacarpal4.R,tail,CUBE,joint-r-finger-5-1,
+default,neck01,head,CUBE,joint-neck,
+default,neck01,tail,MEAN,,"[659, 18889]"
+default,neck02,head,MEAN,,"[659, 18889]"
+default,neck02,tail,MEAN,,"[226, 17824]"
+default,neck03,head,MEAN,,"[226, 17824]"
+default,neck03,tail,CUBE,joint-head,
+default,oculi01.L,head,VERTEX,,6996
+default,oculi01.L,tail,VERTEX,,7006
+default,oculi01.R,head,VERTEX,,222
+default,oculi01.R,tail,VERTEX,,233
+default,oculi02.L,head,VERTEX,,6986
+default,oculi02.L,tail,VERTEX,,6996
+default,oculi02.R,head,VERTEX,,211
+default,oculi02.R,tail,VERTEX,,222
+default,orbicularis03.L,head,CUBE,joint-l-eye,
+default,orbicularis03.L,tail,CUBE,joint-l-upperlid,
+default,orbicularis03.R,head,CUBE,joint-r-eye,
+default,orbicularis03.R,tail,CUBE,joint-r-upperlid,
+default,orbicularis04.L,head,CUBE,joint-l-eye,
+default,orbicularis04.L,tail,CUBE,joint-l-lowerlid,
+default,orbicularis04.R,head,CUBE,joint-r-eye,
+default,orbicularis04.R,tail,CUBE,joint-r-lowerlid,
+default,oris01,head,VERTEX,,491
+default,oris01,tail,VERTEX,,493
+default,oris02,head,CUBE,joint-jaw,
+default,oris02,tail,VERTEX,,491
+default,oris03.L,head,VERTEX,,11965
+default,oris03.L,tail,VERTEX,,7170
+default,oris03.R,head,VERTEX,,5363
+default,oris03.R,tail,VERTEX,,410
+default,oris04.L,head,VERTEX,,343
+default,oris04.L,tail,VERTEX,,11965
+default,oris04.R,head,VERTEX,,343
+default,oris04.R,tail,VERTEX,,5363
+default,oris05,head,VERTEX,,5342
+default,oris05,tail,VERTEX,,466
+default,oris06,head,VERTEX,,343
+default,oris06,tail,VERTEX,,5342
+default,oris06.L,head,CUBE,joint-jaw,
+default,oris06.L,tail,VERTEX,,7450
+default,oris06.R,head,CUBE,joint-jaw,
+default,oris06.R,tail,VERTEX,,728
+default,oris07.L,head,VERTEX,,7450
+default,oris07.L,tail,VERTEX,,7166
+default,oris07.R,head,VERTEX,,728
+default,oris07.R,tail,VERTEX,,406
+default,pelvis.L,head,CUBE,joint-pelvis,
+default,pelvis.L,tail,CUBE,joint-l-upper-leg,
+default,pelvis.R,head,CUBE,joint-pelvis,
+default,pelvis.R,tail,CUBE,joint-r-upper-leg,
+default,risorius02.L,head,VERTEX,,11704
+default,risorius02.L,tail,VERTEX,,11927
+default,risorius02.R,head,VERTEX,,5089
+default,risorius02.R,tail,VERTEX,,5323
+default,risorius03.L,head,VERTEX,,11927
+default,risorius03.L,tail,VERTEX,,11819
+default,risorius03.R,head,VERTEX,,5323
+default,risorius03.R,tail,VERTEX,,5208
+default,root,head,VERTEX,,4223
+default,root,tail,CUBE,joint-pelvis,
+default,shoulder01.L,head,CUBE,joint-l-scapula,
+default,shoulder01.L,tail,CUBE,joint-l-shoulder,
+default,shoulder01.R,head,CUBE,joint-r-scapula,
+default,shoulder01.R,tail,CUBE,joint-r-shoulder,
+default,special01,head,VERTEX,,5266
+default,special01,tail,VERTEX,,343
+default,special03,head,CUBE,joint-mouth,
+default,special03,tail,VERTEX,,5134
+default,special04,head,VERTEX,,991
+default,special04,tail,CUBE,joint-jaw,
+default,special05.L,head,VERTEX,,7746
+default,special05.L,tail,CUBE,joint-l-eye,
+default,special05.R,head,VERTEX,,1054
+default,special05.R,tail,CUBE,joint-r-eye,
+default,special06.L,head,CUBE,joint-head-2,
+default,special06.L,tail,VERTEX,,7746
+default,special06.R,head,CUBE,joint-head-2,
+default,special06.R,tail,VERTEX,,1054
+default,spine01,head,CUBE,joint-spine-1,
+default,spine01,tail,CUBE,joint-neck,
+default,spine02,head,CUBE,joint-spine-2,
+default,spine02,tail,CUBE,joint-spine-1,
+default,spine03,head,CUBE,joint-spine-3,
+default,spine03,tail,CUBE,joint-spine-2,
+default,spine04,head,CUBE,joint-spine-4,
+default,spine04,tail,CUBE,joint-spine-3,
+default,spine05,head,CUBE,joint-pelvis,
+default,spine05,tail,CUBE,joint-spine-4,
+default,temporalis01.L,head,VERTEX,,10409
+default,temporalis01.L,tail,VERTEX,,6986
+default,temporalis01.R,head,VERTEX,,3741
+default,temporalis01.R,tail,VERTEX,,211
+default,temporalis02.L,head,VERTEX,,11797
+default,temporalis02.L,tail,VERTEX,,11704
+default,temporalis02.R,head,VERTEX,,5185
+default,temporalis02.R,tail,VERTEX,,5089
+default,toe1-1.L,head,CUBE,joint-l-toe-1-1,
+default,toe1-1.L,tail,CUBE,joint-l-toe-1-2,
+default,toe1-1.R,head,CUBE,joint-r-toe-1-1,
+default,toe1-1.R,tail,CUBE,joint-r-toe-1-2,
+default,toe1-2.L,head,CUBE,joint-l-toe-1-2,
+default,toe1-2.L,tail,CUBE,joint-l-toe-1-3,
+default,toe1-2.R,head,CUBE,joint-r-toe-1-2,
+default,toe1-2.R,tail,CUBE,joint-r-toe-1-3,
+default,toe2-1.L,head,CUBE,joint-l-toe-2-1,
+default,toe2-1.L,tail,CUBE,joint-l-toe-2-2,
+default,toe2-1.R,head,CUBE,joint-r-toe-2-1,
+default,toe2-1.R,tail,CUBE,joint-r-toe-2-2,
+default,toe2-2.L,head,CUBE,joint-l-toe-2-2,
+default,toe2-2.L,tail,CUBE,joint-l-toe-2-3,
+default,toe2-2.R,head,CUBE,joint-r-toe-2-2,
+default,toe2-2.R,tail,CUBE,joint-r-toe-2-3,
+default,toe2-3.L,head,CUBE,joint-l-toe-2-3,
+default,toe2-3.L,tail,CUBE,joint-l-toe-2-4,
+default,toe2-3.R,head,CUBE,joint-r-toe-2-3,
+default,toe2-3.R,tail,CUBE,joint-r-toe-2-4,
+default,toe3-1.L,head,CUBE,joint-l-toe-3-1,
+default,toe3-1.L,tail,CUBE,joint-l-toe-3-2,
+default,toe3-1.R,head,CUBE,joint-r-toe-3-1,
+default,toe3-1.R,tail,CUBE,joint-r-toe-3-2,
+default,toe3-2.L,head,CUBE,joint-l-toe-3-2,
+default,toe3-2.L,tail,CUBE,joint-l-toe-3-3,
+default,toe3-2.R,head,CUBE,joint-r-toe-3-2,
+default,toe3-2.R,tail,CUBE,joint-r-toe-3-3,
+default,toe3-3.L,head,CUBE,joint-l-toe-3-3,
+default,toe3-3.L,tail,CUBE,joint-l-toe-3-4,
+default,toe3-3.R,head,CUBE,joint-r-toe-3-3,
+default,toe3-3.R,tail,CUBE,joint-r-toe-3-4,
+default,toe4-1.L,head,CUBE,joint-l-toe-4-1,
+default,toe4-1.L,tail,CUBE,joint-l-toe-4-2,
+default,toe4-1.R,head,CUBE,joint-r-toe-4-1,
+default,toe4-1.R,tail,CUBE,joint-r-toe-4-2,
+default,toe4-2.L,head,CUBE,joint-l-toe-4-2,
+default,toe4-2.L,tail,CUBE,joint-l-toe-4-3,
+default,toe4-2.R,head,CUBE,joint-r-toe-4-2,
+default,toe4-2.R,tail,CUBE,joint-r-toe-4-3,
+default,toe4-3.L,head,CUBE,joint-l-toe-4-3,
+default,toe4-3.L,tail,CUBE,joint-l-toe-4-4,
+default,toe4-3.R,head,CUBE,joint-r-toe-4-3,
+default,toe4-3.R,tail,CUBE,joint-r-toe-4-4,
+default,toe5-1.L,head,CUBE,joint-l-toe-5-1,
+default,toe5-1.L,tail,CUBE,joint-l-toe-5-2,
+default,toe5-1.R,head,CUBE,joint-r-toe-5-1,
+default,toe5-1.R,tail,CUBE,joint-r-toe-5-2,
+default,toe5-2.L,head,CUBE,joint-l-toe-5-2,
+default,toe5-2.L,tail,CUBE,joint-l-toe-5-3,
+default,toe5-2.R,head,CUBE,joint-r-toe-5-2,
+default,toe5-2.R,tail,CUBE,joint-r-toe-5-3,
+default,toe5-3.L,head,CUBE,joint-l-toe-5-3,
+default,toe5-3.L,tail,CUBE,joint-l-toe-5-4,
+default,toe5-3.R,head,CUBE,joint-r-toe-5-3,
+default,toe5-3.R,tail,CUBE,joint-r-toe-5-4,
+default,tongue00,head,VERTEX,,991
+default,tongue00,tail,CUBE,joint-tongue-1,
+default,tongue01,head,CUBE,joint-tongue-1,
+default,tongue01,tail,CUBE,joint-tongue-2,
+default,tongue02,head,CUBE,joint-tongue-2,
+default,tongue02,tail,CUBE,joint-tongue-3,
+default,tongue03,head,CUBE,joint-tongue-3,
+default,tongue03,tail,MEAN,,"[13455, 13562]"
+default,tongue04,head,MEAN,,"[13455, 13562]"
+default,tongue04,tail,CUBE,joint-tongue-4,
+default,tongue05.L,head,CUBE,joint-tongue-2,
+default,tongue05.L,tail,VERTEX,,13535
+default,tongue05.R,head,CUBE,joint-tongue-2,
+default,tongue05.R,tail,VERTEX,,13435
+default,tongue06.L,head,CUBE,joint-tongue-3,
+default,tongue06.L,tail,VERTEX,,13527
+default,tongue06.R,head,CUBE,joint-tongue-3,
+default,tongue06.R,tail,VERTEX,,13427
+default,tongue07.L,head,MEAN,,"[13455, 13562]"
+default,tongue07.L,tail,VERTEX,,13564
+default,tongue07.R,head,MEAN,,"[13455, 13562]"
+default,tongue07.R,tail,VERTEX,,13464
+default,upperarm01.L,head,CUBE,joint-l-shoulder,
+default,upperarm01.L,tail,MEAN,,"[8057, 17023]"
+default,upperarm01.R,head,CUBE,joint-r-shoulder,
+default,upperarm01.R,tail,MEAN,,"[1365, 15711]"
+default,upperarm02.L,head,MEAN,,"[8057, 17023]"
+default,upperarm02.L,tail,CUBE,joint-l-elbow,
+default,upperarm02.R,head,MEAN,,"[1365, 15711]"
+default,upperarm02.R,tail,CUBE,joint-r-elbow,
+default,upperleg01.L,head,CUBE,joint-l-upper-leg,
+default,upperleg01.L,tail,MEAN,,"[10712, 11192]"
+default,upperleg01.R,head,CUBE,joint-r-upper-leg,
+default,upperleg01.R,tail,MEAN,,"[4056, 4574]"
+default,upperleg02.L,head,MEAN,,"[10712, 11192]"
+default,upperleg02.L,tail,CUBE,joint-l-knee,
+default,upperleg02.R,head,MEAN,,"[4056, 4574]"
+default,upperleg02.R,tail,CUBE,joint-r-knee,
+default,wrist.L,head,CUBE,joint-l-hand,
+default,wrist.L,tail,CUBE,joint-l-hand-3,
+default,wrist.R,head,CUBE,joint-r-hand,
+default,wrist.R,tail,CUBE,joint-r-hand-3,
+game_engine,Root,head,CUBE,joint-ground,
+game_engine,Root,tail,MEAN,,"[19152, 19155]"
+game_engine,ball_l,head,CUBE,joint-l-foot-1,
+game_engine,ball_l,tail,CUBE,joint-l-toe-2-4,
+game_engine,ball_r,head,CUBE,joint-r-foot-1,
+game_engine,ball_r,tail,CUBE,joint-r-toe-2-4,
+game_engine,calf_l,head,CUBE,joint-l-knee,
+game_engine,calf_l,tail,CUBE,joint-l-ankle,
+game_engine,calf_r,head,CUBE,joint-r-knee,
+game_engine,calf_r,tail,CUBE,joint-r-ankle,
+game_engine,clavicle_l,head,CUBE,joint-l-clavicle,
+game_engine,clavicle_l,tail,CUBE,joint-l-shoulder,
+game_engine,clavicle_r,head,CUBE,joint-r-clavicle,
+game_engine,clavicle_r,tail,CUBE,joint-r-shoulder,
+game_engine,foot_l,head,CUBE,joint-l-ankle,
+game_engine,foot_l,tail,CUBE,joint-l-foot-1,
+game_engine,foot_r,head,CUBE,joint-r-ankle,
+game_engine,foot_r,tail,CUBE,joint-r-foot-1,
+game_engine,hand_l,head,CUBE,joint-l-hand,
+game_engine,hand_l,tail,CUBE,joint-l-hand-3,
+game_engine,hand_r,head,CUBE,joint-r-hand,
+game_engine,hand_r,tail,CUBE,joint-r-hand-3,
+game_engine,head,head,CUBE,joint-head,
+game_engine,head,tail,CUBE,joint-head-2,
+game_engine,index_01_l,head,CUBE,joint-l-finger-2-1,
+game_engine,index_01_l,tail,CUBE,joint-l-finger-2-2,
+game_engine,index_01_r,head,CUBE,joint-r-finger-2-1,
+game_engine,index_01_r,tail,CUBE,joint-r-finger-2-2,
+game_engine,index_02_l,head,CUBE,joint-l-finger-2-2,
+game_engine,index_02_l,tail,CUBE,joint-l-finger-2-3,
+game_engine,index_02_r,head,CUBE,joint-r-finger-2-2,
+game_engine,index_02_r,tail,CUBE,joint-r-finger-2-3,
+game_engine,index_03_l,head,CUBE,joint-l-finger-2-3,
+game_engine,index_03_l,tail,CUBE,joint-l-finger-2-4,
+game_engine,index_03_r,head,CUBE,joint-r-finger-2-3,
+game_engine,index_03_r,tail,CUBE,joint-r-finger-2-4,
+game_engine,lowerarm_l,head,CUBE,joint-l-elbow,
+game_engine,lowerarm_l,tail,CUBE,joint-l-hand,
+game_engine,lowerarm_r,head,CUBE,joint-r-elbow,
+game_engine,lowerarm_r,tail,CUBE,joint-r-hand,
+game_engine,middle_01_l,head,CUBE,joint-l-finger-3-1,
+game_engine,middle_01_l,tail,CUBE,joint-l-finger-3-2,
+game_engine,middle_01_r,head,CUBE,joint-r-finger-3-1,
+game_engine,middle_01_r,tail,CUBE,joint-r-finger-3-2,
+game_engine,middle_02_l,head,CUBE,joint-l-finger-3-2,
+game_engine,middle_02_l,tail,CUBE,joint-l-finger-3-3,
+game_engine,middle_02_r,head,CUBE,joint-r-finger-3-2,
+game_engine,middle_02_r,tail,CUBE,joint-r-finger-3-3,
+game_engine,middle_03_l,head,CUBE,joint-l-finger-3-3,
+game_engine,middle_03_l,tail,CUBE,joint-l-finger-3-4,
+game_engine,middle_03_r,head,CUBE,joint-r-finger-3-3,
+game_engine,middle_03_r,tail,CUBE,joint-r-finger-3-4,
+game_engine,neck_01,head,CUBE,joint-neck,
+game_engine,neck_01,tail,CUBE,joint-head,
+game_engine,pelvis,head,CUBE,joint-pelvis,
+game_engine,pelvis,tail,CUBE,joint-spine-4,
+game_engine,pinky_01_l,head,CUBE,joint-l-finger-5-1,
+game_engine,pinky_01_l,tail,CUBE,joint-l-finger-5-2,
+game_engine,pinky_01_r,head,CUBE,joint-r-finger-5-1,
+game_engine,pinky_01_r,tail,CUBE,joint-r-finger-5-2,
+game_engine,pinky_02_l,head,CUBE,joint-l-finger-5-2,
+game_engine,pinky_02_l,tail,CUBE,joint-l-finger-5-3,
+game_engine,pinky_02_r,head,CUBE,joint-r-finger-5-2,
+game_engine,pinky_02_r,tail,CUBE,joint-r-finger-5-3,
+game_engine,pinky_03_l,head,CUBE,joint-l-finger-5-3,
+game_engine,pinky_03_l,tail,CUBE,joint-l-finger-5-4,
+game_engine,pinky_03_r,head,CUBE,joint-r-finger-5-3,
+game_engine,pinky_03_r,tail,CUBE,joint-r-finger-5-4,
+game_engine,ring_01_l,head,CUBE,joint-l-finger-4-1,
+game_engine,ring_01_l,tail,CUBE,joint-l-finger-4-2,
+game_engine,ring_01_r,head,CUBE,joint-r-finger-4-1,
+game_engine,ring_01_r,tail,CUBE,joint-r-finger-4-2,
+game_engine,ring_02_l,head,CUBE,joint-l-finger-4-2,
+game_engine,ring_02_l,tail,CUBE,joint-l-finger-4-3,
+game_engine,ring_02_r,head,CUBE,joint-r-finger-4-2,
+game_engine,ring_02_r,tail,CUBE,joint-r-finger-4-3,
+game_engine,ring_03_l,head,CUBE,joint-l-finger-4-3,
+game_engine,ring_03_l,tail,CUBE,joint-l-finger-4-4,
+game_engine,ring_03_r,head,CUBE,joint-r-finger-4-3,
+game_engine,ring_03_r,tail,CUBE,joint-r-finger-4-4,
+game_engine,spine_01,head,CUBE,joint-spine-4,
+game_engine,spine_01,tail,CUBE,joint-spine-3,
+game_engine,spine_02,head,CUBE,joint-spine-3,
+game_engine,spine_02,tail,CUBE,joint-spine-2,
+game_engine,spine_03,head,CUBE,joint-spine-2,
+game_engine,spine_03,tail,CUBE,joint-spine-1,
+game_engine,thigh_l,head,CUBE,joint-l-upper-leg,
+game_engine,thigh_l,tail,CUBE,joint-l-knee,
+game_engine,thigh_r,head,CUBE,joint-r-upper-leg,
+game_engine,thigh_r,tail,CUBE,joint-r-knee,
+game_engine,thumb_01_l,head,CUBE,joint-l-finger-1-1,
+game_engine,thumb_01_l,tail,CUBE,joint-l-finger-1-2,
+game_engine,thumb_01_r,head,CUBE,joint-r-finger-1-1,
+game_engine,thumb_01_r,tail,CUBE,joint-r-finger-1-2,
+game_engine,thumb_02_l,head,CUBE,joint-l-finger-1-2,
+game_engine,thumb_02_l,tail,CUBE,joint-l-finger-1-3,
+game_engine,thumb_02_r,head,CUBE,joint-r-finger-1-2,
+game_engine,thumb_02_r,tail,CUBE,joint-r-finger-1-3,
+game_engine,thumb_03_l,head,CUBE,joint-l-finger-1-3,
+game_engine,thumb_03_l,tail,CUBE,joint-l-finger-1-4,
+game_engine,thumb_03_r,head,CUBE,joint-r-finger-1-3,
+game_engine,thumb_03_r,tail,CUBE,joint-r-finger-1-4,
+game_engine,upperarm_l,head,CUBE,joint-l-shoulder,
+game_engine,upperarm_l,tail,CUBE,joint-l-elbow,
+game_engine,upperarm_r,head,CUBE,joint-r-shoulder,
+game_engine,upperarm_r,tail,CUBE,joint-r-elbow,
+rigify_human,DEF-elbow-helper.L,head,CUBE,joint-l-elbow,
+rigify_human,DEF-elbow-helper.L,tail,VERTEX,,10059
+rigify_human,DEF-elbow-helper.R,head,CUBE,joint-r-elbow,
+rigify_human,DEF-elbow-helper.R,tail,VERTEX,,3391
+rigify_human,DEF-knee-helper.L,head,CUBE,joint-l-knee,
+rigify_human,DEF-knee-helper.L,tail,VERTEX,,11242
+rigify_human,DEF-knee-helper.R,head,CUBE,joint-r-knee,
+rigify_human,DEF-knee-helper.R,tail,VERTEX,,4624
+rigify_human,DEF-pelvis-helper.L,head,CUBE,joint-l-upper-leg,
+rigify_human,DEF-pelvis-helper.L,tail,MEAN,,"[13846, 13847, 13848, 13849, 13846, 13847, 13848, 13849, 13842, 13843, 13844, 13845]"
+rigify_human,DEF-pelvis-helper.R,head,CUBE,joint-r-upper-leg,
+rigify_human,DEF-pelvis-helper.R,tail,MEAN,,"[14286, 14287, 14288, 14289, 14286, 14287, 14288, 14289, 14282, 14283, 14284, 14285]"
+rigify_human,DEF-pelvis-helper.front.L,head,CUBE,joint-l-upper-leg,
+rigify_human,DEF-pelvis-helper.front.L,tail,MEAN,,"[13846, 13847, 13848, 13849, 13846, 13847, 13848, 13849, 13842, 13843, 13844, 13845]"
+rigify_human,DEF-pelvis-helper.front.R,head,CUBE,joint-r-upper-leg,
+rigify_human,DEF-pelvis-helper.front.R,tail,MEAN,,"[14286, 14287, 14288, 14289, 14286, 14287, 14288, 14289, 14282, 14283, 14284, 14285]"
+rigify_human,DEF-shoulder-helper.L,head,CUBE,joint-l-shoulder,
+rigify_human,DEF-shoulder-helper.L,tail,MEAN,,"[14048, 14049, 14052, 14053, 14048, 14049, 14052, 14053, 14038, 14039, 14042, 14043]"
+rigify_human,DEF-shoulder-helper.R,head,CUBE,joint-r-shoulder,
+rigify_human,DEF-shoulder-helper.R,tail,MEAN,,"[14488, 14489, 14492, 14493, 14488, 14489, 14492, 14493, 14478, 14479, 14482, 14483]"
+rigify_human,MCH-breast-parent,head,VERTEX,,1892
+rigify_human,MCH-breast-parent,tail,VERTEX,,1892
+rigify_human,breast.L,head,MEAN,,"[8436, 10619]"
+rigify_human,breast.L,tail,VERTEX,,8436
+rigify_human,breast.R,head,MEAN,,"[1764, 3956]"
+rigify_human,breast.R,tail,VERTEX,,1764
+rigify_human,brow.B.L,head,VERTEX,,6964
+rigify_human,brow.B.L,tail,VERTEX,,6938
+rigify_human,brow.B.L.001,head,VERTEX,,6938
+rigify_human,brow.B.L.001,tail,VERTEX,,6948
+rigify_human,brow.B.L.002,head,VERTEX,,6948
+rigify_human,brow.B.L.002,tail,VERTEX,,6950
+rigify_human,brow.B.L.003,head,VERTEX,,6950
+rigify_human,brow.B.L.003,tail,VERTEX,,6897
+rigify_human,brow.B.L.004,head,VERTEX,,6897
+rigify_human,brow.B.L.004,tail,VERTEX,,11715
+rigify_human,brow.B.R,head,VERTEX,,188
+rigify_human,brow.B.R,tail,VERTEX,,160
+rigify_human,brow.B.R.001,head,VERTEX,,160
+rigify_human,brow.B.R.001,tail,VERTEX,,172
+rigify_human,brow.B.R.002,head,VERTEX,,172
+rigify_human,brow.B.R.002,tail,VERTEX,,174
+rigify_human,brow.B.R.003,head,VERTEX,,174
+rigify_human,brow.B.R.003,tail,VERTEX,,113
+rigify_human,brow.B.R.004,head,VERTEX,,113
+rigify_human,brow.B.R.004,tail,VERTEX,,5100
+rigify_human,brow.T.L,head,VERTEX,,7032
+rigify_human,brow.T.L,tail,VERTEX,,7023
+rigify_human,brow.T.L.001,head,VERTEX,,7023
+rigify_human,brow.T.L.001,tail,VERTEX,,6981
+rigify_human,brow.T.L.002,head,VERTEX,,6981
+rigify_human,brow.T.L.002,tail,VERTEX,,6983
+rigify_human,brow.T.L.003,head,VERTEX,,6983
+rigify_human,brow.T.L.003,tail,VERTEX,,132
+rigify_human,brow.T.R,head,VERTEX,,263
+rigify_human,brow.T.R,tail,VERTEX,,254
+rigify_human,brow.T.R.001,head,VERTEX,,254
+rigify_human,brow.T.R.001,tail,VERTEX,,206
+rigify_human,brow.T.R.002,head,VERTEX,,206
+rigify_human,brow.T.R.002,tail,VERTEX,,208
+rigify_human,brow.T.R.003,head,VERTEX,,208
+rigify_human,brow.T.R.003,tail,VERTEX,,132
+rigify_human,brow_glue.B.L.002,head,VERTEX,,6948
+rigify_human,brow_glue.B.L.002,tail,VERTEX,,6981
+rigify_human,brow_glue.B.R.002,head,VERTEX,,172
+rigify_human,brow_glue.B.R.002,tail,VERTEX,,206
+rigify_human,cheek.B.L,head,MEAN,,"[7162, 7195]"
+rigify_human,cheek.B.L,tail,VERTEX,,11767
+rigify_human,cheek.B.L.001,head,VERTEX,,11767
+rigify_human,cheek.B.L.001,tail,VERTEX,,7032
+rigify_human,cheek.B.R,head,MEAN,,"[402, 435]"
+rigify_human,cheek.B.R,tail,VERTEX,,5153
+rigify_human,cheek.B.R.001,head,VERTEX,,5153
+rigify_human,cheek.B.R.001,tail,VERTEX,,263
+rigify_human,cheek.T.L,head,VERTEX,,7032
+rigify_human,cheek.T.L,tail,VERTEX,,11748
+rigify_human,cheek.T.L.001,head,VERTEX,,11748
+rigify_human,cheek.T.L.001,tail,VERTEX,,11715
+rigify_human,cheek.T.R,head,VERTEX,,263
+rigify_human,cheek.T.R,tail,VERTEX,,5133
+rigify_human,cheek.T.R.001,head,VERTEX,,5133
+rigify_human,cheek.T.R.001,tail,VERTEX,,5100
+rigify_human,cheek_glue.T.L.001,head,VERTEX,,11748
+rigify_human,cheek_glue.T.L.001,tail,VERTEX,,11767
+rigify_human,cheek_glue.T.R.001,head,VERTEX,,5133
+rigify_human,cheek_glue.T.R.001,tail,VERTEX,,5153
+rigify_human,chin,head,VERTEX,,5225
+rigify_human,chin,tail,VERTEX,,5162
+rigify_human,chin.001,head,VERTEX,,5162
+rigify_human,chin.001,tail,VERTEX,,491
+rigify_human,chin.L,head,VERTEX,,11833
+rigify_human,chin.L,tail,MEAN,,"[7162, 7195]"
+rigify_human,chin.R,head,VERTEX,,5223
+rigify_human,chin.R,tail,MEAN,,"[402, 435]"
+rigify_human,chin_end_glue.001,head,VERTEX,,491
+rigify_human,chin_end_glue.001,tail,MEAN,,"[495, 557]"
+rigify_human,ear.L,head,VERTEX,,12020
+rigify_human,ear.L,tail,VERTEX,,12165
+rigify_human,ear.L.001,head,VERTEX,,12165
+rigify_human,ear.L.001,tail,MEAN,,"[12015, 12056]"
+rigify_human,ear.L.002,head,MEAN,,"[12015, 12056]"
+rigify_human,ear.L.002,tail,MEAN,,"[12018, 12256]"
+rigify_human,ear.L.003,head,MEAN,,"[12018, 12256]"
+rigify_human,ear.L.003,tail,MEAN,,"[12041, 12330]"
+rigify_human,ear.L.004,head,MEAN,,"[12041, 12330]"
+rigify_human,ear.L.004,tail,VERTEX,,12020
+rigify_human,ear.R,head,VERTEX,,5421
+rigify_human,ear.R,tail,VERTEX,,5568
+rigify_human,ear.R.001,head,VERTEX,,5568
+rigify_human,ear.R.001,tail,MEAN,,"[5416, 5457]"
+rigify_human,ear.R.002,head,MEAN,,"[5416, 5457]"
+rigify_human,ear.R.002,tail,MEAN,,"[5419, 5659]"
+rigify_human,ear.R.003,head,MEAN,,"[5419, 5659]"
+rigify_human,ear.R.003,tail,MEAN,,"[5442, 5733]"
+rigify_human,ear.R.004,head,MEAN,,"[5442, 5733]"
+rigify_human,ear.R.004,tail,VERTEX,,5421
+rigify_human,eye.L,head,CUBE,joint-l-eye,
+rigify_human,eye.L,tail,MEAN,,"[14598, 14634]"
+rigify_human,eye.R,head,CUBE,joint-r-eye,
+rigify_human,eye.R,tail,MEAN,,"[14670, 14706]"
+rigify_human,f_index.01.L,head,CUBE,joint-l-finger-2-1,
+rigify_human,f_index.01.L,tail,CUBE,joint-l-finger-2-2,
+rigify_human,f_index.01.R,head,CUBE,joint-r-finger-2-1,
+rigify_human,f_index.01.R,tail,CUBE,joint-r-finger-2-2,
+rigify_human,f_index.02.L,head,CUBE,joint-l-finger-2-2,
+rigify_human,f_index.02.L,tail,CUBE,joint-l-finger-2-3,
+rigify_human,f_index.02.R,head,CUBE,joint-r-finger-2-2,
+rigify_human,f_index.02.R,tail,CUBE,joint-r-finger-2-3,
+rigify_human,f_index.03.L,head,CUBE,joint-l-finger-2-3,
+rigify_human,f_index.03.L,tail,CUBE,joint-l-finger-2-4,
+rigify_human,f_index.03.R,head,CUBE,joint-r-finger-2-3,
+rigify_human,f_index.03.R,tail,CUBE,joint-r-finger-2-4,
+rigify_human,f_middle.01.L,head,CUBE,joint-l-finger-3-1,
+rigify_human,f_middle.01.L,tail,CUBE,joint-l-finger-3-2,
+rigify_human,f_middle.01.R,head,CUBE,joint-r-finger-3-1,
+rigify_human,f_middle.01.R,tail,CUBE,joint-r-finger-3-2,
+rigify_human,f_middle.02.L,head,CUBE,joint-l-finger-3-2,
+rigify_human,f_middle.02.L,tail,CUBE,joint-l-finger-3-3,
+rigify_human,f_middle.02.R,head,CUBE,joint-r-finger-3-2,
+rigify_human,f_middle.02.R,tail,CUBE,joint-r-finger-3-3,
+rigify_human,f_middle.03.L,head,CUBE,joint-l-finger-3-3,
+rigify_human,f_middle.03.L,tail,CUBE,joint-l-finger-3-4,
+rigify_human,f_middle.03.R,head,CUBE,joint-r-finger-3-3,
+rigify_human,f_middle.03.R,tail,CUBE,joint-r-finger-3-4,
+rigify_human,f_pinky.01.L,head,CUBE,joint-l-finger-5-1,
+rigify_human,f_pinky.01.L,tail,CUBE,joint-l-finger-5-2,
+rigify_human,f_pinky.01.R,head,CUBE,joint-r-finger-5-1,
+rigify_human,f_pinky.01.R,tail,CUBE,joint-r-finger-5-2,
+rigify_human,f_pinky.02.L,head,CUBE,joint-l-finger-5-2,
+rigify_human,f_pinky.02.L,tail,CUBE,joint-l-finger-5-3,
+rigify_human,f_pinky.02.R,head,CUBE,joint-r-finger-5-2,
+rigify_human,f_pinky.02.R,tail,CUBE,joint-r-finger-5-3,
+rigify_human,f_pinky.03.L,head,CUBE,joint-l-finger-5-3,
+rigify_human,f_pinky.03.L,tail,CUBE,joint-l-finger-5-4,
+rigify_human,f_pinky.03.R,head,CUBE,joint-r-finger-5-3,
+rigify_human,f_pinky.03.R,tail,CUBE,joint-r-finger-5-4,
+rigify_human,f_ring.01.L,head,CUBE,joint-l-finger-4-1,
+rigify_human,f_ring.01.L,tail,CUBE,joint-l-finger-4-2,
+rigify_human,f_ring.01.R,head,CUBE,joint-r-finger-4-1,
+rigify_human,f_ring.01.R,tail,CUBE,joint-r-finger-4-2,
+rigify_human,f_ring.02.L,head,CUBE,joint-l-finger-4-2,
+rigify_human,f_ring.02.L,tail,CUBE,joint-l-finger-4-3,
+rigify_human,f_ring.02.R,head,CUBE,joint-r-finger-4-2,
+rigify_human,f_ring.02.R,tail,CUBE,joint-r-finger-4-3,
+rigify_human,f_ring.03.L,head,CUBE,joint-l-finger-4-3,
+rigify_human,f_ring.03.L,tail,CUBE,joint-l-finger-4-4,
+rigify_human,f_ring.03.R,head,CUBE,joint-r-finger-4-3,
+rigify_human,f_ring.03.R,tail,CUBE,joint-r-finger-4-4,
+rigify_human,face,head,CUBE,joint-head,
+rigify_human,face,tail,CUBE,joint-head,
+rigify_human,foot.L,head,CUBE,joint-l-ankle,
+rigify_human,foot.L,tail,CUBE,joint-l-foot-1,
+rigify_human,foot.R,head,CUBE,joint-r-ankle,
+rigify_human,foot.R,tail,CUBE,joint-r-foot-1,
+rigify_human,forearm.L,head,CUBE,joint-l-elbow,
+rigify_human,forearm.L,tail,CUBE,joint-l-hand,
+rigify_human,forearm.R,head,CUBE,joint-r-elbow,
+rigify_human,forearm.R,tail,CUBE,joint-r-hand,
+rigify_human,forehead.L,head,VERTEX,,7015
+rigify_human,forehead.L,tail,VERTEX,,6983
+rigify_human,forehead.L.001,head,VERTEX,,7011
+rigify_human,forehead.L.001,tail,VERTEX,,6981
+rigify_human,forehead.L.002,head,VERTEX,,7018
+rigify_human,forehead.L.002,tail,VERTEX,,7023
+rigify_human,forehead.R,head,VERTEX,,245
+rigify_human,forehead.R,tail,VERTEX,,208
+rigify_human,forehead.R.001,head,VERTEX,,240
+rigify_human,forehead.R.001,tail,VERTEX,,206
+rigify_human,forehead.R.002,head,VERTEX,,248
+rigify_human,forehead.R.002,tail,VERTEX,,254
+rigify_human,hand.L,head,CUBE,joint-l-hand,
+rigify_human,hand.L,tail,CUBE,joint-l-finger-3-1,
+rigify_human,hand.R,head,CUBE,joint-r-hand,
+rigify_human,hand.R,tail,CUBE,joint-r-finger-3-1,
+rigify_human,heel.02.L,head,XYZ,,"[13319, 12820, 13057]"
+rigify_human,heel.02.L,tail,XYZ,,"[12863, 12820, 13057]"
+rigify_human,heel.02.R,head,XYZ,,"[6723, 6223, 6461]"
+rigify_human,heel.02.R,tail,XYZ,,"[6266, 6223, 6461]"
+rigify_human,jaw,head,VERTEX,,783
+rigify_human,jaw,tail,VERTEX,,5225
+rigify_human,jaw.L,head,VERTEX,,11712
+rigify_human,jaw.L,tail,VERTEX,,7597
+rigify_human,jaw.L.001,head,VERTEX,,7597
+rigify_human,jaw.L.001,tail,VERTEX,,11833
+rigify_human,jaw.R,head,VERTEX,,5097
+rigify_human,jaw.R,tail,VERTEX,,895
+rigify_human,jaw.R.001,head,VERTEX,,895
+rigify_human,jaw.R.001,tail,VERTEX,,5223
+rigify_human,jaw_master,head,MEAN,,"[5097, 11712]"
+rigify_human,jaw_master,tail,VERTEX,,5225
+rigify_human,lid.B.L,head,VERTEX,,6806
+rigify_human,lid.B.L,tail,VERTEX,,6818
+rigify_human,lid.B.L.001,head,VERTEX,,6818
+rigify_human,lid.B.L.001,tail,VERTEX,,6827
+rigify_human,lid.B.L.002,head,VERTEX,,6827
+rigify_human,lid.B.L.002,tail,VERTEX,,6833
+rigify_human,lid.B.L.003,head,VERTEX,,6833
+rigify_human,lid.B.L.003,tail,VERTEX,,6851
+rigify_human,lid.B.R,head,VERTEX,,22
+rigify_human,lid.B.R,tail,VERTEX,,34
+rigify_human,lid.B.R.001,head,VERTEX,,34
+rigify_human,lid.B.R.001,tail,VERTEX,,43
+rigify_human,lid.B.R.002,head,VERTEX,,43
+rigify_human,lid.B.R.002,tail,VERTEX,,49
+rigify_human,lid.B.R.003,head,VERTEX,,49
+rigify_human,lid.B.R.003,tail,VERTEX,,67
+rigify_human,lid.T.L,head,VERTEX,,6851
+rigify_human,lid.T.L,tail,VERTEX,,6842
+rigify_human,lid.T.L.001,head,VERTEX,,6842
+rigify_human,lid.T.L.001,tail,VERTEX,,6787
+rigify_human,lid.T.L.002,head,VERTEX,,6787
+rigify_human,lid.T.L.002,tail,VERTEX,,6794
+rigify_human,lid.T.L.003,head,VERTEX,,6794
+rigify_human,lid.T.L.003,tail,VERTEX,,6806
+rigify_human,lid.T.R,head,VERTEX,,67
+rigify_human,lid.T.R,tail,VERTEX,,58
+rigify_human,lid.T.R.001,head,VERTEX,,58
+rigify_human,lid.T.R.001,tail,VERTEX,,3
+rigify_human,lid.T.R.002,head,VERTEX,,3
+rigify_human,lid.T.R.002,tail,VERTEX,,10
+rigify_human,lid.T.R.003,head,VERTEX,,10
+rigify_human,lid.T.R.003,tail,VERTEX,,22
+rigify_human,lid_glue.B.L.002,head,VERTEX,,6827
+rigify_human,lid_glue.B.L.002,tail,VERTEX,,11748
+rigify_human,lid_glue.B.R.002,head,VERTEX,,43
+rigify_human,lid_glue.B.R.002,tail,VERTEX,,5133
+rigify_human,lip.B.L,head,MEAN,,"[495, 557]"
+rigify_human,lip.B.L,tail,MEAN,,"[7238, 7295]"
+rigify_human,lip.B.L.001,head,MEAN,,"[7238, 7295]"
+rigify_human,lip.B.L.001,tail,MEAN,,"[7162, 7195]"
+rigify_human,lip.B.R,head,MEAN,,"[495, 557]"
+rigify_human,lip.B.R,tail,MEAN,,"[483, 552]"
+rigify_human,lip.B.R.001,head,MEAN,,"[483, 552]"
+rigify_human,lip.B.R.001,tail,MEAN,,"[402, 435]"
+rigify_human,lip.T.L,head,MEAN,,"[509, 571]"
+rigify_human,lip.T.L,tail,MEAN,,"[7212, 7293]"
+rigify_human,lip.T.L.001,head,MEAN,,"[7212, 7293]"
+rigify_human,lip.T.L.001,tail,MEAN,,"[7162, 7195]"
+rigify_human,lip.T.R,head,MEAN,,"[509, 571]"
+rigify_human,lip.T.R,tail,MEAN,,"[452, 550]"
+rigify_human,lip.T.R.001,head,MEAN,,"[452, 550]"
+rigify_human,lip.T.R.001,tail,MEAN,,"[402, 435]"
+rigify_human,nose,head,VERTEX,,132
+rigify_human,nose,tail,VERTEX,,164
+rigify_human,nose.001,head,VERTEX,,164
+rigify_human,nose.001,tail,VERTEX,,297
+rigify_human,nose.002,head,VERTEX,,297
+rigify_human,nose.002,tail,VERTEX,,312
+rigify_human,nose.003,head,VERTEX,,312
+rigify_human,nose.003,tail,VERTEX,,343
+rigify_human,nose.004,head,VERTEX,,343
+rigify_human,nose.004,tail,VERTEX,,5342
+rigify_human,nose.L,head,VERTEX,,11715
+rigify_human,nose.L,tail,VERTEX,,7099
+rigify_human,nose.L.001,head,VERTEX,,7099
+rigify_human,nose.L.001,tail,VERTEX,,297
+rigify_human,nose.R,head,VERTEX,,5100
+rigify_human,nose.R,tail,VERTEX,,337
+rigify_human,nose.R.001,head,VERTEX,,337
+rigify_human,nose.R.001,tail,VERTEX,,297
+rigify_human,nose_end_glue.004,head,VERTEX,,5342
+rigify_human,nose_end_glue.004,tail,MEAN,,"[509, 571]"
+rigify_human,nose_glue.004,head,VERTEX,,343
+rigify_human,nose_glue.004,tail,MEAN,,"[509, 571]"
+rigify_human,nose_glue.L.001,head,VERTEX,,7099
+rigify_human,nose_glue.L.001,tail,MEAN,,"[7212, 7293]"
+rigify_human,nose_glue.R.001,head,VERTEX,,337
+rigify_human,nose_glue.R.001,tail,MEAN,,"[452, 550]"
+rigify_human,nose_master,head,MEAN,,"[337, 7099]"
+rigify_human,nose_master,tail,MEAN,,"[337, 7099]"
+rigify_human,palm.01.L,head,CUBE,joint-l-finger-1-1,
+rigify_human,palm.01.L,tail,CUBE,joint-l-finger-2-1,
+rigify_human,palm.01.R,head,CUBE,joint-r-finger-1-1,
+rigify_human,palm.01.R,tail,CUBE,joint-r-finger-2-1,
+rigify_human,palm.02.L,head,CUBE,joint-l-hand-3,
+rigify_human,palm.02.L,tail,CUBE,joint-l-finger-3-1,
+rigify_human,palm.02.R,head,CUBE,joint-r-hand-3,
+rigify_human,palm.02.R,tail,CUBE,joint-r-finger-3-1,
+rigify_human,palm.03.L,head,MEAN,,"[14022, 14026]"
+rigify_human,palm.03.L,tail,CUBE,joint-l-finger-4-1,
+rigify_human,palm.03.R,head,MEAN,,"[14462, 14466]"
+rigify_human,palm.03.R,tail,CUBE,joint-r-finger-4-1,
+rigify_human,palm.04.L,head,MEAN,,"[14023, 14027]"
+rigify_human,palm.04.L,tail,CUBE,joint-l-finger-5-1,
+rigify_human,palm.04.R,head,MEAN,,"[14463, 14467]"
+rigify_human,palm.04.R,tail,CUBE,joint-r-finger-5-1,
+rigify_human,pelvis.L,head,CUBE,joint-pelvis,
+rigify_human,pelvis.L,tail,CUBE,joint-l-upper-leg,
+rigify_human,pelvis.R,head,CUBE,joint-pelvis,
+rigify_human,pelvis.R,tail,CUBE,joint-r-upper-leg,
+rigify_human,shin.L,head,CUBE,joint-l-knee,
+rigify_human,shin.L,tail,CUBE,joint-l-ankle,
+rigify_human,shin.R,head,CUBE,joint-r-knee,
+rigify_human,shin.R,tail,CUBE,joint-r-ankle,
+rigify_human,shoulder.L,head,CUBE,joint-l-clavicle,
+rigify_human,shoulder.L,tail,CUBE,joint-l-shoulder,
+rigify_human,shoulder.R,head,CUBE,joint-r-clavicle,
+rigify_human,shoulder.R,tail,CUBE,joint-r-shoulder,
+rigify_human,spine,head,VERTEX,,4374
+rigify_human,spine,tail,CUBE,joint-spine-4,
+rigify_human,spine.001,head,CUBE,joint-spine-4,
+rigify_human,spine.001,tail,CUBE,joint-spine-3,
+rigify_human,spine.002,head,CUBE,joint-spine-3,
+rigify_human,spine.002,tail,CUBE,joint-spine-2,
+rigify_human,spine.003,head,CUBE,joint-spine-2,
+rigify_human,spine.003,tail,CUBE,joint-spine-1,
+rigify_human,spine.004,head,CUBE,joint-spine-1,
+rigify_human,spine.004,tail,CUBE,joint-neck,
+rigify_human,spine.005,head,CUBE,joint-neck,
+rigify_human,spine.005,tail,CUBE,joint-head,
+rigify_human,spine.006,head,CUBE,joint-head,
+rigify_human,spine.006,tail,CUBE,joint-head-2,
+rigify_human,teeth.B,head,VERTEX,,15012
+rigify_human,teeth.B,tail,MEAN,,"[15009, 15044]"
+rigify_human,teeth.T,head,VERTEX,,15079
+rigify_human,teeth.T,tail,MEAN,,"[15081, 15114]"
+rigify_human,temple.L,head,VERTEX,,12159
+rigify_human,temple.L,tail,VERTEX,,11712
+rigify_human,temple.R,head,VERTEX,,5562
+rigify_human,temple.R,tail,VERTEX,,5097
+rigify_human,thigh.L,head,CUBE,joint-l-upper-leg,
+rigify_human,thigh.L,tail,CUBE,joint-l-knee,
+rigify_human,thigh.R,head,CUBE,joint-r-upper-leg,
+rigify_human,thigh.R,tail,CUBE,joint-r-knee,
+rigify_human,thumb.01.L,head,CUBE,joint-l-finger-1-1,
+rigify_human,thumb.01.L,tail,CUBE,joint-l-finger-1-2,
+rigify_human,thumb.01.R,head,CUBE,joint-r-finger-1-1,
+rigify_human,thumb.01.R,tail,CUBE,joint-r-finger-1-2,
+rigify_human,thumb.02.L,head,CUBE,joint-l-finger-1-2,
+rigify_human,thumb.02.L,tail,CUBE,joint-l-finger-1-3,
+rigify_human,thumb.02.R,head,CUBE,joint-r-finger-1-2,
+rigify_human,thumb.02.R,tail,CUBE,joint-r-finger-1-3,
+rigify_human,thumb.03.L,head,CUBE,joint-l-finger-1-3,
+rigify_human,thumb.03.L,tail,CUBE,joint-l-finger-1-4,
+rigify_human,thumb.03.R,head,CUBE,joint-r-finger-1-3,
+rigify_human,thumb.03.R,tail,CUBE,joint-r-finger-1-4,
+rigify_human,toe.L,head,CUBE,joint-l-foot-1,
+rigify_human,toe.L,tail,CUBE,joint-l-foot-2,
+rigify_human,toe.R,head,CUBE,joint-r-foot-1,
+rigify_human,toe.R,tail,CUBE,joint-r-foot-2,
+rigify_human,tongue,head,CUBE,joint-tongue-4,
+rigify_human,tongue,tail,CUBE,joint-tongue-3,
+rigify_human,tongue.001,head,CUBE,joint-tongue-3,
+rigify_human,tongue.001,tail,CUBE,joint-tongue-2,
+rigify_human,tongue.002,head,CUBE,joint-tongue-2,
+rigify_human,tongue.002,tail,CUBE,joint-tongue-1,
+rigify_human,upper_arm.L,head,CUBE,joint-l-shoulder,
+rigify_human,upper_arm.L,tail,CUBE,joint-l-elbow,
+rigify_human,upper_arm.R,head,CUBE,joint-r-shoulder,
+rigify_human,upper_arm.R,tail,CUBE,joint-r-elbow,
+rigify_human_toes,DEF-elbow-helper.L,head,CUBE,joint-l-elbow,
+rigify_human_toes,DEF-elbow-helper.L,tail,VERTEX,,10059
+rigify_human_toes,DEF-elbow-helper.R,head,CUBE,joint-r-elbow,
+rigify_human_toes,DEF-elbow-helper.R,tail,VERTEX,,3391
+rigify_human_toes,DEF-knee-helper.L,head,CUBE,joint-l-knee,
+rigify_human_toes,DEF-knee-helper.L,tail,VERTEX,,11242
+rigify_human_toes,DEF-knee-helper.R,head,CUBE,joint-r-knee,
+rigify_human_toes,DEF-knee-helper.R,tail,VERTEX,,4624
+rigify_human_toes,DEF-pelvis-helper.L,head,CUBE,joint-l-upper-leg,
+rigify_human_toes,DEF-pelvis-helper.L,tail,MEAN,,"[13846, 13847, 13848, 13849, 13846, 13847, 13848, 13849, 13842, 13843, 13844, 13845]"
+rigify_human_toes,DEF-pelvis-helper.R,head,CUBE,joint-r-upper-leg,
+rigify_human_toes,DEF-pelvis-helper.R,tail,MEAN,,"[14286, 14287, 14288, 14289, 14286, 14287, 14288, 14289, 14282, 14283, 14284, 14285]"
+rigify_human_toes,DEF-pelvis-helper.front.L,head,CUBE,joint-l-upper-leg,
+rigify_human_toes,DEF-pelvis-helper.front.L,tail,MEAN,,"[13846, 13847, 13848, 13849, 13846, 13847, 13848, 13849, 13842, 13843, 13844, 13845]"
+rigify_human_toes,DEF-pelvis-helper.front.R,head,CUBE,joint-r-upper-leg,
+rigify_human_toes,DEF-pelvis-helper.front.R,tail,MEAN,,"[14286, 14287, 14288, 14289, 14286, 14287, 14288, 14289, 14282, 14283, 14284, 14285]"
+rigify_human_toes,DEF-shoulder-helper.L,head,CUBE,joint-l-shoulder,
+rigify_human_toes,DEF-shoulder-helper.L,tail,MEAN,,"[14048, 14049, 14052, 14053, 14048, 14049, 14052, 14053, 14038, 14039, 14042, 14043]"
+rigify_human_toes,DEF-shoulder-helper.R,head,CUBE,joint-r-shoulder,
+rigify_human_toes,DEF-shoulder-helper.R,tail,MEAN,,"[14488, 14489, 14492, 14493, 14488, 14489, 14492, 14493, 14478, 14479, 14482, 14483]"
+rigify_human_toes,MCH-breast-parent,head,VERTEX,,1892
+rigify_human_toes,MCH-breast-parent,tail,VERTEX,,1892
+rigify_human_toes,breast.L,head,MEAN,,"[8436, 10619]"
+rigify_human_toes,breast.L,tail,VERTEX,,8436
+rigify_human_toes,breast.R,head,MEAN,,"[1764, 3956]"
+rigify_human_toes,breast.R,tail,VERTEX,,1764
+rigify_human_toes,brow.B.L,head,VERTEX,,6964
+rigify_human_toes,brow.B.L,tail,VERTEX,,6938
+rigify_human_toes,brow.B.L.001,head,VERTEX,,6938
+rigify_human_toes,brow.B.L.001,tail,VERTEX,,6948
+rigify_human_toes,brow.B.L.002,head,VERTEX,,6948
+rigify_human_toes,brow.B.L.002,tail,VERTEX,,6950
+rigify_human_toes,brow.B.L.003,head,VERTEX,,6950
+rigify_human_toes,brow.B.L.003,tail,VERTEX,,6897
+rigify_human_toes,brow.B.L.004,head,VERTEX,,6897
+rigify_human_toes,brow.B.L.004,tail,VERTEX,,11715
+rigify_human_toes,brow.B.R,head,VERTEX,,188
+rigify_human_toes,brow.B.R,tail,VERTEX,,160
+rigify_human_toes,brow.B.R.001,head,VERTEX,,160
+rigify_human_toes,brow.B.R.001,tail,VERTEX,,172
+rigify_human_toes,brow.B.R.002,head,VERTEX,,172
+rigify_human_toes,brow.B.R.002,tail,VERTEX,,174
+rigify_human_toes,brow.B.R.003,head,VERTEX,,174
+rigify_human_toes,brow.B.R.003,tail,VERTEX,,113
+rigify_human_toes,brow.B.R.004,head,VERTEX,,113
+rigify_human_toes,brow.B.R.004,tail,VERTEX,,5100
+rigify_human_toes,brow.T.L,head,VERTEX,,7032
+rigify_human_toes,brow.T.L,tail,VERTEX,,7023
+rigify_human_toes,brow.T.L.001,head,VERTEX,,7023
+rigify_human_toes,brow.T.L.001,tail,VERTEX,,6981
+rigify_human_toes,brow.T.L.002,head,VERTEX,,6981
+rigify_human_toes,brow.T.L.002,tail,VERTEX,,6983
+rigify_human_toes,brow.T.L.003,head,VERTEX,,6983
+rigify_human_toes,brow.T.L.003,tail,VERTEX,,132
+rigify_human_toes,brow.T.R,head,VERTEX,,263
+rigify_human_toes,brow.T.R,tail,VERTEX,,254
+rigify_human_toes,brow.T.R.001,head,VERTEX,,254
+rigify_human_toes,brow.T.R.001,tail,VERTEX,,206
+rigify_human_toes,brow.T.R.002,head,VERTEX,,206
+rigify_human_toes,brow.T.R.002,tail,VERTEX,,208
+rigify_human_toes,brow.T.R.003,head,VERTEX,,208
+rigify_human_toes,brow.T.R.003,tail,VERTEX,,132
+rigify_human_toes,brow_glue.B.L.002,head,VERTEX,,6948
+rigify_human_toes,brow_glue.B.L.002,tail,VERTEX,,6981
+rigify_human_toes,brow_glue.B.R.002,head,VERTEX,,172
+rigify_human_toes,brow_glue.B.R.002,tail,VERTEX,,206
+rigify_human_toes,cheek.B.L,head,MEAN,,"[7162, 7195]"
+rigify_human_toes,cheek.B.L,tail,VERTEX,,11767
+rigify_human_toes,cheek.B.L.001,head,VERTEX,,11767
+rigify_human_toes,cheek.B.L.001,tail,VERTEX,,7032
+rigify_human_toes,cheek.B.R,head,MEAN,,"[402, 435]"
+rigify_human_toes,cheek.B.R,tail,VERTEX,,5153
+rigify_human_toes,cheek.B.R.001,head,VERTEX,,5153
+rigify_human_toes,cheek.B.R.001,tail,VERTEX,,263
+rigify_human_toes,cheek.T.L,head,VERTEX,,7032
+rigify_human_toes,cheek.T.L,tail,VERTEX,,11748
+rigify_human_toes,cheek.T.L.001,head,VERTEX,,11748
+rigify_human_toes,cheek.T.L.001,tail,VERTEX,,11715
+rigify_human_toes,cheek.T.R,head,VERTEX,,263
+rigify_human_toes,cheek.T.R,tail,VERTEX,,5133
+rigify_human_toes,cheek.T.R.001,head,VERTEX,,5133
+rigify_human_toes,cheek.T.R.001,tail,VERTEX,,5100
+rigify_human_toes,cheek_glue.T.L.001,head,VERTEX,,11748
+rigify_human_toes,cheek_glue.T.L.001,tail,VERTEX,,11767
+rigify_human_toes,cheek_glue.T.R.001,head,VERTEX,,5133
+rigify_human_toes,cheek_glue.T.R.001,tail,VERTEX,,5153
+rigify_human_toes,chin,head,VERTEX,,5225
+rigify_human_toes,chin,tail,VERTEX,,5162
+rigify_human_toes,chin.001,head,VERTEX,,5162
+rigify_human_toes,chin.001,tail,VERTEX,,491
+rigify_human_toes,chin.L,head,VERTEX,,11833
+rigify_human_toes,chin.L,tail,MEAN,,"[7162, 7195]"
+rigify_human_toes,chin.R,head,VERTEX,,5223
+rigify_human_toes,chin.R,tail,MEAN,,"[402, 435]"
+rigify_human_toes,chin_end_glue.001,head,VERTEX,,491
+rigify_human_toes,chin_end_glue.001,tail,MEAN,,"[495, 557]"
+rigify_human_toes,ear.L,head,VERTEX,,12020
+rigify_human_toes,ear.L,tail,VERTEX,,12165
+rigify_human_toes,ear.L.001,head,VERTEX,,12165
+rigify_human_toes,ear.L.001,tail,MEAN,,"[12015, 12056]"
+rigify_human_toes,ear.L.002,head,MEAN,,"[12015, 12056]"
+rigify_human_toes,ear.L.002,tail,MEAN,,"[12018, 12256]"
+rigify_human_toes,ear.L.003,head,MEAN,,"[12018, 12256]"
+rigify_human_toes,ear.L.003,tail,MEAN,,"[12041, 12330]"
+rigify_human_toes,ear.L.004,head,MEAN,,"[12041, 12330]"
+rigify_human_toes,ear.L.004,tail,VERTEX,,12020
+rigify_human_toes,ear.R,head,VERTEX,,5421
+rigify_human_toes,ear.R,tail,VERTEX,,5568
+rigify_human_toes,ear.R.001,head,VERTEX,,5568
+rigify_human_toes,ear.R.001,tail,MEAN,,"[5416, 5457]"
+rigify_human_toes,ear.R.002,head,MEAN,,"[5416, 5457]"
+rigify_human_toes,ear.R.002,tail,MEAN,,"[5419, 5659]"
+rigify_human_toes,ear.R.003,head,MEAN,,"[5419, 5659]"
+rigify_human_toes,ear.R.003,tail,MEAN,,"[5442, 5733]"
+rigify_human_toes,ear.R.004,head,MEAN,,"[5442, 5733]"
+rigify_human_toes,ear.R.004,tail,VERTEX,,5421
+rigify_human_toes,eye.L,head,CUBE,joint-l-eye,
+rigify_human_toes,eye.L,tail,MEAN,,"[14598, 14634]"
+rigify_human_toes,eye.R,head,CUBE,joint-r-eye,
+rigify_human_toes,eye.R,tail,MEAN,,"[14670, 14706]"
+rigify_human_toes,f_index.01.L,head,CUBE,joint-l-finger-2-1,
+rigify_human_toes,f_index.01.L,tail,CUBE,joint-l-finger-2-2,
+rigify_human_toes,f_index.01.R,head,CUBE,joint-r-finger-2-1,
+rigify_human_toes,f_index.01.R,tail,CUBE,joint-r-finger-2-2,
+rigify_human_toes,f_index.02.L,head,CUBE,joint-l-finger-2-2,
+rigify_human_toes,f_index.02.L,tail,CUBE,joint-l-finger-2-3,
+rigify_human_toes,f_index.02.R,head,CUBE,joint-r-finger-2-2,
+rigify_human_toes,f_index.02.R,tail,CUBE,joint-r-finger-2-3,
+rigify_human_toes,f_index.03.L,head,CUBE,joint-l-finger-2-3,
+rigify_human_toes,f_index.03.L,tail,CUBE,joint-l-finger-2-4,
+rigify_human_toes,f_index.03.R,head,CUBE,joint-r-finger-2-3,
+rigify_human_toes,f_index.03.R,tail,CUBE,joint-r-finger-2-4,
+rigify_human_toes,f_middle.01.L,head,CUBE,joint-l-finger-3-1,
+rigify_human_toes,f_middle.01.L,tail,CUBE,joint-l-finger-3-2,
+rigify_human_toes,f_middle.01.R,head,CUBE,joint-r-finger-3-1,
+rigify_human_toes,f_middle.01.R,tail,CUBE,joint-r-finger-3-2,
+rigify_human_toes,f_middle.02.L,head,CUBE,joint-l-finger-3-2,
+rigify_human_toes,f_middle.02.L,tail,CUBE,joint-l-finger-3-3,
+rigify_human_toes,f_middle.02.R,head,CUBE,joint-r-finger-3-2,
+rigify_human_toes,f_middle.02.R,tail,CUBE,joint-r-finger-3-3,
+rigify_human_toes,f_middle.03.L,head,CUBE,joint-l-finger-3-3,
+rigify_human_toes,f_middle.03.L,tail,CUBE,joint-l-finger-3-4,
+rigify_human_toes,f_middle.03.R,head,CUBE,joint-r-finger-3-3,
+rigify_human_toes,f_middle.03.R,tail,CUBE,joint-r-finger-3-4,
+rigify_human_toes,f_pinky.01.L,head,CUBE,joint-l-finger-5-1,
+rigify_human_toes,f_pinky.01.L,tail,CUBE,joint-l-finger-5-2,
+rigify_human_toes,f_pinky.01.R,head,CUBE,joint-r-finger-5-1,
+rigify_human_toes,f_pinky.01.R,tail,CUBE,joint-r-finger-5-2,
+rigify_human_toes,f_pinky.02.L,head,CUBE,joint-l-finger-5-2,
+rigify_human_toes,f_pinky.02.L,tail,CUBE,joint-l-finger-5-3,
+rigify_human_toes,f_pinky.02.R,head,CUBE,joint-r-finger-5-2,
+rigify_human_toes,f_pinky.02.R,tail,CUBE,joint-r-finger-5-3,
+rigify_human_toes,f_pinky.03.L,head,CUBE,joint-l-finger-5-3,
+rigify_human_toes,f_pinky.03.L,tail,CUBE,joint-l-finger-5-4,
+rigify_human_toes,f_pinky.03.R,head,CUBE,joint-r-finger-5-3,
+rigify_human_toes,f_pinky.03.R,tail,CUBE,joint-r-finger-5-4,
+rigify_human_toes,f_ring.01.L,head,CUBE,joint-l-finger-4-1,
+rigify_human_toes,f_ring.01.L,tail,CUBE,joint-l-finger-4-2,
+rigify_human_toes,f_ring.01.R,head,CUBE,joint-r-finger-4-1,
+rigify_human_toes,f_ring.01.R,tail,CUBE,joint-r-finger-4-2,
+rigify_human_toes,f_ring.02.L,head,CUBE,joint-l-finger-4-2,
+rigify_human_toes,f_ring.02.L,tail,CUBE,joint-l-finger-4-3,
+rigify_human_toes,f_ring.02.R,head,CUBE,joint-r-finger-4-2,
+rigify_human_toes,f_ring.02.R,tail,CUBE,joint-r-finger-4-3,
+rigify_human_toes,f_ring.03.L,head,CUBE,joint-l-finger-4-3,
+rigify_human_toes,f_ring.03.L,tail,CUBE,joint-l-finger-4-4,
+rigify_human_toes,f_ring.03.R,head,CUBE,joint-r-finger-4-3,
+rigify_human_toes,f_ring.03.R,tail,CUBE,joint-r-finger-4-4,
+rigify_human_toes,face,head,CUBE,joint-head,
+rigify_human_toes,face,tail,CUBE,joint-head,
+rigify_human_toes,foot.L,head,CUBE,joint-l-ankle,
+rigify_human_toes,foot.L,tail,CUBE,joint-l-foot-1,
+rigify_human_toes,foot.R,head,CUBE,joint-r-ankle,
+rigify_human_toes,foot.R,tail,CUBE,joint-r-foot-1,
+rigify_human_toes,forearm.L,head,CUBE,joint-l-elbow,
+rigify_human_toes,forearm.L,tail,CUBE,joint-l-hand,
+rigify_human_toes,forearm.R,head,CUBE,joint-r-elbow,
+rigify_human_toes,forearm.R,tail,CUBE,joint-r-hand,
+rigify_human_toes,forehead.L,head,VERTEX,,7015
+rigify_human_toes,forehead.L,tail,VERTEX,,6983
+rigify_human_toes,forehead.L.001,head,VERTEX,,7011
+rigify_human_toes,forehead.L.001,tail,VERTEX,,6981
+rigify_human_toes,forehead.L.002,head,VERTEX,,7018
+rigify_human_toes,forehead.L.002,tail,VERTEX,,7023
+rigify_human_toes,forehead.R,head,VERTEX,,245
+rigify_human_toes,forehead.R,tail,VERTEX,,208
+rigify_human_toes,forehead.R.001,head,VERTEX,,240
+rigify_human_toes,forehead.R.001,tail,VERTEX,,206
+rigify_human_toes,forehead.R.002,head,VERTEX,,248
+rigify_human_toes,forehead.R.002,tail,VERTEX,,254
+rigify_human_toes,hand.L,head,CUBE,joint-l-hand,
+rigify_human_toes,hand.L,tail,CUBE,joint-l-finger-3-1,
+rigify_human_toes,hand.R,head,CUBE,joint-r-hand,
+rigify_human_toes,hand.R,tail,CUBE,joint-r-finger-3-1,
+rigify_human_toes,heel.02.L,head,XYZ,,"[13319, 12820, 13057]"
+rigify_human_toes,heel.02.L,tail,XYZ,,"[12863, 12820, 13057]"
+rigify_human_toes,heel.02.R,head,XYZ,,"[6723, 6223, 6461]"
+rigify_human_toes,heel.02.R,tail,XYZ,,"[6266, 6223, 6461]"
+rigify_human_toes,jaw,head,VERTEX,,783
+rigify_human_toes,jaw,tail,VERTEX,,5225
+rigify_human_toes,jaw.L,head,VERTEX,,11712
+rigify_human_toes,jaw.L,tail,VERTEX,,7597
+rigify_human_toes,jaw.L.001,head,VERTEX,,7597
+rigify_human_toes,jaw.L.001,tail,VERTEX,,11833
+rigify_human_toes,jaw.R,head,VERTEX,,5097
+rigify_human_toes,jaw.R,tail,VERTEX,,895
+rigify_human_toes,jaw.R.001,head,VERTEX,,895
+rigify_human_toes,jaw.R.001,tail,VERTEX,,5223
+rigify_human_toes,jaw_master,head,MEAN,,"[5097, 11712]"
+rigify_human_toes,jaw_master,tail,VERTEX,,5225
+rigify_human_toes,lid.B.L,head,VERTEX,,6806
+rigify_human_toes,lid.B.L,tail,VERTEX,,6818
+rigify_human_toes,lid.B.L.001,head,VERTEX,,6818
+rigify_human_toes,lid.B.L.001,tail,VERTEX,,6827
+rigify_human_toes,lid.B.L.002,head,VERTEX,,6827
+rigify_human_toes,lid.B.L.002,tail,VERTEX,,6833
+rigify_human_toes,lid.B.L.003,head,VERTEX,,6833
+rigify_human_toes,lid.B.L.003,tail,VERTEX,,6851
+rigify_human_toes,lid.B.R,head,VERTEX,,22
+rigify_human_toes,lid.B.R,tail,VERTEX,,34
+rigify_human_toes,lid.B.R.001,head,VERTEX,,34
+rigify_human_toes,lid.B.R.001,tail,VERTEX,,43
+rigify_human_toes,lid.B.R.002,head,VERTEX,,43
+rigify_human_toes,lid.B.R.002,tail,VERTEX,,49
+rigify_human_toes,lid.B.R.003,head,VERTEX,,49
+rigify_human_toes,lid.B.R.003,tail,VERTEX,,67
+rigify_human_toes,lid.T.L,head,VERTEX,,6851
+rigify_human_toes,lid.T.L,tail,VERTEX,,6842
+rigify_human_toes,lid.T.L.001,head,VERTEX,,6842
+rigify_human_toes,lid.T.L.001,tail,VERTEX,,6787
+rigify_human_toes,lid.T.L.002,head,VERTEX,,6787
+rigify_human_toes,lid.T.L.002,tail,VERTEX,,6794
+rigify_human_toes,lid.T.L.003,head,VERTEX,,6794
+rigify_human_toes,lid.T.L.003,tail,VERTEX,,6806
+rigify_human_toes,lid.T.R,head,VERTEX,,67
+rigify_human_toes,lid.T.R,tail,VERTEX,,58
+rigify_human_toes,lid.T.R.001,head,VERTEX,,58
+rigify_human_toes,lid.T.R.001,tail,VERTEX,,3
+rigify_human_toes,lid.T.R.002,head,VERTEX,,3
+rigify_human_toes,lid.T.R.002,tail,VERTEX,,10
+rigify_human_toes,lid.T.R.003,head,VERTEX,,10
+rigify_human_toes,lid.T.R.003,tail,VERTEX,,22
+rigify_human_toes,lid_glue.B.L.002,head,VERTEX,,6827
+rigify_human_toes,lid_glue.B.L.002,tail,VERTEX,,11748
+rigify_human_toes,lid_glue.B.R.002,head,VERTEX,,43
+rigify_human_toes,lid_glue.B.R.002,tail,VERTEX,,5133
+rigify_human_toes,lip.B.L,head,MEAN,,"[495, 557]"
+rigify_human_toes,lip.B.L,tail,MEAN,,"[7238, 7295]"
+rigify_human_toes,lip.B.L.001,head,MEAN,,"[7238, 7295]"
+rigify_human_toes,lip.B.L.001,tail,MEAN,,"[7162, 7195]"
+rigify_human_toes,lip.B.R,head,MEAN,,"[495, 557]"
+rigify_human_toes,lip.B.R,tail,MEAN,,"[483, 552]"
+rigify_human_toes,lip.B.R.001,head,MEAN,,"[483, 552]"
+rigify_human_toes,lip.B.R.001,tail,MEAN,,"[402, 435]"
+rigify_human_toes,lip.T.L,head,MEAN,,"[509, 571]"
+rigify_human_toes,lip.T.L,tail,MEAN,,"[7212, 7293]"
+rigify_human_toes,lip.T.L.001,head,MEAN,,"[7212, 7293]"
+rigify_human_toes,lip.T.L.001,tail,MEAN,,"[7162, 7195]"
+rigify_human_toes,lip.T.R,head,MEAN,,"[509, 571]"
+rigify_human_toes,lip.T.R,tail,MEAN,,"[452, 550]"
+rigify_human_toes,lip.T.R.001,head,MEAN,,"[452, 550]"
+rigify_human_toes,lip.T.R.001,tail,MEAN,,"[402, 435]"
+rigify_human_toes,nose,head,VERTEX,,132
+rigify_human_toes,nose,tail,VERTEX,,164
+rigify_human_toes,nose.001,head,VERTEX,,164
+rigify_human_toes,nose.001,tail,VERTEX,,297
+rigify_human_toes,nose.002,head,VERTEX,,297
+rigify_human_toes,nose.002,tail,VERTEX,,312
+rigify_human_toes,nose.003,head,VERTEX,,312
+rigify_human_toes,nose.003,tail,VERTEX,,343
+rigify_human_toes,nose.004,head,VERTEX,,343
+rigify_human_toes,nose.004,tail,VERTEX,,5342
+rigify_human_toes,nose.L,head,VERTEX,,11715
+rigify_human_toes,nose.L,tail,VERTEX,,7099
+rigify_human_toes,nose.L.001,head,VERTEX,,7099
+rigify_human_toes,nose.L.001,tail,VERTEX,,297
+rigify_human_toes,nose.R,head,VERTEX,,5100
+rigify_human_toes,nose.R,tail,VERTEX,,337
+rigify_human_toes,nose.R.001,head,VERTEX,,337
+rigify_human_toes,nose.R.001,tail,VERTEX,,297
+rigify_human_toes,nose_end_glue.004,head,VERTEX,,5342
+rigify_human_toes,nose_end_glue.004,tail,MEAN,,"[509, 571]"
+rigify_human_toes,nose_glue.004,head,VERTEX,,343
+rigify_human_toes,nose_glue.004,tail,MEAN,,"[509, 571]"
+rigify_human_toes,nose_glue.L.001,head,VERTEX,,7099
+rigify_human_toes,nose_glue.L.001,tail,MEAN,,"[7212, 7293]"
+rigify_human_toes,nose_glue.R.001,head,VERTEX,,337
+rigify_human_toes,nose_glue.R.001,tail,MEAN,,"[452, 550]"
+rigify_human_toes,nose_master,head,MEAN,,"[337, 7099]"
+rigify_human_toes,nose_master,tail,MEAN,,"[337, 7099]"
+rigify_human_toes,palm.01.L,head,CUBE,joint-l-finger-1-1,
+rigify_human_toes,palm.01.L,tail,CUBE,joint-l-finger-2-1,
+rigify_human_toes,palm.01.R,head,CUBE,joint-r-finger-1-1,
+rigify_human_toes,palm.01.R,tail,CUBE,joint-r-finger-2-1,
+rigify_human_toes,palm.02.L,head,CUBE,joint-l-hand-3,
+rigify_human_toes,palm.02.L,tail,CUBE,joint-l-finger-3-1,
+rigify_human_toes,palm.02.R,head,CUBE,joint-r-hand-3,
+rigify_human_toes,palm.02.R,tail,CUBE,joint-r-finger-3-1,
+rigify_human_toes,palm.03.L,head,MEAN,,"[14022, 14026]"
+rigify_human_toes,palm.03.L,tail,CUBE,joint-l-finger-4-1,
+rigify_human_toes,palm.03.R,head,MEAN,,"[14462, 14466]"
+rigify_human_toes,palm.03.R,tail,CUBE,joint-r-finger-4-1,
+rigify_human_toes,palm.04.L,head,MEAN,,"[14023, 14027]"
+rigify_human_toes,palm.04.L,tail,CUBE,joint-l-finger-5-1,
+rigify_human_toes,palm.04.R,head,MEAN,,"[14463, 14467]"
+rigify_human_toes,palm.04.R,tail,CUBE,joint-r-finger-5-1,
+rigify_human_toes,pelvis.L,head,CUBE,joint-pelvis,
+rigify_human_toes,pelvis.L,tail,CUBE,joint-l-upper-leg,
+rigify_human_toes,pelvis.R,head,CUBE,joint-pelvis,
+rigify_human_toes,pelvis.R,tail,CUBE,joint-r-upper-leg,
+rigify_human_toes,shin.L,head,CUBE,joint-l-knee,
+rigify_human_toes,shin.L,tail,CUBE,joint-l-ankle,
+rigify_human_toes,shin.R,head,CUBE,joint-r-knee,
+rigify_human_toes,shin.R,tail,CUBE,joint-r-ankle,
+rigify_human_toes,shoulder.L,head,CUBE,joint-l-clavicle,
+rigify_human_toes,shoulder.L,tail,CUBE,joint-l-shoulder,
+rigify_human_toes,shoulder.R,head,CUBE,joint-r-clavicle,
+rigify_human_toes,shoulder.R,tail,CUBE,joint-r-shoulder,
+rigify_human_toes,spine,head,VERTEX,,4374
+rigify_human_toes,spine,tail,CUBE,joint-spine-4,
+rigify_human_toes,spine.001,head,CUBE,joint-spine-4,
+rigify_human_toes,spine.001,tail,CUBE,joint-spine-3,
+rigify_human_toes,spine.002,head,CUBE,joint-spine-3,
+rigify_human_toes,spine.002,tail,CUBE,joint-spine-2,
+rigify_human_toes,spine.003,head,CUBE,joint-spine-2,
+rigify_human_toes,spine.003,tail,CUBE,joint-spine-1,
+rigify_human_toes,spine.004,head,CUBE,joint-spine-1,
+rigify_human_toes,spine.004,tail,CUBE,joint-neck,
+rigify_human_toes,spine.005,head,CUBE,joint-neck,
+rigify_human_toes,spine.005,tail,CUBE,joint-head,
+rigify_human_toes,spine.006,head,CUBE,joint-head,
+rigify_human_toes,spine.006,tail,CUBE,joint-head-2,
+rigify_human_toes,teeth.B,head,VERTEX,,15012
+rigify_human_toes,teeth.B,tail,MEAN,,"[15009, 15044]"
+rigify_human_toes,teeth.T,head,VERTEX,,15079
+rigify_human_toes,teeth.T,tail,MEAN,,"[15081, 15114]"
+rigify_human_toes,temple.L,head,VERTEX,,12159
+rigify_human_toes,temple.L,tail,VERTEX,,11712
+rigify_human_toes,temple.R,head,VERTEX,,5562
+rigify_human_toes,temple.R,tail,VERTEX,,5097
+rigify_human_toes,thigh.L,head,CUBE,joint-l-upper-leg,
+rigify_human_toes,thigh.L,tail,CUBE,joint-l-knee,
+rigify_human_toes,thigh.R,head,CUBE,joint-r-upper-leg,
+rigify_human_toes,thigh.R,tail,CUBE,joint-r-knee,
+rigify_human_toes,thumb.01.L,head,CUBE,joint-l-finger-1-1,
+rigify_human_toes,thumb.01.L,tail,CUBE,joint-l-finger-1-2,
+rigify_human_toes,thumb.01.R,head,CUBE,joint-r-finger-1-1,
+rigify_human_toes,thumb.01.R,tail,CUBE,joint-r-finger-1-2,
+rigify_human_toes,thumb.02.L,head,CUBE,joint-l-finger-1-2,
+rigify_human_toes,thumb.02.L,tail,CUBE,joint-l-finger-1-3,
+rigify_human_toes,thumb.02.R,head,CUBE,joint-r-finger-1-2,
+rigify_human_toes,thumb.02.R,tail,CUBE,joint-r-finger-1-3,
+rigify_human_toes,thumb.03.L,head,CUBE,joint-l-finger-1-3,
+rigify_human_toes,thumb.03.L,tail,CUBE,joint-l-finger-1-4,
+rigify_human_toes,thumb.03.R,head,CUBE,joint-r-finger-1-3,
+rigify_human_toes,thumb.03.R,tail,CUBE,joint-r-finger-1-4,
+rigify_human_toes,toe.L,head,CUBE,joint-l-foot-1,
+rigify_human_toes,toe.L,tail,CUBE,joint-l-foot-2,
+rigify_human_toes,toe.R,head,CUBE,joint-r-foot-1,
+rigify_human_toes,toe.R,tail,CUBE,joint-r-foot-2,
+rigify_human_toes,toe1-1.L,head,CUBE,joint-l-toe-1-1,
+rigify_human_toes,toe1-1.L,tail,CUBE,joint-l-toe-1-2,
+rigify_human_toes,toe1-1.R,head,CUBE,joint-r-toe-1-1,
+rigify_human_toes,toe1-1.R,tail,CUBE,joint-r-toe-1-2,
+rigify_human_toes,toe1-2.L,head,CUBE,joint-l-toe-1-2,
+rigify_human_toes,toe1-2.L,tail,CUBE,joint-l-toe-1-3,
+rigify_human_toes,toe1-2.R,head,CUBE,joint-r-toe-1-2,
+rigify_human_toes,toe1-2.R,tail,CUBE,joint-r-toe-1-3,
+rigify_human_toes,toe2-1.L,head,CUBE,joint-l-toe-2-1,
+rigify_human_toes,toe2-1.L,tail,CUBE,joint-l-toe-2-2,
+rigify_human_toes,toe2-1.R,head,CUBE,joint-r-toe-2-1,
+rigify_human_toes,toe2-1.R,tail,CUBE,joint-r-toe-2-2,
+rigify_human_toes,toe2-2.L,head,CUBE,joint-l-toe-2-2,
+rigify_human_toes,toe2-2.L,tail,CUBE,joint-l-toe-2-3,
+rigify_human_toes,toe2-2.R,head,CUBE,joint-r-toe-2-2,
+rigify_human_toes,toe2-2.R,tail,CUBE,joint-r-toe-2-3,
+rigify_human_toes,toe2-3.L,head,CUBE,joint-l-toe-2-3,
+rigify_human_toes,toe2-3.L,tail,CUBE,joint-l-toe-2-4,
+rigify_human_toes,toe2-3.R,head,CUBE,joint-r-toe-2-3,
+rigify_human_toes,toe2-3.R,tail,CUBE,joint-r-toe-2-4,
+rigify_human_toes,toe3-1.L,head,CUBE,joint-l-toe-3-1,
+rigify_human_toes,toe3-1.L,tail,CUBE,joint-l-toe-3-2,
+rigify_human_toes,toe3-1.R,head,CUBE,joint-r-toe-3-1,
+rigify_human_toes,toe3-1.R,tail,CUBE,joint-r-toe-3-2,
+rigify_human_toes,toe3-2.L,head,CUBE,joint-l-toe-3-2,
+rigify_human_toes,toe3-2.L,tail,CUBE,joint-l-toe-3-3,
+rigify_human_toes,toe3-2.R,head,CUBE,joint-r-toe-3-2,
+rigify_human_toes,toe3-2.R,tail,CUBE,joint-r-toe-3-3,
+rigify_human_toes,toe3-3.L,head,CUBE,joint-l-toe-3-3,
+rigify_human_toes,toe3-3.L,tail,CUBE,joint-l-toe-3-4,
+rigify_human_toes,toe3-3.R,head,CUBE,joint-r-toe-3-3,
+rigify_human_toes,toe3-3.R,tail,CUBE,joint-r-toe-3-4,
+rigify_human_toes,toe4-1.L,head,CUBE,joint-l-toe-4-1,
+rigify_human_toes,toe4-1.L,tail,CUBE,joint-l-toe-4-2,
+rigify_human_toes,toe4-1.R,head,CUBE,joint-r-toe-4-1,
+rigify_human_toes,toe4-1.R,tail,CUBE,joint-r-toe-4-2,
+rigify_human_toes,toe4-2.L,head,CUBE,joint-l-toe-4-2,
+rigify_human_toes,toe4-2.L,tail,CUBE,joint-l-toe-4-3,
+rigify_human_toes,toe4-2.R,head,CUBE,joint-r-toe-4-2,
+rigify_human_toes,toe4-2.R,tail,CUBE,joint-r-toe-4-3,
+rigify_human_toes,toe4-3.L,head,CUBE,joint-l-toe-4-3,
+rigify_human_toes,toe4-3.L,tail,CUBE,joint-l-toe-4-4,
+rigify_human_toes,toe4-3.R,head,CUBE,joint-r-toe-4-3,
+rigify_human_toes,toe4-3.R,tail,CUBE,joint-r-toe-4-4,
+rigify_human_toes,toe5-1.L,head,CUBE,joint-l-toe-5-1,
+rigify_human_toes,toe5-1.L,tail,CUBE,joint-l-toe-5-2,
+rigify_human_toes,toe5-1.R,head,CUBE,joint-r-toe-5-1,
+rigify_human_toes,toe5-1.R,tail,CUBE,joint-r-toe-5-2,
+rigify_human_toes,toe5-2.L,head,CUBE,joint-l-toe-5-2,
+rigify_human_toes,toe5-2.L,tail,CUBE,joint-l-toe-5-3,
+rigify_human_toes,toe5-2.R,head,CUBE,joint-r-toe-5-2,
+rigify_human_toes,toe5-2.R,tail,CUBE,joint-r-toe-5-3,
+rigify_human_toes,toe5-3.L,head,CUBE,joint-l-toe-5-3,
+rigify_human_toes,toe5-3.L,tail,CUBE,joint-l-toe-5-4,
+rigify_human_toes,toe5-3.R,head,CUBE,joint-r-toe-5-3,
+rigify_human_toes,toe5-3.R,tail,CUBE,joint-r-toe-5-4,
+rigify_human_toes,tongue,head,CUBE,joint-tongue-4,
+rigify_human_toes,tongue,tail,CUBE,joint-tongue-3,
+rigify_human_toes,tongue.001,head,CUBE,joint-tongue-3,
+rigify_human_toes,tongue.001,tail,CUBE,joint-tongue-2,
+rigify_human_toes,tongue.002,head,CUBE,joint-tongue-2,
+rigify_human_toes,tongue.002,tail,CUBE,joint-tongue-1,
+rigify_human_toes,upper_arm.L,head,CUBE,joint-l-shoulder,
+rigify_human_toes,upper_arm.L,tail,CUBE,joint-l-elbow,
+rigify_human_toes,upper_arm.R,head,CUBE,joint-r-shoulder,
+rigify_human_toes,upper_arm.R,tail,CUBE,joint-r-elbow,

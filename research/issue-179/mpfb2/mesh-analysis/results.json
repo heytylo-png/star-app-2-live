@@ -1,0 +1,3221 @@
+{
+ "M1": {
+  "v": 19158,
+  "vt": 21334,
+  "f": 18486,
+  "line_counts": {
+   "v": 19158,
+   "vt": 21334,
+   "g": 172,
+   "s": 1,
+   "f": 18486
+  },
+  "face_arity": {
+   "4": 18486
+  },
+  "n_groups_distinct": 139,
+  "n_group_segments": 172,
+  "repeated_groups": {
+   "helper-tights": 2,
+   "helper-l-eyelashes-2": 9,
+   "helper-l-eyelashes-1": 9,
+   "helper-r-eyelashes-2": 9,
+   "helper-r-eyelashes-1": 9
+  },
+  "groups": {
+   "body": {
+    "faces": 13378,
+    "verts": 13380,
+    "min_idx": 0,
+    "max_idx": 13379
+   },
+   "helper-tights": {
+    "faces": 2650,
+    "verts": 2674,
+    "min_idx": 15328,
+    "max_idx": 18001
+   },
+   "joint-l-eye": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13606,
+    "max_idx": 13613
+   },
+   "joint-r-eye": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13614,
+    "max_idx": 13621
+   },
+   "joint-pelvis": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13622,
+    "max_idx": 13629
+   },
+   "joint-spine-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13630,
+    "max_idx": 13637
+   },
+   "joint-spine-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13638,
+    "max_idx": 13645
+   },
+   "joint-spine-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13646,
+    "max_idx": 13653
+   },
+   "joint-spine-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13654,
+    "max_idx": 13661
+   },
+   "joint-l-foot-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13662,
+    "max_idx": 13669
+   },
+   "joint-l-foot-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13670,
+    "max_idx": 13677
+   },
+   "joint-l-toe-5-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13678,
+    "max_idx": 13685
+   },
+   "joint-l-toe-5-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13686,
+    "max_idx": 13693
+   },
+   "joint-l-toe-4-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13694,
+    "max_idx": 13701
+   },
+   "joint-l-toe-4-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13702,
+    "max_idx": 13709
+   },
+   "joint-l-toe-3-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13710,
+    "max_idx": 13717
+   },
+   "joint-l-toe-3-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13718,
+    "max_idx": 13725
+   },
+   "joint-l-toe-2-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13726,
+    "max_idx": 13733
+   },
+   "joint-l-toe-2-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13734,
+    "max_idx": 13741
+   },
+   "joint-l-toe-2-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13742,
+    "max_idx": 13749
+   },
+   "joint-l-toe-3-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13750,
+    "max_idx": 13757
+   },
+   "joint-l-toe-4-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13758,
+    "max_idx": 13765
+   },
+   "joint-l-toe-5-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13766,
+    "max_idx": 13773
+   },
+   "joint-l-toe-5-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13774,
+    "max_idx": 13781
+   },
+   "joint-l-toe-4-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13782,
+    "max_idx": 13789
+   },
+   "joint-l-toe-3-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13790,
+    "max_idx": 13797
+   },
+   "joint-l-toe-2-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13798,
+    "max_idx": 13805
+   },
+   "joint-l-toe-1-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13806,
+    "max_idx": 13813
+   },
+   "joint-l-toe-1-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13814,
+    "max_idx": 13821
+   },
+   "joint-l-toe-1-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13822,
+    "max_idx": 13829
+   },
+   "joint-l-ankle": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13830,
+    "max_idx": 13837
+   },
+   "joint-l-knee": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13838,
+    "max_idx": 13845
+   },
+   "joint-l-upper-leg": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13846,
+    "max_idx": 13853
+   },
+   "joint-l-finger-2-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13854,
+    "max_idx": 13861
+   },
+   "joint-l-finger-3-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13862,
+    "max_idx": 13869
+   },
+   "joint-l-finger-4-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13870,
+    "max_idx": 13877
+   },
+   "joint-l-finger-5-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13878,
+    "max_idx": 13885
+   },
+   "joint-l-finger-5-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13886,
+    "max_idx": 13893
+   },
+   "joint-l-finger-4-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13894,
+    "max_idx": 13901
+   },
+   "joint-l-finger-3-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13902,
+    "max_idx": 13909
+   },
+   "joint-l-finger-2-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13910,
+    "max_idx": 13917
+   },
+   "joint-l-finger-2-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13918,
+    "max_idx": 13925
+   },
+   "joint-l-finger-3-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13926,
+    "max_idx": 13933
+   },
+   "joint-l-finger-4-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13934,
+    "max_idx": 13941
+   },
+   "joint-l-finger-5-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13942,
+    "max_idx": 13949
+   },
+   "joint-l-finger-5-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13950,
+    "max_idx": 13957
+   },
+   "joint-l-finger-4-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13958,
+    "max_idx": 13965
+   },
+   "joint-l-finger-3-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13966,
+    "max_idx": 13973
+   },
+   "joint-l-finger-2-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13974,
+    "max_idx": 13981
+   },
+   "joint-l-finger-1-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13982,
+    "max_idx": 13989
+   },
+   "joint-l-finger-1-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13990,
+    "max_idx": 13997
+   },
+   "joint-l-finger-1-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 13998,
+    "max_idx": 14005
+   },
+   "joint-l-finger-1-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14006,
+    "max_idx": 14013
+   },
+   "joint-l-hand-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14014,
+    "max_idx": 14021
+   },
+   "joint-l-hand-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14022,
+    "max_idx": 14029
+   },
+   "joint-l-hand": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14030,
+    "max_idx": 14037
+   },
+   "joint-l-elbow": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14038,
+    "max_idx": 14045
+   },
+   "joint-l-shoulder": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14046,
+    "max_idx": 14053
+   },
+   "joint-l-clavicle": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14054,
+    "max_idx": 14061
+   },
+   "joint-l-scapula": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14062,
+    "max_idx": 14069
+   },
+   "joint-head": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14070,
+    "max_idx": 14077
+   },
+   "joint-l-lowerlid": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14078,
+    "max_idx": 14085
+   },
+   "joint-l-eye-target": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14086,
+    "max_idx": 14093
+   },
+   "joint-l-upperlid": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14094,
+    "max_idx": 14101
+   },
+   "joint-r-foot-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14102,
+    "max_idx": 14109
+   },
+   "joint-r-foot-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14110,
+    "max_idx": 14117
+   },
+   "joint-r-toe-5-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14118,
+    "max_idx": 14125
+   },
+   "joint-r-toe-5-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14126,
+    "max_idx": 14133
+   },
+   "joint-r-toe-4-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14134,
+    "max_idx": 14141
+   },
+   "joint-r-toe-4-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14142,
+    "max_idx": 14149
+   },
+   "joint-r-toe-3-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14150,
+    "max_idx": 14157
+   },
+   "joint-r-toe-3-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14158,
+    "max_idx": 14165
+   },
+   "joint-r-toe-2-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14166,
+    "max_idx": 14173
+   },
+   "joint-r-toe-2-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14174,
+    "max_idx": 14181
+   },
+   "joint-r-toe-2-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14182,
+    "max_idx": 14189
+   },
+   "joint-r-toe-3-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14190,
+    "max_idx": 14197
+   },
+   "joint-r-toe-4-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14198,
+    "max_idx": 14205
+   },
+   "joint-r-toe-5-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14206,
+    "max_idx": 14213
+   },
+   "joint-r-toe-5-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14214,
+    "max_idx": 14221
+   },
+   "joint-r-toe-4-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14222,
+    "max_idx": 14229
+   },
+   "joint-r-toe-3-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14230,
+    "max_idx": 14237
+   },
+   "joint-r-toe-2-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14238,
+    "max_idx": 14245
+   },
+   "joint-r-toe-1-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14246,
+    "max_idx": 14253
+   },
+   "joint-r-toe-1-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14254,
+    "max_idx": 14261
+   },
+   "joint-r-toe-1-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14262,
+    "max_idx": 14269
+   },
+   "joint-r-ankle": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14270,
+    "max_idx": 14277
+   },
+   "joint-r-knee": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14278,
+    "max_idx": 14285
+   },
+   "joint-r-upper-leg": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14286,
+    "max_idx": 14293
+   },
+   "joint-r-finger-2-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14294,
+    "max_idx": 14301
+   },
+   "joint-r-finger-3-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14302,
+    "max_idx": 14309
+   },
+   "joint-r-finger-4-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14310,
+    "max_idx": 14317
+   },
+   "joint-r-finger-5-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14318,
+    "max_idx": 14325
+   },
+   "joint-r-finger-5-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14326,
+    "max_idx": 14333
+   },
+   "joint-r-finger-4-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14334,
+    "max_idx": 14341
+   },
+   "joint-r-finger-3-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14342,
+    "max_idx": 14349
+   },
+   "joint-r-finger-2-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14350,
+    "max_idx": 14357
+   },
+   "joint-r-finger-2-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14358,
+    "max_idx": 14365
+   },
+   "joint-r-finger-3-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14366,
+    "max_idx": 14373
+   },
+   "joint-r-finger-4-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14374,
+    "max_idx": 14381
+   },
+   "joint-r-finger-5-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14382,
+    "max_idx": 14389
+   },
+   "joint-r-finger-5-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14390,
+    "max_idx": 14397
+   },
+   "joint-r-finger-4-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14398,
+    "max_idx": 14405
+   },
+   "joint-r-finger-3-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14406,
+    "max_idx": 14413
+   },
+   "joint-r-finger-2-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14414,
+    "max_idx": 14421
+   },
+   "joint-r-finger-1-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14422,
+    "max_idx": 14429
+   },
+   "joint-r-finger-1-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14430,
+    "max_idx": 14437
+   },
+   "joint-r-finger-1-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14438,
+    "max_idx": 14445
+   },
+   "joint-r-finger-1-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14446,
+    "max_idx": 14453
+   },
+   "joint-r-hand-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14454,
+    "max_idx": 14461
+   },
+   "joint-r-hand-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14462,
+    "max_idx": 14469
+   },
+   "joint-r-hand": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14470,
+    "max_idx": 14477
+   },
+   "joint-r-elbow": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14478,
+    "max_idx": 14485
+   },
+   "joint-r-shoulder": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14486,
+    "max_idx": 14493
+   },
+   "joint-r-clavicle": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14494,
+    "max_idx": 14501
+   },
+   "joint-r-scapula": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14502,
+    "max_idx": 14509
+   },
+   "joint-r-lowerlid": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14510,
+    "max_idx": 14517
+   },
+   "joint-r-eye-target": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14518,
+    "max_idx": 14525
+   },
+   "joint-r-upperlid": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14526,
+    "max_idx": 14533
+   },
+   "joint-neck": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14534,
+    "max_idx": 14541
+   },
+   "joint-jaw": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14542,
+    "max_idx": 14549
+   },
+   "joint-tongue-4": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14550,
+    "max_idx": 14557
+   },
+   "joint-tongue-3": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14558,
+    "max_idx": 14565
+   },
+   "joint-head-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14566,
+    "max_idx": 14573
+   },
+   "joint-tongue-2": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14574,
+    "max_idx": 14581
+   },
+   "joint-tongue-1": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14582,
+    "max_idx": 14589
+   },
+   "joint-mouth": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 14590,
+    "max_idx": 14597
+   },
+   "helper-skirt": {
+    "faces": 684,
+    "verts": 720,
+    "min_idx": 18002,
+    "max_idx": 18721
+   },
+   "helper-hair": {
+    "faces": 198,
+    "verts": 428,
+    "min_idx": 18722,
+    "max_idx": 19149
+   },
+   "helper-l-eye": {
+    "faces": 70,
+    "verts": 72,
+    "min_idx": 14598,
+    "max_idx": 14669
+   },
+   "helper-r-eye": {
+    "faces": 70,
+    "verts": 72,
+    "min_idx": 14670,
+    "max_idx": 14741
+   },
+   "helper-genital": {
+    "faces": 182,
+    "verts": 200,
+    "min_idx": 15128,
+    "max_idx": 15327
+   },
+   "helper-upper-teeth": {
+    "faces": 48,
+    "verts": 68,
+    "min_idx": 15060,
+    "max_idx": 15127
+   },
+   "helper-lower-teeth": {
+    "faces": 48,
+    "verts": 68,
+    "min_idx": 14992,
+    "max_idx": 15059
+   },
+   "helper-l-eyelashes-2": {
+    "faces": 48,
+    "verts": 65,
+    "min_idx": 14742,
+    "max_idx": 14854
+   },
+   "helper-l-eyelashes-1": {
+    "faces": 44,
+    "verts": 60,
+    "min_idx": 14751,
+    "max_idx": 14866
+   },
+   "helper-r-eyelashes-2": {
+    "faces": 48,
+    "verts": 65,
+    "min_idx": 14867,
+    "max_idx": 14979
+   },
+   "helper-r-eyelashes-1": {
+    "faces": 44,
+    "verts": 60,
+    "min_idx": 14876,
+    "max_idx": 14991
+   },
+   "helper-tongue": {
+    "faces": 224,
+    "verts": 226,
+    "min_idx": 13380,
+    "max_idx": 13605
+   },
+   "joint-ground": {
+    "faces": 6,
+    "verts": 8,
+    "min_idx": 19150,
+    "max_idx": 19157
+   }
+  },
+  "group_families": {
+   "body": 1,
+   "helper": 13,
+   "joint": 125
+  },
+  "group_vertex_overlaps": {}
+ },
+ "M2": {
+  "default": {
+   "bones_in_weights": 163,
+   "bones_empty": 24,
+   "entries": 58388,
+   "max_index": 19157,
+   "min_index": 0,
+   "unique_indices_weighted": 19158,
+   "out_of_range": 0,
+   "duplicate_bone_idx_pairs": 0,
+   "zero_weight_entries": 0,
+   "unweighted_vertices": 0,
+   "weighted_by_obj_group": {
+    "body": 13380,
+    "helper-tongue": 226,
+    "joint-*": 1000,
+    "helper-l-eye": 72,
+    "helper-r-eye": 72,
+    "helper-l-eyelashes-2": 65,
+    "helper-l-eyelashes-1": 60,
+    "helper-r-eyelashes-2": 65,
+    "helper-r-eyelashes-1": 60,
+    "helper-lower-teeth": 68,
+    "helper-upper-teeth": 68,
+    "helper-genital": 200,
+    "helper-tights": 2674,
+    "helper-skirt": 720,
+    "helper-hair": 428
+   },
+   "unweighted_by_obj_group": {},
+   "unweighted_index_range": null,
+   "wsum": {
+    "min": 0.9998,
+    "max": 1.0,
+    "mean": 1.0,
+    "within_1em3_of_1": 19158,
+    "gt_1_001": 0,
+    "lt_0_999": 0,
+    "zero": 0
+   },
+   "influences": {
+    "all_entries": {
+     "max": 8,
+     "mean_over_weighted": 3.0477,
+     "mean_over_all_nv": 3.0477,
+     "histogram": {
+      "1": 4002,
+      "2": 5469,
+      "3": 3710,
+      "4": 1952,
+      "5": 1535,
+      "6": 1118,
+      "7": 849,
+      "8": 523
+     }
+    },
+    "w>1e-6": {
+     "max": 8,
+     "mean_over_weighted": 3.0477,
+     "mean_over_all_nv": 3.0477,
+     "histogram": {
+      "1": 4002,
+      "2": 5469,
+      "3": 3710,
+      "4": 1952,
+      "5": 1535,
+      "6": 1118,
+      "7": 849,
+      "8": 523
+     }
+    },
+    "w>1e-3": {
+     "max": 8,
+     "mean_over_weighted": 2.9726,
+     "mean_over_all_nv": 2.9726,
+     "histogram": {
+      "1": 4087,
+      "2": 5479,
+      "3": 3664,
+      "4": 2200,
+      "5": 1692,
+      "6": 978,
+      "7": 680,
+      "8": 378
+     }
+    }
+   },
+   "bones_in_rig": 163,
+   "weight_bones_not_in_rig": [],
+   "rig_bones_not_in_weights": []
+  },
+  "game_engine": {
+   "bones_in_weights": 53,
+   "bones_empty": 1,
+   "entries": 36416,
+   "max_index": 19157,
+   "min_index": 0,
+   "unique_indices_weighted": 19158,
+   "out_of_range": 0,
+   "duplicate_bone_idx_pairs": 0,
+   "zero_weight_entries": 0,
+   "unweighted_vertices": 0,
+   "weighted_by_obj_group": {
+    "body": 13380,
+    "helper-tongue": 226,
+    "joint-*": 1000,
+    "helper-l-eye": 72,
+    "helper-r-eye": 72,
+    "helper-l-eyelashes-2": 65,
+    "helper-l-eyelashes-1": 60,
+    "helper-r-eyelashes-2": 65,
+    "helper-r-eyelashes-1": 60,
+    "helper-lower-teeth": 68,
+    "helper-upper-teeth": 68,
+    "helper-genital": 200,
+    "helper-tights": 2674,
+    "helper-skirt": 720,
+    "helper-hair": 428
+   },
+   "unweighted_by_obj_group": {},
+   "unweighted_index_range": null,
+   "wsum": {
+    "min": 0.9999,
+    "max": 1.0,
+    "mean": 1.0,
+    "within_1em3_of_1": 19158,
+    "gt_1_001": 0,
+    "lt_0_999": 0,
+    "zero": 0
+   },
+   "influences": {
+    "all_entries": {
+     "max": 7,
+     "mean_over_weighted": 1.9008,
+     "mean_over_all_nv": 1.9008,
+     "histogram": {
+      "1": 9369,
+      "2": 5586,
+      "3": 1941,
+      "4": 1281,
+      "5": 962,
+      "6": 15,
+      "7": 4
+     }
+    },
+    "w>1e-6": {
+     "max": 7,
+     "mean_over_weighted": 1.9008,
+     "mean_over_all_nv": 1.9008,
+     "histogram": {
+      "1": 9369,
+      "2": 5586,
+      "3": 1941,
+      "4": 1281,
+      "5": 962,
+      "6": 15,
+      "7": 4
+     }
+    },
+    "w>1e-3": {
+     "max": 7,
+     "mean_over_weighted": 1.8619,
+     "mean_over_all_nv": 1.8619,
+     "histogram": {
+      "1": 9451,
+      "2": 5553,
+      "3": 2076,
+      "4": 1518,
+      "5": 550,
+      "6": 6,
+      "7": 4
+     }
+    }
+   },
+   "bones_in_rig": 53,
+   "weight_bones_not_in_rig": [],
+   "rig_bones_not_in_weights": []
+  },
+  "rigify_human_toes": {
+   "bones_in_weights": 209,
+   "bones_empty": 0,
+   "entries": 69658,
+   "max_index": 19149,
+   "min_index": 0,
+   "unique_indices_weighted": 19142,
+   "out_of_range": 0,
+   "duplicate_bone_idx_pairs": 0,
+   "zero_weight_entries": 0,
+   "unweighted_vertices": 16,
+   "weighted_by_obj_group": {
+    "body": 13380,
+    "helper-tongue": 226,
+    "joint-*": 984,
+    "helper-l-eye": 72,
+    "helper-r-eye": 72,
+    "helper-l-eyelashes-2": 65,
+    "helper-l-eyelashes-1": 60,
+    "helper-r-eyelashes-2": 65,
+    "helper-r-eyelashes-1": 60,
+    "helper-lower-teeth": 68,
+    "helper-upper-teeth": 68,
+    "helper-genital": 200,
+    "helper-tights": 2674,
+    "helper-skirt": 720,
+    "helper-hair": 428
+   },
+   "unweighted_by_obj_group": {
+    "joint-*": 16
+   },
+   "unweighted_index_range": [
+    13622,
+    19157
+   ],
+   "wsum": {
+    "min": 0.999,
+    "max": 2.85,
+    "mean": 1.195541,
+    "within_1em3_of_1": 14825,
+    "gt_1_001": 4317,
+    "lt_0_999": 0,
+    "zero": 0
+   },
+   "influences": {
+    "all_entries": {
+     "max": 11,
+     "mean_over_weighted": 3.639,
+     "mean_over_all_nv": 3.636,
+     "histogram": {
+      "1": 2192,
+      "2": 3441,
+      "3": 4820,
+      "4": 3102,
+      "5": 2115,
+      "6": 2056,
+      "7": 829,
+      "8": 360,
+      "9": 155,
+      "10": 65,
+      "11": 7
+     }
+    },
+    "w>1e-6": {
+     "max": 11,
+     "mean_over_weighted": 3.639,
+     "mean_over_all_nv": 3.636,
+     "histogram": {
+      "1": 2192,
+      "2": 3441,
+      "3": 4820,
+      "4": 3102,
+      "5": 2115,
+      "6": 2056,
+      "7": 829,
+      "8": 360,
+      "9": 155,
+      "10": 65,
+      "11": 7
+     }
+    },
+    "w>1e-3": {
+     "max": 11,
+     "mean_over_weighted": 3.6177,
+     "mean_over_all_nv": 3.6147,
+     "histogram": {
+      "1": 2192,
+      "2": 3465,
+      "3": 4886,
+      "4": 3080,
+      "5": 2171,
+      "6": 1986,
+      "7": 793,
+      "8": 364,
+      "9": 141,
+      "10": 57,
+      "11": 7
+     }
+    }
+   },
+   "bones_in_rig": 213,
+   "weight_bones_not_in_rig": [
+    "DEF-eye_master.L",
+    "DEF-eye_master.R",
+    "DEF-forearm.L.001",
+    "DEF-forearm.R.001",
+    "DEF-shin.L.001",
+    "DEF-shin.R.001",
+    "DEF-thigh.L.001",
+    "DEF-thigh.R.001",
+    "DEF-upper_arm.L.001",
+    "DEF-upper_arm.R.001",
+    "mhmask-no-smooth",
+    "mhmask-preserve-volume"
+   ],
+   "rig_bones_not_in_weights": [
+    "MCH-breast-parent",
+    "brow_glue.B.L.002",
+    "brow_glue.B.R.002",
+    "cheek_glue.T.L.001",
+    "cheek_glue.T.R.001",
+    "chin_end_glue.001",
+    "face",
+    "heel.02.L",
+    "heel.02.R",
+    "lid_glue.B.L.002",
+    "lid_glue.B.R.002",
+    "nose_end_glue.004",
+    "nose_glue.004",
+    "nose_glue.L.001",
+    "nose_glue.R.001",
+    "nose_master"
+   ]
+  }
+ },
+ "M3": {
+  "whole": {
+   "referenced_vertices": 19158,
+   "unique_edges": 37364,
+   "edge_face_count": {
+    "1": 784,
+    "2": 36580
+   },
+   "boundary_edges": 784,
+   "nonmanifold_edges": 0,
+   "inconsistent_winding_edges": 0,
+   "components": 154,
+   "component_sizes_top": [
+    13380,
+    2674,
+    720,
+    226,
+    200,
+    72,
+    72,
+    68,
+    68,
+    65,
+    65,
+    60
+   ],
+   "valence_hist": {
+    "2": 92,
+    "3": 1908,
+    "4": 16970,
+    "5": 188
+   },
+   "poles": {
+    "v3": 1908,
+    "v5": 188,
+    "v6plus": 0,
+    "v4": 16970,
+    "v_le2": 92
+   }
+  },
+  "body": {
+   "referenced_vertices": 13380,
+   "unique_edges": 26756,
+   "edge_face_count": {
+    "2": 26756
+   },
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "inconsistent_winding_edges": 0,
+   "components": 1,
+   "component_sizes_top": [
+    13380
+   ],
+   "valence_hist": {
+    "3": 164,
+    "4": 13060,
+    "5": 156
+   },
+   "poles": {
+    "v3": 164,
+    "v5": 156,
+    "v6plus": 0,
+    "v4": 13060,
+    "v_le2": 0
+   }
+  },
+  "unreferenced_vertices_whole": 0,
+  "per_group": {
+   "body": {
+    "faces": 13378,
+    "verts": 13380,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 13378
+    }
+   },
+   "helper-tights": {
+    "faces": 2650,
+    "verts": 2674,
+    "components": 1,
+    "boundary_edges": 50,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 2650
+    }
+   },
+   "joint-l-eye": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-eye": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-pelvis": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-spine-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-spine-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-spine-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-spine-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-foot-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-foot-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-toe-5-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-toe-5-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-toe-4-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-toe-4-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-toe-3-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-toe-3-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-toe-2-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-toe-2-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-toe-2-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-toe-3-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-toe-4-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-toe-5-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-toe-5-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-toe-4-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-toe-3-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-toe-2-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-toe-1-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-toe-1-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-toe-1-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-ankle": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-knee": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-upper-leg": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-2-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-3-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-4-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-5-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-5-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-4-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-3-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-2-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-2-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-3-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-4-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-5-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-5-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-4-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-3-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-2-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-1-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-1-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-1-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-finger-1-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-hand-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-hand-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-hand": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-elbow": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-shoulder": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-clavicle": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-scapula": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-head": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-lowerlid": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-eye-target": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-l-upperlid": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-foot-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-foot-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-toe-5-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-toe-5-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-toe-4-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-toe-4-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-toe-3-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-toe-3-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-toe-2-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-toe-2-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-toe-2-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-toe-3-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-toe-4-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-toe-5-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-toe-5-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-toe-4-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-toe-3-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-toe-2-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-toe-1-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-toe-1-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-toe-1-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-ankle": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-knee": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-upper-leg": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-2-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-3-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-4-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-5-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-5-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-4-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-3-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-2-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-2-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-3-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-4-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-5-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-5-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-4-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-3-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-2-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-1-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-1-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-1-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-finger-1-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-hand-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-hand-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-hand": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-elbow": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-shoulder": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-clavicle": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-scapula": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-lowerlid": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-eye-target": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-r-upperlid": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-neck": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-jaw": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-tongue-4": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-tongue-3": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-head-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-tongue-2": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-tongue-1": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "joint-mouth": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   },
+   "helper-skirt": {
+    "faces": 684,
+    "verts": 720,
+    "components": 1,
+    "boundary_edges": 72,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 684
+    }
+   },
+   "helper-hair": {
+    "faces": 198,
+    "verts": 428,
+    "components": 16,
+    "boundary_edges": 428,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 198
+    }
+   },
+   "helper-l-eye": {
+    "faces": 70,
+    "verts": 72,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 70
+    }
+   },
+   "helper-r-eye": {
+    "faces": 70,
+    "verts": 72,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 70
+    }
+   },
+   "helper-genital": {
+    "faces": 182,
+    "verts": 200,
+    "components": 1,
+    "boundary_edges": 34,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 182
+    }
+   },
+   "helper-upper-teeth": {
+    "faces": 48,
+    "verts": 68,
+    "components": 1,
+    "boundary_edges": 38,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 48
+    }
+   },
+   "helper-lower-teeth": {
+    "faces": 48,
+    "verts": 68,
+    "components": 1,
+    "boundary_edges": 38,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 48
+    }
+   },
+   "helper-l-eyelashes-2": {
+    "faces": 48,
+    "verts": 65,
+    "components": 1,
+    "boundary_edges": 32,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 48
+    }
+   },
+   "helper-l-eyelashes-1": {
+    "faces": 44,
+    "verts": 60,
+    "components": 1,
+    "boundary_edges": 30,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 44
+    }
+   },
+   "helper-r-eyelashes-2": {
+    "faces": 48,
+    "verts": 65,
+    "components": 1,
+    "boundary_edges": 32,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 48
+    }
+   },
+   "helper-r-eyelashes-1": {
+    "faces": 44,
+    "verts": 60,
+    "components": 1,
+    "boundary_edges": 30,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 44
+    }
+   },
+   "helper-tongue": {
+    "faces": 224,
+    "verts": 226,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 224
+    }
+   },
+   "joint-ground": {
+    "faces": 6,
+    "verts": 8,
+    "components": 1,
+    "boundary_edges": 0,
+    "nonmanifold": 0,
+    "arity": {
+     "4": 6
+    }
+   }
+  },
+  "uv": {
+   "vt_count": 21334,
+   "faces_with_uv": 18486,
+   "faces": 18486,
+   "unique_v_vt_pairs": 21833,
+   "v_referenced": 19158,
+   "uv_split_extra": 2675,
+   "body_unique_pairs": 14517,
+   "body_verts": 13380,
+   "uv_range": [
+    [
+     0.0092,
+     0.0096
+    ],
+    [
+     0.9935,
+     0.9922
+    ]
+   ],
+   "uv_outside_0_1": 0
+  },
+  "bbox_obj_units": {
+   "body": {
+    "min": [
+     -4.9627,
+     -8.1676,
+     -1.0154
+    ],
+    "max": [
+     4.9627,
+     8.4913,
+     3.2147
+    ]
+   },
+   "whole": {
+    "min": [
+     -4.9732,
+     -8.4488,
+     -1.1034
+    ],
+    "max": [
+     4.9732,
+     8.4967,
+     3.2564
+    ]
+   },
+   "index_range_body": [
+    0,
+    13379
+   ]
+  },
+  "symmetry_x_body": {
+   "n": 13380,
+   "within": {
+    "0.0001": 13380,
+    "0.001": 13380,
+    "0.01": 13380,
+    "0.1": 13380
+   },
+   "max_residual": 0.0,
+   "median_residual": 0.0,
+   "mean_residual": 0.0,
+   "centre_line_abs_x_le_1em4": 188,
+   "nearest_is_self": 188,
+   "bbox_x": [
+    -4.9627,
+    4.9627
+   ],
+   "x_mean_of_body": 0.0,
+   "mirror_map_involution_count": 13380,
+   "n_unique_targets": 13380,
+   "worst10": [
+    {
+     "idx": 0,
+     "resid": 0.0
+    },
+    {
+     "idx": 1,
+     "resid": 0.0
+    },
+    {
+     "idx": 2,
+     "resid": 0.0
+    },
+    {
+     "idx": 3,
+     "resid": 0.0
+    },
+    {
+     "idx": 4,
+     "resid": 0.0
+    },
+    {
+     "idx": 5,
+     "resid": 0.0
+    },
+    {
+     "idx": 6,
+     "resid": 0.0
+    },
+    {
+     "idx": 7,
+     "resid": 0.0
+    },
+    {
+     "idx": 8,
+     "resid": 0.0
+    },
+    {
+     "idx": 9,
+     "resid": 0.0
+    }
+   ]
+  },
+  "lr_joint_groups": {
+   "l": 55,
+   "r": 55,
+   "l_without_r_counterpart": [],
+   "mirror_centroid_residual_max": 0.0,
+   "mirror_centroid_residual_mean": 0.0
+  }
+ },
+ "M4": {
+  "default": {
+   "bones": 163,
+   "strategies": {
+    "head:CUBE": 113,
+    "head:MEAN": 13,
+    "head:VERTEX": 37,
+    "tail:CUBE": 103,
+    "tail:MEAN": 13,
+    "tail:VERTEX": 47
+   },
+   "distinct_cube_groups": 120,
+   "cube_groups_missing_in_obj": [],
+   "vertex_refs_by_obj_group": {
+    "body": 110,
+    "helper-tights": 10,
+    "helper-hair": 2,
+    "helper-tongue": 14
+   },
+   "max_vertex_index_referenced": 18889
+  },
+  "game_engine": {
+   "bones": 53,
+   "strategies": {
+    "head:CUBE": 53,
+    "tail:CUBE": 52,
+    "tail:MEAN": 1
+   },
+   "distinct_cube_groups": 69,
+   "cube_groups_missing_in_obj": [],
+   "vertex_refs_by_obj_group": {
+    "joint-*": 2
+   },
+   "max_vertex_index_referenced": 19155
+  },
+  "rigify_human": {
+   "bones": 185,
+   "strategies": {
+    "head:CUBE": 74,
+    "head:MEAN": 24,
+    "head:VERTEX": 85,
+    "head:XYZ": 2,
+    "tail:CUBE": 67,
+    "tail:MEAN": 32,
+    "tail:VERTEX": 84,
+    "tail:XYZ": 2
+   },
+   "distinct_cube_groups": 74,
+   "cube_groups_missing_in_obj": [],
+   "vertex_refs_by_obj_group": {
+    "body": 251,
+    "joint-*": 80,
+    "helper-l-eye": 2,
+    "helper-r-eye": 2,
+    "helper-lower-teeth": 3,
+    "helper-upper-teeth": 3
+   },
+   "max_vertex_index_referenced": 15114
+  },
+  "rigify_human_toes": {
+   "bones": 213,
+   "strategies": {
+    "head:CUBE": 102,
+    "head:MEAN": 24,
+    "head:VERTEX": 85,
+    "head:XYZ": 2,
+    "tail:CUBE": 95,
+    "tail:MEAN": 32,
+    "tail:VERTEX": 84,
+    "tail:XYZ": 2
+   },
+   "distinct_cube_groups": 112,
+   "cube_groups_missing_in_obj": [],
+   "vertex_refs_by_obj_group": {
+    "body": 251,
+    "joint-*": 80,
+    "helper-l-eye": 2,
+    "helper-r-eye": 2,
+    "helper-lower-teeth": 3,
+    "helper-upper-teeth": 3
+   },
+   "max_vertex_index_referenced": 15114
+  },
+  "joint_groups_in_obj": {
+   "count": 125,
+   "n_verts_hist": {
+    "8": 125
+   },
+   "total_joint_verts": 1000,
+   "shared_with_body_total": 0,
+   "index_range": [
+    13606,
+    19157
+   ],
+   "all_cube_faces_nonquad": []
+  },
+  "joint_groups_used_by_any_rig": 125,
+  "joint_groups_unused_by_any_rig": []
+ },
+ "M5": {
+  "n_points": 432,
+  "best": {
+   "perm": [
+    0,
+    2,
+    1
+   ],
+   "sign": [
+    1,
+    -1,
+    1
+   ],
+   "scale": 0.100585,
+   "translation": [
+    5e-06,
+    -0.003543,
+    -0.013573
+   ],
+   "rmse": 0.05457627,
+   "max_resid": 0.83667181
+  },
+  "second_best": {
+   "perm": [
+    0,
+    2,
+    1
+   ],
+   "sign": [
+    1,
+    1,
+    1
+   ],
+   "rmse": 0.192959
+  },
+  "n_candidates_positive_scale": 24,
+  "hypothesis_x_negz_y_times_0.1": {
+   "rmse": 0.05628865,
+   "max": 0.818305,
+   "n_within_1em4": 0,
+   "n_within_1em3": 0,
+   "n": 432
+  },
+  "hypothesis_resid_by_strategy": {
+   "CUBE": {
+    "n": 321,
+    "max": 0.818305,
+    "mean": 0.0448174
+   },
+   "VERTEX": {
+    "n": 84,
+    "max": 0.02836151,
+    "mean": 0.0107696
+   },
+   "MEAN": {
+    "n": 27,
+    "max": 0.0533267,
+    "mean": 0.02529767
+   }
+  },
+  "worst8": [
+   {
+    "rig": "game_engine",
+    "bone": "Root",
+    "end": "head",
+    "strat": "CUBE",
+    "resid": 0.818305
+   },
+   {
+    "rig": "default",
+    "bone": "finger3-3.L",
+    "end": "tail",
+    "strat": "CUBE",
+    "resid": 0.062448
+   },
+   {
+    "rig": "game_engine",
+    "bone": "middle_03_r",
+    "end": "tail",
+    "strat": "CUBE",
+    "resid": 0.062448
+   },
+   {
+    "rig": "default",
+    "bone": "finger3-3.R",
+    "end": "tail",
+    "strat": "CUBE",
+    "resid": 0.062448
+   },
+   {
+    "rig": "game_engine",
+    "bone": "middle_03_l",
+    "end": "tail",
+    "strat": "CUBE",
+    "resid": 0.062448
+   },
+   {
+    "rig": "default",
+    "bone": "finger4-3.L",
+    "end": "tail",
+    "strat": "CUBE",
+    "resid": 0.061795
+   },
+   {
+    "rig": "default",
+    "bone": "finger4-3.R",
+    "end": "tail",
+    "strat": "CUBE",
+    "resid": 0.061795
+   },
+   {
+    "rig": "game_engine",
+    "bone": "ring_03_r",
+    "end": "tail",
+    "strat": "CUBE",
+    "resid": 0.061795
+   }
+  ]
+ },
+ "M6": {
+  "bone_names_foot_like_default": [
+   "foot.L",
+   "foot.R",
+   "toe1-1.L",
+   "toe1-1.R",
+   "toe1-2.L",
+   "toe1-2.R",
+   "toe2-1.L",
+   "toe2-1.R",
+   "toe2-2.L",
+   "toe2-2.R",
+   "toe2-3.L",
+   "toe2-3.R"
+  ],
+  "bone_names_foot_like_game": [
+   "ball_l",
+   "ball_r",
+   "foot_l",
+   "foot_r"
+  ],
+  "default:foot.L": {
+   "head": [
+    0.18058,
+    -0.02268,
+    -0.74861
+   ],
+   "tail": [
+    0.18332,
+    -0.08108,
+    -0.7787
+   ],
+   "length": 0.06575,
+   "pitch_deg": 27.233,
+   "obj_recon_length": 0.0705,
+   "obj_recon_pitch_deg": 25.197
+  },
+  "default:toe1-1.L": {
+   "head": [
+    0.15604,
+    -0.15463,
+    -0.78911
+   ],
+   "tail": [
+    0.15818,
+    -0.1789,
+    -0.79557
+   ],
+   "length": 0.0252,
+   "pitch_deg": 14.844,
+   "obj_recon_length": 0.02654,
+   "obj_recon_pitch_deg": -0.022
+  },
+  "default:toe2-1.L": {
+   "head": [
+    0.17881,
+    -0.15597,
+    -0.79161
+   ],
+   "tail": [
+    0.18058,
+    -0.17636,
+    -0.79484
+   ],
+   "length": 0.02072,
+   "pitch_deg": 8.965,
+   "obj_recon_length": 0.02201,
+   "obj_recon_pitch_deg": -0.013
+  },
+  "default:toe3-1.L": {
+   "head": [
+    0.19454,
+    -0.15347,
+    -0.79323
+   ],
+   "tail": [
+    0.19615,
+    -0.17156,
+    -0.7957
+   ],
+   "length": 0.01834,
+   "pitch_deg": 7.764,
+   "obj_recon_length": 0.02028,
+   "obj_recon_pitch_deg": -0.0
+  },
+  "game:foot_l": {
+   "head": [
+    0.18058,
+    -0.02268,
+    -0.74861
+   ],
+   "tail": [
+    0.18605,
+    -0.13948,
+    -0.80879
+   ],
+   "length": 0.1315,
+   "pitch_deg": 27.233,
+   "obj_recon_length": 0.13819,
+   "obj_recon_pitch_deg": 28.229
+  },
+  "game:ball_l": {
+   "head": [
+    0.18605,
+    -0.13948,
+    -0.80879
+   ],
+   "tail": [
+    0.18168,
+    -0.20545,
+    -0.80572
+   ],
+   "length": 0.06619,
+   "pitch_deg": -2.659,
+   "obj_recon_length": 0.07159,
+   "obj_recon_pitch_deg": -7.905
+  },
+  "ankle_z_rig": -0.74861,
+  "ball_z_rig": -0.80879,
+  "ankle_z_obj_recon_m": -0.74479,
+  "ball_z_obj_recon_m": -0.81015,
+  "ankle_minus_ball_z_cm": 6.02,
+  "sole": {
+   "body_min_z_m": -0.81676,
+   "all_min_z_m": -0.84488,
+   "n_left_foot_verts": 1068,
+   "left_foot_min_z_m": -0.81676,
+   "left_foot_x_range_m": [
+    0.174,
+    0.2703
+   ],
+   "joint_ground_z_m": -0.81831,
+   "lowest_per_ybin": [
+    [
+     -0.178,
+     -0.8146
+    ],
+    [
+     -0.1651,
+     -0.8161
+    ],
+    [
+     -0.1366,
+     -0.8168
+    ],
+    [
+     -0.1251,
+     -0.8158
+    ],
+    [
+     -0.1038,
+     -0.8146
+    ],
+    [
+     -0.0709,
+     -0.8088
+    ],
+    [
+     -0.0649,
+     -0.8118
+    ],
+    [
+     -0.0362,
+     -0.8129
+    ],
+    [
+     -0.0114,
+     -0.8144
+    ],
+    [
+     0.0031,
+     -0.8153
+    ],
+    [
+     0.0157,
+     -0.8157
+    ],
+    [
+     0.0331,
+     -0.814
+    ]
+   ],
+   "slope_deg_fit_all_bins": 0.36,
+   "slope_deg_fit_central_bins": 0.71,
+   "front_back_z_range_cm": [
+    0.8,
+    21.11
+   ]
+  },
+  "ankle_height_above_cm": {
+   "body_min": 6.82,
+   "all_min": 9.63,
+   "left_foot_min": 6.82,
+   "joint_ground": 6.97
+  }
+ },
+ "M6_claim_numbers": {
+  "weighted_verts": {
+   "default": 19158,
+   "game_engine": 19158,
+   "rigify_human_toes": 19142
+  },
+  "bones": {
+   "default": 163,
+   "game": 53
+  },
+  "max_infl": {
+   "default": {
+    "all_entries": 8,
+    "w>1e-6": 8,
+    "w>1e-3": 8
+   },
+   "game_engine": {
+    "all_entries": 7,
+    "w>1e-6": 7,
+    "w>1e-3": 7
+   },
+   "rigify_human_toes": {
+    "all_entries": 11,
+    "w>1e-6": 11,
+    "w>1e-3": 11
+   }
+  },
+  "mean_infl": {
+   "default": {
+    "all_entries": 3.0477,
+    "w>1e-6": 3.0477,
+    "w>1e-3": 2.9726
+   },
+   "game_engine": {
+    "all_entries": 1.9008,
+    "w>1e-6": 1.9008,
+    "w>1e-3": 1.8619
+   },
+   "rigify_human_toes": {
+    "all_entries": 3.639,
+    "w>1e-6": 3.639,
+    "w>1e-3": 3.6177
+   }
+  }
+ }
+}

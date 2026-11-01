@@ -1,0 +1,261 @@
+{
+ "S1_default": {
+  "body_verts_weighted": 13380,
+  "body_max_infl": 8,
+  "body_mean_infl": 3.0579,
+  "helper_joint_verts_weighted": 5778,
+  "helper_mean_infl": 3.0241,
+  "helper_max_infl": 8,
+  "body_hist": {
+   "1": 2168,
+   "2": 4440,
+   "3": 2756,
+   "4": 1384,
+   "5": 1044,
+   "6": 751,
+   "7": 359,
+   "8": 478
+  }
+ },
+ "S1_game_engine": {
+  "body_verts_weighted": 13380,
+  "body_max_infl": 6,
+  "body_mean_infl": 1.848,
+  "helper_joint_verts_weighted": 5778,
+  "helper_mean_infl": 2.0232,
+  "helper_max_infl": 7,
+  "body_hist": {
+   "1": 6588,
+   "2": 4144,
+   "3": 1361,
+   "4": 679,
+   "5": 597,
+   "6": 11
+  }
+ },
+ "S1_rigify_human_toes": {
+  "body_verts_weighted": 13380,
+  "body_max_infl": 11,
+  "body_mean_infl": 3.7839,
+  "helper_joint_verts_weighted": 5762,
+  "helper_mean_infl": 3.3025,
+  "helper_max_infl": 11,
+  "body_hist": {
+   "1": 847,
+   "2": 2397,
+   "3": 3657,
+   "4": 2562,
+   "5": 1431,
+   "6": 1424,
+   "7": 622,
+   "8": 286,
+   "9": 116,
+   "10": 34,
+   "11": 4
+  }
+ },
+ "S2": {
+  "mask_bones": [
+   "mhmask-no-smooth",
+   "mhmask-preserve-volume"
+  ],
+  "sum_excl_masks": {
+   "min": 0.999,
+   "max": 1.0001,
+   "mean": 1.0,
+   "n_gt_1_001": 0,
+   "n_lt_0_999": 0,
+   "n": 19142
+  },
+  "unweighted_groups": [
+   "joint-ground",
+   "joint-pelvis"
+  ]
+ },
+ "S3": {
+  "n": 432,
+  "percentiles_m": {
+   "10": 0.00908,
+   "25": 0.01274,
+   "50": 0.03786,
+   "75": 0.05714,
+   "90": 0.05917,
+   "95": 0.06051,
+   "99": 0.06225
+  },
+  "median_signed_offset_xyz_m": [
+   0.0,
+   -0.00839,
+   -0.00072
+  ],
+  "mean_signed_offset_xyz_m": [
+   1e-05,
+   -0.00441,
+   -0.01258
+  ],
+  "n_gt_1cm": 352,
+  "n_gt_5cm": 150,
+  "excluding_Root_head": {
+   "rmse": 0.04028,
+   "median": 0.03774,
+   "max": 0.06245
+  },
+  "robust_refit": {
+   "scale": 0.102699,
+   "translation": [
+    0.00021,
+    0.00123,
+    -0.02416
+   ],
+   "rmse_kept": 0.03354,
+   "median_all_but_root": 0.03397
+  },
+  "by_strategy_end_median_m": {
+   "CUBE:head": 0.04189,
+   "VERTEX:tail": 0.00954,
+   "CUBE:tail": 0.04577,
+   "MEAN:tail": 0.02633,
+   "VERTEX:head": 0.00963,
+   "MEAN:head": 0.02113
+  },
+  "top_nonroot": [
+   {
+    "rig": "default",
+    "bone": "finger3-3.L",
+    "end": "tail",
+    "strat": "CUBE",
+    "resid_m": 0.0624,
+    "signed_xyz": [
+     0.0286,
+     -0.0108,
+     -0.0545
+    ]
+   },
+   {
+    "rig": "game_engine",
+    "bone": "middle_03_r",
+    "end": "tail",
+    "strat": "CUBE",
+    "resid_m": 0.0624,
+    "signed_xyz": [
+     -0.0286,
+     -0.0108,
+     -0.0545
+    ]
+   },
+   {
+    "rig": "default",
+    "bone": "finger3-3.R",
+    "end": "tail",
+    "strat": "CUBE",
+    "resid_m": 0.0624,
+    "signed_xyz": [
+     -0.0286,
+     -0.0108,
+     -0.0545
+    ]
+   },
+   {
+    "rig": "game_engine",
+    "bone": "middle_03_l",
+    "end": "tail",
+    "strat": "CUBE",
+    "resid_m": 0.0624,
+    "signed_xyz": [
+     0.0286,
+     -0.0108,
+     -0.0545
+    ]
+   },
+   {
+    "rig": "default",
+    "bone": "finger4-3.L",
+    "end": "tail",
+    "strat": "CUBE",
+    "resid_m": 0.0618,
+    "signed_xyz": [
+     0.0293,
+     -0.0089,
+     -0.0537
+    ]
+   },
+   {
+    "rig": "default",
+    "bone": "finger4-3.R",
+    "end": "tail",
+    "strat": "CUBE",
+    "resid_m": 0.0618,
+    "signed_xyz": [
+     -0.0293,
+     -0.0089,
+     -0.0537
+    ]
+   }
+  ]
+ },
+ "S4": {
+  "lowest_vertex_all": {
+   "idx": 19150,
+   "groups": [
+    "joint-ground"
+   ],
+   "y_dm": -8.4488
+  },
+  "lowest_vertex_body": {
+   "idx": 5796,
+   "groups": [
+    "body"
+   ],
+   "y_dm": -8.1676
+  },
+  "min_z_m_per_nonjoint_group": {
+   "body": -0.8168,
+   "helper-tights": -0.8221,
+   "helper-skirt": -0.7285,
+   "helper-hair": 0.2013,
+   "helper-l-eye": 0.7146,
+   "helper-r-eye": 0.7146,
+   "helper-genital": -0.0982,
+   "helper-upper-teeth": 0.66,
+   "helper-lower-teeth": 0.6419,
+   "helper-l-eyelashes-2": 0.7279,
+   "helper-l-eyelashes-1": 0.7203,
+   "helper-r-eyelashes-2": 0.7279,
+   "helper-r-eyelashes-1": 0.7203,
+   "helper-tongue": 0.6292
+  },
+  "ankle_obj_frame_z_m": -0.74479,
+  "ankle_above_body_min_cm_obj_frame": 7.2,
+  "ankle_above_all_min_cm_obj_frame": 10.01,
+  "ankle_above_body_min_cm_rig_ankle_z": 6.81
+ },
+ "S5": {
+  "joint_ground_centroid_obj": [
+   0.0,
+   -8.183,
+   0.0
+  ],
+  "joint_ground_centroid_rig_frame_m": [
+   0.0,
+   -0.0,
+   -0.8183
+  ],
+  "root_default_head": [
+   0,
+   0,
+   0
+  ],
+  "game_root_tail_verts": [
+   19152,
+   19155
+  ],
+  "game_root_tail_groups": [
+   [
+    "joint-ground"
+   ],
+   [
+    "joint-ground"
+   ]
+  ]
+ }
+}

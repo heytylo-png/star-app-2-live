@@ -1,0 +1,114 @@
+{
+ "default": {
+  "mean_arity": {
+   "tail:2": 13,
+   "head:2": 13
+  },
+  "head_vertex_by_group": {
+   "body": 37
+  },
+  "head_mean_by_group": {
+   "body": 4,
+   "body+helper-tights": 5,
+   "body+helper-hair": 1,
+   "helper-tongue": 3
+  },
+  "extra_bones": null
+ },
+ "game_engine": {
+  "mean_arity": {
+   "tail:2": 1
+  },
+  "head_vertex_by_group": {},
+  "head_mean_by_group": {},
+  "extra_bones": null
+ },
+ "rigify_human_toes": {
+  "mean_arity": {
+   "tail:12": 6,
+   "head:2": 24,
+   "tail:2": 26
+  },
+  "head_vertex_by_group": {
+   "body": 83,
+   "helper-lower-teeth": 1,
+   "helper-upper-teeth": 1
+  },
+  "head_mean_by_group": {
+   "body": 20,
+   "joint-l-hand-2": 2,
+   "joint-r-hand-2": 2
+  },
+  "extra_bones": [
+   "DEF-eye_iris.L",
+   "DEF-eye_iris.R",
+   "DEF-eye_master.L",
+   "DEF-eye_master.R",
+   "DEF-forearm.L.001",
+   "DEF-forearm.R.001",
+   "DEF-shin.L.001",
+   "DEF-shin.R.001",
+   "DEF-thigh.L.001",
+   "DEF-thigh.R.001",
+   "DEF-upper_arm.L.001",
+   "DEF-upper_arm.R.001"
+  ]
+ },
+ "rigify_weight_bones_not_in_bones": {
+  "total": 12,
+  "in_extra_bones": [
+   "DEF-eye_master.L",
+   "DEF-eye_master.R",
+   "DEF-forearm.L.001",
+   "DEF-forearm.R.001",
+   "DEF-shin.L.001",
+   "DEF-shin.R.001",
+   "DEF-thigh.L.001",
+   "DEF-thigh.R.001",
+   "DEF-upper_arm.L.001",
+   "DEF-upper_arm.R.001"
+  ],
+  "neither": [
+   "mhmask-no-smooth",
+   "mhmask-preserve-volume"
+  ]
+ },
+ "frame_offset_VERTEX_joints": {
+  "default": {
+   "n": 84,
+   "median_xyz_m": [
+    0.0,
+    0.006,
+    0.0069
+   ],
+   "p5_xyz": [
+    -0.0042,
+    0.0022,
+    0.0037
+   ],
+   "p95_xyz": [
+    0.0042,
+    0.0161,
+    0.01
+   ]
+  },
+  "rigify_human_toes": {
+   "n": 169,
+   "median_xyz_m": [
+    0.0,
+    0.006,
+    0.8237
+   ],
+   "p5_xyz": [
+    -0.0042,
+    0.0018,
+    0.8201
+   ],
+   "p95_xyz": [
+    0.0042,
+    0.0105,
+    0.8274
+   ]
+  }
+ }
+}
