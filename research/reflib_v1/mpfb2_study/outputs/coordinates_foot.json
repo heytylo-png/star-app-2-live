@@ -1,0 +1,426 @@
+{
+ "body_vertices": {
+  "n_vertices_total": 19158,
+  "n_faces": 18486,
+  "all_quads": true,
+  "body_group_vertex_count": 13380,
+  "body_is_exactly_0_to_13379": true,
+  "body_faces": 13378,
+  "helper_groups": {
+   "helper-tights": [
+    2674,
+    15328,
+    18001
+   ],
+   "helper-skirt": [
+    720,
+    18002,
+    18721
+   ],
+   "helper-hair": [
+    428,
+    18722,
+    19149
+   ],
+   "helper-l-eye": [
+    72,
+    14598,
+    14669
+   ],
+   "helper-r-eye": [
+    72,
+    14670,
+    14741
+   ],
+   "helper-genital": [
+    200,
+    15128,
+    15327
+   ],
+   "helper-upper-teeth": [
+    68,
+    15060,
+    15127
+   ],
+   "helper-lower-teeth": [
+    68,
+    14992,
+    15059
+   ],
+   "helper-l-eyelashes-2": [
+    65,
+    14742,
+    14854
+   ],
+   "helper-l-eyelashes-1": [
+    60,
+    14751,
+    14866
+   ],
+   "helper-r-eyelashes-2": [
+    65,
+    14867,
+    14979
+   ],
+   "helper-r-eyelashes-1": [
+    60,
+    14876,
+    14991
+   ],
+   "helper-tongue": [
+    226,
+    13380,
+    13605
+   ]
+  },
+  "joint_groups": 125,
+  "joint_vertices": 1000,
+  "joint_vertices_index_range": [
+   13606,
+   19157
+  ],
+  "joint_vertices_shared_with_body": 0,
+  "vertices_in_no_face": 0
+ },
+ "body_extent_rig_space_m": {
+  "min": [
+   -0.49627,
+   -0.32147000000000003,
+   -0.81676
+  ],
+  "max": [
+   0.49627,
+   0.10154,
+   0.84913
+  ],
+  "height_z": 1.66589,
+  "raw_obj_min": [
+   -4.9627,
+   -8.1676,
+   -1.0154
+  ],
+  "raw_obj_max": [
+   4.9627,
+   8.4913,
+   3.2147
+  ]
+ },
+ "conversion": {
+  "formula": "rig = (x, -z, y)/10  (OBJ Y-up dm -> rig Z-up m)",
+  "matrix_det": 1.0,
+  "is_proper_rotation": true,
+  "equivalent": "+90 deg rotation about X, then /10"
+ },
+ "side_convention": {
+  "default": {
+   "n_L": 62,
+   "L_head_x_pos": 62,
+   "n_R": 62,
+   "R_head_x_neg": 62
+  },
+  "game_engine": {
+   "n_L": 23,
+   "L_head_x_pos": 23,
+   "n_R": 23,
+   "R_head_x_neg": 23
+  },
+  "rigify_human": {
+   "n_L": 47,
+   "L_head_x_pos": 47,
+   "n_R": 47,
+   "R_head_x_neg": 47
+  }
+ },
+ "front_axis": {
+  "left_foot_vertices_used": 1103,
+  "foot_ymin": -0.19117,
+  "foot_ymax": 0.051649999999999995,
+  "toe_end_is_neg_y_vs_ankle": true,
+  "eye_y_lt_spine_y": true,
+  "breast_y_lt_spine_y": true,
+  "breast_L_tail_y_default": -0.14870992302894592,
+  "eye_L_y": -0.1180787980556488,
+  "head_head_y": -0.04428749904036522,
+  "spine01_y_default": 0.018699999898672104,
+  "jaw_tail_y": -0.10692666471004486
+ },
+ "frames": {
+  "vertex_joint_offsets": {
+   "default": {
+    "n_vertex_joints": 84,
+    "median_default_minus_mesh": [
+     0.0,
+     0.006033318614959718,
+     0.006949962654113739
+    ],
+    "p5": [
+     -0.004199997311234468,
+     0.002233374030590057,
+     0.003699967360496581
+    ],
+    "p95": [
+     0.004199997311234468,
+     0.01613332970201968,
+     0.009999972057342488
+    ]
+   },
+   "game_engine": {
+    "n_vertex_joints": 0,
+    "note": "no VERTEX-strategy joints in this rig; frame inferred only via CUBE/MEAN (see joints_hierarchy_summary.json)"
+   },
+   "rigify_human": {
+    "n_vertex_joints": 169,
+    "median_default_minus_mesh": [
+     0.0,
+     0.006019999999999998,
+     0.8237200000000001
+    ],
+    "p5": [
+     -0.004179999999999998,
+     0.0017699999999999938,
+     0.8201
+    ],
+    "p95": [
+     0.004179999999999997,
+     0.01051800000000001,
+     0.8273500000000001
+    ]
+   },
+   "rigify_human_toes": {
+    "n_vertex_joints": 169,
+    "median_default_minus_mesh": [
+     0.0,
+     0.006019999999999998,
+     0.8237200000000001
+    ],
+    "p5": [
+     -0.004179999999999998,
+     0.0017699999999999938,
+     0.8201
+    ],
+    "p95": [
+     0.004179999999999997,
+     0.01051800000000001,
+     0.8273500000000001
+    ]
+   }
+  },
+  "joint_ground_z_in_mesh_frame": -0.8183050000000002,
+  "conclusion": "standard rigs (default, game_engine) share the mesh frame; Rigify rigs are shifted +0.8183 m in Z (ground at z=0)"
+ },
+ "game_engine_Root": {
+  "cube": "joint-ground",
+  "default_position": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "recomputed_from_cube": [
+   0.0,
+   0.0,
+   -0.8183050000000002
+  ],
+  "note": "Root default_position is (0,0,0) in the mesh frame, but its cube joint-ground sits at z=-0.8183"
+ },
+ "residual_affine_fit": {
+  "default:VERTEX": {
+   "n": 84,
+   "raw_rms_m": 0.011676097717773906,
+   "affine3d_fit_rms_m": 0.006417186584504282,
+   "affine_linear_part_diag": [
+    0.9836132412334412,
+    0.9794869580037446,
+    0.9971810258978315
+   ]
+  },
+  "default:CUBE": {
+   "n": 216,
+   "raw_rms_m": 0.04325963524013735,
+   "affine3d_fit_rms_m": 0.03201550210688759,
+   "affine_linear_part_diag": [
+    1.0319588328378384,
+    1.049323084766321,
+    0.9869146500373485
+   ]
+  },
+  "default:MEAN": {
+   "n": 26,
+   "raw_rms_m": 0.027016679250552813,
+   "affine3d_fit_rms_m": 0.024619272529533928,
+   "affine_linear_part_diag": [
+    1.0027584736939967,
+    1.0363978668355032,
+    0.9936224740485584
+   ]
+  },
+  "rigify_human:VERTEX": {
+   "n": 169,
+   "raw_rms_m": 0.011124771714963733,
+   "affine3d_fit_rms_m": 0.006578316737678776,
+   "affine_linear_part_diag": [
+    0.9985556207168216,
+    0.9845087312389766,
+    0.9788056986424238
+   ]
+  },
+  "rigify_human:CUBE": {
+   "n": 141,
+   "raw_rms_m": 0.04672127947859553,
+   "affine3d_fit_rms_m": 0.023043151015310077,
+   "affine_linear_part_diag": [
+    1.0577374884602058,
+    1.0415910286026522,
+    0.9890540052841656
+   ]
+  },
+  "rigify_human:MEAN": {
+   "n": 56,
+   "raw_rms_m": 0.018178241231369793,
+   "affine3d_fit_rms_m": 0.014407728379432976,
+   "affine_linear_part_diag": [
+    1.0567480476301965,
+    1.015381915303086,
+    1.0257910029833903
+   ]
+  }
+ },
+ "foot_bones": {
+  "default_rig_foot.L_default": {
+   "head": [
+    0.18058249354362488,
+    -0.02267960086464882,
+    -0.7486119866371155
+   ],
+   "tail": [
+    0.18331500887870789,
+    -0.08107903599739075,
+    -0.7787008285522461
+   ],
+   "length_m": 0.06575179899952181,
+   "pitch_deg_below_horizontal": 27.233150334889686,
+   "heading_deg_from_minus_y": 2.6789213203473743
+  },
+  "game_engine_foot_l_default": {
+   "head": [
+    0.18058249354362488,
+    -0.02267960086464882,
+    -0.7486119866371155
+   ],
+   "tail": [
+    0.1860475093126297,
+    -0.13947831094264984,
+    -0.8087895512580872
+   ],
+   "length_m": 0.1315034005528056,
+   "pitch_deg_below_horizontal": 27.233136195283283
+  },
+  "game_engine_ball_l_default": {
+   "head": [
+    0.1860474944114685,
+    -0.13947829604148865,
+    -0.8087896108627319
+   ],
+   "tail": [
+    0.1816767007112503,
+    -0.2054504156112671,
+    -0.8057195544242859
+   ],
+   "length_m": 0.06618798716258302,
+   "pitch_deg_below_horizontal": -2.6585551204998445
+  },
+  "default_rig_foot.L_recomputed": {
+   "head": [
+    0.21962,
+    0.0009100000000000002,
+    -0.744785
+   ],
+   "tail": [
+    0.21968,
+    -0.062885,
+    -0.7748
+   ],
+   "length_m": 0.07050323290459806,
+   "pitch_deg_below_horizontal": 25.19657221234331,
+   "heading_deg_from_minus_y": 0.05388738548708469
+  },
+  "game_engine_foot_l_recomputed": {
+   "head": [
+    0.21962,
+    0.0009100000000000002,
+    -0.744785
+   ],
+   "tail": [
+    0.21986000000000003,
+    -0.120845,
+    -0.8101499999999999
+   ],
+   "length_m": 0.13819160918811238,
+   "pitch_deg_below_horizontal": 28.2293834881745
+  },
+  "game_engine_ball_l_recomputed": {
+   "head": [
+    0.21986000000000003,
+    -0.120845,
+    -0.8101499999999999
+   ],
+   "tail": [
+    0.21638499999999997,
+    -0.19166499999999997,
+    -0.800305
+   ],
+   "length_m": 0.07158541785866725,
+   "pitch_deg_below_horizontal": -7.904827929901133
+  }
+ },
+ "sole_plane": {
+  "n_foot_vertices": 1103,
+  "n_lowest_used": 288,
+  "selection": "body verts with x>0.05 m and z<-0.70 m (rig space); 288 lowest by z",
+  "lowest_z": -0.81676,
+  "lowest_z_max_of_288": -0.80684,
+  "plane_dz_dy": -0.009078859042615734,
+  "plane_dz_dx": 0.021760641590190765,
+  "slope_deg_heel_to_toe_along_foot_axis": 0.5213383115681737,
+  "extent_along_axis_m": 0.23201590961023588,
+  "plane_z_under_ankle": -0.812297730827922,
+  "ankle_height_above_sole_m_recomputed_joint": 0.06751273082792197,
+  "ankle_height_above_sole_m_default_position": 0.06368574419080653,
+  "ankle_height_above_lowest_body_vertex_m_recomputed": 0.07197500000000001,
+  "body_vertex_min_z": -0.81676,
+  "all_vertex_min_z": -0.8448800000000001
+ },
+ "foot_tail_height_vs_sole": {
+  "default_foot.L_default": {
+   "ankle_height_above_sole_m": 0.06432105871625671,
+   "tail_height_above_sole_m": 0.033642555274541186,
+   "tail_height_over_ankle_height": 0.5230410684461925,
+   "horizontal_ankle_to_tail_m": 0.058463327512893036,
+   "pitch_deg": 27.233150334889686,
+   "pitch_deg_if_tail_were_on_sole": 47.731365172243194
+  },
+  "game_engine_foot_l_default": {
+   "ankle_height_above_sole_m": 0.06432105871625671,
+   "tail_height_above_sole_m": 0.0029641728206935003,
+   "tail_height_over_ankle_height": 0.04608401789170684,
+   "horizontal_ankle_to_tail_m": 0.11692649431690154,
+   "pitch_deg": 27.233136195283283,
+   "pitch_deg_if_tail_were_on_sole": 28.815115044798926
+  },
+  "default_foot.L_recomputed": {
+   "ankle_height_above_sole_m": 0.06751273082792197,
+   "tail_height_above_sole_m": 0.03691723937680291,
+   "tail_height_over_ankle_height": 0.5468189321344212,
+   "horizontal_ankle_to_tail_m": 0.06379502821537113,
+   "pitch_deg": 25.19657221234331,
+   "pitch_deg_if_tail_were_on_sole": 46.62177605316638
+  },
+  "game_engine_foot_l_recomputed": {
+   "ankle_height_above_sole_m": 0.06751273082792197,
+   "tail_height_above_sole_m": 0.0010371117912068017,
+   "tail_height_over_ankle_height": 0.015361721833623002,
+   "horizontal_ankle_to_tail_m": 0.12175523654036403,
+   "pitch_deg": 28.2293834881745,
+   "pitch_deg_if_tail_were_on_sole": 29.00817122290655
+  }
+ }
+}

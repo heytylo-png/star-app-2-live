@@ -1,0 +1,731 @@
+{
+ "bone_counts": {
+  "default": 163,
+  "game_engine": 53,
+  "rigify_human": 185,
+  "rigify_human_toes": 213
+ },
+ "category_counts": {
+  "default": {
+   "spine/neck/head/root": 12,
+   "arm": 12,
+   "face": 59,
+   "fingers/hand": 40,
+   "toes/foot": 30,
+   "leg": 10
+  },
+  "game_engine": {
+   "spine/neck/head/root": 6,
+   "toes/foot": 4,
+   "fingers/hand": 34,
+   "arm": 6,
+   "leg": 3
+  },
+  "rigify_human": {
+   "arm": 10,
+   "leg": 12,
+   "spine/neck/head/root": 10,
+   "face": 107,
+   "fingers/hand": 40,
+   "toes/foot": 6
+  },
+  "rigify_human_toes": {
+   "arm": 10,
+   "leg": 12,
+   "spine/neck/head/root": 10,
+   "face": 107,
+   "fingers/hand": 40,
+   "toes/foot": 34
+  }
+ },
+ "naming": {
+  "default": "lower-case MakeHuman-style, .L/.R suffix, chains numbered 01/02, spine05(pelvis end)->spine01(neck end)",
+  "game_engine": "Unreal-style snake_case, _l/_r suffix (pelvis, spine_01..03, upperarm_l, calf_l, ball_l, index_01_l ...)",
+  "rigify": "Rigify metarig names (spine.001, thigh.L, f_index.01.L) + DEF-/MCH- helper names; generated deform bones DEF-*.001 only appear in weights"
+ },
+ "joint_cubes_used": {
+  "default": 120,
+  "game_engine": 69,
+  "rigify_human": 74,
+  "rigify_human_toes": 112
+ },
+ "joint_cube_overlap": {
+  "game_engine_subset_of_default": false,
+  "game_engine_only": [
+   "joint-ground",
+   "joint-l-foot-1",
+   "joint-r-foot-1"
+  ],
+  "default_not_in_game_engine": 54,
+  "rigify_human_toes_not_in_default": [
+   "joint-l-foot-1",
+   "joint-l-foot-2",
+   "joint-r-foot-1",
+   "joint-r-foot-2"
+  ],
+  "obj_has_cubes": 125
+ },
+ "game_engine_to_default_by_head_cube": {
+  "Root": {
+   "head_cube": "joint-ground",
+   "tail_cube": null,
+   "default_bones_sharing_head_cube": []
+  },
+  "ball_l": {
+   "head_cube": "joint-l-foot-1",
+   "tail_cube": "joint-l-toe-2-4",
+   "default_bones_sharing_head_cube": []
+  },
+  "ball_r": {
+   "head_cube": "joint-r-foot-1",
+   "tail_cube": "joint-r-toe-2-4",
+   "default_bones_sharing_head_cube": []
+  },
+  "calf_l": {
+   "head_cube": "joint-l-knee",
+   "tail_cube": "joint-l-ankle",
+   "default_bones_sharing_head_cube": [
+    "lowerleg01.L"
+   ]
+  },
+  "calf_r": {
+   "head_cube": "joint-r-knee",
+   "tail_cube": "joint-r-ankle",
+   "default_bones_sharing_head_cube": [
+    "lowerleg01.R"
+   ]
+  },
+  "clavicle_l": {
+   "head_cube": "joint-l-clavicle",
+   "tail_cube": "joint-l-shoulder",
+   "default_bones_sharing_head_cube": [
+    "clavicle.L"
+   ]
+  },
+  "clavicle_r": {
+   "head_cube": "joint-r-clavicle",
+   "tail_cube": "joint-r-shoulder",
+   "default_bones_sharing_head_cube": [
+    "clavicle.R"
+   ]
+  },
+  "foot_l": {
+   "head_cube": "joint-l-ankle",
+   "tail_cube": "joint-l-foot-1",
+   "default_bones_sharing_head_cube": [
+    "foot.L"
+   ]
+  },
+  "foot_r": {
+   "head_cube": "joint-r-ankle",
+   "tail_cube": "joint-r-foot-1",
+   "default_bones_sharing_head_cube": [
+    "foot.R"
+   ]
+  },
+  "hand_l": {
+   "head_cube": "joint-l-hand",
+   "tail_cube": "joint-l-hand-3",
+   "default_bones_sharing_head_cube": [
+    "wrist.L"
+   ]
+  },
+  "hand_r": {
+   "head_cube": "joint-r-hand",
+   "tail_cube": "joint-r-hand-3",
+   "default_bones_sharing_head_cube": [
+    "wrist.R"
+   ]
+  },
+  "head": {
+   "head_cube": "joint-head",
+   "tail_cube": "joint-head-2",
+   "default_bones_sharing_head_cube": [
+    "head"
+   ]
+  },
+  "index_01_l": {
+   "head_cube": "joint-l-finger-2-1",
+   "tail_cube": "joint-l-finger-2-2",
+   "default_bones_sharing_head_cube": [
+    "finger2-1.L"
+   ]
+  },
+  "index_01_r": {
+   "head_cube": "joint-r-finger-2-1",
+   "tail_cube": "joint-r-finger-2-2",
+   "default_bones_sharing_head_cube": [
+    "finger2-1.R"
+   ]
+  },
+  "index_02_l": {
+   "head_cube": "joint-l-finger-2-2",
+   "tail_cube": "joint-l-finger-2-3",
+   "default_bones_sharing_head_cube": [
+    "finger2-2.L"
+   ]
+  },
+  "index_02_r": {
+   "head_cube": "joint-r-finger-2-2",
+   "tail_cube": "joint-r-finger-2-3",
+   "default_bones_sharing_head_cube": [
+    "finger2-2.R"
+   ]
+  },
+  "index_03_l": {
+   "head_cube": "joint-l-finger-2-3",
+   "tail_cube": "joint-l-finger-2-4",
+   "default_bones_sharing_head_cube": [
+    "finger2-3.L"
+   ]
+  },
+  "index_03_r": {
+   "head_cube": "joint-r-finger-2-3",
+   "tail_cube": "joint-r-finger-2-4",
+   "default_bones_sharing_head_cube": [
+    "finger2-3.R"
+   ]
+  },
+  "lowerarm_l": {
+   "head_cube": "joint-l-elbow",
+   "tail_cube": "joint-l-hand",
+   "default_bones_sharing_head_cube": [
+    "lowerarm01.L"
+   ]
+  },
+  "lowerarm_r": {
+   "head_cube": "joint-r-elbow",
+   "tail_cube": "joint-r-hand",
+   "default_bones_sharing_head_cube": [
+    "lowerarm01.R"
+   ]
+  },
+  "middle_01_l": {
+   "head_cube": "joint-l-finger-3-1",
+   "tail_cube": "joint-l-finger-3-2",
+   "default_bones_sharing_head_cube": [
+    "finger3-1.L"
+   ]
+  },
+  "middle_01_r": {
+   "head_cube": "joint-r-finger-3-1",
+   "tail_cube": "joint-r-finger-3-2",
+   "default_bones_sharing_head_cube": [
+    "finger3-1.R"
+   ]
+  },
+  "middle_02_l": {
+   "head_cube": "joint-l-finger-3-2",
+   "tail_cube": "joint-l-finger-3-3",
+   "default_bones_sharing_head_cube": [
+    "finger3-2.L"
+   ]
+  },
+  "middle_02_r": {
+   "head_cube": "joint-r-finger-3-2",
+   "tail_cube": "joint-r-finger-3-3",
+   "default_bones_sharing_head_cube": [
+    "finger3-2.R"
+   ]
+  },
+  "middle_03_l": {
+   "head_cube": "joint-l-finger-3-3",
+   "tail_cube": "joint-l-finger-3-4",
+   "default_bones_sharing_head_cube": [
+    "finger3-3.L"
+   ]
+  },
+  "middle_03_r": {
+   "head_cube": "joint-r-finger-3-3",
+   "tail_cube": "joint-r-finger-3-4",
+   "default_bones_sharing_head_cube": [
+    "finger3-3.R"
+   ]
+  },
+  "neck_01": {
+   "head_cube": "joint-neck",
+   "tail_cube": "joint-head",
+   "default_bones_sharing_head_cube": [
+    "neck01"
+   ]
+  },
+  "pelvis": {
+   "head_cube": "joint-pelvis",
+   "tail_cube": "joint-spine-4",
+   "default_bones_sharing_head_cube": [
+    "pelvis.L",
+    "pelvis.R",
+    "spine05"
+   ]
+  },
+  "pinky_01_l": {
+   "head_cube": "joint-l-finger-5-1",
+   "tail_cube": "joint-l-finger-5-2",
+   "default_bones_sharing_head_cube": [
+    "finger5-1.L"
+   ]
+  },
+  "pinky_01_r": {
+   "head_cube": "joint-r-finger-5-1",
+   "tail_cube": "joint-r-finger-5-2",
+   "default_bones_sharing_head_cube": [
+    "finger5-1.R"
+   ]
+  },
+  "pinky_02_l": {
+   "head_cube": "joint-l-finger-5-2",
+   "tail_cube": "joint-l-finger-5-3",
+   "default_bones_sharing_head_cube": [
+    "finger5-2.L"
+   ]
+  },
+  "pinky_02_r": {
+   "head_cube": "joint-r-finger-5-2",
+   "tail_cube": "joint-r-finger-5-3",
+   "default_bones_sharing_head_cube": [
+    "finger5-2.R"
+   ]
+  },
+  "pinky_03_l": {
+   "head_cube": "joint-l-finger-5-3",
+   "tail_cube": "joint-l-finger-5-4",
+   "default_bones_sharing_head_cube": [
+    "finger5-3.L"
+   ]
+  },
+  "pinky_03_r": {
+   "head_cube": "joint-r-finger-5-3",
+   "tail_cube": "joint-r-finger-5-4",
+   "default_bones_sharing_head_cube": [
+    "finger5-3.R"
+   ]
+  },
+  "ring_01_l": {
+   "head_cube": "joint-l-finger-4-1",
+   "tail_cube": "joint-l-finger-4-2",
+   "default_bones_sharing_head_cube": [
+    "finger4-1.L"
+   ]
+  },
+  "ring_01_r": {
+   "head_cube": "joint-r-finger-4-1",
+   "tail_cube": "joint-r-finger-4-2",
+   "default_bones_sharing_head_cube": [
+    "finger4-1.R"
+   ]
+  },
+  "ring_02_l": {
+   "head_cube": "joint-l-finger-4-2",
+   "tail_cube": "joint-l-finger-4-3",
+   "default_bones_sharing_head_cube": [
+    "finger4-2.L"
+   ]
+  },
+  "ring_02_r": {
+   "head_cube": "joint-r-finger-4-2",
+   "tail_cube": "joint-r-finger-4-3",
+   "default_bones_sharing_head_cube": [
+    "finger4-2.R"
+   ]
+  },
+  "ring_03_l": {
+   "head_cube": "joint-l-finger-4-3",
+   "tail_cube": "joint-l-finger-4-4",
+   "default_bones_sharing_head_cube": [
+    "finger4-3.L"
+   ]
+  },
+  "ring_03_r": {
+   "head_cube": "joint-r-finger-4-3",
+   "tail_cube": "joint-r-finger-4-4",
+   "default_bones_sharing_head_cube": [
+    "finger4-3.R"
+   ]
+  },
+  "spine_01": {
+   "head_cube": "joint-spine-4",
+   "tail_cube": "joint-spine-3",
+   "default_bones_sharing_head_cube": [
+    "spine04"
+   ]
+  },
+  "spine_02": {
+   "head_cube": "joint-spine-3",
+   "tail_cube": "joint-spine-2",
+   "default_bones_sharing_head_cube": [
+    "spine03"
+   ]
+  },
+  "spine_03": {
+   "head_cube": "joint-spine-2",
+   "tail_cube": "joint-spine-1",
+   "default_bones_sharing_head_cube": [
+    "spine02"
+   ]
+  },
+  "thigh_l": {
+   "head_cube": "joint-l-upper-leg",
+   "tail_cube": "joint-l-knee",
+   "default_bones_sharing_head_cube": [
+    "upperleg01.L"
+   ]
+  },
+  "thigh_r": {
+   "head_cube": "joint-r-upper-leg",
+   "tail_cube": "joint-r-knee",
+   "default_bones_sharing_head_cube": [
+    "upperleg01.R"
+   ]
+  },
+  "thumb_01_l": {
+   "head_cube": "joint-l-finger-1-1",
+   "tail_cube": "joint-l-finger-1-2",
+   "default_bones_sharing_head_cube": [
+    "finger1-1.L"
+   ]
+  },
+  "thumb_01_r": {
+   "head_cube": "joint-r-finger-1-1",
+   "tail_cube": "joint-r-finger-1-2",
+   "default_bones_sharing_head_cube": [
+    "finger1-1.R"
+   ]
+  },
+  "thumb_02_l": {
+   "head_cube": "joint-l-finger-1-2",
+   "tail_cube": "joint-l-finger-1-3",
+   "default_bones_sharing_head_cube": [
+    "finger1-2.L"
+   ]
+  },
+  "thumb_02_r": {
+   "head_cube": "joint-r-finger-1-2",
+   "tail_cube": "joint-r-finger-1-3",
+   "default_bones_sharing_head_cube": [
+    "finger1-2.R"
+   ]
+  },
+  "thumb_03_l": {
+   "head_cube": "joint-l-finger-1-3",
+   "tail_cube": "joint-l-finger-1-4",
+   "default_bones_sharing_head_cube": [
+    "finger1-3.L"
+   ]
+  },
+  "thumb_03_r": {
+   "head_cube": "joint-r-finger-1-3",
+   "tail_cube": "joint-r-finger-1-4",
+   "default_bones_sharing_head_cube": [
+    "finger1-3.R"
+   ]
+  },
+  "upperarm_l": {
+   "head_cube": "joint-l-shoulder",
+   "tail_cube": "joint-l-elbow",
+   "default_bones_sharing_head_cube": [
+    "upperarm01.L"
+   ]
+  },
+  "upperarm_r": {
+   "head_cube": "joint-r-shoulder",
+   "tail_cube": "joint-r-elbow",
+   "default_bones_sharing_head_cube": [
+    "upperarm01.R"
+   ]
+  }
+ },
+ "game_engine_bones_with_no_default_bone_sharing_head_cube": [
+  "Root",
+  "ball_l",
+  "ball_r"
+ ],
+ "depth": {
+  "default": {
+   "max_depth": 16,
+   "mean_depth": 10.349693251533742
+  },
+  "game_engine": {
+   "max_depth": 11,
+   "mean_depth": 7.566037735849057
+  },
+  "rigify_human": {
+   "max_depth": 12,
+   "mean_depth": 8.064864864864864
+  },
+  "rigify_human_toes": {
+   "max_depth": 12,
+   "mean_depth": 7.784037558685446
+  }
+ },
+ "limb_chain": {
+  "default": {
+   "spine": [
+    "root",
+    "pelvis.L/R(leg roots)",
+    "spine05",
+    "spine04",
+    "spine03",
+    "spine02",
+    "spine01",
+    "neck01",
+    "neck02",
+    "neck03",
+    "head"
+   ],
+   "arm": [
+    "clavicle.L",
+    "shoulder01.L",
+    "upperarm01.L",
+    "upperarm02.L",
+    "lowerarm01.L",
+    "lowerarm02.L",
+    "wrist.L"
+   ],
+   "leg": [
+    "pelvis.L",
+    "upperleg01.L",
+    "upperleg02.L",
+    "lowerleg01.L",
+    "lowerleg02.L",
+    "foot.L",
+    "toe*"
+   ]
+  },
+  "game_engine": {
+   "spine": [
+    "Root",
+    "pelvis",
+    "spine_01",
+    "spine_02",
+    "spine_03",
+    "neck_01",
+    "head"
+   ],
+   "arm": [
+    "clavicle_l",
+    "upperarm_l",
+    "lowerarm_l",
+    "hand_l"
+   ],
+   "leg": [
+    "thigh_l",
+    "calf_l",
+    "foot_l",
+    "ball_l"
+   ]
+  },
+  "rigify_metarig": {
+   "spine": [
+    "spine",
+    "spine.001..006"
+   ],
+   "arm": [
+    "shoulder.L",
+    "upper_arm.L",
+    "forearm.L",
+    "hand.L"
+   ],
+   "leg": [
+    "pelvis.L",
+    "thigh.L",
+    "shin.L",
+    "foot.L",
+    "toe.L"
+   ]
+  }
+ },
+ "chain_verification": {
+  "default_upperarm02_parent": "upperarm01.L",
+  "default_lowerarm01_parent": "upperarm02.L",
+  "default_spine_parent_chain_from_head": [
+   "head",
+   "neck03",
+   "neck02",
+   "neck01",
+   "spine01",
+   "spine02",
+   "spine03",
+   "spine04",
+   "spine05",
+   "root"
+  ],
+  "game_engine_head_parent_chain": [
+   "head",
+   "neck_01",
+   "spine_03",
+   "spine_02",
+   "spine_01",
+   "pelvis",
+   "Root"
+  ],
+  "default_upperleg01_chain": [
+   "lowerleg02.L",
+   "lowerleg01.L",
+   "upperleg02.L",
+   "upperleg01.L",
+   "pelvis.L",
+   "root"
+  ],
+  "game_engine_calf_chain": [
+   "calf_l",
+   "thigh_l",
+   "pelvis",
+   "Root"
+  ]
+ },
+ "rigify": {
+  "n_bones_human": 185,
+  "n_bones_human_toes": 213,
+  "only_in_toes": [
+   "toe1-1.L",
+   "toe1-1.R",
+   "toe1-2.L",
+   "toe1-2.R",
+   "toe2-1.L",
+   "toe2-1.R",
+   "toe2-2.L",
+   "toe2-2.R",
+   "toe2-3.L",
+   "toe2-3.R",
+   "toe3-1.L",
+   "toe3-1.R",
+   "toe3-2.L",
+   "toe3-2.R",
+   "toe3-3.L",
+   "toe3-3.R",
+   "toe4-1.L",
+   "toe4-1.R",
+   "toe4-2.L",
+   "toe4-2.R",
+   "toe4-3.L",
+   "toe4-3.R",
+   "toe5-1.L",
+   "toe5-1.R",
+   "toe5-2.L",
+   "toe5-2.R",
+   "toe5-3.L",
+   "toe5-3.R"
+  ],
+  "only_in_human": [],
+  "shared_bones_with_different_json": [],
+  "n_shared_bones_with_different_json": 0,
+  "collections": 22,
+  "collections_toes": 24,
+  "extra_bones": [
+   "DEF-eye_iris.L",
+   "DEF-eye_iris.R",
+   "DEF-eye_master.L",
+   "DEF-eye_master.R",
+   "DEF-forearm.L.001",
+   "DEF-forearm.R.001",
+   "DEF-shin.L.001",
+   "DEF-shin.R.001",
+   "DEF-thigh.L.001",
+   "DEF-thigh.R.001",
+   "DEF-upper_arm.L.001",
+   "DEF-upper_arm.R.001"
+  ],
+  "scale_factor": 0.10000000149011612,
+  "version": 110,
+  "rigify_types": {
+   "basic.raw_copy": 11,
+   "basic.super_copy": 11,
+   "skin.stretchy_chain": 21,
+   "null": 85,
+   "skin.basic_chain": 24,
+   "skin.glue": 11,
+   "face.skin_eye": 2,
+   "limbs.super_finger": 10,
+   "face.skin_jaw": 1,
+   "limbs.super_palm": 2,
+   "spines.basic_spine": 1,
+   "spines.super_head": 1,
+   "limbs.super_limb": 4,
+   "face.basic_tongue": 1
+  },
+  "n_bones_with_constraints": 11,
+  "constraint_types": {
+   "ARMATURE": 5,
+   "TRANSFORM": 18,
+   "COPY_TRANSFORMS": 4
+  },
+  "n_roots_parent_empty": 6,
+  "strategies_extra": {
+   "CUBE": 141,
+   "VERTEX": 169,
+   "MEAN": 56,
+   "XYZ": 4
+  },
+  "n_with_offset": 3,
+  "roll_strategies": {
+   "null": 115,
+   "ALIGN_X_WORLD_X": 12,
+   "ALIGN_Z_WORLD_Z": 58
+  },
+  "rotation_modes": {
+   "null": 138,
+   "XYZ": 43,
+   "ZXY": 2,
+   "YXZ": 2
+  },
+  "default_standard_bones_have_constraints": false,
+  "rigify_ground_frame_offset_z_m": 0.818305
+ },
+ "weights_files": {
+  "default": {
+   "n_bones": 163,
+   "n_entries": 58388,
+   "mean_infl_body": 3.0579222720478327,
+   "max_infl_body": 8,
+   "pct_single": 16.203288490284006,
+   "pct_le4": 80.3288490284006,
+   "n_unweighted_vertices": 0,
+   "size_bytes": 5034981
+  },
+  "game_engine": {
+   "n_bones": 53,
+   "n_entries": 36416,
+   "mean_infl_body": 1.847982062780269,
+   "max_infl_body": 6,
+   "pct_single": 49.237668161434975,
+   "pct_le4": 95.4559043348281,
+   "n_unweighted_vertices": 0,
+   "size_bytes": 3026778
+  },
+  "rigify_human_toes": {
+   "n_bones": 207,
+   "n_entries": 65101,
+   "mean_infl_body": 3.4433482810164424,
+   "max_infl_body": 11,
+   "pct_single": 10.971599402092675,
+   "pct_le4": 74.2899850523169,
+   "n_unweighted_vertices": 16,
+   "size_bytes": 5965933
+  }
+ },
+ "weights_files_note": "no weights file for rigify human (without toes) in the approved set -> only human_toes weights can be analysed",
+ "weights_file_meta": {
+  "default": {
+   "name": "MakeHuman weights",
+   "license": "CC0",
+   "version": 110,
+   "copyright": "(c) the guy who clicked the save weights button",
+   "description": "Weights for a rig"
+  },
+  "game_engine": {
+   "name": "MakeHuman weights",
+   "license": "CC0",
+   "version": 110,
+   "copyright": "(c) the guy who clicked the save weights button",
+   "description": "Weights for a rig"
+  },
+  "rigify_human_toes": {
+   "name": "MakeHuman weights",
+   "license": "CC0",
+   "version": 110,
+   "copyright": "(c) the guy who clicked the save weights button",
+   "description": "Weights for a rig"
+  }
+ },
+ "category_counts_note": "category counts are a name-regex heuristic (see CATS in script), indicative only"
+}

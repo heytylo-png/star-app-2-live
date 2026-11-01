@@ -1,0 +1,9 @@
+{
+ "note": "Snapshot taken at the very start of the task (before any analysis script ran) via sha256sum over key directories; compared with hash_verification_before.json",
+ "protected_total": 68,
+ "matching": 67,
+ "mismatching": [],
+ "not_in_prior_snapshot": [
+  "/workspace/share/star_rai_rig_compat_review_bundle_v1/02_rig_exports/r3/r3_rig_bone_names.txt"
+ ]
+}

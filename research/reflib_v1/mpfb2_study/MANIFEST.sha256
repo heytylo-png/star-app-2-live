@@ -1,0 +1,66 @@
+# MANIFEST.sha256 — MPFB2 study (Issue #179). Paths relative to this folder. Format: sha256  bytes  path  [status]
+# Generated after the final analysis run; MANIFEST.sha256 itself is not listed (its SHA-256 is reported in the GitHub handoff comment).
+
+## INCLUDED (committed to the branch)
+682537f02eb85a888f20978153c547cd9a2944a3a157e4b7846845dc1271bb32  716  README.md  INCLUDED
+a3895016867a7c34ac1057552ebe14a749415011535a297c5f6cae569ca9902e  23320  REPORT.md  INCLUDED
+a431b2950129f5b28f97e43079dff5d0761c98495bc98139fd1fd1dd71a3048b  1520  outputs/compare_landmarks_normalised.csv  INCLUDED
+12dd10b029ee4f72260f94fa98b623294ecb1e8d307b57e90a5a8e7c11f25823  1250  outputs/compare_ratios.csv  INCLUDED
+646caa82027154c0172cc517689bae3e9dc579f428c4f58bf6a823523f6e7ed3  979  outputs/compare_segments.csv  INCLUDED
+f79dfc64dc4af470441097c55a2fff211581a857fc1c20c2ec5ddc7d58785fb8  18899  outputs/compare_star_rai.json  INCLUDED
+2f98bcb04c1b7b937f79b1839916f156bcbbfa11f788686e21299619d77741b1  9611  outputs/coordinates_foot.json  INCLUDED
+facb05e28bdc458e39b83a9622ebf3c780a0556c7d8bd0ff896e316c4b2d3796  363  outputs/hash_prior_snapshot_comparison.json  INCLUDED
+ffa9415eff0cf9b9f1a95ba3228021e3db731318503ce48acd2c5e6fad7c903d  20472  outputs/hash_verification_after.json  INCLUDED
+4a1f7ec90cee198061e764fc75630b91030f52bb28c657ee922319d4c02f014c  20473  outputs/hash_verification_before.json  INCLUDED
+7fd43f27d75e53493c74bf9ebe969d3ce95dcaa03c9eae67b7496adc5473e42a  218  outputs/hash_verification_compare.json  INCLUDED
+4d927f0095502cd1a50d634c72e614220cdfce7e979767897a98ba20585f79e3  35228  outputs/joint_cube_groups.json  INCLUDED
+413faa6ee486de7372868a002d54835c615418ce0ea9a26e48935353e5f48b0c  38087  outputs/joints_default.csv  INCLUDED
+bddcdde0a4d5ac90dad97c56b9e2422ebd0937c4a88f83742c194470dcd80340  12908  outputs/joints_game_engine.csv  INCLUDED
+a20dc3f50e061c24b8681b2d3a6afe59e933c9be0ad6149ae60e0af9b998de0f  10948  outputs/joints_hierarchy_summary.json  INCLUDED
+301936f9eab3393b807260e1591bb5ee2136b4657410c852c7dccfcb58779f50  40350  outputs/joints_rigify_human.csv  INCLUDED
+c00b8e5e98e7cfcc6c13e75a2c89c32fbf3c044f788a93cbc9372aefdcc6fbd0  46806  outputs/joints_rigify_human_toes.csv  INCLUDED
+129af4fe530059e1759a6ec595eda0fb99bc0bfafa3b8d30c85bd0af19633f78  207  outputs/rig_category_counts.csv  INCLUDED
+d58907a5eb434a4a466a1664487b7dda4ce27df50c421efcb5e1d837c6ffb6c6  15603  outputs/rig_differences.json  INCLUDED
+14338dd9c03de14c40373492a796b2adcf07b50185a0c43baea1413707954e5d  48385  outputs/weight_falloff_profiles.csv  INCLUDED
+00388f5847c454d9079465d4626d5112d3a68365503112c207258500a89b3599  33813  outputs/weight_falloff_summary.json  INCLUDED
+d92bc41cea13efd226e273810051d680b87315f7dbcdbd741eb19bd9d09466da  151  outputs/weights_influence_hist_default.csv  INCLUDED
+b66a17e6e002e87656bf2af2ccb316b494858c78ff8e91e51c27e823a5cb767c  130  outputs/weights_influence_hist_game_engine.csv  INCLUDED
+f325c0028040b8897c5d5692fdc64b77ce916352e205e0bc05a97702ca3a8383  180  outputs/weights_influence_hist_rigify_human_toes.csv  INCLUDED
+b30009a7d0b82439c710ae45bb33ab3148652cdd28145dfda6a60e6ce92d7e06  8805  outputs/weights_per_bone_default.csv  INCLUDED
+010c2d58d6e4b9b11c1da267c8e362b82d80f1f588e16cfe245e642e05aafafe  3114  outputs/weights_per_bone_game_engine.csv  INCLUDED
+76758079448fb10e256ba4e0f1fff906b7f13558217ac367dd3e4da5ba7b2365  12565  outputs/weights_per_bone_rigify_human_toes.csv  INCLUDED
+b4fc7a54971beea08a508686af177b3d8c79c6bdd1e12025e494fcd3b9879313  10533  outputs/weights_summary.json  INCLUDED
+0ef802f09c4fce58ee7cef1a9417084b9ef5c64736b3ef7c55115d0bcea45196  2985  scripts/00_verify_hashes.py  INCLUDED
+746c10e4010f51a78e9cda997cb2423e8861f694b4bd6844d3a69e732d824790  6971  scripts/02_joints_hierarchy.py  INCLUDED
+68739c7a0205875b34859b2ff1d05caf16638f5d8a96c5906cd1190d3e489145  11552  scripts/03_coordinates_foot.py  INCLUDED
+a0578738f7c60682a54a1e3c91cb2c5e9803ccf67f89bcc13bbc64e2bd223d48  5677  scripts/04_weights_stats.py  INCLUDED
+bc4634b008a57a7511ffdd0997f6543ad79fc2bb5ec489286d4c5dd35a496faa  7616  scripts/05_weight_falloff.py  INCLUDED
+c988929b71ef7247be40017da6e06d5250c72b083be7ef864ada3c6d003b78b1  13904  scripts/06_compare_star_rai.py  INCLUDED
+6ec303532fc2eb510d66c063ec13feb927274c6434961f1d9fc26f936c242f20  7869  scripts/07_rig_differences.py  INCLUDED
+7fbceeddccf78d155567e8fd0281a129d7fd42ab9bbca856c1eaa40cc5c56863  3383  scripts/common.py  INCLUDED
+5b1c87d6e43f421f1063a4a49993a6d19f971126ba539326ffe0295b23e9e21f  5729  scripts/protected_paths.txt  INCLUDED
+96ce5b0c86cd25785043b9b143ac9fd784843f05abf1fedf4d68acdd202010fb  836  scripts/run_all.sh  INCLUDED
+
+## INPUTS used (NOT committed; not redistributed). Upstream makehumancommunity/mpfb2 @ 6ff1eb358f6c1959ced77e79e6dd2406d9a71f49 (v2.0.18)
+f6089cba01cb570a24712b41ab8a586ccd3cc5ef53dc266ca50b95c288956d2c  6962  LICENSE.ASSETS.md  INPUT_NOT_COMMITTED  git_blob_sha1=f3ede1fc3318f8d794e2cb51924186c62f02f71a
+5cefb60680cb9efd4550a2e65d719021cfbec9dad3658481d11d48ae863ce04d  3188  LICENSE.md  INPUT_NOT_COMMITTED  git_blob_sha1=88cf832acc18dd64fd27ff2efb84625718bf2201
+8e761e6624b8f54536409135d1636da63b32486a90d4897f84e121d144f6fb4c  1749303  src/mpfb/data/3dobjs/base.obj  INPUT_NOT_COMMITTED  git_blob_sha1=d26635e9326e3cca30778fd7b9c00062b03cce09
+6c3e61576d299d4acfbe45789d69738608ae0559d382f4a0e9e598a82379be7f  257096  src/mpfb/data/rigs/rigify/rig.human.json  INPUT_NOT_COMMITTED  git_blob_sha1=90911ccdc5dcb4fc227e2b7a972bf4fd00b540fd
+970f19f9e426528052a0f8bfc2cd6f1eea627aa607517ff4e43ae88d96488846  287189  src/mpfb/data/rigs/rigify/rig.human_toes.json  INPUT_NOT_COMMITTED  git_blob_sha1=150a96b450f35d6283044041fde9fee8b072f4b0
+edcbca3323b03080fe750caa292c673ecbacdd200ebf0062d00d3b425e13a999  5965933  src/mpfb/data/rigs/rigify/weights.human_toes.json  INPUT_NOT_COMMITTED  git_blob_sha1=1931ed762e4e44258fe6dcc3202e73bdeb22169c
+8b949de35c2dd70dbb5094e57a8586c3b9a9f650775a293212581a8f67be6797  126355  src/mpfb/data/rigs/standard/rig.default.json  INPUT_NOT_COMMITTED  git_blob_sha1=85900f3ac30228f403eadb10cb370f2f99f41263
+b324ddb4b707721c19630bfadb87c3e3b38eed3b6e4590bb3cead43ea918f799  40936  src/mpfb/data/rigs/standard/rig.game_engine.json  INPUT_NOT_COMMITTED  git_blob_sha1=e0903a1bc1ed7aae1516b1a8d0fe3085bbc6e5f0
+154b866774a8c2b055a8e86419f22a87b76c60440fdcb70bcb78345f00924e89  5034981  src/mpfb/data/rigs/standard/weights.default.json  INPUT_NOT_COMMITTED  git_blob_sha1=1328020289b65b019f0881841bf40418c315fef7
+9f4a773e74ce5ba08415b4f30070338e9f75bae5971b5075b10cd6b9caa58473  3026778  src/mpfb/data/rigs/standard/weights.game_engine.json  INPUT_NOT_COMMITTED  git_blob_sha1=c9366e4bfe5d1af69c66ebdf4065874b996af6b1
+93d2801e1191a3f8328c3ae5520acb1db35bbc315888825b7c4ba3973a6ac9c3  1670  MANIFEST_sha256_blobsha1.txt  INPUT_MANIFEST_NOT_COMMITTED
+
+## STAR RAI inputs read (read-only; NOT committed)
+5d373125cc4fe19d97c0df0d986e362c0030228734fddac580b4c0b97c80849f  star_rai_tripo_blender_bones.json (v8.3, metres)
+235767bfa9a932a6f8d4bb5892ea4a8568afb53d614d26dc83676c6ba31fc1de  star_rai_tripo_blender_bones_mm.json (v8.3, mm)
+eab1839c7eb4d05b6e7c8a98527d40a6a88e5679c12b249e87aff65bdb686c05  star_rai_locked_final_v10_blender_bones.json (locked v10)
+
+## EXCLUDED by design
+MPFB2 asset files (base.obj, rig/weights JSON, licence copies); GPL code; system-assets archive; other rigs; Human Base Meshes; Seed-san; any Star Rai production file or protected checkpoint.
+
+## UNAVAILABLE / not established
+Cause of default_position vs raw-mesh mismatch; Star Rai joint-placement quality; game_engine<-default weight mapping; Blender deformation evaluation (Blender not allowed); weights for rigify_human without toes (not in approved set).

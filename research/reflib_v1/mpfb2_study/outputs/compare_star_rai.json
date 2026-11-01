@@ -1,0 +1,644 @@
+{
+ "input_hashes": {
+  "star_rai_tripo_blender_bones.json": "5d373125cc4fe19d97c0df0d986e362c0030228734fddac580b4c0b97c80849f",
+  "star_rai_tripo_blender_bones_mm.json": "235767bfa9a932a6f8d4bb5892ea4a8568afb53d614d26dc83676c6ba31fc1de",
+  "star_rai_locked_final_v10_blender_bones.json": "eab1839c7eb4d05b6e7c8a98527d40a6a88e5679c12b249e87aff65bdb686c05"
+ },
+ "axis_mapping_evidence": {
+  "v83": {
+   "header": {
+    "units": "metres",
+    "up": "Z",
+    "facing": "-Y",
+    "side": "_left = character left = +X",
+    "height_m": 0.3915,
+    "sole_to_skull_m": 0.95
+   },
+   "left_bones_x_positive": true,
+   "right_bones_x_negative": true,
+   "foot_tail_forward_is_minus_y": true,
+   "head_tail_z_equals_sole_to_skull": true,
+   "min_bone_z": 0.005655,
+   "mm_file_is_1000x_of_m_file": true
+  },
+  "v10": {
+   "header": {
+    "height_mm": 66.0,
+    "ankle_to_head_mm": 211.65
+   },
+   "left_bones_x_negative": true,
+   "right_bones_x_positive": true,
+   "foot_tail_forward_is_plus_y": true,
+   "foot_tail_z_mm": -88.0,
+   "ankle_to_head_tail_mm": 211.65,
+   "ankle_to_head_matches_header": true,
+   "sole_plane_z_mm_from_foot_tail": -88.0
+  },
+  "mapping_det": {
+   "v83": 1.0,
+   "v10": 1.0
+  },
+  "v83_vs_v10_known_nonuniform": "v8.3 foot tail z is 6 mm above sole (z=0 INFERRED) whereas v10 foot tail IS the sole (-88 mm): sole references differ by construction; documented, not corrected"
+ },
+ "mpfb2": {
+  "sole_z": -0.81676,
+  "body_top_z": 0.84913,
+  "S_body_top_m": 1.66589,
+  "S_joint_head2_m": 1.6571949999999998,
+  "S_default_pos_m": 1.6615741813278198
+ },
+ "starrai": {
+  "v83_S_m": 0.95,
+  "v83_sole_z": 0.0,
+  "v10_S_m": 0.23765,
+  "v10_sole_z_m": -0.088
+ },
+ "landmarks_normalised": {
+  "mpfb2_mesh_bodytop": {
+   "hip": {
+    "z_over_S": 0.5194670716553914,
+    "x_over_S": 0.0662498724405573,
+    "y_fwd_of_ankle_over_S": 0.007926693839329127
+   },
+   "knee": {
+    "z_over_S": 0.2684916170935656,
+    "x_over_S": 0.09491322956497728,
+    "y_fwd_of_ankle_over_S": 0.019770212919220355
+   },
+   "ankle": {
+    "z_over_S": 0.043205133592253996,
+    "x_over_S": 0.13183343438042128,
+    "y_fwd_of_ankle_over_S": -0.0
+   },
+   "toe_tip": {
+    "z_over_S": 0.009877602962980746,
+    "x_over_S": 0.12989152945272495,
+    "y_fwd_of_ankle_over_S": 0.11559886907298798
+   },
+   "shoulder": {
+    "z_over_S": 0.8051792135134974,
+    "x_over_S": 0.10067441427705309,
+    "y_fwd_of_ankle_over_S": 0.009313340016447664
+   },
+   "elbow": {
+    "z_over_S": 0.6999734376219318,
+    "x_over_S": 0.18784928776809995,
+    "y_fwd_of_ankle_over_S": 0.008470697344962752
+   },
+   "wrist": {
+    "z_over_S": 0.6374618072021562,
+    "x_over_S": 0.25883161553283823,
+    "y_fwd_of_ankle_over_S": 0.10598839059001493
+   },
+   "hand_tip": {
+    "z_over_S": 0.5684874151354531,
+    "x_over_S": 0.2871820768478111,
+    "y_fwd_of_ankle_over_S": 0.1815118345148839
+   },
+   "neck_base": {
+    "z_over_S": 0.8438642407361829,
+    "x_over_S": 0.0,
+    "y_fwd_of_ankle_over_S": 0.004631158119683773
+   },
+   "skull_base": {
+    "z_over_S": 0.9089765830877189,
+    "x_over_S": 0.0,
+    "y_fwd_of_ankle_over_S": 0.010195751220068551
+   },
+   "skull_top": {
+    "z_over_S": 1.0,
+    "x_over_S": 0.0,
+    "y_fwd_of_ankle_over_S": 0.0005462545546224541
+   }
+  },
+  "mpfb2_mesh_cubes": {
+   "hip": {
+    "z_over_S": 0.5221926206632292,
+    "x_over_S": 0.06659747344156845,
+    "y_fwd_of_ankle_over_S": 0.007968283756588696
+   },
+   "knee": {
+    "z_over_S": 0.26990034365297993,
+    "x_over_S": 0.09541122197448099,
+    "y_fwd_of_ankle_over_S": 0.019873943621601563
+   },
+   "ankle": {
+    "z_over_S": 0.04343182305039541,
+    "x_over_S": 0.1325251403727383,
+    "y_fwd_of_ankle_over_S": -0.0
+   },
+   "toe_tip": {
+    "z_over_S": 0.00992942894469269,
+    "x_over_S": 0.130573046623964,
+    "y_fwd_of_ankle_over_S": 0.1162053952612698
+   },
+   "shoulder": {
+    "z_over_S": 0.8094038420342811,
+    "x_over_S": 0.10120263457227424,
+    "y_fwd_of_ankle_over_S": 0.00936220541336415
+   },
+   "elbow": {
+    "z_over_S": 0.7036460706193298,
+    "x_over_S": 0.18883489872947967,
+    "y_fwd_of_ankle_over_S": 0.008515141549425386
+   },
+   "wrist": {
+    "z_over_S": 0.6408064530728129,
+    "x_over_S": 0.26018965782542186,
+    "y_fwd_of_ankle_over_S": 0.1065444923500252
+   },
+   "hand_tip": {
+    "z_over_S": 0.5714701649473961,
+    "x_over_S": 0.28868886884162703,
+    "y_fwd_of_ankle_over_S": 0.18246419401458489
+   },
+   "neck_base": {
+    "z_over_S": 0.8482918425411614,
+    "x_over_S": 0.0,
+    "y_fwd_of_ankle_over_S": 0.0046554569619145615
+   },
+   "skull_base": {
+    "z_over_S": 0.9137458174807432,
+    "x_over_S": 0.0,
+    "y_fwd_of_ankle_over_S": 0.010249246467675803
+   },
+   "skull_top": {
+    "z_over_S": 1.0,
+    "x_over_S": 0.0,
+    "y_fwd_of_ankle_over_S": 0.005524395137566793
+   }
+  },
+  "mpfb2_default_position": {
+   "hip": {
+    "z_over_S": 0.5203800165902486,
+    "x_over_S": 0.06101545022782969,
+    "y_fwd_of_ankle_over_S": -0.010682159869943933
+   },
+   "knee": {
+    "z_over_S": 0.28509133442473417,
+    "x_over_S": 0.0857522329984997,
+    "y_fwd_of_ankle_over_S": 0.00884679167631994
+   },
+   "ankle": {
+    "z_over_S": 0.0410141263199126,
+    "x_over_S": 0.10868157171250419,
+    "y_fwd_of_ankle_over_S": -0.0
+   },
+   "toe_tip": {
+    "z_over_S": 0.006644569769910219,
+    "x_over_S": 0.10934010816541838,
+    "y_fwd_of_ankle_over_S": 0.10999858856771592
+   },
+   "shoulder": {
+    "z_over_S": 0.7937618547110878,
+    "x_over_S": 0.10233644461034358,
+    "y_fwd_of_ankle_over_S": -0.0020272342186954686
+   },
+   "elbow": {
+    "z_over_S": 0.6850730009024694,
+    "x_over_S": 0.19941980749270585,
+    "y_fwd_of_ankle_over_S": -0.0015367363934647208
+   },
+   "wrist": {
+    "z_over_S": 0.610307029553751,
+    "x_over_S": 0.27282333632446026,
+    "y_fwd_of_ankle_over_S": 0.09667061286747707
+   },
+   "hand_tip": {
+    "z_over_S": 0.537191385657174,
+    "x_over_S": 0.30514310837167935,
+    "y_fwd_of_ankle_over_S": 0.1742747632405314
+   },
+   "neck_base": {
+    "z_over_S": 0.850228913983619,
+    "x_over_S": 0.0,
+    "y_fwd_of_ankle_over_S": -0.010572083465184118
+   },
+   "skull_base": {
+    "z_over_S": 0.9109363414107239,
+    "x_over_S": 0.0,
+    "y_fwd_of_ankle_over_S": 0.013004473961222004
+   },
+   "skull_top": {
+    "z_over_S": 1.0,
+    "x_over_S": 0.0,
+    "y_fwd_of_ankle_over_S": 0.008831187184646525
+   }
+  },
+  "starrai_v8_3": {
+   "hip": {
+    "z_over_S": 0.542,
+    "x_over_S": 0.0428421052631579,
+    "y_fwd_of_ankle_over_S": 0.008526315789473684
+   },
+   "knee": {
+    "z_over_S": 0.31,
+    "x_over_S": 0.04789473684210526,
+    "y_fwd_of_ankle_over_S": 0.012421052631578947
+   },
+   "ankle": {
+    "z_over_S": 0.1,
+    "x_over_S": 0.04105263157894737,
+    "y_fwd_of_ankle_over_S": -0.0
+   },
+   "toe_tip": {
+    "z_over_S": 0.006049473684210527,
+    "x_over_S": 0.030505263157894737,
+    "y_fwd_of_ankle_over_S": 0.08914315789473684
+   },
+   "shoulder": {
+    "z_over_S": 0.7746315789473684,
+    "x_over_S": 0.06589473684210527,
+    "y_fwd_of_ankle_over_S": 0.0009473684210526313
+   },
+   "elbow": {
+    "z_over_S": 0.7821052631578947,
+    "x_over_S": 0.1988421052631579,
+    "y_fwd_of_ankle_over_S": -0.012421052631578947
+   },
+   "wrist": {
+    "z_over_S": 0.7772631578947368,
+    "x_over_S": 0.3604210526315789,
+    "y_fwd_of_ankle_over_S": -0.0062105263157894745
+   },
+   "hand_tip": {
+    "z_over_S": 0.7768421052631579,
+    "x_over_S": 0.4649473684210526,
+    "y_fwd_of_ankle_over_S": -0.002947368421052632
+   },
+   "skull_base": {
+    "z_over_S": 0.8738947368421054,
+    "x_over_S": 0.0,
+    "y_fwd_of_ankle_over_S": 0.009193684210526317
+   },
+   "skull_top": {
+    "z_over_S": 1.0,
+    "x_over_S": 0.0,
+    "y_fwd_of_ankle_over_S": 0.005263157894736843
+   },
+   "neck_base": {
+    "z_over_S": 0.8248421052631579,
+    "x_over_S": 0.0,
+    "y_fwd_of_ankle_over_S": 0.01473684210526316
+   }
+  },
+  "starrai_v10": {
+   "hip": {
+    "z_over_S": 0.5386071954555018,
+    "x_over_S": 0.04207868714496108,
+    "y_fwd_of_ankle_over_S": -0.0
+   },
+   "knee": {
+    "z_over_S": 0.3408373658741847,
+    "x_over_S": 0.04207868714496108,
+    "y_fwd_of_ankle_over_S": -0.0
+   },
+   "ankle": {
+    "z_over_S": 0.10940458657689878,
+    "x_over_S": 0.04207868714496108,
+    "y_fwd_of_ankle_over_S": -0.0
+   },
+   "toe_tip": {
+    "z_over_S": 0.0,
+    "x_over_S": 0.04207868714496108,
+    "y_fwd_of_ankle_over_S": 0.10940458657689879
+   },
+   "shoulder": {
+    "z_over_S": 0.7910793183252682,
+    "x_over_S": 0.08541973490427099,
+    "y_fwd_of_ankle_over_S": -0.0
+   },
+   "elbow": {
+    "z_over_S": 0.6656423858615612,
+    "x_over_S": 0.11050727540500736,
+    "y_fwd_of_ankle_over_S": -0.0
+   },
+   "wrist": {
+    "z_over_S": 0.540205453397854,
+    "x_over_S": 0.13559481590574374,
+    "y_fwd_of_ankle_over_S": -0.0
+   },
+   "hand_tip": {
+    "z_over_S": 0.48835819061645275,
+    "x_over_S": 0.14596432989690722,
+    "y_fwd_of_ankle_over_S": -0.0
+   },
+   "skull_base": {
+    "z_over_S": 0.858405217757206,
+    "x_over_S": 0.0,
+    "y_fwd_of_ankle_over_S": -0.0
+   },
+   "skull_top": {
+    "z_over_S": 1.0,
+    "x_over_S": 0.0,
+    "y_fwd_of_ankle_over_S": -0.0
+   }
+  }
+ },
+ "segments": {
+  "mpfb2_mesh_bodytop": {
+   "thigh(hip-knee)": {
+    "length_m": 0.4212776458658233,
+    "over_S": 0.2528844316646497
+   },
+   "shin(knee-ankle)": {
+    "length_m": 0.3817322959303418,
+    "over_S": 0.22914615966861065
+   },
+   "upper_arm(sh-elbow)": {
+    "length_m": 0.22761461690692786,
+    "over_S": 0.1366324408615982
+   },
+   "forearm(elbow-wrist)": {
+    "length_m": 0.22631528156948436,
+    "over_S": 0.13585247619559776
+   },
+   "hand(wrist-tip)": {
+    "length_m": 0.176812121416173,
+    "over_S": 0.10613673256708006
+   },
+   "foot(ankle-toe)": {
+    "length_m": 0.2004446712936016,
+    "over_S": 0.12032287323508851
+   },
+   "head(skull_base-top)": {
+    "length_m": 0.15248468398498252,
+    "over_S": 0.09153346498567283
+   },
+   "neck_base_to_skull_base": {
+    "length_m": 0.10886539303194583,
+    "over_S": 0.06534968877413624
+   }
+  },
+  "mpfb2_mesh_cubes": {
+   "thigh(hip-knee)": {
+    "length_m": 0.4212776458658233,
+    "over_S": 0.25421127016785794
+   },
+   "shin(knee-ankle)": {
+    "length_m": 0.3817322959303418,
+    "over_S": 0.23034844778697852
+   },
+   "upper_arm(sh-elbow)": {
+    "length_m": 0.22761461690692786,
+    "over_S": 0.13734932636589411
+   },
+   "forearm(elbow-wrist)": {
+    "length_m": 0.22631528156948436,
+    "over_S": 0.13656526936750618
+   },
+   "hand(wrist-tip)": {
+    "length_m": 0.176812121416173,
+    "over_S": 0.10669361265039602
+   },
+   "foot(ankle-toe)": {
+    "length_m": 0.2004446712936016,
+    "over_S": 0.12095418541185657
+   },
+   "head(skull_base-top)": {
+    "length_m": 0.14315429612833813,
+    "over_S": 0.08638349507953992
+   },
+   "neck_base_to_skull_base": {
+    "length_m": 0.10886539303194583,
+    "over_S": 0.06569256667558486
+   }
+  },
+  "mpfb2_default_position": {
+   "thigh(hip-knee)": {
+    "length_m": 0.3944412356815187,
+    "over_S": 0.23739008472453962
+   },
+   "shin(knee-ankle)": {
+    "length_m": 0.4076031592139693,
+    "over_S": 0.24531144248295908
+   },
+   "upper_arm(sh-elbow)": {
+    "length_m": 0.24214949424077684,
+    "over_S": 0.14573498851990288
+   },
+   "forearm(elbow-wrist)": {
+    "length_m": 0.23861218808932624,
+    "over_S": 0.14360610002897567
+   },
+   "hand(wrist-tip)": {
+    "length_m": 0.1851210584716661,
+    "over_S": 0.11141305669767307
+   },
+   "foot(ankle-toe)": {
+    "length_m": 0.19148796910259036,
+    "over_S": 0.11524491127417849
+   },
+   "head(skull_base-top)": {
+    "length_m": 0.14814824623713824,
+    "over_S": 0.08916137955318251
+   },
+   "neck_base_to_skull_base": {
+    "length_m": 0.10820976571745032,
+    "over_S": 0.06512484783013195
+   }
+  },
+  "starrai_v8_3": {
+   "thigh(hip-knee)": {
+    "length_m": 0.2204833100259519,
+    "over_S": 0.2320876947641599
+   },
+   "shin(knee-ankle)": {
+    "length_m": 0.19995434478900426,
+    "over_S": 0.21047825767263606
+   },
+   "upper_arm(sh-elbow)": {
+    "length_m": 0.1271353216065465,
+    "over_S": 0.13382665432268054
+   },
+   "forearm(elbow-wrist)": {
+    "length_m": 0.15368220456513496,
+    "over_S": 0.16177074164751049
+   },
+   "hand(wrist-tip)": {
+    "length_m": 0.09934918218083126,
+    "over_S": 0.10457808650613817
+   },
+   "foot(ankle-toe)": {
+    "length_m": 0.12344317318102285,
+    "over_S": 0.12994018229581353
+   },
+   "head(skull_base-top)": {
+    "length_m": 0.1198581776767859,
+    "over_S": 0.12616650281766936
+   },
+   "neck_base_to_skull_base": {
+    "length_m": 0.04689659642234187,
+    "over_S": 0.04936483833930723
+   }
+  },
+  "starrai_v10": {
+   "thigh(hip-knee)": {
+    "length_m": 0.047,
+    "over_S": 0.19776982958131706
+   },
+   "shin(knee-ankle)": {
+    "length_m": 0.055,
+    "over_S": 0.23143277929728592
+   },
+   "upper_arm(sh-elbow)": {
+    "length_m": 0.03040045024085145,
+    "over_S": 0.1279211034750745
+   },
+   "forearm(elbow-wrist)": {
+    "length_m": 0.030400450240851456,
+    "over_S": 0.12792110347507452
+   },
+   "hand(wrist-tip)": {
+    "length_m": 0.012565518690258235,
+    "over_S": 0.052874052978153736
+   },
+   "foot(ankle-toe)": {
+    "length_m": 0.036769552621700466,
+    "over_S": 0.15472145012287172
+   },
+   "head(skull_base-top)": {
+    "length_m": 0.03365,
+    "over_S": 0.141594782242794
+   }
+  }
+ },
+ "ratios": {
+  "mpfb2_mesh_bodytop": {
+   "thigh/shin": 1.1035944570503349,
+   "upper_arm/forearm": 1.0057412620501482,
+   "leg(hip-ankle)/S": 0.4808216610341075,
+   "arm(shoulder-wrist)/leg(hip-ankle)": 0.5198971000185177,
+   "ankle_height_over_sole/S": 0.043205133592253996,
+   "half_shoulder_width(|x|)/S": 0.10067441427705309,
+   "half_hip_spacing(|x|)/S": 0.0662498724405573,
+   "stature_over_head_length": 10.92496607832473,
+   "head_length/S": 0.09153346498567283,
+   "stature_S_m": 1.66589,
+   "thigh/leg(hip-ankle)": 0.525942261254971,
+   "upper_arm_len/leg": 0.28416448744788575,
+   "forearm_len/leg": 0.28254233784605004,
+   "shoulder_width(2|x|)/leg": 0.41875989555267423,
+   "hip_spacing(2|x|)/leg": 0.27556941714345023,
+   "leg_splay_from_vertical_deg": 7.840593462303848,
+   "arm_angle_from_down_deg(shoulder->wrist)": 47.86117558551453
+  },
+  "mpfb2_mesh_cubes": {
+   "thigh/shin": 1.1035944570503349,
+   "upper_arm/forearm": 1.0057412620501482,
+   "leg(hip-ankle)/S": 0.4833444446188345,
+   "arm(shoulder-wrist)/leg(hip-ankle)": 0.5198971000185177,
+   "ankle_height_over_sole/S": 0.04343182305039541,
+   "half_shoulder_width(|x|)/S": 0.10120263457227424,
+   "half_hip_spacing(|x|)/S": 0.06659747344156845,
+   "stature_over_head_length": 11.576285482304499,
+   "head_length/S": 0.08638349507953992,
+   "stature_S_m": 1.6571949999999998,
+   "thigh/leg(hip-ankle)": 0.525942261254971,
+   "upper_arm_len/leg": 0.28416448744788575,
+   "forearm_len/leg": 0.28254233784605004,
+   "shoulder_width(2|x|)/leg": 0.41875989555267423,
+   "hip_spacing(2|x|)/leg": 0.27556941714345023,
+   "leg_splay_from_vertical_deg": 7.840593462303848,
+   "arm_angle_from_down_deg(shoulder->wrist)": 47.86117558551453
+  },
+  "mpfb2_default_position": {
+   "thigh/shin": 0.9677089756668414,
+   "upper_arm/forearm": 1.0148244990324065,
+   "leg(hip-ankle)/S": 0.4818483417337353,
+   "arm(shoulder-wrist)/leg(hip-ankle)": 0.5586591826971693,
+   "ankle_height_over_sole/S": 0.0410141263199126,
+   "half_shoulder_width(|x|)/S": 0.10233644461034358,
+   "half_hip_spacing(|x|)/S": 0.06101545022782969,
+   "stature_over_head_length": 11.215618298094247,
+   "head_length/S": 0.08916137955318251,
+   "stature_S_m": 1.6615741813278198,
+   "thigh/leg(hip-ankle)": 0.49266556333967637,
+   "upper_arm_len/leg": 0.30244991192775467,
+   "forearm_len/leg": 0.2980317406764699,
+   "shoulder_width(2|x|)/leg": 0.4247662002617981,
+   "hip_spacing(2|x|)/leg": 0.253255827376267,
+   "leg_splay_from_vertical_deg": 5.678584034655213,
+   "arm_angle_from_down_deg(shoulder->wrist)": 47.03829691384997
+  },
+  "starrai_v8_3": {
+   "thigh/shin": 1.1026682628907625,
+   "upper_arm/forearm": 0.827261178132455,
+   "leg(hip-ankle)/S": 0.4420858517041779,
+   "arm(shoulder-wrist)/leg(hip-ankle)": 0.6664430314803035,
+   "ankle_height_over_sole/S": 0.1,
+   "half_shoulder_width(|x|)/S": 0.06589473684210527,
+   "half_hip_spacing(|x|)/S": 0.0428421052631579,
+   "stature_over_head_length": 7.926034071382312,
+   "head_length/S": 0.12616650281766936,
+   "stature_S_m": 0.95,
+   "thigh/leg(hip-ankle)": 0.524983312335138,
+   "upper_arm_len/leg": 0.30271643801039516,
+   "forearm_len/leg": 0.36592607753427836,
+   "shoulder_width(2|x|)/leg": 0.2981083270957008,
+   "hip_spacing(2|x|)/leg": 0.19381803375071918,
+   "leg_splay_from_vertical_deg": 0.23196545129820517,
+   "arm_angle_from_down_deg(shoulder->wrist)": 90.51177039983939
+  },
+  "starrai_v10": {
+   "thigh/shin": 0.8545454545454545,
+   "upper_arm/forearm": 0.9999999999999998,
+   "leg(hip-ankle)/S": 0.429202608878603,
+   "arm(shoulder-wrist)/leg(hip-ankle)": 0.5960872596245382,
+   "ankle_height_over_sole/S": 0.10940458657689878,
+   "half_shoulder_width(|x|)/S": 0.08541973490427099,
+   "half_hip_spacing(|x|)/S": 0.04207868714496108,
+   "stature_over_head_length": 7.062407132243685,
+   "head_length/S": 0.141594782242794,
+   "stature_S_m": 0.23765,
+   "thigh/leg(hip-ankle)": 0.46078431372549017,
+   "upper_arm_len/leg": 0.29804362981226906,
+   "forearm_len/leg": 0.2980436298122692,
+   "shoulder_width(2|x|)/leg": 0.39803921568627454,
+   "hip_spacing(2|x|)/leg": 0.19607843137254902,
+   "leg_splay_from_vertical_deg": 0.0,
+   "arm_angle_from_down_deg(shoulder->wrist)": 11.310000114554974
+  }
+ },
+ "foot": {
+  "mpfb2_default_foot_L_pitch_deg": 27.233150334889686,
+  "mpfb2_game_engine_foot_l_pitch_deg": 27.233136195283283,
+  "starrai_v8_3_foot_left_pitch_deg": 46.30513387041238,
+  "starrai_v10_foot_left_pitch_deg": 45.0,
+  "starrai_v8_3_foot_length_horizontal_over_S": 0.08976496855709025,
+  "starrai_v10_foot_length_horizontal_over_S": 0.10940458657689879,
+  "mpfb2_ankle_to_toe_horizontal_over_S_bodytop": 0.11561517861294004,
+  "starrai_v8_3_ankle_above_sole_over_S": 0.1,
+  "starrai_v10_ankle_above_sole_over_S": 0.10940458657689878,
+  "mpfb2_ankle_above_sole_over_S_bodytop": 0.043205133592253996,
+  "note": "Star Rai foot tail is a bone tail, MPFB2 foot.L tail is 'MEAN' of two vertices near the ball; pitch is ankle->bone tail in both. v10 sole plane assumed flat (z=-88 at tail)."
+ },
+ "v10_to_v83_uniform_fit": {
+  "landmarks": [
+   "hip",
+   "knee",
+   "ankle",
+   "shoulder",
+   "elbow",
+   "wrist",
+   "hand_tip",
+   "skull_base",
+   "skull_top"
+  ],
+  "z_scale": 3.8566587619579464,
+  "z_shift_m": 0.42299052155162775,
+  "max_resid_m": 0.20679809734791732,
+  "rms_resid_m": 0.10656418561813936,
+  "per_landmark_resid_m": {
+   "hip": 0.062356872029945554,
+   "knee": 0.10149391021792215,
+   "ankle": 0.08887767831023508,
+   "shoulder": 0.07275639774742237,
+   "elbow": -0.0493109354758563,
+   "wrist": -0.15967826869913493,
+   "hand_tip": -0.20679809734791732,
+   "skull_base": 0.04016293793874948,
+   "skull_top": 0.05013950527863442
+  }
+ }
+}

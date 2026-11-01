@@ -1,0 +1,18 @@
+ratio,mpfb2_mesh_bodytop,mpfb2_mesh_cubes,mpfb2_default_position,starrai_v8_3,starrai_v10,pose_independent
+thigh/shin,1.1036,1.1036,0.9677,1.1027,0.8545,yes
+upper_arm/forearm,1.0057,1.0057,1.0148,0.8273,1.0,yes
+leg(hip-ankle)/S,0.4808,0.4833,0.4818,0.4421,0.4292,yes
+arm(shoulder-wrist)/leg(hip-ankle),0.5199,0.5199,0.5587,0.6664,0.5961,yes (3D lengths)
+ankle_height_over_sole/S,0.0432,0.0434,0.041,0.1,0.1094,yes
+half_shoulder_width(|x|)/S,0.1007,0.1012,0.1023,0.0659,0.0854,no (arm/clavicle pose-dependent; shoulder joint x depends on A/T pose)
+half_hip_spacing(|x|)/S,0.0662,0.0666,0.061,0.0428,0.0421,yes
+stature_over_head_length,10.925,11.5763,11.2156,7.926,7.0624,yes
+head_length/S,0.0915,0.0864,0.0892,0.1262,0.1416,yes
+stature_S_m,1.6659,1.6572,1.6616,0.95,0.2377,yes
+thigh/leg(hip-ankle),0.5259,0.5259,0.4927,0.525,0.4608,yes
+upper_arm_len/leg,0.2842,0.2842,0.3024,0.3027,0.298,yes
+forearm_len/leg,0.2825,0.2825,0.298,0.3659,0.298,yes
+shoulder_width(2|x|)/leg,0.4188,0.4188,0.4248,0.2981,0.398,yes
+hip_spacing(2|x|)/leg,0.2756,0.2756,0.2533,0.1938,0.1961,yes
+leg_splay_from_vertical_deg,7.8406,7.8406,5.6786,0.232,0.0,pose measure
+arm_angle_from_down_deg(shoulder->wrist),47.8612,47.8612,47.0383,90.5118,11.31,pose measure

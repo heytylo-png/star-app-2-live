@@ -1,0 +1,8 @@
+category,default,game_engine,rigify_human,rigify_human_toes
+face,59,0,107,107
+fingers/hand,40,34,40,40
+toes/foot,30,4,6,34
+arm,12,6,10,10
+leg,10,3,12,12
+spine/neck/head/root,12,6,10,10
+other,0,0,0,0

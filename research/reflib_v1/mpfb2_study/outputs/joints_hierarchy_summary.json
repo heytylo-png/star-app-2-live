@@ -1,0 +1,592 @@
+{
+ "default": {
+  "n_bones": 163,
+  "n_roots": 1,
+  "roots": [
+   "root"
+  ],
+  "missing_parent": [],
+  "max_depth": 16,
+  "cycle": false,
+  "n_leaf": 49,
+  "n_use_connect": 0,
+  "connect_checked": 0,
+  "connect_head_ne_parent_tail": 0,
+  "strategy_counts": {
+   "head:CUBE": 113,
+   "tail:VERTEX": 47,
+   "tail:CUBE": 103,
+   "tail:MEAN": 13,
+   "head:VERTEX": 37,
+   "head:MEAN": 13
+  },
+  "n_with_offset": 0,
+  "frame_offset_applied_m": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "recompute_error_by_strategy": {
+   "head:CUBE": {
+    "n": 113,
+    "max_m": 0.061195752074064046,
+    "median_m": 0.0395866604678297,
+    "p95_m": 0.05920896644623717,
+    "n_within_1mm": 0,
+    "n_within_1cm": 10
+   },
+   "head:MEAN": {
+    "n": 13,
+    "max_m": 0.04288120368102429,
+    "median_m": 0.02113346975722287,
+    "p95_m": 0.04288120368102429,
+    "n_within_1mm": 0,
+    "n_within_1cm": 4
+   },
+   "head:VERTEX": {
+    "n": 37,
+    "max_m": 0.02171724574927003,
+    "median_m": 0.00963043118402831,
+    "p95_m": 0.019528341572521594,
+    "n_within_1mm": 0,
+    "n_within_1cm": 21
+   },
+   "tail:CUBE": {
+    "n": 103,
+    "max_m": 0.06244750008744283,
+    "median_m": 0.03924273833406181,
+    "p95_m": 0.061540247013983675,
+    "n_within_1mm": 0,
+    "n_within_1cm": 11
+   },
+   "tail:MEAN": {
+    "n": 13,
+    "max_m": 0.04288117301993424,
+    "median_m": 0.022497122783754403,
+    "p95_m": 0.04288117301993424,
+    "n_within_1mm": 0,
+    "n_within_1cm": 2
+   },
+   "tail:VERTEX": {
+    "n": 47,
+    "max_m": 0.028361509657109207,
+    "median_m": 0.009536131501364502,
+    "p95_m": 0.021717239147997423,
+    "n_within_1mm": 0,
+    "n_within_1cm": 31
+   }
+  },
+  "recompute_error_by_region": {
+   "other": {
+    "n": 246,
+    "median_m": 0.016754683177856708,
+    "p95_m": 0.04204946172828423,
+    "max_m": 0.05329096948393379
+   },
+   "hand_fingers": {
+    "n": 80,
+    "median_m": 0.05786815469980232,
+    "p95_m": 0.06158934731235986,
+    "max_m": 0.06244750008744283
+   }
+  },
+  "worst_bones": [
+   [
+    "finger3-3.R",
+    0.0624
+   ],
+   [
+    "finger3-3.L",
+    0.0624
+   ],
+   [
+    "finger4-3.R",
+    0.0618
+   ],
+   [
+    "finger4-3.L",
+    0.0618
+   ],
+   [
+    "finger2-3.R",
+    0.0616
+   ],
+   [
+    "finger2-3.L",
+    0.0616
+   ],
+   [
+    "finger3-2.R",
+    0.0612
+   ],
+   [
+    "finger3-2.L",
+    0.0612
+   ],
+   [
+    "finger5-3.R",
+    0.0605
+   ],
+   [
+    "finger5-3.L",
+    0.0605
+   ]
+  ],
+  "recompute_error_all": {
+   "n": 326,
+   "median_m": 0.031163677637980735,
+   "p95_m": 0.05926589413554247,
+   "max_m": 0.06244750008744283
+  },
+  "bones_with_parent_empty": 1
+ },
+ "game_engine": {
+  "n_bones": 53,
+  "n_roots": 1,
+  "roots": [
+   "Root"
+  ],
+  "missing_parent": [],
+  "max_depth": 11,
+  "cycle": false,
+  "n_leaf": 13,
+  "n_use_connect": 0,
+  "connect_checked": 0,
+  "connect_head_ne_parent_tail": 0,
+  "strategy_counts": {
+   "head:CUBE": 53,
+   "tail:MEAN": 1,
+   "tail:CUBE": 52
+  },
+  "n_with_offset": 0,
+  "frame_offset_applied_m": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "recompute_error_by_strategy": {
+   "head:CUBE": {
+    "n": 53,
+    "max_m": 0.8183050000000002,
+    "median_m": 0.05542840480790041,
+    "p95_m": 0.06069399953765438,
+    "n_within_1mm": 0,
+    "n_within_1cm": 1
+   },
+   "tail:CUBE": {
+    "n": 52,
+    "max_m": 0.06244750008744283,
+    "median_m": 0.056209353525012884,
+    "p95_m": 0.061794958690407235,
+    "n_within_1mm": 0,
+    "n_within_1cm": 0
+   },
+   "tail:MEAN": {
+    "n": 1,
+    "max_m": 0.053326699586512934,
+    "median_m": 0.053326699586512934,
+    "p95_m": 0.053326699586512934,
+    "n_within_1mm": 0,
+    "n_within_1cm": 0
+   }
+  },
+  "recompute_error_by_region": {
+   "other": {
+    "n": 42,
+    "median_m": 0.034040142243537914,
+    "p95_m": 0.0532909447306762,
+    "max_m": 0.8183050000000002
+   },
+   "hand_fingers": {
+    "n": 64,
+    "median_m": 0.058812021866948734,
+    "p95_m": 0.0617624937359787,
+    "max_m": 0.06244750008744283
+   }
+  },
+  "worst_bones": [
+   [
+    "Root",
+    0.8183
+   ],
+   [
+    "middle_03_r",
+    0.0624
+   ],
+   [
+    "middle_03_l",
+    0.0624
+   ],
+   [
+    "ring_03_r",
+    0.0618
+   ],
+   [
+    "ring_03_l",
+    0.0618
+   ],
+   [
+    "index_03_r",
+    0.0616
+   ],
+   [
+    "index_03_l",
+    0.0616
+   ],
+   [
+    "middle_02_r",
+    0.0612
+   ],
+   [
+    "middle_02_l",
+    0.0612
+   ],
+   [
+    "pinky_03_r",
+    0.0605
+   ]
+  ],
+  "recompute_error_all": {
+   "n": 106,
+   "median_m": 0.05535110340662179,
+   "p95_m": 0.06157852566088368,
+   "max_m": 0.8183050000000002
+  },
+  "bones_with_parent_empty": 1
+ },
+ "rigify_human": {
+  "n_bones": 185,
+  "n_roots": 6,
+  "roots": [
+   "DEF-elbow-helper.L",
+   "DEF-elbow-helper.R",
+   "DEF-knee-helper.L",
+   "DEF-knee-helper.R",
+   "MCH-breast-parent",
+   "spine"
+  ],
+  "missing_parent": [],
+  "max_depth": 12,
+  "cycle": false,
+  "n_leaf": 85,
+  "n_use_connect": 76,
+  "connect_checked": 76,
+  "connect_head_ne_parent_tail": 0,
+  "strategy_counts": {
+   "head:CUBE": 74,
+   "tail:VERTEX": 84,
+   "tail:MEAN": 32,
+   "head:VERTEX": 85,
+   "head:MEAN": 24,
+   "tail:CUBE": 67,
+   "head:XYZ": 2,
+   "tail:XYZ": 2
+  },
+  "n_with_offset": 3,
+  "frame_offset_applied_m": [
+   0.0,
+   0.0,
+   0.8183050000000002
+  ],
+  "recompute_error_by_strategy": {
+   "head:CUBE": {
+    "n": 74,
+    "max_m": 0.061043580103684984,
+    "median_m": 0.04774394568947982,
+    "p95_m": 0.05951575337763793,
+    "n_within_1mm": 0,
+    "n_within_1cm": 5
+   },
+   "head:MEAN": {
+    "n": 24,
+    "max_m": 0.05538317682293074,
+    "median_m": 0.009560086296681576,
+    "p95_m": 0.05537836266240222,
+    "n_within_1mm": 0,
+    "n_within_1cm": 15
+   },
+   "head:VERTEX": {
+    "n": 85,
+    "max_m": 0.02544469345462818,
+    "median_m": 0.008504535554631897,
+    "p95_m": 0.015349639522088246,
+    "n_within_1mm": 0,
+    "n_within_1cm": 62
+   },
+   "head:XYZ": {
+    "n": 2,
+    "max_m": 0.043268263484914686,
+    "median_m": 0.043268263484914686,
+    "p95_m": 0.043268263484914686,
+    "n_within_1mm": 0,
+    "n_within_1cm": 0
+   },
+   "tail:CUBE": {
+    "n": 67,
+    "max_m": 0.062313231715864455,
+    "median_m": 0.05735573254915351,
+    "p95_m": 0.061603230926977476,
+    "n_within_1mm": 0,
+    "n_within_1cm": 2
+   },
+   "tail:MEAN": {
+    "n": 32,
+    "max_m": 0.02631070248544838,
+    "median_m": 0.00906171605393622,
+    "p95_m": 0.019441307268767756,
+    "n_within_1mm": 0,
+    "n_within_1cm": 23
+   },
+   "tail:VERTEX": {
+    "n": 84,
+    "max_m": 0.036002951615110745,
+    "median_m": 0.008442584023863475,
+    "p95_m": 0.025427294973305113,
+    "n_within_1mm": 0,
+    "n_within_1cm": 63
+   },
+   "tail:XYZ": {
+    "n": 2,
+    "max_m": 0.041731272745987535,
+    "median_m": 0.041731272745987535,
+    "p95_m": 0.041731272745987535,
+    "n_within_1mm": 0,
+    "n_within_1cm": 0
+   }
+  },
+  "recompute_error_by_region": {
+   "other": {
+    "n": 290,
+    "median_m": 0.009594002667281495,
+    "p95_m": 0.03822401274068438,
+    "max_m": 0.0532677178416958
+   },
+   "hand_fingers": {
+    "n": 80,
+    "median_m": 0.057737300068363695,
+    "p95_m": 0.06146548095074656,
+    "max_m": 0.062313231715864455
+   }
+  },
+  "worst_bones": [
+   [
+    "f_middle.03.R",
+    0.0623
+   ],
+   [
+    "f_middle.03.L",
+    0.0623
+   ],
+   [
+    "f_ring.03.R",
+    0.0617
+   ],
+   [
+    "f_ring.03.L",
+    0.0617
+   ],
+   [
+    "f_index.03.R",
+    0.0615
+   ],
+   [
+    "f_index.03.L",
+    0.0615
+   ],
+   [
+    "f_middle.02.R",
+    0.061
+   ],
+   [
+    "f_middle.02.L",
+    0.061
+   ],
+   [
+    "f_pinky.03.R",
+    0.0604
+   ],
+   [
+    "f_pinky.03.L",
+    0.0604
+   ]
+  ],
+  "recompute_error_all": {
+   "n": 370,
+   "median_m": 0.010779421366659532,
+   "p95_m": 0.059134349630734995,
+   "max_m": 0.062313231715864455
+  },
+  "bones_with_parent_empty": 6
+ },
+ "rigify_human_toes": {
+  "n_bones": 213,
+  "n_roots": 6,
+  "roots": [
+   "DEF-elbow-helper.L",
+   "DEF-elbow-helper.R",
+   "DEF-knee-helper.L",
+   "DEF-knee-helper.R",
+   "MCH-breast-parent",
+   "spine"
+  ],
+  "missing_parent": [],
+  "max_depth": 12,
+  "cycle": false,
+  "n_leaf": 93,
+  "n_use_connect": 94,
+  "connect_checked": 94,
+  "connect_head_ne_parent_tail": 0,
+  "strategy_counts": {
+   "head:CUBE": 102,
+   "tail:VERTEX": 84,
+   "tail:MEAN": 32,
+   "head:VERTEX": 85,
+   "head:MEAN": 24,
+   "tail:CUBE": 95,
+   "head:XYZ": 2,
+   "tail:XYZ": 2
+  },
+  "n_with_offset": 3,
+  "frame_offset_applied_m": [
+   0.0,
+   0.0,
+   0.8183050000000002
+  ],
+  "recompute_error_by_strategy": {
+   "head:CUBE": {
+    "n": 102,
+    "max_m": 0.061043580103684984,
+    "median_m": 0.03921553176038791,
+    "p95_m": 0.05913030501471879,
+    "n_within_1mm": 0,
+    "n_within_1cm": 5
+   },
+   "head:MEAN": {
+    "n": 24,
+    "max_m": 0.05538317682293074,
+    "median_m": 0.009560086296681576,
+    "p95_m": 0.05537836266240222,
+    "n_within_1mm": 0,
+    "n_within_1cm": 15
+   },
+   "head:VERTEX": {
+    "n": 85,
+    "max_m": 0.02544469345462818,
+    "median_m": 0.008504535554631897,
+    "p95_m": 0.015349639522088246,
+    "n_within_1mm": 0,
+    "n_within_1cm": 62
+   },
+   "head:XYZ": {
+    "n": 2,
+    "max_m": 0.043268263484914686,
+    "median_m": 0.043268263484914686,
+    "p95_m": 0.043268263484914686,
+    "n_within_1mm": 0,
+    "n_within_1cm": 0
+   },
+   "tail:CUBE": {
+    "n": 95,
+    "max_m": 0.062313231715864455,
+    "median_m": 0.039672497794441895,
+    "p95_m": 0.0614548847987288,
+    "n_within_1mm": 0,
+    "n_within_1cm": 2
+   },
+   "tail:MEAN": {
+    "n": 32,
+    "max_m": 0.02631070248544838,
+    "median_m": 0.00906171605393622,
+    "p95_m": 0.019441307268767756,
+    "n_within_1mm": 0,
+    "n_within_1cm": 23
+   },
+   "tail:VERTEX": {
+    "n": 84,
+    "max_m": 0.036002951615110745,
+    "median_m": 0.008442584023863475,
+    "p95_m": 0.025427294973305113,
+    "n_within_1mm": 0,
+    "n_within_1cm": 63
+   },
+   "tail:XYZ": {
+    "n": 2,
+    "max_m": 0.041731272745987535,
+    "median_m": 0.041731272745987535,
+    "p95_m": 0.041731272745987535,
+    "n_within_1mm": 0,
+    "n_within_1cm": 0
+   }
+  },
+  "recompute_error_by_region": {
+   "other": {
+    "n": 346,
+    "median_m": 0.010422221260358244,
+    "p95_m": 0.04047632441128522,
+    "max_m": 0.0532677178416958
+   },
+   "hand_fingers": {
+    "n": 80,
+    "median_m": 0.057737300068363695,
+    "p95_m": 0.06146548095074656,
+    "max_m": 0.062313231715864455
+   }
+  },
+  "worst_bones": [
+   [
+    "f_middle.03.R",
+    0.0623
+   ],
+   [
+    "f_middle.03.L",
+    0.0623
+   ],
+   [
+    "f_ring.03.R",
+    0.0617
+   ],
+   [
+    "f_ring.03.L",
+    0.0617
+   ],
+   [
+    "f_index.03.R",
+    0.0615
+   ],
+   [
+    "f_index.03.L",
+    0.0615
+   ],
+   [
+    "f_middle.02.R",
+    0.061
+   ],
+   [
+    "f_middle.02.L",
+    0.061
+   ],
+   [
+    "f_pinky.03.R",
+    0.0604
+   ],
+   [
+    "f_pinky.03.L",
+    0.0604
+   ]
+  ],
+  "recompute_error_all": {
+   "n": 426,
+   "median_m": 0.012754658736237667,
+   "p95_m": 0.05905345731041086,
+   "max_m": 0.062313231715864455
+  },
+  "bones_with_parent_empty": 6
+ },
+ "_cube_groups": {
+  "n_groups": 125,
+  "verts_per_group_set": [
+   8
+  ],
+  "mean_vs_bbox_centre_max_dist_m": 0.00010789896894781021
+ }
+}

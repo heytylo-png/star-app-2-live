@@ -1,0 +1,543 @@
+{
+ "mode": "after",
+ "time_local": "2026-10-31T21:43:34-05:00",
+ "inputs": [
+  {
+   "path": "LICENSE.ASSETS.md",
+   "size": 6962,
+   "size_ok": true,
+   "sha256": "f6089cba01cb570a24712b41ab8a586ccd3cc5ef53dc266ca50b95c288956d2c",
+   "sha256_ok": true,
+   "blob_sha1": "f3ede1fc3318f8d794e2cb51924186c62f02f71a",
+   "blob_sha1_ok": true,
+   "mode": "0o444",
+   "read_only": true,
+   "mtime_ns": 1793497829926193412
+  },
+  {
+   "path": "LICENSE.md",
+   "size": 3188,
+   "size_ok": true,
+   "sha256": "5cefb60680cb9efd4550a2e65d719021cfbec9dad3658481d11d48ae863ce04d",
+   "sha256_ok": true,
+   "blob_sha1": "88cf832acc18dd64fd27ff2efb84625718bf2201",
+   "blob_sha1_ok": true,
+   "mode": "0o444",
+   "read_only": true,
+   "mtime_ns": 1793497830006190469
+  },
+  {
+   "path": "src/mpfb/data/3dobjs/base.obj",
+   "size": 1749303,
+   "size_ok": true,
+   "sha256": "8e761e6624b8f54536409135d1636da63b32486a90d4897f84e121d144f6fb4c",
+   "sha256_ok": true,
+   "blob_sha1": "d26635e9326e3cca30778fd7b9c00062b03cce09",
+   "blob_sha1_ok": true,
+   "mode": "0o444",
+   "read_only": true,
+   "mtime_ns": 1793497828702238385
+  },
+  {
+   "path": "src/mpfb/data/rigs/rigify/rig.human.json",
+   "size": 257096,
+   "size_ok": true,
+   "sha256": "6c3e61576d299d4acfbe45789d69738608ae0559d382f4a0e9e598a82379be7f",
+   "sha256_ok": true,
+   "blob_sha1": "90911ccdc5dcb4fc227e2b7a972bf4fd00b540fd",
+   "blob_sha1_ok": true,
+   "mode": "0o444",
+   "read_only": true,
+   "mtime_ns": 1793497829402212691
+  },
+  {
+   "path": "src/mpfb/data/rigs/rigify/rig.human_toes.json",
+   "size": 287189,
+   "size_ok": true,
+   "sha256": "970f19f9e426528052a0f8bfc2cd6f1eea627aa607517ff4e43ae88d96488846",
+   "sha256_ok": true,
+   "blob_sha1": "150a96b450f35d6283044041fde9fee8b072f4b0",
+   "blob_sha1_ok": true,
+   "mode": "0o444",
+   "read_only": true,
+   "mtime_ns": 1793497829558206951
+  },
+  {
+   "path": "src/mpfb/data/rigs/rigify/weights.human_toes.json",
+   "size": 5965933,
+   "size_ok": true,
+   "sha256": "edcbca3323b03080fe750caa292c673ecbacdd200ebf0062d00d3b425e13a999",
+   "sha256_ok": true,
+   "blob_sha1": "1931ed762e4e44258fe6dcc3202e73bdeb22169c",
+   "blob_sha1_ok": true,
+   "mode": "0o444",
+   "read_only": true,
+   "mtime_ns": 1793497829810197680
+  },
+  {
+   "path": "src/mpfb/data/rigs/standard/rig.default.json",
+   "size": 126355,
+   "size_ok": true,
+   "sha256": "8b949de35c2dd70dbb5094e57a8586c3b9a9f650775a293212581a8f67be6797",
+   "sha256_ok": true,
+   "blob_sha1": "85900f3ac30228f403eadb10cb370f2f99f41263",
+   "blob_sha1_ok": true,
+   "mode": "0o444",
+   "read_only": true,
+   "mtime_ns": 1793497828826233847
+  },
+  {
+   "path": "src/mpfb/data/rigs/standard/rig.game_engine.json",
+   "size": 40936,
+   "size_ok": true,
+   "sha256": "b324ddb4b707721c19630bfadb87c3e3b38eed3b6e4590bb3cead43ea918f799",
+   "sha256_ok": true,
+   "blob_sha1": "e0903a1bc1ed7aae1516b1a8d0fe3085bbc6e5f0",
+   "blob_sha1_ok": true,
+   "mode": "0o444",
+   "read_only": true,
+   "mtime_ns": 1793497829110223433
+  },
+  {
+   "path": "src/mpfb/data/rigs/standard/weights.default.json",
+   "size": 5034981,
+   "size_ok": true,
+   "sha256": "154b866774a8c2b055a8e86419f22a87b76c60440fdcb70bcb78345f00924e89",
+   "sha256_ok": true,
+   "blob_sha1": "1328020289b65b019f0881841bf40418c315fef7",
+   "blob_sha1_ok": true,
+   "mode": "0o444",
+   "read_only": true,
+   "mtime_ns": 1793497829026226523
+  },
+  {
+   "path": "src/mpfb/data/rigs/standard/weights.game_engine.json",
+   "size": 3026778,
+   "size_ok": true,
+   "sha256": "9f4a773e74ce5ba08415b4f30070338e9f75bae5971b5075b10cd6b9caa58473",
+   "sha256_ok": true,
+   "blob_sha1": "c9366e4bfe5d1af69c66ebdf4065874b996af6b1",
+   "blob_sha1_ok": true,
+   "mode": "0o444",
+   "read_only": true,
+   "mtime_ns": 1793497829258217988
+  }
+ ],
+ "protected": [
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_locked_final_blender_bones.json",
+   "size": 7321,
+   "sha256": "eab1839c7eb4d05b6e7c8a98527d40a6a88e5679c12b249e87aff65bdb686c05",
+   "mtime_ns": 1793493149552038148
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_locked_final_v10_blender_bones.json",
+   "size": 7321,
+   "sha256": "eab1839c7eb4d05b6e7c8a98527d40a6a88e5679c12b249e87aff65bdb686c05",
+   "mtime_ns": 1793493149580037976
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_blender_bones.json",
+   "size": 26605,
+   "sha256": "5d373125cc4fe19d97c0df0d986e362c0030228734fddac580b4c0b97c80849f",
+   "mtime_ns": 1793493260787427966
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_blender_bones_mm.json",
+   "size": 26079,
+   "sha256": "235767bfa9a932a6f8d4bb5892ea4a8568afb53d614d26dc83676c6ba31fc1de",
+   "mtime_ns": 1793493260787427966
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_blender_bones.json",
+   "size": 237272,
+   "sha256": "9b18498bf5486da8afd73fdcadfacaa3fefa219b7ec278d1dbe06860af5e2e20",
+   "mtime_ns": 1793493265275405508
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_blender_bones_mm.json",
+   "size": 236352,
+   "sha256": "d151d5b52051670777b54df8f70b624e43144e2ad61d2a345de49b4758144eb0",
+   "mtime_ns": 1793493264639408684
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_build_report.json",
+   "size": 191025,
+   "sha256": "26b8079859587acba498c513a9737a85c1851af0f877c7d8580948a2c17489f3",
+   "mtime_ns": 1793493265275405508
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_neck_check.json",
+   "size": 7935,
+   "sha256": "9c8bf4a7ac6c79df3f527e8b771802af9d8e3d8cfd9322137a4157957a4493bf",
+   "mtime_ns": 1793493265167406047
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v1_blender_bones.json",
+   "size": 99768,
+   "sha256": "5098fe38eec4d9d6c17a5e6cc1050fbb2e4d8682d7127fecef7abad9a4f4e9a4",
+   "mtime_ns": 1793493265283405469
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v1_blender_bones_mm.json",
+   "size": 98997,
+   "sha256": "b9589c0326bc76ea0590b36a17c490226998198e2fd1e3c935c9a6e757e32762",
+   "mtime_ns": 1793493265359405089
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v1_build_report.json",
+   "size": 36264,
+   "sha256": "4894e29980f8787f7f12f4e7f2ae435d060a76554debdd7b3d93cc636d43a73a",
+   "mtime_ns": 1793493265279405488
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v2_blender_bones.json",
+   "size": 114242,
+   "sha256": "3a4c9c4a085a960751f23203d9217d0c7ac704635f2a5150d12cc6a388497443",
+   "mtime_ns": 1793493265283405469
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v2_blender_bones_mm.json",
+   "size": 113411,
+   "sha256": "0628c9699d753cc8ff14785578bd646674aef8ce57b857feaf56d7510046096e",
+   "mtime_ns": 1793493265279405488
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v2_build_report.json",
+   "size": 45525,
+   "sha256": "41589f2c4b413b5fb9da5896f9d294be0b1e3b1bb0d5764e976b156c9f7dfb15",
+   "mtime_ns": 1793493265279405488
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v2_neck_check.json",
+   "size": 7920,
+   "sha256": "4c517dd8ed86d1a5f759706ee094bd74f234c63c543e4fffb6fb0b42ff2aaea7",
+   "mtime_ns": 1793493265279405488
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_1_blender_bones.json",
+   "size": 217530,
+   "sha256": "87f823037d6b1b1014abe4c1bdcd4ffeecf79dda6ac7b30c27fc31387bad5f8e",
+   "mtime_ns": 1793493280847328487
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_1_blender_bones_mm.json",
+   "size": 216647,
+   "sha256": "c4765db3843c0a26feb4e49108901e44bf0ec9938e016a975d785743d52a2d2d",
+   "mtime_ns": 1793493280843328507
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_1_build_report.json",
+   "size": 118483,
+   "sha256": "b28c956f12d83e979721eca125d43bb54fb836b45d595c9a85d8319df9343b10",
+   "mtime_ns": 1793493280847328487
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_2_blender_bones.json",
+   "size": 220642,
+   "sha256": "466ad026e2530fb7f478f917ef752cbf314c64dbe0e4f749289221cea39ce63c",
+   "mtime_ns": 1793493280823328605
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_2_blender_bones_mm.json",
+   "size": 219747,
+   "sha256": "923c578bb5267aa487cd7a3341fb4889ee94cbb6f03e42b22a1186136a582775",
+   "mtime_ns": 1793493280827328586
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_2_build_report.json",
+   "size": 125212,
+   "sha256": "2580a7204465bca901e430e8e4e27a31052c5b6e87b9d86e388a66834dbc2173",
+   "mtime_ns": 1793493280823328605
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_3_blender_bones.json",
+   "size": 226418,
+   "sha256": "73053c4d04dd90972e5b198a63effcf6bb556bac64ecf4b7e6fbc643d3ebbdb9",
+   "mtime_ns": 1793493280827328586
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_3_blender_bones_mm.json",
+   "size": 225507,
+   "sha256": "ce272c5ed37275efc3679634b085a825d02b4d1f0151856d6f54ff97169d3fa9",
+   "mtime_ns": 1793493280827328586
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_3_build_report.json",
+   "size": 156547,
+   "sha256": "e9fadcb4e0601c43d8dd092f1a34b2fa640cdfe94080da438badb13bc8f7b89a",
+   "mtime_ns": 1793493280823328605
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_3_neckshoulder_fit.json",
+   "size": 1477399,
+   "sha256": "3faba86641f269f5685ca3694f509457607a4193b51ead080b742b613e3cc33f",
+   "mtime_ns": 1793493280859328429
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_3_trapfit_A_innerz775.json",
+   "size": 12025931,
+   "sha256": "f73bf467a291dafdc0f2e587ecec0da5be168445ed928204a705b03f5950ff50",
+   "mtime_ns": 1793493280915328154
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_3_trapfit_B_innerx30.json",
+   "size": 6518045,
+   "sha256": "fc6d9044f4093e0b028e894a71f17b30f3ebbe2184c7f4e678ea356900cdad6b",
+   "mtime_ns": 1793493280883328311
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_4_back_a_04_left_m32_v3_3_vs_v3_4.json",
+   "size": 938,
+   "sha256": "c91532078321f928a39eed5fa308ca323bbb28c3cb2070bde131d32b536ed283",
+   "mtime_ns": 1793493287083298009
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_4_blender_bones.json",
+   "size": 232131,
+   "sha256": "5c358d077b9adedd23e0075204cfc9af5a42dfb7723e5bc5e08a829d4e8e3d3d",
+   "mtime_ns": 1793493287547295749
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_4_blender_bones_mm.json",
+   "size": 231208,
+   "sha256": "bec1b0d6e1cc038de5ff133944b949d1a453686934cd7fc15402b5e50650aee8",
+   "mtime_ns": 1793493287547295749
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_4_build_report.json",
+   "size": 191025,
+   "sha256": "26b8079859587acba498c513a9737a85c1851af0f877c7d8580948a2c17489f3",
+   "mtime_ns": 1793493265287405449
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_4_innertrap_fit.json",
+   "size": 147312,
+   "sha256": "4efd92e9beead1942d0d4dbc419aa2ba7a14d093a4b5ffffd0a74af13a0efec7",
+   "mtime_ns": 1793493287579295593
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_4_scope_check.json",
+   "size": 14825,
+   "sha256": "9d27823615d835415a504a1fd21757dc6a2a7faf06c21d60bbccff774034a7ac",
+   "mtime_ns": 1793493287083298009
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_5_1_blender_bones.json",
+   "size": 237272,
+   "sha256": "9b18498bf5486da8afd73fdcadfacaa3fefa219b7ec278d1dbe06860af5e2e20",
+   "mtime_ns": 1793493265287405449
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_5_1_blender_bones_mm.json",
+   "size": 236352,
+   "sha256": "d151d5b52051670777b54df8f70b624e43144e2ad61d2a345de49b4758144eb0",
+   "mtime_ns": 1793493264643408664
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_5_1_build_report.json",
+   "size": 25480,
+   "sha256": "a67e1d2a56fcc94623a9d7feda9db71088f390d01d9d528d457d1761c8efe510",
+   "mtime_ns": 1793493290831279785
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_5_1_runtime_variant_A.json",
+   "size": 106693,
+   "sha256": "f668bd6c35f81e8c41e8b6e629cca1d92007d3cf50d4e1c7d9e99eea46d2d0f6",
+   "mtime_ns": 1793493292039273925
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_5_blender_bones.json",
+   "size": 233644,
+   "sha256": "966173dea240bbd8e9a8925bbfa08656ba2b18d8579eaba0dfd4202cbf006853",
+   "mtime_ns": 1793493292943269545
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_5_blender_bones_mm.json",
+   "size": 232724,
+   "sha256": "26f69384e045973fd2b938812af2a1236125f28f071d73101f63eac7e2ebd751",
+   "mtime_ns": 1793493292399272180
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_5_build_report.json",
+   "size": 79110,
+   "sha256": "269aaa312c76c921c95d6b00ca1dbb51df003c71e33524fed5737322395bbcd4",
+   "mtime_ns": 1793493290831279785
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_5_runtime_variant_A.json",
+   "size": 106430,
+   "sha256": "83380e2928f777568a5a25b2caf420f20cd2056e06ad928e8f4fea6304b6fb6d",
+   "mtime_ns": 1793493290831279785
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_blender_bones.json",
+   "size": 118457,
+   "sha256": "71480cef327df95578992768a525bdd14a35cbc145cc9b5fb714215a20893787",
+   "mtime_ns": 1793493265291405429
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_blender_bones_mm.json",
+   "size": 117573,
+   "sha256": "76d9af0d78695bdb3653f5bfb99e1421e975fe02060c16b58fc985d631c48cb9",
+   "mtime_ns": 1793493265295405409
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_build_report.json",
+   "size": 70678,
+   "sha256": "ced25a9a94516a3e3ecadf9c11cb8325492c269ba5177a28657d2d9733341f8e",
+   "mtime_ns": 1793493265287405449
+  },
+  {
+   "path": "/workspace/artifacts/spine_requests/star_rai_tripo_hairalt_v3_neck_check.json",
+   "size": 7935,
+   "sha256": "9c8bf4a7ac6c79df3f527e8b771802af9d8e3d8cfd9322137a4157957a4493bf",
+   "mtime_ns": 1793493265295405409
+  },
+  {
+   "path": "/workspace/blender/star_rai/export/base_body_v8s_export/star_rai_base_body_v8s.blend",
+   "size": 15663352,
+   "sha256": "1c5ce67fd68256fbcf19970385deaa71088f64c4c1d2469c5205f487f92527e9",
+   "mtime_ns": 1793493210539688993
+  },
+  {
+   "path": "/workspace/blender/star_rai/star_rai_armature_final_v10.blend",
+   "size": 188616,
+   "sha256": "f459ea1f14ca09d59b2cf7e227182b74d65ecfbb0271d1189045d1b5a8f0514f",
+   "mtime_ns": 1793493207007708111
+  },
+  {
+   "path": "/workspace/blender/star_rai/star_rai_base_body_v8i.blend",
+   "size": 3663573,
+   "sha256": "57d998ccadeccbb2e3c6a2f7245c19d693f5f5eabc27c90af1eb1047b92292ba",
+   "mtime_ns": 1793493290631280755
+  },
+  {
+   "path": "/workspace/blender/star_rai/star_rai_base_body_v8s.blend",
+   "size": 15663352,
+   "sha256": "1c5ce67fd68256fbcf19970385deaa71088f64c4c1d2469c5205f487f92527e9",
+   "mtime_ns": 1793493210127691216
+  },
+  {
+   "path": "/workspace/hairalt_v3_5_1_optA_drive_trial.zip",
+   "size": 28236391,
+   "sha256": "5b890ae1da69dbc3a538068c68094fa90b5d3096f9cc96108683128643a2634d",
+   "mtime_ns": 1793493292003274100
+  },
+  {
+   "path": "/workspace/hairalt_v3_5_1_optA_drive_trial_part1of2.zip",
+   "size": 13215079,
+   "sha256": "aa6434ad5c42a7462f73c26c8f2e40ace6bea911efbf6f198c3b5f40c0df60b1",
+   "mtime_ns": 1793493293203268287
+  },
+  {
+   "path": "/workspace/hairalt_v3_5_1_optA_drive_trial_part2of2.zip",
+   "size": 14871140,
+   "sha256": "501251099befdf05ad03a8c5c827eae188a893b7e1312dc422f524e099381552",
+   "mtime_ns": 1793493293207268267
+  },
+  {
+   "path": "/workspace/optA_trial.zip",
+   "size": 16860431,
+   "sha256": "808ecc2438086611d9a584c552084836cbaa6d73c732cc009df6434a0d627935",
+   "mtime_ns": 1793493293211268248
+  },
+  {
+   "path": "/workspace/recovery_inv_20261023/extract/hairalt_rig_v3_5_on_v3_4_harness_r_20261022T173633Z.tar.gz/hairalt_rig_v3_5_on_v3_4/head_hair_alt_v3_4_rigged_hairalt_v3_5.blend",
+   "size": 1647899,
+   "sha256": "40b6ae027200cb3a3026cdf069c6e5a56af1046c15fdf1b4528aa803954b0a7b",
+   "mtime_ns": 1793493293783265479
+  },
+  {
+   "path": "/workspace/recovery_inv_20261023/scratch/rig_copy.blend",
+   "size": 1647899,
+   "sha256": "40b6ae027200cb3a3026cdf069c6e5a56af1046c15fdf1b4528aa803954b0a7b",
+   "mtime_ns": 1793493293847265170
+  },
+  {
+   "path": "/workspace/recovery_v3_5_1_exact_20261023.zip",
+   "size": 89000210,
+   "sha256": "6a6ac337989bb7679476a67915b26762f8aaa2351a621785b09932b723b35ca6",
+   "mtime_ns": 1793492504827523910
+  },
+  {
+   "path": "/workspace/share/star_rai_rig_compat_review_bundle_v1.zip",
+   "size": 1430688,
+   "sha256": "d0cce8e3d59f9e0ecc7c4a94938e524b634322c15b7545b70c94a9cde86fb8a1",
+   "mtime_ns": 1793493343763028851
+  },
+  {
+   "path": "/workspace/share/star_rai_rig_compat_review_bundle_v1/02_rig_exports/hairalt/star_rai_tripo_hairalt_v3_4_blender_bones.json",
+   "size": 232131,
+   "sha256": "5c358d077b9adedd23e0075204cfc9af5a42dfb7723e5bc5e08a829d4e8e3d3d",
+   "mtime_ns": 1793493287599295496
+  },
+  {
+   "path": "/workspace/share/star_rai_rig_compat_review_bundle_v1/02_rig_exports/hairalt/star_rai_tripo_hairalt_v3_5_1_blender_bones.json",
+   "size": 237272,
+   "sha256": "9b18498bf5486da8afd73fdcadfacaa3fefa219b7ec278d1dbe06860af5e2e20",
+   "mtime_ns": 1793493265311405329
+  },
+  {
+   "path": "/workspace/share/star_rai_rig_compat_review_bundle_v1/02_rig_exports/hairalt/star_rai_tripo_hairalt_v3_5_blender_bones.json",
+   "size": 233644,
+   "sha256": "966173dea240bbd8e9a8925bbfa08656ba2b18d8579eaba0dfd4202cbf006853",
+   "mtime_ns": 1793493293195268325
+  },
+  {
+   "path": "/workspace/share/star_rai_rig_compat_review_bundle_v1/02_rig_exports/r3/r3_bones.json",
+   "size": 40730,
+   "sha256": "e0281cb93af94790bcffd4a1e0fee89a56538118015c0cdda8ab945bc5e34ea1",
+   "mtime_ns": 1793493343779028777
+  },
+  {
+   "path": "/workspace/share/star_rai_rig_compat_review_bundle_v1/02_rig_exports/r3/r3_rig_bone_names.txt",
+   "size": 5498,
+   "sha256": "45daead7eb45c6441451dad602b553148d5b8fb90326805fd4fe84b45f09f750",
+   "mtime_ns": 1793493343087031990
+  },
+  {
+   "path": "/workspace/share/star_rai_rig_compat_review_bundle_v1/02_rig_exports/r3_source_glb/head_hair_alt_v3_4_rigged_hairalt_v3_4.glb",
+   "size": 1907580,
+   "sha256": "bf4e5b5d8e2be9924a5adf861a2b952843da855142282b4c57e4448122153c5a",
+   "mtime_ns": 1793493287587295554
+  },
+  {
+   "path": "/workspace/share/star_rai_rig_compat_review_bundle_v1/02_rig_exports/v10/star_rai_locked_final_v10_blender_bones.json",
+   "size": 7321,
+   "sha256": "eab1839c7eb4d05b6e7c8a98527d40a6a88e5679c12b249e87aff65bdb686c05",
+   "mtime_ns": 1793493150104034776
+  },
+  {
+   "path": "/workspace/share/star_rai_rig_compat_review_bundle_v1/02_rig_exports/v10/star_rai_locked_final_v9_blender_bones.json",
+   "size": 7220,
+   "sha256": "5d6d09f9841806564dee06bf3274bb1fc76e4bc8c3935b1432b2c7b00299ee05",
+   "mtime_ns": 1793493204607721169
+  },
+  {
+   "path": "/workspace/share/star_rai_rig_compat_review_bundle_v1/02_rig_exports/v2_2_blend_dump/v22_bones.json",
+   "size": 15928,
+   "sha256": "a09fce60291931001e974409edd0591812daa6e1919a78e7238cbd4e62403c83",
+   "mtime_ns": 1793493343079032027
+  },
+  {
+   "path": "/workspace/share/star_rai_rig_compat_review_bundle_v1/02_rig_exports/v8_3/star_rai_tripo_blender_bones.json",
+   "size": 26605,
+   "sha256": "5d373125cc4fe19d97c0df0d986e362c0030228734fddac580b4c0b97c80849f",
+   "mtime_ns": 1793493261835422711
+  },
+  {
+   "path": "/workspace/share/star_rai_rig_compat_review_bundle_v1/02_rig_exports/v8_3/star_rai_tripo_blender_bones_mm.json",
+   "size": 26079,
+   "sha256": "235767bfa9a932a6f8d4bb5892ea4a8568afb53d614d26dc83676c6ba31fc1de",
+   "mtime_ns": 1793493261839422691
+  }
+ ],
+ "manifest_file": {
+  "sha256": "93d2801e1191a3f8328c3ae5520acb1db35bbc315888825b7c4ba3973a6ac9c3",
+  "expected": "93d2801e1191a3f8328c3ae5520acb1db35bbc315888825b7c4ba3973a6ac9c3",
+  "ok": true
+ },
+ "inputs_all_ok": true,
+ "total_bytes": 16498721
+}
