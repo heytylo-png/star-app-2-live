@@ -1,0 +1,12 @@
+# MANIFEST.sha256 — Claude independent review of MPFB2 study (Issue #179). Paths relative to this folder. Format: sha256  bytes  path
+# Reviewed study: research/reflib-v1-mpfb2-study @ 8513fffa818c17e98bb47edee76c11a4d678ff3b (study MANIFEST.sha256 sha256 1c97bd95a2ceaa08d676eec3df20b4a40b9f0a7d0d7831fb67810ff3b34bd910)
+## INCLUDED
+76c8df7434faa9e1d111c8f46037ec296a2b456e07199750c7441eab3e46a19f  19737  REVIEW.md
+b1fcc2a8c339ba18ed578e96cc73520d228510d99d5ad906c97f378e50116537  12582  scripts/reproduce_mpfb2_review.py
+dab02586f34a20d3eb0aa2d4bad332d18753462abec9d6c75b2746e49bfbb511  13269  outputs/repro_output.json
+## INPUTS read (NOT committed here)
+# study outputs at 8513fff (hashes in the study's MANIFEST.sha256)
+5d373125cc4fe19d97c0df0d986e362c0030228734fddac580b4c0b97c80849f  public/rig/star_rai_tripo/star_rai_tripo_v8_3_blender_bones.json @ 3ac5602ca232abee0a3e78b1ad450f73e6c4f512 (read-only)
+235767bfa9a932a6f8d4bb5892ea4a8568afb53d614d26dc83676c6ba31fc1de  public/rig/star_rai_tripo/star_rai_tripo_v8_3_blender_bones_mm.json @ 3ac5602ca232abee0a3e78b1ad450f73e6c4f512 (read-only)
+## UNAVAILABLE
+# 10 MPFB2 raw inputs (not committed by design; not re-acquired); Star Rai v10 bone JSON eab1839c... (not in repository)

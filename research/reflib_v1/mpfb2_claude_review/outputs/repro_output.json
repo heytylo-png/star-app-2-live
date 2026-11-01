@@ -1,0 +1,626 @@
+{
+ "input_sha256": {
+  "v83": "5d373125cc4fe19d97c0df0d986e362c0030228734fddac580b4c0b97c80849f",
+  "v83_mm": "235767bfa9a932a6f8d4bb5892ea4a8568afb53d614d26dc83676c6ba31fc1de"
+ },
+ "C1_conversion": {
+  "det": 1.0,
+  "orthonormal": true,
+  "rig_min_from_raw": [
+   -0.49627,
+   -0.32147,
+   -0.81676
+  ],
+  "rig_max_from_raw": [
+   0.49627,
+   0.10154,
+   0.84913
+  ],
+  "reported_min": [
+   -0.49627,
+   -0.32147000000000003,
+   -0.81676
+  ],
+  "reported_max": [
+   0.49627,
+   0.10154,
+   0.84913
+  ],
+  "height_from_raw": 1.66589,
+  "reported_height": 1.66589
+ },
+ "C1b_v83": {
+  "header": {
+   "units": "metres",
+   "up_axis": "Z",
+   "facing": "-Y",
+   "side_convention": "_left = character left = +X",
+   "height_m": 0.3915,
+   "sole_to_skull_m": 0.95
+  },
+  "n_bones": 58,
+  "left_x_pos": "21/21",
+  "right_x_neg": "19/19",
+  "foot_tail_minus_y": true,
+  "head_tail_z": 0.95,
+  "min_bone_z": 0.005655,
+  "mm_over_m_ratio_min": 999.9999999999999,
+  "mm_over_m_ratio_max": 1000.0000000000001
+ },
+ "C2_joints": {
+  "default": {
+   "n_bones": 163,
+   "n": 326,
+   "median_cm": 3.12,
+   "p95_cm": 5.93,
+   "max_cm": 6.24,
+   "err_column_mismatches": 0,
+   "worst3": [
+    [
+     "finger3-3.R",
+     6.24
+    ],
+    [
+     "finger3-3.L",
+     6.24
+    ],
+    [
+     "finger4-3.R",
+     6.18
+    ]
+   ],
+   "vertex_ends": 84,
+   "vertex_dz_median_mm": 6.95
+  },
+  "game_engine": {
+   "n_bones": 53,
+   "n": 106,
+   "median_cm": 5.54,
+   "p95_cm": 6.16,
+   "max_cm": 81.83,
+   "err_column_mismatches": 0,
+   "worst3": [
+    [
+     "Root",
+     81.83
+    ],
+    [
+     "middle_03_r",
+     6.24
+    ],
+    [
+     "middle_03_l",
+     6.24
+    ]
+   ],
+   "vertex_ends": 0,
+   "vertex_dz_median_mm": null,
+   "Root": {
+    "head_strategy": "CUBE",
+    "head_source": "joint-ground",
+    "head_default_z": "0.0",
+    "head_recomp_z": "-0.818305",
+    "head_err_m": "0.818305"
+   },
+   "without_Root": {
+    "n": 104,
+    "median_cm": 5.54,
+    "p95_cm": 6.15,
+    "max_cm": 6.24
+   }
+  },
+  "rigify_human": {
+   "n_bones": 185,
+   "n": 370,
+   "median_cm": 1.08,
+   "p95_cm": 5.91,
+   "max_cm": 6.23,
+   "err_column_mismatches": 0,
+   "worst3": [
+    [
+     "f_middle.03.R",
+     6.23
+    ],
+    [
+     "f_middle.03.L",
+     6.23
+    ],
+    [
+     "f_ring.03.R",
+     6.17
+    ]
+   ],
+   "vertex_ends": 169,
+   "vertex_dz_median_mm": 5.41,
+   "frame_offset_note": "recomp columns already include +0.818305 m (= -joint-ground z); vertex_dz_median is the residual"
+  },
+  "rigify_human_toes": {
+   "n_bones": 213,
+   "n": 426,
+   "median_cm": 1.28,
+   "p95_cm": 5.91,
+   "max_cm": 6.23,
+   "err_column_mismatches": 0,
+   "worst3": [
+    [
+     "f_middle.03.R",
+     6.23
+    ],
+    [
+     "f_middle.03.L",
+     6.23
+    ],
+    [
+     "f_ring.03.R",
+     6.17
+    ]
+   ],
+   "vertex_ends": 169,
+   "vertex_dz_median_mm": 5.41,
+   "frame_offset_note": "recomp columns already include +0.818305 m (= -joint-ground z); vertex_dz_median is the residual"
+  },
+  "default_by_strategy": {
+   "head:CUBE": {
+    "n": 113,
+    "median_cm": 3.96,
+    "p95_cm": 5.92,
+    "max_cm": 6.12
+   },
+   "head:MEAN": {
+    "n": 13,
+    "median_cm": 2.11,
+    "p95_cm": 4.29,
+    "max_cm": 4.29
+   },
+   "head:VERTEX": {
+    "n": 37,
+    "median_cm": 0.96,
+    "p95_cm": 1.95,
+    "max_cm": 2.17
+   },
+   "tail:CUBE": {
+    "n": 103,
+    "median_cm": 3.92,
+    "p95_cm": 6.15,
+    "max_cm": 6.24
+   },
+   "tail:MEAN": {
+    "n": 13,
+    "median_cm": 2.25,
+    "p95_cm": 4.29,
+    "max_cm": 4.29
+   },
+   "tail:VERTEX": {
+    "n": 47,
+    "median_cm": 0.95,
+    "p95_cm": 2.17,
+    "max_cm": 2.84
+   }
+  },
+  "default_hand_vs_other": {
+   "hand_name_filter": "finger|metacarpal|wrist (reviewer's filter; study's region rule not in data)",
+   "hand": {
+    "n": 80,
+    "median_cm": 5.79,
+    "p95_cm": 6.16,
+    "max_cm": 6.24
+   },
+   "other": {
+    "n": 246,
+    "median_cm": 1.68,
+    "p95_cm": 4.2,
+    "max_cm": 5.33
+   }
+  }
+ },
+ "C1d_rigify_offset": {
+  "joint_ground_z": -0.8183050000000002,
+  "rigify_vertex_median_dz_total": 0.8237200000000001,
+  "default_vertex_median_dz": 0.006949962654113739,
+  "residual_rigify_minus_ground_mm": 5.41
+ },
+ "C3_blend": {
+  "default:shoulder_l": {
+   "t10_cm": -8.09,
+   "t50_cm": 0.16,
+   "t90_cm": 7.35,
+   "width_cm": 15.44,
+   "summary_width_cm": 15.44,
+   "radius_m": 0.1,
+   "limb_axis_len_m": 0.2276,
+   "width_over_limb": 0.678,
+   "n_bins": 35,
+   "n_vertices": 407,
+   "monotonic_bin_means": false
+  },
+  "default:shoulder_r": {
+   "t10_cm": -8.08,
+   "t50_cm": 0.16,
+   "t90_cm": 7.35,
+   "width_cm": 15.43,
+   "summary_width_cm": 15.43,
+   "radius_m": 0.1,
+   "limb_axis_len_m": 0.2276,
+   "width_over_limb": 0.678,
+   "n_bins": 35,
+   "n_vertices": 407,
+   "monotonic_bin_means": false
+  },
+  "default:elbow_l": {
+   "t10_cm": -4.5,
+   "t50_cm": -0.06,
+   "t90_cm": 2.64,
+   "width_cm": 7.14,
+   "summary_width_cm": 7.14,
+   "radius_m": 0.07,
+   "limb_axis_len_m": 0.2263,
+   "width_over_limb": 0.315,
+   "n_bins": 30,
+   "n_vertices": 292,
+   "monotonic_bin_means": true
+  },
+  "default:elbow_r": {
+   "t10_cm": -4.5,
+   "t50_cm": -0.06,
+   "t90_cm": 2.69,
+   "width_cm": 7.19,
+   "summary_width_cm": 7.19,
+   "radius_m": 0.07,
+   "limb_axis_len_m": 0.2263,
+   "width_over_limb": 0.318,
+   "n_bins": 30,
+   "n_vertices": 292,
+   "monotonic_bin_means": true
+  },
+  "default:hip_l": {
+   "t10_cm": -8.38,
+   "t50_cm": 1.34,
+   "t90_cm": 11.92,
+   "width_cm": 20.3,
+   "summary_width_cm": 20.3,
+   "radius_m": 0.14,
+   "limb_axis_len_m": 0.4213,
+   "width_over_limb": 0.482,
+   "n_bins": 35,
+   "n_vertices": 312,
+   "monotonic_bin_means": false
+  },
+  "default:hip_r": {
+   "t10_cm": -8.38,
+   "t50_cm": 1.48,
+   "t90_cm": 11.95,
+   "width_cm": 20.32,
+   "summary_width_cm": 20.32,
+   "radius_m": 0.14,
+   "limb_axis_len_m": 0.4213,
+   "width_over_limb": 0.482,
+   "n_bins": 35,
+   "n_vertices": 312,
+   "monotonic_bin_means": false
+  },
+  "default:knee_l": {
+   "t10_cm": -3.52,
+   "t50_cm": 2.02,
+   "t90_cm": 5.61,
+   "width_cm": 9.13,
+   "summary_width_cm": 9.13,
+   "radius_m": 0.09,
+   "limb_axis_len_m": 0.3817,
+   "width_over_limb": 0.239,
+   "n_bins": 35,
+   "n_vertices": 280,
+   "monotonic_bin_means": false
+  },
+  "default:knee_r": {
+   "t10_cm": -2.34,
+   "t50_cm": 2.35,
+   "t90_cm": 5.53,
+   "width_cm": 7.86,
+   "summary_width_cm": 7.86,
+   "radius_m": 0.09,
+   "limb_axis_len_m": 0.3817,
+   "width_over_limb": 0.206,
+   "n_bins": 35,
+   "n_vertices": 280,
+   "monotonic_bin_means": false
+  },
+  "game_engine:shoulder_l": {
+   "t10_cm": -8.09,
+   "t50_cm": 0.16,
+   "t90_cm": 7.35,
+   "width_cm": 15.44,
+   "summary_width_cm": 15.44,
+   "radius_m": 0.1,
+   "limb_axis_len_m": 0.2276,
+   "width_over_limb": 0.678,
+   "n_bins": 35,
+   "n_vertices": 407,
+   "monotonic_bin_means": false
+  },
+  "game_engine:shoulder_r": {
+   "t10_cm": -8.08,
+   "t50_cm": 0.16,
+   "t90_cm": 7.35,
+   "width_cm": 15.43,
+   "summary_width_cm": 15.43,
+   "radius_m": 0.1,
+   "limb_axis_len_m": 0.2276,
+   "width_over_limb": 0.678,
+   "n_bins": 35,
+   "n_vertices": 407,
+   "monotonic_bin_means": false
+  },
+  "game_engine:elbow_l": {
+   "t10_cm": -4.5,
+   "t50_cm": -0.06,
+   "t90_cm": 2.64,
+   "width_cm": 7.14,
+   "summary_width_cm": 7.14,
+   "radius_m": 0.07,
+   "limb_axis_len_m": 0.2263,
+   "width_over_limb": 0.315,
+   "n_bins": 30,
+   "n_vertices": 292,
+   "monotonic_bin_means": true
+  },
+  "game_engine:elbow_r": {
+   "t10_cm": -4.5,
+   "t50_cm": -0.06,
+   "t90_cm": 2.69,
+   "width_cm": 7.19,
+   "summary_width_cm": 7.19,
+   "radius_m": 0.07,
+   "limb_axis_len_m": 0.2263,
+   "width_over_limb": 0.318,
+   "n_bins": 30,
+   "n_vertices": 292,
+   "monotonic_bin_means": true
+  },
+  "game_engine:hip_l": {
+   "t10_cm": -8.38,
+   "t50_cm": 1.34,
+   "t90_cm": 11.92,
+   "width_cm": 20.3,
+   "summary_width_cm": 20.3,
+   "radius_m": 0.14,
+   "limb_axis_len_m": 0.4213,
+   "width_over_limb": 0.482,
+   "n_bins": 35,
+   "n_vertices": 312,
+   "monotonic_bin_means": false
+  },
+  "game_engine:hip_r": {
+   "t10_cm": -8.38,
+   "t50_cm": 1.48,
+   "t90_cm": 11.95,
+   "width_cm": 20.32,
+   "summary_width_cm": 20.32,
+   "radius_m": 0.14,
+   "limb_axis_len_m": 0.4213,
+   "width_over_limb": 0.482,
+   "n_bins": 35,
+   "n_vertices": 312,
+   "monotonic_bin_means": false
+  },
+  "game_engine:knee_l": {
+   "t10_cm": -3.52,
+   "t50_cm": 2.02,
+   "t90_cm": 5.61,
+   "width_cm": 9.13,
+   "summary_width_cm": 9.13,
+   "radius_m": 0.09,
+   "limb_axis_len_m": 0.3817,
+   "width_over_limb": 0.239,
+   "n_bins": 35,
+   "n_vertices": 280,
+   "monotonic_bin_means": false
+  },
+  "game_engine:knee_r": {
+   "t10_cm": -2.34,
+   "t50_cm": 2.35,
+   "t90_cm": 5.53,
+   "width_cm": 7.86,
+   "summary_width_cm": 7.86,
+   "radius_m": 0.09,
+   "limb_axis_len_m": 0.3817,
+   "width_over_limb": 0.206,
+   "n_bins": 35,
+   "n_vertices": 280,
+   "monotonic_bin_means": false
+  },
+  "rigify_human_toes:shoulder_l": {
+   "t10_cm": -0.65,
+   "t50_cm": 4.25,
+   "t90_cm": 7.72,
+   "width_cm": 8.37,
+   "summary_width_cm": 8.37,
+   "radius_m": 0.1,
+   "limb_axis_len_m": 0.2276,
+   "width_over_limb": 0.368,
+   "n_bins": 35,
+   "n_vertices": 407,
+   "monotonic_bin_means": false
+  },
+  "rigify_human_toes:shoulder_r": {
+   "t10_cm": -0.65,
+   "t50_cm": 4.25,
+   "t90_cm": 7.72,
+   "width_cm": 8.37,
+   "summary_width_cm": 8.37,
+   "radius_m": 0.1,
+   "limb_axis_len_m": 0.2276,
+   "width_over_limb": 0.368,
+   "n_bins": 35,
+   "n_vertices": 407,
+   "monotonic_bin_means": false
+  },
+  "rigify_human_toes:elbow_l": {
+   "t10_cm": -4.35,
+   "t50_cm": 2.19,
+   "t90_cm": 5.78,
+   "width_cm": 10.13,
+   "summary_width_cm": 10.13,
+   "radius_m": 0.07,
+   "limb_axis_len_m": 0.2263,
+   "width_over_limb": 0.448,
+   "n_bins": 30,
+   "n_vertices": 292,
+   "monotonic_bin_means": false
+  },
+  "rigify_human_toes:elbow_r": {
+   "t10_cm": -4.35,
+   "t50_cm": 2.19,
+   "t90_cm": 5.78,
+   "width_cm": 10.13,
+   "summary_width_cm": 10.13,
+   "radius_m": 0.07,
+   "limb_axis_len_m": 0.2263,
+   "width_over_limb": 0.448,
+   "n_bins": 30,
+   "n_vertices": 292,
+   "monotonic_bin_means": false
+  },
+  "rigify_human_toes:hip_l": {
+   "t10_cm": 0.91,
+   "t50_cm": 9.34,
+   "t90_cm": 14.87,
+   "width_cm": 13.96,
+   "summary_width_cm": 13.96,
+   "radius_m": 0.14,
+   "limb_axis_len_m": 0.4213,
+   "width_over_limb": 0.331,
+   "n_bins": 35,
+   "n_vertices": 312,
+   "monotonic_bin_means": false
+  },
+  "rigify_human_toes:hip_r": {
+   "t10_cm": 0.91,
+   "t50_cm": 9.34,
+   "t90_cm": 14.87,
+   "width_cm": 13.96,
+   "summary_width_cm": 13.96,
+   "radius_m": 0.14,
+   "limb_axis_len_m": 0.4213,
+   "width_over_limb": 0.331,
+   "n_bins": 35,
+   "n_vertices": 312,
+   "monotonic_bin_means": false
+  },
+  "rigify_human_toes:knee_l": {
+   "t10_cm": 0.54,
+   "t50_cm": 3.54,
+   "t90_cm": 6.6,
+   "width_cm": 6.05,
+   "summary_width_cm": 6.05,
+   "radius_m": 0.09,
+   "limb_axis_len_m": 0.3817,
+   "width_over_limb": 0.159,
+   "n_bins": 35,
+   "n_vertices": 280,
+   "monotonic_bin_means": false
+  },
+  "rigify_human_toes:knee_r": {
+   "t10_cm": 0.54,
+   "t50_cm": 3.54,
+   "t90_cm": 6.6,
+   "width_cm": 6.05,
+   "summary_width_cm": 6.05,
+   "radius_m": 0.09,
+   "limb_axis_len_m": 0.3817,
+   "width_over_limb": 0.159,
+   "n_bins": 35,
+   "n_vertices": 280,
+   "monotonic_bin_means": false
+  }
+ },
+ "C4_foot": {
+  "default_rig_foot.L_default": {
+   "pitch_recomputed": 27.233,
+   "reported": 27.233
+  },
+  "game_engine_foot_l_default": {
+   "pitch_recomputed": 27.233,
+   "reported": 27.233
+  },
+  "game_engine_ball_l_default": {
+   "pitch_recomputed": -2.659,
+   "reported": -2.659
+  },
+  "default_rig_foot.L_recomputed": {
+   "pitch_recomputed": 25.197,
+   "reported": 25.197
+  },
+  "game_engine_foot_l_recomputed": {
+   "pitch_recomputed": 28.229,
+   "reported": 28.229
+  },
+  "game_engine_ball_l_recomputed": {
+   "pitch_recomputed": -7.905,
+   "reported": -7.905
+  },
+  "sole": {
+   "axis_used_here": "default foot.L recomputed head->tail (as scripts/03 L126)",
+   "slope_deg_recomputed": 0.521,
+   "slope_deg_reported": 0.521,
+   "slope_deg_sensitivity_axis_ankle_to_toe": 0.499,
+   "toe_higher": true,
+   "lateral_tilt_deg_dzdx": 1.247,
+   "ankle_h_recomputed_cm": 6.751,
+   "reported_recomputed_cm": 6.751,
+   "ankle_h_default_using_plane_under_recomputed_ankle_cm": 6.369,
+   "ankle_h_default_using_plane_under_default_ankle_cm": 6.432,
+   "reported_default_cm_sole_plane": 6.369,
+   "reported_default_cm_tail_table": 6.432
+  },
+  "v83_foot_left_pitch": 46.305,
+  "v83_ankle_left_pitch": -0.0
+ },
+ "C5_proportions": {
+  "v83_recomputed": {
+   "S": 0.95,
+   "head_over_S": 0.1261,
+   "head_len3d_over_S": 0.1262,
+   "ankle_over_S": 0.1,
+   "thigh_over_shin": 1.1027,
+   "upper_over_fore": 0.8273,
+   "leg_over_S": 0.4421,
+   "hip_spacing_over_leg": 0.1938,
+   "foot_over_S": 0.1299,
+   "arm_over_leg": 0.6664,
+   "study_csv": {
+    "head_length/S": "0.1262",
+    "ankle_height_over_sole/S": "0.1",
+    "thigh/shin": "1.1027",
+    "upper_arm/forearm": "0.8273",
+    "leg(hip-ankle)/S": "0.4421",
+    "hip_spacing(2|x|)/leg": "0.1938",
+    "foot/S": "0.1299",
+    "arm/leg": "0.6664"
+   }
+  },
+  "head_ratio_starrai_over_mpfb2": {
+   "v8_3": [
+    1.379,
+    1.461
+   ],
+   "v10": [
+    1.548,
+    1.639
+   ]
+  },
+  "ankle_ratio_starrai_over_mpfb2": {
+   "v8_3": [
+    2.304,
+    2.439
+   ],
+   "v10": [
+    2.521,
+    2.668
+   ]
+  },
+  "report_claims": {
+   "head": "+40-60 %",
+   "ankle": "2.3-2.5x"
+  }
+ }
+}
