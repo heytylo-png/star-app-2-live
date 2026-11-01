@@ -33,9 +33,6 @@ Verification was done on the box, on 2026-10-31, by re-hashing and reading the a
 
 **Not verified by BlendBro:** that the saved fragments are really bytes 0-19 and 20-134,755 of the upstream file; the ETag, the file size and Accept-Ranges against the live source; the pinned commit and path against upstream; and the full-file hashes (not published here). No re-fetch from the source was done.
 
-## Format identification (not a licence field)
-VRM version 1.0 (`VRMC_vrm.specVersion` in the JSON chunk). This is a file-format fact, not a licence field. It was reported in Texture Bro's records, and BlendBro read the same value from the saved JSON-chunk fragment earlier in this task; it was not re-checked in this corrective edit. Note that the licence field `version` ("1") below is a separate field.
-
 ## Licence metadata (from `license_meta.json`)
 - Licence URL: https://vrm.dev/licenses/1.0/ (VRM Public License 1.0)
 - Author: VirtualCast, Inc.

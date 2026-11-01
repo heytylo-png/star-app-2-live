@@ -1,13 +1,13 @@
 # Seed-san metadata publication (issue #179)
 
-Metadata-only publication of source and licence facts for the Seed-san reference. Research only; not production approval. No AI training, no redistribution, no production use.
+This publication is strictly source and licence metadata: the pinned source reference, retrieval records, GLB header facts, licence fields, attribution requirement and scope statement. Research only; not production approval. No AI training, no redistribution, no production use.
 
-Corrective revision: this version separates "Reported records" from "Independently verified" items, removes the extension lists, and corrects the ETag provenance (HEAD-request record in the review-package verification notes, not `source.txt`).
+It separates "Reported records" from "Independently verified" items, with the provenance caveats kept. ETag, file size and Accept-Ranges come from the HEAD-request record in the review-package verification notes, not from `source.txt`. This revision removes the file-format identification section; no format, extension, material, texture, hair, expression or UV information is included.
 
 ## Files
 | File | SHA-256 |
 |---|---|
-| SEED_SAN_METADATA.md | `07e4c895b381156e8bf189d726a95818f9a1ecdf1abd5b62f27e2bd1cbdb9c66` |
+| SEED_SAN_METADATA.md | `8634355e368f8934250fdb42c7386cc60eb167665421a1c625e2c684b5bfa8c2` |
 | README.md | listed in MANIFEST_sha256.txt (a file cannot contain its own hash) |
 | MANIFEST_sha256.txt | not self-listed; its hash is reported in the issue #179 comment |
 
