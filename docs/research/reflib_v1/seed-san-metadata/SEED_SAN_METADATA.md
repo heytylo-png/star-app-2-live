@@ -2,31 +2,39 @@
 
 Related issue: heytylo-png/star-app-2-live #179. Research reference only.
 
-## Source
-- Repository: `vrm-c/vrm-specification`
-- Pinned commit: `94e82dd346fa6cf0337c4421728640e5252dd38e`
-- Path: `samples/Seed-san/vrm/Seed-san.vrm`
-- Source URL record (`source.txt`): `https://raw.githubusercontent.com/vrm-c/vrm-specification/94e82dd346fa6cf0337c4421728640e5252dd38e/samples/Seed-san/vrm/Seed-san.vrm`
-- ETag (HEAD request): `1e3d958c917c25e8b238329bfebb24dd7c79c78da2f6fb6aae92a81c484db086`
-- File size: 10,917,800 bytes
-- Accept-Ranges: bytes
+This document separates records that were *reported* by earlier work from facts that were *independently verified* by BlendBro. Where a value could not be confirmed as verified, it is listed under "Reported records" only.
 
-## Byte ranges retrieved in the metadata-only step (2026-10-31, 20:50 CT)
-| Range (bytes, inclusive) | Content | SHA-256 |
+## Reported records (not independently re-verified)
+
+| Value | Reported value | Where it came from |
 |---|---|---|
-| 0-19 | GLB header (20 bytes) | `79331aa2318b0c347063f997f630fa463dc0a665ae6b24e32b1356176d5df964` |
-| 20-134,755 | JSON chunk (134,736 bytes) | `00d021d13140655972dcf134cad6464b6c4756fd3e262e989e0feb01eed81652` |
+| Source repository | `vrm-c/vrm-specification` | `source.txt` (in the Seed-san research folder) |
+| Pinned commit | `94e82dd346fa6cf0337c4421728640e5252dd38e` | `source.txt` |
+| Path | `samples/Seed-san/vrm/Seed-san.vrm` | `source.txt` (inside the URL) and Texture Bro's records |
+| Source URL | `https://raw.githubusercontent.com/vrm-c/vrm-specification/94e82dd346fa6cf0337c4421728640e5252dd38e/samples/Seed-san/vrm/Seed-san.vrm` | `source.txt` |
+| ETag | `1e3d958c917c25e8b238329bfebb24dd7c79c78da2f6fb6aae92a81c484db086` | HEAD-request record in the verification notes, `/workspace/research/reflib_v1/seed-san/claude_review_package/4_verification/VERIFICATION.md`. It is NOT in the original source record (`source.txt`). |
+| File size | 10,917,800 bytes | Same HEAD-request record in `VERIFICATION.md` (also the length declared in the GLB header, see below). Not in `source.txt`. |
+| Accept-Ranges | `bytes` | Same HEAD-request record in `VERIFICATION.md`. Not in `source.txt`. |
+| Byte range 0-19 | GLB header, 20 bytes | Texture Bro's metadata-only retrieval record (2026-10-31, 20:50 CT), also recorded in `VERIFICATION.md` |
+| Byte range 20-134,755 | JSON chunk, 134,736 bytes | Same records |
+| SHA-256 of bytes 0-19 | `79331aa2318b0c347063f997f630fa463dc0a665ae6b24e32b1356176d5df964` | Same records |
+| SHA-256 of bytes 20-134,755 | `00d021d13140655972dcf134cad6464b6c4756fd3e262e989e0feb01eed81652` | Same records |
+| Licence fields | see "Licence metadata" below | `license_meta.json`, extracted by Texture Bro |
 
-## GLB header facts (from the 20 header bytes)
-- Magic: `glTF`
-- glTF container version: 2
-- Declared total length: 10,917,800 (equals file size)
-- First chunk type: `JSON`; JSON chunk length: 134,736
+## Independently verified by BlendBro (local files only)
 
-## VRM version and extension names (top-level fields of the JSON chunk)
-- VRM version: 1.0 (`VRMC_vrm.specVersion` = `1.0`)
-- `extensionsUsed`: `VRMC_springBone`, `VRMC_vrm`, `KHR_materials_unlit`, `VRMC_materials_mtoon`, `KHR_texture_transform`, `KHR_materials_emissive_strength`, `VRMC_node_constraint`
-- `extensionsRequired`: not present
+Verification was done on the box, on 2026-10-31, by re-hashing and reading the already-saved fragment files. Nothing was re-fetched from the source.
+
+- The saved header fragment `hdr.bin` is 20 bytes and hashes to `79331aa2318b0c347063f997f630fa463dc0a665ae6b24e32b1356176d5df964`, matching the reported hash for bytes 0-19.
+- The saved JSON-chunk fragment `json_chunk.json` is 134,736 bytes and hashes to `00d021d13140655972dcf134cad6464b6c4756fd3e262e989e0feb01eed81652`, matching the reported hash for bytes 20-134,755.
+- Reading the 20 header bytes gives: magic `glTF`, container version 2, declared total length 10,917,800, first chunk length 134,736.
+- `source.txt` contains the pinned commit `94e82dd346fa6cf0337c4421728640e5252dd38e` and the source URL above.
+- The licence values below match `license_meta.json` as saved.
+
+**Not verified by BlendBro:** that the saved fragments are really bytes 0-19 and 20-134,755 of the upstream file; the ETag, the file size and Accept-Ranges against the live source; the pinned commit and path against upstream; and the full-file hashes (not published here). No re-fetch from the source was done.
+
+## Format identification (not a licence field)
+VRM version 1.0 (`VRMC_vrm.specVersion` in the JSON chunk). This is a file-format fact, not a licence field. It was reported in Texture Bro's records, and BlendBro read the same value from the saved JSON-chunk fragment earlier in this task; it was not re-checked in this corrective edit. Note that the licence field `version` ("1") below is a separate field.
 
 ## Licence metadata (from `license_meta.json`)
 - Licence URL: https://vrm.dev/licenses/1.0/ (VRM Public License 1.0)
@@ -43,11 +51,11 @@ Related issue: heytylo-png/star-app-2-live #179. Research reference only.
 Credit is required. Any shared work derived from Seed-san must credit "VirtualCast, Inc."
 
 ## Scope statement
-The original approval was metadata-only (GLB header and JSON chunk, licence fields). A later full download and study of the model exceeded that scope. The findings from that study are withheld from publication pending a separate decision. This document does not retroactively authorize anything.
+The original approval was metadata-only (GLB header and JSON chunk, licence fields only). A later full download and study exceeded that scope. The findings from that study are withheld from publication pending a separate decision. This document does not retroactively authorize anything.
 
 ## Not included
 - Claude's review was not located and is not included.
-- The model file, the JSON chunk, the header bytes, licence JSON, images, and all findings from the expanded study are not included.
+- The model file, the JSON chunk, the header bytes, the licence JSON, images, and all findings from the expanded study are not included.
 
 ## Use restrictions (project rules)
 No AI training. No redistribution. No production use. A licence label alone does not grant approval for these uses; this is not production approval.

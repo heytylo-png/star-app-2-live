@@ -2,10 +2,12 @@
 
 Metadata-only publication of source and licence facts for the Seed-san reference. Research only; not production approval. No AI training, no redistribution, no production use.
 
+Corrective revision: this version separates "Reported records" from "Independently verified" items, removes the extension lists, and corrects the ETag provenance (HEAD-request record in the review-package verification notes, not `source.txt`).
+
 ## Files
 | File | SHA-256 |
 |---|---|
-| SEED_SAN_METADATA.md | `4a6888fb52b913f00e0c1b7a44be21b1d1bfe01c273791e1e9b39d87d602baee` |
+| SEED_SAN_METADATA.md | `07e4c895b381156e8bf189d726a95818f9a1ecdf1abd5b62f27e2bd1cbdb9c66` |
 | README.md | listed in MANIFEST_sha256.txt (a file cannot contain its own hash) |
 | MANIFEST_sha256.txt | not self-listed; its hash is reported in the issue #179 comment |
 
