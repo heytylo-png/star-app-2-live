@@ -1,0 +1,10 @@
+# Manifest: Seed-san independent review (Claude), issue #179
+# Branch: research/issue-179-seed-san-claude-review (base: master @ 4fd282e3a1c7cf261b134b2fd6d55c3dc7c35dfb)
+# Format: sha256  bytes  path
+853153f2ce856f5bb38b913570aa4bd88e5fdc915b9947792b150e0cd1b3275e  10304  research/issue-179/seed-san/SEED_SAN_INDEPENDENT_REVIEW.md
+#
+# Included: the review report above (summary-level, public-repo safe).
+# Excluded by policy (pilot clause of docs/WORK_HANDOFF_STANDARD.md and the issue #179 quarantine instruction):
+#   Seed-san.vrm, extracted textures, json_chunk.json, per-material tables, REPORT.md, contact sheet, UV overlays.
+# Unavailable in repository (never committed by producing bots): TextureBro REPORT.md and images,
+#   BlendBro HANDOFF.md (received off-repo, sha256 8203c28a067b208d88b9f700e4fdc6f52c19f0470640282e05d09d080661eb52), verify_counts.py.
