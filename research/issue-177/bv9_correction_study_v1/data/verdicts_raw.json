@@ -1,0 +1,162 @@
+{
+ "reproducibility_max_abs_diff_run1_vs_run2": 0.0,
+ "candidates": {
+  "A": {
+   "intended": {
+    "modeF": {
+     "gap_zone_mean_decrease_mm": {
+      "front": -0.592714786529541,
+      "back": -1.0320895910263062
+     },
+     "improves": false,
+     "gap_zone_frac_le_1": {
+      "front": [
+       0.4347064592966232,
+       0.25245593759029183
+      ],
+      "back": [
+       0.5492841758520208,
+       0.20148524526089506
+      ]
+     },
+     "regression_flag": true
+    },
+    "modeL": {
+     "gap_zone_mean_decrease_mm": {
+      "front": 0.9119244813919067,
+      "back": 0.8124972581863403
+     },
+     "improves": true,
+     "gap_zone_frac_le_1": {
+      "front": [
+       0.2784439115374367,
+       0.5590053578788295
+      ],
+      "back": [
+       0.28786515505968446,
+       0.5403822441430333
+      ]
+     },
+     "regression_flag": false
+    }
+   },
+   "regression": {
+    "modeF": [
+     "front: p95 +0.52 mm (>0.5)",
+     "front: %<=1mm 56.1 vs 61.0 (drop>3 pts)",
+     "back: mean +0.35 mm (>0.25)",
+     "back: %<=1mm 45.4 vs 57.5 (drop>3 pts)",
+     "front: arm outer-edge mean|offset| z40-80 0.77->2.61 mm (>+0.5)",
+     "back: arm outer-edge mean|offset| z40-80 0.34->3.26 mm (>+0.5)",
+     "back: hand zone z15-45 sym mean 1.35->1.88 (>+0.5)"
+    ],
+    "modeL": []
+   },
+   "min_z_mm": -87.99999952316284,
+   "min_z_ok": true,
+   "new_bvh_pairs": 110,
+   "recal_modeF_agrees_sign": null,
+   "I_F": false,
+   "I_L": true,
+   "R_F": true,
+   "R_L": false
+  },
+  "B": {
+   "intended": {
+    "modeF": {
+     "side_foot_zone_mean_decrease_mm": 0.6862468719482422,
+     "sole_envelope_mean_abs_dz_decrease_mm": 2.5028954348956356,
+     "sole_env_before_after": [
+      4.659004152908141,
+      2.156108718012505
+     ],
+     "improves": false,
+     "foot_zone_before_after": [
+      2.9249770641326904,
+      2.2387301921844482
+     ],
+     "regression_flag": false
+    },
+    "modeL": {
+     "side_foot_zone_mean_decrease_mm": 0.7028605937957764,
+     "sole_envelope_mean_abs_dz_decrease_mm": 2.4397822772959494,
+     "sole_env_before_after": [
+      4.942053410246472,
+      2.5022711329505225
+     ],
+     "improves": false,
+     "foot_zone_before_after": [
+      2.8878495693206787,
+      2.1849889755249023
+     ],
+     "regression_flag": true
+    }
+   },
+   "regression": {
+    "modeF": [],
+    "modeL": [
+     "front: %<=1mm 57.2 vs 61.3 (drop>3 pts)",
+     "side: %<=1mm 64.2 vs 67.5 (drop>3 pts)"
+    ]
+   },
+   "min_z_mm": -87.99999952316284,
+   "min_z_ok": true,
+   "new_bvh_pairs": 0,
+   "recal_modeF_agrees_sign": null,
+   "I_F": false,
+   "I_L": false,
+   "R_F": false,
+   "R_L": true
+  },
+  "B1": {
+   "intended": {
+    "modeF": {
+     "side_foot_zone_mean_decrease_mm": 0.10856270790100098,
+     "sole_envelope_mean_abs_dz_decrease_mm": 3.9626893221704726,
+     "sole_env_before_after": [
+      4.659004152908141,
+      0.6963148307376681
+     ],
+     "improves": false,
+     "foot_zone_before_after": [
+      2.9249770641326904,
+      2.8164143562316895
+     ],
+     "regression_flag": true
+    },
+    "modeL": {
+     "side_foot_zone_mean_decrease_mm": 0.14032769203186035,
+     "sole_envelope_mean_abs_dz_decrease_mm": 4.223431570218879,
+     "sole_env_before_after": [
+      4.942053410246472,
+      0.7186218400275927
+     ],
+     "improves": false,
+     "foot_zone_before_after": [
+      2.8878495693206787,
+      2.7475218772888184
+     ],
+     "regression_flag": true
+    }
+   },
+   "regression": {
+    "modeF": [
+     "side ankle zone z-75..-55 sym mean 0.85->3.25 (>+0.5)"
+    ],
+    "modeL": [
+     "front: %<=1mm 57.2 vs 61.3 (drop>3 pts)",
+     "side: %<=1mm 64.4 vs 67.5 (drop>3 pts)",
+     "side ankle zone z-75..-55 sym mean 0.65->3.08 (>+0.5)"
+    ]
+   },
+   "min_z_mm": -87.99999952316284,
+   "min_z_ok": true,
+   "new_bvh_pairs": 0,
+   "recal_modeF_agrees_sign": null,
+   "I_F": false,
+   "I_L": false,
+   "R_F": true,
+   "R_L": true
+  }
+ }
+}

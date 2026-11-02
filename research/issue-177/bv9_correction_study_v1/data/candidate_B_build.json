@@ -1,0 +1,12 @@
+{
+ "candidate": "B",
+ "n_verts": 30007,
+ "n_moved": 4250,
+ "max_disp_mm": 13.6820494231644,
+ "mean_disp_moved_mm": 9.127956952782547,
+ "shape_keys_shifted": 17,
+ "dz_mm": -9.677727879990002,
+ "phi_deg": 28.1,
+ "min_z_after": -88.0,
+ "saved": "candidates/bv9_candidate_B_foot.blend"
+}

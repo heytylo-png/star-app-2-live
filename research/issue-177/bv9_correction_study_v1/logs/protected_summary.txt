@@ -1,0 +1,9 @@
+protected files hashed: 9079 (sha256, size, path); list excluded this study folder; includes /workspace/blender (all), /workspace/blendbro/references, /workspace/blendbro/out (except this study), /workspace/research/reflib_v1, /workspace/notes, /workspace/artifacts/spine_requests, /workspace/star-rai-canon-refs
+before list sha256 ea429241c04e0d0478738df0abcc56c397f363b1b03ddd93da45d63481dea141
+after list sha256 ea429241c04e0d0478738df0abcc56c397f363b1b03ddd93da45d63481dea141
+final list sha256 ea429241c04e0d0478738df0abcc56c397f363b1b03ddd93da45d63481dea141
+differences before vs after: 0 lines; before vs final: 0 lines
+bv9: d72cedc1fbe6aaa14bebddbe052af97321816f88e8c3065a920165cbcf6d9689 (final) /workspace/blender/star_rai/star_rai_base_body_bv9.blend
+v8s: 1c5ce67fd68256fbcf19970385deaa71088f64c4c1d2469c5205f487f92527e9 (final) /workspace/blender/star_rai/star_rai_base_body_v8s.blend
+v10 armature: f459ea1f14ca09d59b2cf7e227182b74d65ecfbb0271d1189045d1b5a8f0514f (final) /workspace/blender/star_rai/star_rai_armature_final_v10.blend
+reflib_v1 subfolder files present in list: 54

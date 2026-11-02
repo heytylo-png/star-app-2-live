@@ -1,0 +1,433 @@
+{
+ "blender": "5.2.2 LTS",
+ "file": "/workspace/blendbro/out/bv9_correction_study_v1/candidates/bv9_candidate_A_arm_hand.blend",
+ "scene": {
+  "unit_system": "METRIC",
+  "scale_length": 1.0,
+  "length_unit": "METERS",
+  "frame": 1,
+  "n_scenes": 1
+ },
+ "objects": [
+  {
+   "name": "RaiFaceNormalCenter",
+   "type": "EMPTY",
+   "parent": "StarRai_star_rai_locked_v10",
+   "hide_viewport": false,
+   "hide_render": false,
+   "matrix_world": [
+    [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     1.0,
+     2.8212795655235823e-07,
+     -0.025084469467401505
+    ],
+    [
+     0.0,
+     5.523390882444801e-07,
+     1.0,
+     0.1260800063610077
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "location": [
+    0.0,
+    -0.023569965735077858,
+    0.02508465200662613
+   ],
+   "rotation_euler": [
+    -1.5707966089248657,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    1.0,
+    1.0000072717666626,
+    1.0000001192092896
+   ],
+   "modifiers": [],
+   "collections": [
+    "Scene Collection"
+   ]
+  },
+  {
+   "name": "StarRai_base_body",
+   "type": "MESH",
+   "parent": "StarRai_star_rai_locked_v10",
+   "hide_viewport": false,
+   "hide_render": false,
+   "matrix_world": [
+    [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     1.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     1.0,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "location": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "rotation_euler": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "modifiers": [
+    {
+     "name": "Armature",
+     "type": "ARMATURE",
+     "show_viewport": true,
+     "show_render": true
+    },
+    {
+     "name": "FaceNormals",
+     "type": "NORMAL_EDIT",
+     "show_viewport": true,
+     "show_render": true
+    },
+    {
+     "name": "Outline",
+     "type": "SOLIDIFY",
+     "show_viewport": true,
+     "show_render": true
+    }
+   ],
+   "collections": [
+    "Scene Collection"
+   ],
+   "mesh": {
+    "name": "StarRai_base_body",
+    "verts": 30007,
+    "edges": 61630,
+    "faces": 31659,
+    "loops": 123048,
+    "shape_keys": [
+     "Basis",
+     "corr_armpit_R_30",
+     "corr_armpit_R_60",
+     "corr_armpit_R_90",
+     "corr_armpit_L_30",
+     "corr_armpit_L_60",
+     "corr_armpit_L_90",
+     "corr_elbow_R_45",
+     "corr_elbow_R_90",
+     "corr_elbow_R_130",
+     "corr_elbow_L_45",
+     "corr_elbow_L_90",
+     "corr_elbow_L_130",
+     "corr_knee_R_90",
+     "corr_knee_R_120",
+     "corr_knee_L_90",
+     "corr_knee_L_120"
+    ],
+    "vertex_groups": 32,
+    "materials": [
+     "Rai_body_toon",
+     "Rai_hair_cap_toon",
+     "Rai_skin_base_toon",
+     "Rai_outline"
+    ]
+   },
+   "evaluated": {
+    "verts": 60014,
+    "edges": 123260,
+    "faces": 63318,
+    "same_vertex_count": false,
+    "max_abs_coord_diff_local": null
+   },
+   "bbox_world_min": [
+    -0.03169732913374901,
+    -0.016124943271279335,
+    -0.08799999952316284
+   ],
+   "bbox_world_max": [
+    0.03214731067419052,
+    0.022507382556796074,
+    0.15682916343212128
+   ],
+   "dims_world": [
+    0.06384463980793953,
+    0.03863232582807541,
+    0.24482916295528412
+   ],
+   "bbox_local_min": [
+    -0.03169732913374901,
+    -0.016124943271279335,
+    -0.08799999952316284
+   ],
+   "bbox_local_max": [
+    0.03214731067419052,
+    0.022507382556796074,
+    0.15682916343212128
+   ],
+   "components": {
+    "n": 74,
+    "sizes": [
+     22727,
+     4171,
+     2276,
+     186,
+     168,
+     108,
+     87,
+     83,
+     63,
+     49,
+     14,
+     13,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   "topology": {
+    "boundary_edges": 212,
+    "nonmanifold_edges": 0,
+    "loose_verts": 62,
+    "tris": 3588,
+    "quads": 28071,
+    "ngons": 0
+   }
+  },
+  {
+   "name": "StarRai_hair_strands",
+   "type": "MESH",
+   "parent": "StarRai_star_rai_locked_v10",
+   "hide_viewport": false,
+   "hide_render": false,
+   "matrix_world": [
+    [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     1.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     1.0,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "location": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "rotation_euler": [
+    0.0,
+    -0.0,
+    0.0
+   ],
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "modifiers": [
+    {
+     "name": "Armature",
+     "type": "ARMATURE",
+     "show_viewport": true,
+     "show_render": true
+    },
+    {
+     "name": "Outline",
+     "type": "SOLIDIFY",
+     "show_viewport": true,
+     "show_render": true
+    }
+   ],
+   "collections": [
+    "Scene Collection"
+   ],
+   "mesh": {
+    "name": "StarRai_hair_strands",
+    "verts": 16068,
+    "edges": 31268,
+    "faces": 15200,
+    "loops": 60800,
+    "shape_keys": [],
+    "vertex_groups": 2,
+    "materials": [
+     "Rai_hair_strands_toon",
+     "Rai_outline"
+    ]
+   },
+   "evaluated": {
+    "verts": 32136,
+    "edges": 62536,
+    "faces": 30400,
+    "same_vertex_count": false,
+    "max_abs_coord_diff_local": null
+   },
+   "bbox_world_min": [
+    -0.02811404876410961,
+    -0.014140786603093147,
+    0.09774527698755264
+   ],
+   "bbox_world_max": [
+    0.023851891979575157,
+    0.021957430988550186,
+    0.1573675125837326
+   ],
+   "dims_world": [
+    0.05196594074368477,
+    0.03609821759164333,
+    0.05962223559617996
+   ],
+   "bbox_local_min": [
+    -0.02811404876410961,
+    -0.014140786603093147,
+    0.09774527698755264
+   ],
+   "bbox_local_max": [
+    0.023851891979575157,
+    0.021957430988550186,
+    0.1573675125837326
+   ],
+   "components": {
+    "n": 216,
+    "sizes": [
+     968,
+     136,
+     132,
+     132,
+     132,
+     132,
+     132,
+     132,
+     132,
+     132,
+     132,
+     132,
+     132,
+     132,
+     128,
+     124,
+     124,
+     120,
+     120,
+     120
+    ]
+   },
+   "topology": {
+    "boundary_edges": 1736,
+    "nonmanifold_edges": 0,
+    "loose_verts": 0,
+    "tris": 0,
+    "quads": 15200,
+    "ngons": 0
+   }
+  },
+  {
+   "name": "StarRai_star_rai_locked_v10",
+   "type": "ARMATURE",
+   "parent": null,
+   "hide_viewport": false,
+   "hide_render": false,
+   "matrix_world": [
+    [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     1.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     1.0,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "location": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "rotation_euler": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "modifiers": [],
+   "collections": [
+    "Scene Collection"
+   ],
+   "armature": {
+    "bones": 31,
+    "pose_position": "POSE"
+   }
+  }
+ ]
+}

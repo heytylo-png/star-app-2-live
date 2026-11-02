@@ -1,0 +1,65 @@
+{
+ "ankles/shins": {
+  "front": {
+   "same_sign_all_variants": true,
+   "sign": "narrower",
+   "min_abs_mm": 0.235,
+   "weakest_variant": "modeL (baseline cam) / left",
+   "max_abs_mm": 1.514
+  },
+  "back": {
+   "same_sign_all_variants": true,
+   "sign": "narrower",
+   "min_abs_mm": 0.709,
+   "weakest_variant": "modeL (baseline cam) / right",
+   "max_abs_mm": 1.575
+  },
+  "side_view_signed_range_mm": [
+   -1.27,
+   -0.43
+  ],
+  "SUPPORTED_by_preregistered_rule": false
+ },
+ "knees": {
+  "front": {
+   "same_sign_all_variants": true,
+   "sign": "narrower",
+   "min_abs_mm": 0.696,
+   "weakest_variant": "modeL (baseline cam) / right",
+   "max_abs_mm": 2.168
+  },
+  "back": {
+   "same_sign_all_variants": true,
+   "sign": "narrower",
+   "min_abs_mm": 0.385,
+   "weakest_variant": "modeL (baseline cam) / right",
+   "max_abs_mm": 1.641
+  },
+  "side_view_signed_range_mm": [
+   -0.84,
+   0.16
+  ],
+  "SUPPORTED_by_preregistered_rule": false
+ },
+ "thighs": {
+  "front": {
+   "same_sign_all_variants": true,
+   "sign": "narrower",
+   "min_abs_mm": 0.196,
+   "weakest_variant": "modeL (baseline cam) / right",
+   "max_abs_mm": 1.437
+  },
+  "back": {
+   "same_sign_all_variants": true,
+   "sign": "narrower",
+   "min_abs_mm": 0.555,
+   "weakest_variant": "F scale +2% / left",
+   "max_abs_mm": 3.094
+  },
+  "side_view_signed_range_mm": [
+   -0.4,
+   0.29
+  ],
+  "SUPPORTED_by_preregistered_rule": false
+ }
+}

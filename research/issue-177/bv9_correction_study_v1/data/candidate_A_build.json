@@ -1,0 +1,9 @@
+{
+ "candidate": "A",
+ "n_verts": 30007,
+ "n_moved": 8514,
+ "max_disp_mm": 3.5,
+ "mean_disp_moved_mm": 3.1526324030107804,
+ "shape_keys_shifted": 17,
+ "saved": "candidates/bv9_candidate_A_arm_hand.blend"
+}

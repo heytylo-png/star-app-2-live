@@ -1,0 +1,167 @@
+{
+ "A": {
+  "edges_identical": true,
+  "weights_identical": true,
+  "group_names_identical": true,
+  "counts_components_modifiers_materials_shapekeys_identical": true,
+  "tris_identical": true,
+  "mat_identical": true,
+  "n_moved_gt_1e3mm": 8452,
+  "max_move_mm": 3.4999996423721313,
+  "bones_identical": true,
+  "bbox_before": [
+   [
+    -0.03519732132554054,
+    -0.016124943271279335,
+    -0.08799999952316284
+   ],
+   [
+    0.03564731031656265,
+    0.022507382556796074,
+    0.15682914853096008
+   ]
+  ],
+  "bbox_after": [
+   [
+    -0.03169732168316841,
+    -0.016124943271279335,
+    -0.08799999952316284
+   ],
+   [
+    0.03214731067419052,
+    0.022507382556796074,
+    0.15682914853096008
+   ]
+  ],
+  "moved_verts_by_dominant_group": {
+   "lower_arm_right": 1177,
+   "hand_left": 2259,
+   "upper_arm_right": 758,
+   "upper_arm_left": 759,
+   "waist": 63,
+   "hand_right": 2259,
+   "lower_arm_left": 1177
+  },
+  "moved_verts_with_zero_weight_all_groups": 0,
+  "bvh": {
+   "baseline_pairs": 974,
+   "candidate_pairs": 1084,
+   "new_pairs": 110,
+   "removed_pairs": 0,
+   "new_pairs_by_dominant_groups": {
+    "lower_arm_left|pelvis": 70,
+    "lower_arm_right|pelvis": 40
+   },
+   "new_pair_vertex_bbox_mm": [
+    [
+     -26.459999084472656,
+     -2.4800000190734863,
+     40.7599983215332
+    ],
+    [
+     26.469999313354492,
+     3.049999952316284,
+     48.130001068115234
+    ]
+   ]
+  }
+ },
+ "B": {
+  "edges_identical": true,
+  "weights_identical": true,
+  "group_names_identical": true,
+  "counts_components_modifiers_materials_shapekeys_identical": true,
+  "tris_identical": true,
+  "mat_identical": true,
+  "n_moved_gt_1e3mm": 4250,
+  "max_move_mm": 13.682048638491478,
+  "bones_identical": true,
+  "bbox_before": [
+   [
+    -0.03519732132554054,
+    -0.016124943271279335,
+    -0.08799999952316284
+   ],
+   [
+    0.03564731031656265,
+    0.022507382556796074,
+    0.15682914853096008
+   ]
+  ],
+  "bbox_after": [
+   [
+    -0.03519732132554054,
+    -0.016124943271279335,
+    -0.08799999952316284
+   ],
+   [
+    0.03564731031656265,
+    0.03168145939707756,
+    0.15682914853096008
+   ]
+  ],
+  "moved_verts_by_dominant_group": {
+   "foot_left": 1981,
+   "shin_left": 144,
+   "foot_right": 1981,
+   "shin_right": 144
+  },
+  "moved_verts_with_zero_weight_all_groups": 0,
+  "bvh": {
+   "baseline_pairs": 974,
+   "candidate_pairs": 974,
+   "new_pairs": 0,
+   "removed_pairs": 0,
+   "new_pairs_by_dominant_groups": {}
+  }
+ },
+ "B1": {
+  "edges_identical": true,
+  "weights_identical": true,
+  "group_names_identical": true,
+  "counts_components_modifiers_materials_shapekeys_identical": true,
+  "tris_identical": true,
+  "mat_identical": true,
+  "n_moved_gt_1e3mm": 4250,
+  "max_move_mm": 14.46955004020344,
+  "bones_identical": true,
+  "bbox_before": [
+   [
+    -0.03519732132554054,
+    -0.016124943271279335,
+    -0.08799999952316284
+   ],
+   [
+    0.03564731031656265,
+    0.022507382556796074,
+    0.15682914853096008
+   ]
+  ],
+  "bbox_after": [
+   [
+    -0.03519732132554054,
+    -0.016124943271279335,
+    -0.08799999952316284
+   ],
+   [
+    0.03564731031656265,
+    0.023089999333024025,
+    0.15682914853096008
+   ]
+  ],
+  "moved_verts_by_dominant_group": {
+   "foot_left": 1981,
+   "shin_left": 144,
+   "foot_right": 1981,
+   "shin_right": 144
+  },
+  "moved_verts_with_zero_weight_all_groups": 0,
+  "bvh": {
+   "baseline_pairs": 974,
+   "candidate_pairs": 974,
+   "new_pairs": 0,
+   "removed_pairs": 0,
+   "new_pairs_by_dominant_groups": {}
+  }
+ }
+}
