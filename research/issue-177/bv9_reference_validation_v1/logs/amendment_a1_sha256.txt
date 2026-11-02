@@ -1,0 +1,3 @@
+834ed0dd030934e4544b38502894d7618a314b840246ecb1c5c08570fb25419d  METHOD_AMENDMENT_A1.md
+05a34ac8e1846b66e664d921cc6ada4acc78a50fd1cd4f5c30f95dbcc0af28fe  scripts/refseg.py
+f031f30a6cb7e98df3edeb40df0f126c275cdb988e5446ee3398d1f6ff095613  data/superseded_run1/refseg_run1.py

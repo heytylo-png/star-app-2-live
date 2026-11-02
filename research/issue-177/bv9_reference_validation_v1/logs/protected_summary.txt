@@ -1,0 +1,17 @@
+protected-file snapshot summary (full lists kept locally: logs/protected_before.txt, logs/protected_after.txt)
+scope: /workspace/blender/star_rai/** , /workspace/artifacts/spine_requests/** , /workspace/blendbro/references/** , /workspace/research/reflib_v1/** , /workspace/notes/** , /workspace/star-rai-canon-refs/** , /workspace/blendbro/out/** (excluding this task folder), plus every path in the issue-178 input_hash_manifest.sha256 and protected_hashes_before.txt
+files hashed before: 8245   after: 8245   differing lines (hash,path): 0
+sha256(list before) = aa56cb64f21537bc99bbffab2883f151b4bd6255b2c5425a46ca252042d07dc7
+sha256(list after)  = aa56cb64f21537bc99bbffab2883f151b4bd6255b2c5425a46ca252042d07dc7
+
+key files (sha256, before == after):
+d72cedc1fbe6aaa14bebddbe052af97321816f88e8c3065a920165cbcf6d9689  SAME  /workspace/blender/star_rai/star_rai_base_body_bv9.blend
+d72cedc1fbe6aaa14bebddbe052af97321816f88e8c3065a920165cbcf6d9689  SAME  /workspace/blender/star_rai/star_rai_base_body_v9.blend
+1c5ce67fd68256fbcf19970385deaa71088f64c4c1d2469c5205f487f92527e9  SAME  /workspace/blender/star_rai/star_rai_base_body_v8s.blend
+57d998ccadeccbb2e3c6a2f7245c19d693f5f5eabc27c90af1eb1047b92292ba  SAME  /workspace/blender/star_rai/star_rai_base_body_v8i.blend
+f459ea1f14ca09d59b2cf7e227182b74d65ecfbb0271d1189045d1b5a8f0514f  SAME  /workspace/blender/star_rai/star_rai_armature_final_v10.blend
+9145d12f95ce9089289ead6e7afa25186a7b5a00a1535a4d7cb997468c82f280  SAME  /workspace/blendbro/references/issue177_official_v1/issue177_reference_images/02_full_body_front_wireframe.jpg
+aac1885ebb32c3573e18866bf30d1137eb4f2f4563cad146f2788a84c22de4cb  SAME  /workspace/blendbro/references/issue177_official_v1/issue177_reference_images/03_full_body_side_wireframe.jpg
+fb9dcf137da76a35e9a92b7a1a3fce81972be5d52956f49ad100c10980f31bfc  SAME  /workspace/blendbro/references/issue177_official_v1/issue177_reference_images/04_full_body_back_wireframe.jpg
+
+all 8245 paths: before/after identical = True

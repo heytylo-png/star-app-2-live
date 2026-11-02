@@ -1,0 +1,26 @@
+{
+ "front": {
+  "n": 12465,
+  "mean": 7.803384304046631,
+  "p50": 6.529266357421875,
+  "p95": 19.342702865600586,
+  "max": 21.941669464111328,
+  "note": "informational only: model has hair geometry in all views; side/back references are bald; front reference clipped at image top"
+ },
+ "side": {
+  "n": 11091,
+  "mean": 2.62068772315979,
+  "p50": 2.3678760528564453,
+  "p95": 5.886899948120117,
+  "max": 7.19177770614624,
+  "note": "informational only: model has hair geometry in all views; side/back references are bald; front reference clipped at image top"
+ },
+ "back": {
+  "n": 11365,
+  "mean": 4.2378830909729,
+  "p50": 4.011420726776123,
+  "p95": 9.429503440856934,
+  "max": 11.202916145324707,
+  "note": "informational only: model has hair geometry in all views; side/back references are bald; front reference clipped at image top"
+ }
+}

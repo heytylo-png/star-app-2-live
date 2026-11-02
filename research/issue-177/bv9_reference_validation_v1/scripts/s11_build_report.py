@@ -1,0 +1,200 @@
+#!/usr/bin/env python3
+import json
+O='/workspace/blendbro/out/bv9_reference_validation_v1/'
+M=json.load(open(O+'data/silhouette_measurements.json')); G=json.load(open(O+'data/geometry_review.json'))
+FR=json.load(open(O+'data/fractions_within_tolerance.json')); HZ=json.load(open(O+'data/head_zone_info.json'))
+INS=json.load(open(O+'data/bv9_inspect.json')); INF=json.load(open(O+'work/bv9_geom_info.json')); REF=json.load(open(O+'data/reference_inventory.json'))
+body=[o for o in INS['objects'] if o['name']=='StarRai_base_body'][0]
+V=['front','side','back']
+def f(x,n=2): return f'{x:.{n}f}'
+def cls_view(v):
+    F=M[v]['modeF']['sym']['p95']; L=M[v]['modeL']['sym']['p95']; mean=M[v]['modeF']['sym']['mean']
+    if F>1.0: return 'FAIL'
+    return 'PASS' if (mean<=0.5 and L<=1.0) else 'NOT VERIFIABLE'
+def cls_band(v,i):
+    a=M[v]['modeF']['bands'][i]['outline_abs_mean_mm']; b=M[v]['modeL']['bands'][i]['outline_abs_mean_mm']
+    if a>1.0: return 'FAIL'
+    return 'PASS' if (a<=0.5 and b<=0.5) else 'NOT VERIFIABLE'
+L=[]
+A=L.append
+A('# bv9 reference accuracy validation — REPORT (read-only audit, task t125u)')
+A('')
+A('Model: `/workspace/blender/star_rai/star_rai_base_body_bv9.blend`  ·  References: official issue #177 set (`/workspace/blendbro/references/issue177_official_v1/`)  ·  Date: 2026-11-01 (America/Chicago)')
+A('')
+A('## 0. Verdict (read this first)')
+A('')
+vv={v:cls_view(v) for v in V}
+A(f'**bv9 does NOT meet the official reference requirements, and the ~1 mm outline target is NOT achieved (and cannot be claimed).** Front **{vv["front"]}**, side **{vv["side"]}**, back **{vv["back"]}**; full-body three-quarter views are missing from the official set (NOT VERIFIABLE); head close-ups have no scale link (NOT VERIFIABLE). The benchmark is incomplete.')
+A('')
+A('| view | calibration | mean | p50 | p90 | p95 | p99 | max (mm) | share of outline ≤1.0 mm | IoU (z<100) | class |')
+A('|---|---|---|---|---|---|---|---|---|---|---|')
+for v in V:
+    for mode,lab in [('modeF','F best-fit'),('modeL','L landmark')]:
+        s=M[v][mode]['sym']; fr=FR[v][mode]['overall']['frac_le_1.0mm']
+        A(f'| {v} | {lab} | {f(s["mean"])} | {f(s["p50"])} | {f(s["p90"])} | {f(s["p95"])} | {f(s["p99"])} | {f(s["max"])} | {f(fr*100,0)}% | {f(M[v][mode]["iou"],3)} | {vv[v] if mode=="modeF" else ""} |')
+A('')
+A('Distances are model-mm (1 Blender unit = 1 m; the figure is 244.8 mm tall). Contour-to-contour nearest distance, both directions, primary body zone z < 100 mm (soles to just under the shoulder tops). The median outline error is 0.5–0.75 mm, so most of the outline is near 1 mm, but every view has a tail of 4.0–5.1 mm (p95) and 6.7–13.6 mm (max) that no scale/offset change in the tested range removes (see section 4.4).')
+A('')
+A('Biggest discrepancies (Mode F): (1) **feet in side view** — the reference outline lies 8–10 mm beyond bv9 at the sole line (inference from the overlay and earlier bv9 notes: the reference foot is flat while the bv9 foot is pitched, "tiptoe"); (2) **arms/hands vs hips in front and back views** — bv9 arms hang away from the body leaving a gap wedge the references do not show (reference arms touch the hips), 10–18 mm in the outer silhouette; fingers/hands end 4–5 mm away from the reference at z 17–30; (3) front **knees/ankles** (−0.8…−1.6 mm per side) and back **ankles/knees/thighs** (−0.8…−1.5 mm per side) are narrower than the references in Mode F (partly camera-dependent: Mode L gives smaller front values); (4) head/hair/shoulder-top cannot be judged (section 5).')
+A('')
+A('**Process disclosures (read):** (a) the method/criteria were frozen and hashed before computing (`METHOD_AND_CRITERIA_FROZEN.md`); (b) after the first full run I found a *reference-segmentation* defect (it filled the real arm–torso gaps and used an unreliable brightness test) and corrected it in a disclosed Amendment A1 (`METHOD_AMENDMENT_A1.md`); the first-run numbers are kept in `data/superseded_run1/` — classification rules and thresholds were not changed; (c) a supplementary outer-contour-only metric (S1, section 4.5) was added post hoc and does not feed the classification; (d) two early scripting bugs (a triangle-fill call using even-odd fill, a horizontal-anchor bug) were fixed before any result below was produced; (e) two small implementation departures from the frozen text: outline-offset rows are every 2.5 mm (frozen text said 5 mm), and the bump/pinch check is implemented as a high-pass (σ 6 mm) of the model-minus-reference outline offset rather than a Gaussian-smoothed (σ 4 mm) model width profile.')
+A('')
+A('## 1. Scope, safety and what was (not) done')
+A('- Read-only. A COPY of bv9 (`work/bv9_copy.blend`, sha256 `d72cedc1…9689`, identical to the original) was opened with the already-installed Blender 5.2.2 in background mode to read mesh data; nothing was saved. No renders, installs, downloads, geometry/rig/weight/material changes, or new body version. Protected-file hashes before/after: see `logs/protected_before.txt`, `logs/protected_after.txt`, `logs/protected_diff.txt`.')
+A('- Not committed to the repo: the .blend, raw mesh exports (`work/*.npz`), and the official reference images (they are **not** in the public repo — checked by blob size/hash across all fetched refs). Committed overlays are contour-only (`overlays_publishable/`, no reference pixels). Local overlays with the dimmed reference as underlay are in `overlays/` (not committed).')
+A('')
+A('## 2. Step 1 — reference integrity (measured)')
+A('')
+A(f'Official set = nine files "supplied in the conversation" and copied byte-for-byte (README/manifest in the same folder). Manifest hashes, byte sizes and pixel dimensions were re-verified: **{REF["n_files"]} files, {REF["n_unique_images"]} unique images** (files 01 and 09 are byte-identical). All match `REFERENCE_MANIFEST.json`.')
+A('')
+A('| file | view / class | px | bytes | sha256 | used for mm measurement |')
+A('|---|---|---|---|---|---|')
+use={'02_full_body_front_wireframe.jpg':'YES (front)','03_full_body_side_wireframe.jpg':'YES (side)','04_full_body_back_wireframe.jpg':'YES (back)'}
+for e in REF['files']:
+    A(f'| `{e["filename"]}` | {e["description"]} | {e["width"]}×{e["height"]} | {e["bytes"]} | `{e["sha256"]}` | {use.get(e["filename"],"no (close-up, no scale link; or duplicate)")} |')
+A('')
+A('Gaps and uncertainty (measured/recorded, not inferred):')
+A('- **Missing:** full-body three-quarter front; full-body three-quarter back (only a head/back three-quarter close-up `07` exists). Issue #177 also mentions "earlier shaded multi-view appearance images" as official appearance references — **they are not among the nine files** and I found no file I can tie to them (NOT VERIFIABLE which, if any, workspace file they are).')
+A('- **Camera/provenance:** package README says not to assume calibrated orthographic views; no camera type, focal length, scale bar, framing or crop data exists. Original uploads are named `1655.jpg`…`1669.jpg`; provenance beyond the transfer package is NOT VERIFIED. All mm values below therefore rest on stated camera assumptions.')
+A('- **Reference content differs between views:** front reference has hair (clipped by the top image edge); side and back references show a bald head. bv9 carries hair geometry in all views.')
+A('- **Not used (unverified provenance, per instruction not to substitute):** the older colour "bikini" 5-view set the earlier bv9 fit was based on, and `star-rai-canon-refs/*`. They are inventoried in `data/reference_inventory.json` (sha256, dims) but contribute to no verdict. The earlier validation (`base_body/star_rai_base_body_bv9_validation.md`) used that bikini set — it is **not** a validation against the #177 set.')
+A('')
+A('## 3. Step 2 — model integrity (measured)')
+A('')
+mesh=body['mesh']
+A(f'- File: `/workspace/blender/star_rai/star_rai_base_body_bv9.blend`, 15,663,552 bytes, sha256 `d72cedc1fbe6aaa14bebddbe052af97321816f88e8c3065a920165cbcf6d9689`. It is **byte-identical** to `star_rai_base_body_v9.blend` (same hash), i.e. one candidate, not two. Format v5.2 (opened in Blender 5.2.2 LTS).')
+A(f'- Object `StarRai_base_body` (parent: armature `StarRai_star_rai_locked_v10`): **{mesh["verts"]:,} verts, {mesh["edges"]:,} edges, {mesh["faces"]:,} faces** ({body["topology"]["quads"]:,} quads, {body["topology"]["tris"]:,} tris, 0 n-gons), {mesh["loops"]:,} loops; boundary edges {body["topology"]["boundary_edges"]}, non-manifold edges {body["topology"]["nonmanifold_edges"]}, loose vertices {body["topology"]["loose_verts"]}; **{body["components"]["n"]} connected components** (largest {body["components"]["sizes"][0]:,}, {body["components"]["sizes"][1]:,}, {body["components"]["sizes"][2]:,} verts; the rest are small parts and 62 loose vertices). Materials: Rai_body_toon (4,546 tris, z 119–152 mm), Rai_hair_cap_toon (9,812 tris, z 100–157), Rai_skin_base_toon (45,372 tris, z −88–122), Rai_outline. 17 shape keys, 32 vertex groups.')
+A(f'- Units/dimensions: scene unit METRIC, scale_length 1.0, length unit METERS. World bbox x [{f(INF["bbox_min"][0]*1000,1)}, {f(INF["bbox_max"][0]*1000,1)}] y [{f(INF["bbox_min"][1]*1000,1)}, {f(INF["bbox_max"][1]*1000,1)}] z [{f(INF["bbox_min"][2]*1000,1)}, {f(INF["bbox_max"][2]*1000,1)}] mm → **70.8 × 38.6 × 244.8 mm** (sole z = −88.0 mm). The real-world scale this represents is not stored in the file (earlier notes disagree: constants 1.6554 / 1.65 m / 239.65 mm) — **NOT VERIFIED**; all mm here are model mm.')
+A('- Axes/orientation: Z up, the figure faces +Y, its right side is +X; object transforms identity (parent armature identity); empty `RaiFaceNormalCenter` present. Rest pose: no pose bone is non-identity.')
+A(f'- Modifiers on the body: Armature (max displacement vs base mesh {INF["armature_modifier_max_displacement_m"]:.1e} m → none at rest), NormalEdit (no positional effect), **Outline = Solidify** (thickness {INF["outline_params"]["thickness"]*1000:.1f} mm, offset +1, flipped normals, no rim). Evaluated geometry with Outline on = {INF["n_verts_with_outline"]:,} verts / {INF["n_tris_with_outline"]:,} tris (a back-face shell that makes a toon render ~0.3 mm larger than the measured silhouette). **Measurements use the evaluated mesh with Outline muted in memory** ({INF["n_verts_no_outline"]:,} verts). The separate object `StarRai_hair_strands` (16,068 verts) is not part of the silhouette.')
+A('- v8s unchanged: `star_rai_base_body_v8s.blend` sha256 `1c5ce67f…27e9` (before and after; see `logs/protected_diff.txt`). v10 armature `f459ea1f…514f` also unchanged.')
+A('')
+A('## 4. Step 3 — view-by-view silhouette comparison')
+A('')
+A('### 4.1 Method (frozen; see `METHOD_AND_CRITERIA_FROZEN.md`)')
+A('- Reference silhouette: wire-texture segmentation (3×3 local std > 4 grey levels, close 5×5, hole policy per Amendment A1). Model silhouette: orthographic triangle rasterisation of the evaluated mesh at 4× reference resolution (same grid/half-pixel convention as the 4×-upsampled reference mask).')
+A('- Camera (orthographic **assumed**, NOT VERIFIED): isotropic scale s [px/mm], translation. Two calibrations per view: **Mode L** = landmark-only (sole line ↔ z=−88; scale from reference sole→bald-skull-top ÷ model sole→top of material-0 head surface for side/back, front uses the mean of side/back because its crown is clipped; horizontal anchor = lower-leg centroid) and **Mode F** = best-fit similarity (maximise IoU over z<100, ±6% scale). Mode F is the most favourable camera for the model within this camera class.')
+A('- Metric: nearest distance between the two outlines (all contours incl. enclosed gaps), both directions, in zone z < 100 mm. 1 reference px = 1/s mm ≈ 0.17 mm. Landmarks used: lowest foreground row (sole), top foreground row of the bald head (side/back), lower-leg centroid rows z −60…−30, model z_crown = max z of material 0 (151.6 mm; assumption NOT VERIFIED).')
+A('')
+A('### 4.2 Cameras')
+A('')
+A('| view | Mode L s (px/mm) | Mode F s (px/mm) | F−L scale | F tx, ty (px) | IoU z<100 (F) | note |')
+A('|---|---|---|---|---|---|---|')
+for v in V:
+    l=M[v]['modeL_cam']; fcam=M[v]['modeF_cam']
+    note={'front':'L scale assumed = mean(side,back); crown clipped','side':'L from sole→skull','back':'L from sole→skull'}[v]
+    A(f'| {v} | {f(l["s"],3)} | {f(fcam["s"],3)} | {f((fcam["s"]/l["s"]-1)*100,1)}% | {f(fcam["tx"],1)}, {f(fcam["ty"],1)} | {f(fcam["iou_zone"],3)} | {note} |')
+A('')
+A(f'The best-fit scales differ between views by up to {f((max(M[v]["modeF_cam"]["s"] for v in V)/min(M[v]["modeF_cam"]["s"] for v in V)-1)*100,1)}% (front 5.69, back 5.74, side 5.98 px/mm). One camera scale cannot reconcile all three views with the model: either the reference views are not mutually scale-consistent, or bv9\'s height-to-width proportions differ from the references, or the views are perspective — these cannot be separated with the evidence available (NOT VERIFIED). I did not average or force the views into agreement.')
+A('')
+A('### 4.3 Per-view results (primary body zone z < 100 mm; Mode F first, Mode L in the summary table above)')
+for v in V:
+    A('')
+    A(f'#### {v.upper()} — {cls_view(v)}  (reference `{ {"front":"02","side":"03","back":"04"}[v]}`; overlay: `overlays_publishable/overlay_{v}_modeF.png`, heat: `deviation_heat_{v}_modeF.png`)')
+    r=M[v]['modeF']
+    A(f'- Outline distance R→M (reference points to model outline): mean {f(r["R2M"]["mean"])}, p50 {f(r["R2M"]["p50"])}, p90 {f(r["R2M"]["p90"])}, p95 {f(r["R2M"]["p95"])}, p99 {f(r["R2M"]["p99"])}, max {f(r["R2M"]["max"])} mm; M→R: mean {f(r["M2R"]["mean"])}, p50 {f(r["M2R"]["p50"])}, p90 {f(r["M2R"]["p90"])}, p95 {f(r["M2R"]["p95"])}, p99 {f(r["M2R"]["p99"])}, max {f(r["M2R"]["max"])} mm.')
+    A(f'- Area: reference {r["ref_area_mm2"]:.0f} mm² vs model {r["model_area_mm2"]:.0f} mm² in zone; symmetric difference {r["symdiff_area_mm2"]:.0f} mm² (IoU {f(r["iou"],3)}). Share of outline points beyond tolerance: ≤0.5 mm {f(FR[v]["modeF"]["overall"]["frac_le_0.5mm"]*100,0)}%, ≤1 mm {f(FR[v]["modeF"]["overall"]["frac_le_1.0mm"]*100,0)}%, ≤2 mm {f(FR[v]["modeF"]["overall"]["frac_le_2.0mm"]*100,0)}%.')
+    A('')
+    A('| band (z mm) | sym mean | sym p95 | sym max | mean abs outline offset F / L (mm) | signed offset L-side / R-side (+ = model wider), F | share ≤1 mm (F) | band class |')
+    A('|---|---|---|---|---|---|---|---|')
+    for i,b in enumerate(r['bands']):
+        bl=M[v]['modeL']['bands'][i]
+        A(f'| {b["band"]} ({b["z0"]}…{b["z1"]}) | {f(b["sym_mean"])} | {f(b["sym_p95"])} | {f(b["sym_max"])} | {f(b["outline_abs_mean_mm"])} / {f(bl["outline_abs_mean_mm"])} | {f(b["outline_signed_mean_left"])} / {f(b["outline_signed_mean_right"])} | {f(FR[v]["modeF"]["bands"][b["band"]]["frac_le_1.0mm"]*100,0)}% | {cls_band(v,i)} |')
+    A('')
+    A('Worst regions (Mode F; clusters of outline points > 1 mm from the other outline, 3 mm z-bins; "model short" = reference outline lies outside bv9; "model proud" = bv9 outline lies outside the reference):')
+    for c in M[v]['worst_clusters_modeF'][:6]:
+        A(f'- z {c["z0"]:.0f}…{c["z1"]:.0f} mm, {c["side"]}: {"model short" if c["type"].startswith("model_short") else "model proud"}, n={c["n"]}, mean {f(c["mean_d"])} mm, max {f(c["max_d"])} mm')
+    A('')
+    A('Sensitivity of p95 (mm) — separation of camera/segmentation uncertainty from geometry mismatch (Mode F camera, one parameter varied):')
+    A('')
+    A('| baseline | scale −2% | scale +2% | x ±1 px | y ±2 px | ref segmentation thr 3 / 6 | Mode L p95 |')
+    A('|---|---|---|---|---|---|---|')
+    S={s['label']:s for s in M[v]['sensitivity']}
+    A(f'| {f(S["modeF baseline"]["p95"])} | {f(S["scale -2%"]["p95"])} | {f(S["scale +2%"]["p95"])} | {f(S["x shift -1px"]["p95"])} / {f(S["x shift +1px"]["p95"])} | {f(S["y shift -2px"]["p95"])} / {f(S["y shift +2px"]["p95"])} | {f(S["ref segmentation texture thr 3.0"]["p95"])} / {f(S["ref segmentation texture thr 6.0"]["p95"])} | {f(M[v]["modeL"]["sym"]["p95"])} |')
+A('')
+A('Note on the band tables: "mean abs outline offset" uses the outermost left/right extents of each 2.5 mm row, so rows where the hands/fingers are the outermost feature (front/back z ≈ 15–25) inflate the thighs band (front thighs signed means are only −0.3 mm). The signed means and the contour-distance columns are given alongside for that reason. The band class is the frozen rule applied literally.')
+A('')
+A('### 4.4 Geometry mismatch vs camera/projection uncertainty (the separation requested)')
+A('- **Measured:** within the tested uncertainty (scale ±2%, shifts ±1–2 px ≈ ±0.2–0.35 mm, segmentation threshold 3…6) p95 moves by at most ~0.5 mm (front thr-3 segmentation: +1.9 mm, because the arm–torso gap pocket detection changes); it stays 4–5 mm. Mode L and Mode F give similar tails (4.4–4.7 vs 4.1–5.1 mm). The p95 failure therefore does not come from scale/offset error of an orthographic camera, nor from the ±1 px (±0.17 mm) edge uncertainty.')
+A('- **Inference (not measured):** the dominant tails are geometry/pose differences at the arms/hands/hips (front, back) and the feet (side, back): they are localised, large (5–18 mm), consistent between overlays, and absent from the leg shafts where agreement is ~0.3–1.0 mm (mean outline distance).')
+A('- **NOT VERIFIED:** perspective/lens effects, view-to-view reference inconsistency, and reference distortion cannot be excluded; they would act as an additional, unquantified uncertainty on every number here. The sub-mm figures (e.g. side thighs mean 0.30 mm) are also bounded below by the reference edge uncertainty (±1 px ≈ ±0.17 mm) and segmentation threshold dependence.')
+A('')
+A('### 4.5 Supplement S1 (post hoc, disclosed): outer contour only')
+A('Enclosed gaps (arm–torso pockets) were also filled in both masks, so only the visible external outline is compared. It does not feed the classification.')
+A('')
+A('| view | calibration | mean | p50 | p95 | p99 | max |')
+A('|---|---|---|---|---|---|---|')
+for v in V:
+    for mode in ['modeF_outer','modeL_outer']:
+        s=M[v][mode]['sym']; A(f'| {v} | {mode[:5]} outer | {f(s["mean"])} | {f(s["p50"])} | {f(s["p95"])} | {f(s["p99"])} | {f(s["max"])} |')
+A('')
+A('Front/back worsen (p95 ≈ 10 mm, max 18–19 mm) because the model has an open slit between arm and hip where the references show the arm touching the hip. Side is unchanged (arms overlap the torso in profile).')
+A('')
+A('### 4.6 Informational: head/hair/shoulder-top zone (z ≥ 100 mm) — NOT used for classification')
+A('| view | mean | p50 | p95 | max (mm) |')
+A('|---|---|---|---|---|')
+for v in V: A(f'| {v} | {f(HZ[v]["mean"])} | {f(HZ[v]["p50"])} | {f(HZ[v]["p95"])} | {f(HZ[v]["max"])} |')
+A('Model has hair geometry; side/back references are bald; the front reference is clipped at the top edge. No valid like-for-like comparison exists.')
+A('')
+A('## 5. Step 4 — geometry and surface review')
+A('')
+sm=G['smoothness']; cs=G['cross_sections']; ma=G['model_mirror_asymmetry']
+A('Measured on bv9 only unless stated. These checks have no pass/fail threshold supplied by the references, so the class is NOT VERIFIABLE unless stated.')
+A(f'- **Surface smoothness** (dihedral angle across {sm["n_edges"]:,} skin-material edges, z<100): p50 {f(sm["p50"],1)}°, p95 {f(sm["p95"],1)}°, p99 {f(sm["p99"],1)}°, max {f(sm["max"],0)}°; {sm["n_gt30"]:,} edges > 30°, {sm["n_gt45"]:,} > 45°, {sm["n_gt60"]:,} > 60°. Counts by 10-mm z-bin of edges > 30°: {sm["gt30deg_by_z10"]}. The clusters at z ≈ 20…36 mm, x ≈ ±33 mm are the **hands/fingers** (slice loops at z 25–33 show four small loops per side at x ≈ ±34: `data/slice_loops_diag_z21_41.json`) and z ≈ −90…−70 are the **toes/foot**; creases there are expected anatomy (inference from the slice diagnostic). No bump/crease audit against the reference surfaces is possible from silhouettes.')
+A(f'- **Cross-section consistency** (skin slices every 2 mm, z −87…99): loop count 2 (legs) up to z≈21, 6–12 at z 23–35 (hands/fingers beside the hips), 3 at z 37–89, 1 at z 91–97, and 8 at z=99 (head/hair surface, 5 loops not closed by the walker). The loop-count changes are explained by legs/crotch/fingers; no unexplained extra shells in the trunk. Area second-difference extremes (> 4 robust σ) at z = {[x["z"] for x in cs["flagged_levels_gt4sigma"]]}. The cluster at **z 43–47 (negative) and z 53 (positive)** matches the "hip shelf then waist pinch" described in the earlier bv9 validation; this audit could not confirm it against the references there (front/back references have the arms occluding the torso side; side-view outline offset at hips/crotch is 0.6 mm mean). Class: **NOT VERIFIABLE** against references.')
+A(f'- **Silhouette continuity** (kinks > 25° within 1 mm arc on the model outer outline, z<100): front {G["silhouette_continuity"]["front"]["n_kink_clusters_gt25deg_in_1mm"]}, side {G["silhouette_continuity"]["side"]["n_kink_clusters_gt25deg_in_1mm"]}, back {G["silhouette_continuity"]["back"]["n_kink_clusters_gt25deg_in_1mm"]} clusters; they are at the fingers (z ≈ 23–36), the toe/sole (z ≈ −88) and the shoulder/armpit junction (z ≈ 90–91) — the model outline is otherwise continuous (leg shafts and torso have none).')
+A(f'- **Bumps/pinching vs reference** (outline offset high-pass σ=6 mm, |Δ|>1 mm): front at z 15–25 (hand/finger zone, offsets up to +10 mm) and z 30–37; side at the foot (z −85…−70, −9…−21 mm) only; back at z −82…−77 and z 20. No bump/pinch candidates along the leg shafts, torso or thighs in the side view. Candidates are listed in `data/geometry_review.json` (`bump_pinch_candidates_modelminusref_highpass_gt1mm`).')
+A(f'- **Asymmetry:** bv9 mirror deviation (x→−x, nearest skin vertex): mean {f(ma["mean_mm"])} mm, p95 {f(ma["p95"])} mm, max {f(ma["max"])} mm; the **knees band is the largest** (mean {f(ma["by_band"]["knees"]["mean"])} mm, max {f(ma["by_band"]["knees"]["max"])} mm), other bands ≤ 0.55 mm mean. Outline half-width L−R about the Mode-F axis: bv9 ≤ 0.5 mm in every band; **the references themselves are asymmetric by up to {f(max(abs(b["ref_asym_absmax"]) for vv_ in ["front","back"] for b in G["outline_left_right_asymmetry"][vv_]["bands"].values()))} mm** (hips band, front ref mean +0.7 mm), so a mirror-symmetric model cannot match both sides of the references within 1 mm everywhere. Reference asymmetry is a floor on the achievable agreement (measured; the cause — drawing vs pose — is NOT VERIFIED).')
+cons=G['reference_cross_view_consistency']
+A('- **Reference cross-view consistency (reference-only; assumes the same px/mm in front and back — NOT VERIFIED):** figure heights sole→top: front ≥1521 px (clipped), side 1446 px, back 1430 px. Back/front outer width ratios at equal height above the sole range 0.92–1.08 on the legs and torso (e.g. 0.92 at 420 px, 1.08 at 240 px, 1.05 at 300 px) and 1.2–1.4 at the hips/arms (arms attach differently), so the reference views are not mutually consistent at the mm level. Not averaged.')
+A('- **Hidden / non-establishable geometry (NOT VERIFIABLE):** depth profile of the torso/bust/arms between views (only three axis-aligned views, no 3/4 body views), inner thigh gap and crotch, armpits, under-bikini surface (references show a bikini; bv9 body is bare skin), sole/underfoot, back of the head under hair vs bald refs, anything above z=100 mm. No geometry was inferred or invented for these.')
+A('')
+A('## 6. Step 5 — findings (classified)')
+A('')
+A('| id | finding | class | evidence |')
+A('|---|---|---|---|')
+F=[]
+F.append(('R1','All nine #177 reference files exist and match manifest hashes/sizes/dims (8 unique)','PASS','`data/reference_inventory.json`'))
+F.append(('R2','Full-body front, side, back available','PASS','refs 02, 03, 04'))
+F.append(('R3','Full-body three-quarter (front and back) views','NOT VERIFIABLE (missing from official set)','section 2'))
+F.append(('R4','Camera type/scale/framing of the references','NOT VERIFIABLE (no data; orthographic assumed)','section 2/4.1'))
+F.append(('R5','Head close-ups (01,05,06,07,08,09) vs model','NOT VERIFIABLE (no scale link to the body views, hair/bald mismatch)','section 2'))
+F.append(('M1','bv9 identity, counts, dimensions, axes, modifiers recorded; single candidate (bv9 ≡ v9)','PASS (measured)','section 3'))
+F.append(('M2','v8s, v10 armature, other protected files unchanged by this audit','PASS (hash before/after)','`logs/protected_diff.txt`'))
+for v in V:
+    s=M[v]['modeF']['sym']
+    F.append((f'V-{v}',f'{v} silhouette, z<100: p95 {f(s["p95"])} mm, mean {f(s["mean"])} mm (Mode F); Mode L p95 {f(M[v]["modeL"]["sym"]["p95"])} mm',cls_view(v),f'section 4.3, `overlays_publishable/overlay_{v}_modeF.png`'))
+F.append(('V-1mm','"~1 mm outline agreement" target','FAIL — not achieved in any view; 57–72% of outline points ≤1 mm (Mode F), tails 4.0–5.1 mm (p95)','section 4.3'))
+F.append(('V-3q','three-quarter silhouette comparison','NOT VERIFIABLE (no reference)','section 2'))
+F.append(('B-side-leg','side view knees and thighs (z −40…25): mean abs offset 0.33 / 0.32 mm (F), 0.43 / 0.35 (L); sym p95 0.92 / 0.67 mm','PASS (band rule; still bounded by ±0.17 mm edge uncertainty and assumed camera)','section 4.3'))
+F.append(('B-feet','feet: side p95 9.3 mm (model foot pitched/short vs flat reference foot), back 4.4 mm, front 2.4 mm','FAIL','section 4.3'))
+F.append(('B-arms','arms/hands vs hips (front/back outline gap wedge; hands 4–5 mm off at z 17–30; outer silhouette max 18–19 mm)','FAIL','sections 4.3, 4.5'))
+F.append(('B-legs-fb','front knees/ankles (−0.8…−1.6 mm per side) and back ankles/knees/thighs (−0.8…−1.5 mm per side) narrower than the references in Mode F (band mean abs offset 1.0–1.5 mm; 0.3–0.7 mm in Mode L for front knees/thighs/ankles, so partly camera-dependent)','FAIL (Mode F) / camera-dependent','section 4.3'))
+F.append(('B-torso','waist/ribs, bust/arms bands','FAIL (side bust/arms), NOT VERIFIABLE elsewhere (arm occlusion, bikini, hair)','section 4.3'))
+F.append(('G-smooth','surface smoothness / creases','NOT VERIFIABLE vs references (measured values in section 5; creases located at fingers/toes)','section 5'))
+F.append(('G-xsec','cross-section consistency','PASS for internal consistency (loop counts explained); hip-shelf/pinch signature at z 43–53 NOT VERIFIABLE vs references','section 5'))
+F.append(('G-sym','asymmetry','bv9 mirror deviation mean 0.40 mm (knees larger, 1.5 mm mean) — NOT VERIFIABLE vs the (themselves asymmetric, ≤1.2 mm) references','section 5'))
+F.append(('G-head','head/hair/shoulder-top zone z ≥ 100','NOT VERIFIABLE','section 4.6'))
+F.append(('G-hidden','hidden geometry (depth, under-bikini, crotch, armpits, soles)','NOT VERIFIABLE','section 5'))
+for r in F: A(f'| {r[0]} | {r[1]} | {r[2]} | {r[3]} |')
+A('')
+A('## 7. Measured / inferred / NOT VERIFIED (kept separate)')
+A('**Measured:** reference and model hashes, dims and counts; silhouette distance statistics for the stated camera assumptions; sensitivity of those statistics; band tables; slice loop counts; dihedral statistics; mirror deviation; reference L/R asymmetry; reference cross-view width ratios.')
+A('**Inferred (labelled where used):** that the large tails are arm/hand/hip pose and foot-shape differences (from overlays and band positions); that crease clusters are fingers/toes (from slice-loop diagnostic); that the front-vs-side-vs-back scale spread points to reference inconsistency and/or proportion mismatch.')
+A('**NOT VERIFIED:** orthographic assumption; the real-world scale of the model; z_crown = top of material-0 (used only in Mode L); that "official" views are metrically consistent; missing 3/4 views and "earlier shaded" appearance set; anything under hair/bikini; perspective effects.')
+A('')
+A('## 8. Ranked correction proposals (PROPOSALS ONLY — nothing implemented; each needs TyLo\'s explicit approval and must change one variable at a time)')
+A('1. **Arm/hand placement vs hips (front/back, largest area error, 10–18 mm outer-silhouette tail):** compare arm abduction/hand position against the references; the references show the arms touching the hips. Highest visual impact. Note arm/shoulder rig interplay (v10 armature is locked).')
+A('2. **Feet (side p95 9 mm, 8–10 mm model-short at the sole line; back 4–5 mm):** foot pitch/sole flatness and toe length vs the references. Previously noted as blocked by the locked v10 foot bones — needs a TyLo decision before any work.')
+A('3. **Obtain calibration/references before any mm claim:** supply the missing full-body three-quarter views, a statement of camera type/scale (or orthographic turnaround with scale bar), and confirmation of which "earlier shaded" images are official. Without this, even a perfect model cannot be shown to reach 1 mm.')
+A('4. **Front knee/ankle and back ankle/knee/thigh width (≈0.8–1.6 mm per side narrower in Mode F):** may be partly camera-dependent (Mode L shows 0.3–0.7 mm for front knees/thighs); re-measure after item 3 before changing anything.')
+A('5. **Hip shelf / waist pinch (z 43–53 area-profile signature):** re-check once arm-free reference evidence exists; not confirmed here.')
+A('6. **Head/hair:** define the head reference to compare (bald vs hair); until then the head zone is not assessable.')
+A('')
+A('## 9. Relation to the earlier bv9 validation')
+A('`base_body/star_rai_base_body_bv9_validation.md` (earlier session) measured v8→bv9 against the colour "bikini" set with different masks and masked-out regions (it reports bv9 mean outline error of 0.46 mm front and 0.63 mm side). Those numbers are **not comparable** with this audit (different reference set, different segmentation, ~44–50% of edges masked, camera fitted by body-mesh matching). Qualitatively both identify the arm/hip region and the feet as the main problems.')
+A('')
+A('## 10. Reproduction')
+A('Environment: Debian, Python 3.13.5, numpy 2.5.4, scipy 1.18.1, OpenCV 5.0.0, Pillow; Blender 5.2.2 LTS (headless, read-only, copy of bv9). Order: `s01_reference_inventory.py` → (Blender) `s02_inspect_bv9.py`, `s03_export_geometry.py` → `s05_measure.py` → `s06_geometry_review.py` → `s09_loop_diag.py` → `s10_fractions.py` → `s07_overlays.py` → `s11_build_report.py`. `refseg.py` is the reference segmentation (Amendment A1 version). Reference images are required inputs but are NOT in the repo (paths and sha256 in `data/reference_inventory.json`); the exported geometry (`work/bv9_geom.npz`) is likewise not committed. Scripts contain absolute paths of the local box.')
+open(O+'REPORT.md','w').write('\n'.join(L)+'\n')
+print('REPORT written',len('\n'.join(L)))

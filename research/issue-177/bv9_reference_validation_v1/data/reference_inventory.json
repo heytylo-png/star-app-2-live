@@ -1,0 +1,198 @@
+{
+ "official_set_dir": "/workspace/blendbro/references/issue177_official_v1/issue177_reference_images/",
+ "n_files": 9,
+ "n_unique_images": 8,
+ "files": [
+  {
+   "file": "/workspace/blendbro/references/issue177_official_v1/issue177_reference_images/01_head_front_shaded_detail.jpg",
+   "filename": "01_head_front_shaded_detail.jpg",
+   "description": "Head/face close-up, front, shaded sculpt reference",
+   "original_upload": "1657.jpg",
+   "width": 864,
+   "height": 1536,
+   "bytes": 204489,
+   "sha256": "0be85208edd547b6796746e160f3f3172093676f536ff6001eab84ff0a32092c",
+   "manifest_sha256": "0be85208edd547b6796746e160f3f3172093676f536ff6001eab84ff0a32092c",
+   "hash_matches_manifest": true,
+   "size_matches_manifest": true
+  },
+  {
+   "file": "/workspace/blendbro/references/issue177_official_v1/issue177_reference_images/02_full_body_front_wireframe.jpg",
+   "filename": "02_full_body_front_wireframe.jpg",
+   "description": "Full-body front view, wireframe/topology reference",
+   "original_upload": "1658.jpg",
+   "width": 864,
+   "height": 1536,
+   "bytes": 197729,
+   "sha256": "9145d12f95ce9089289ead6e7afa25186a7b5a00a1535a4d7cb997468c82f280",
+   "manifest_sha256": "9145d12f95ce9089289ead6e7afa25186a7b5a00a1535a4d7cb997468c82f280",
+   "hash_matches_manifest": true,
+   "size_matches_manifest": true
+  },
+  {
+   "file": "/workspace/blendbro/references/issue177_official_v1/issue177_reference_images/03_full_body_side_wireframe.jpg",
+   "filename": "03_full_body_side_wireframe.jpg",
+   "description": "Full-body side view, wireframe/topology reference",
+   "original_upload": "1659.jpg",
+   "width": 864,
+   "height": 1536,
+   "bytes": 145596,
+   "sha256": "aac1885ebb32c3573e18866bf30d1137eb4f2f4563cad146f2788a84c22de4cb",
+   "manifest_sha256": "aac1885ebb32c3573e18866bf30d1137eb4f2f4563cad146f2788a84c22de4cb",
+   "hash_matches_manifest": true,
+   "size_matches_manifest": true
+  },
+  {
+   "file": "/workspace/blendbro/references/issue177_official_v1/issue177_reference_images/04_full_body_back_wireframe.jpg",
+   "filename": "04_full_body_back_wireframe.jpg",
+   "description": "Full-body back view, wireframe/topology reference",
+   "original_upload": "1660.jpg",
+   "width": 864,
+   "height": 1536,
+   "bytes": 195425,
+   "sha256": "fb9dcf137da76a35e9a92b7a1a3fce81972be5d52956f49ad100c10980f31bfc",
+   "manifest_sha256": "fb9dcf137da76a35e9a92b7a1a3fce81972be5d52956f49ad100c10980f31bfc",
+   "hash_matches_manifest": true,
+   "size_matches_manifest": true
+  },
+  {
+   "file": "/workspace/blendbro/references/issue177_official_v1/issue177_reference_images/05_head_side_wireframe.jpg",
+   "filename": "05_head_side_wireframe.jpg",
+   "description": "Head/face side close-up, wireframe/topology reference",
+   "original_upload": "1666.jpg",
+   "width": 864,
+   "height": 1536,
+   "bytes": 203760,
+   "sha256": "06db16bcfac7da6c11fa989d6243cfaf2514897974e7ad7f2df1877b74d121f9",
+   "manifest_sha256": "06db16bcfac7da6c11fa989d6243cfaf2514897974e7ad7f2df1877b74d121f9",
+   "hash_matches_manifest": true,
+   "size_matches_manifest": true
+  },
+  {
+   "file": "/workspace/blendbro/references/issue177_official_v1/issue177_reference_images/06_head_back_wireframe.jpg",
+   "filename": "06_head_back_wireframe.jpg",
+   "description": "Head/back close-up, wireframe/topology reference",
+   "original_upload": "1669.jpg",
+   "width": 864,
+   "height": 1536,
+   "bytes": 229273,
+   "sha256": "44cd23e689b5f5b51e82184e54a744b98c7b9adb6bdd23bee22f6d4895d3b43c",
+   "manifest_sha256": "44cd23e689b5f5b51e82184e54a744b98c7b9adb6bdd23bee22f6d4895d3b43c",
+   "hash_matches_manifest": true,
+   "size_matches_manifest": true
+  },
+  {
+   "file": "/workspace/blendbro/references/issue177_official_v1/issue177_reference_images/07_head_threequarter_back_wireframe.jpg",
+   "filename": "07_head_threequarter_back_wireframe.jpg",
+   "description": "Head/back three-quarter close-up, wireframe/topology reference",
+   "original_upload": "1667.jpg",
+   "width": 864,
+   "height": 1536,
+   "bytes": 201953,
+   "sha256": "c90eee9f1b899b12dc2c52c3c24e6c7ac305dbe255572c6b938d32f8791bffb9",
+   "manifest_sha256": "c90eee9f1b899b12dc2c52c3c24e6c7ac305dbe255572c6b938d32f8791bffb9",
+   "hash_matches_manifest": true,
+   "size_matches_manifest": true
+  },
+  {
+   "file": "/workspace/blendbro/references/issue177_official_v1/issue177_reference_images/08_head_front_wireframe.jpg",
+   "filename": "08_head_front_wireframe.jpg",
+   "description": "Head/face front close-up, wireframe/topology reference",
+   "original_upload": "1656.jpg",
+   "width": 864,
+   "height": 1536,
+   "bytes": 280196,
+   "sha256": "0fb0d44b2f4b2983f3adb4eadc8d4b304dcc2ce1fd388c2de0473888cfc999ee",
+   "manifest_sha256": "0fb0d44b2f4b2983f3adb4eadc8d4b304dcc2ce1fd388c2de0473888cfc999ee",
+   "hash_matches_manifest": true,
+   "size_matches_manifest": true
+  },
+  {
+   "file": "/workspace/blendbro/references/issue177_official_v1/issue177_reference_images/09_head_front_shaded_detail_duplicate.jpg",
+   "filename": "09_head_front_shaded_detail_duplicate.jpg",
+   "description": "Head/face close-up, front, shaded sculpt reference",
+   "original_upload": "1655.jpg",
+   "width": 864,
+   "height": 1536,
+   "bytes": 204489,
+   "sha256": "0be85208edd547b6796746e160f3f3172093676f536ff6001eab84ff0a32092c",
+   "manifest_sha256": "0be85208edd547b6796746e160f3f3172093676f536ff6001eab84ff0a32092c",
+   "hash_matches_manifest": true,
+   "size_matches_manifest": true
+  }
+ ],
+ "not_used_unverified_sets": [
+  {
+   "file": "/workspace/blender/star_rai/reference/bikini/bikini_34_back.jpg",
+   "width": 1008,
+   "height": 1792,
+   "bytes": 277440,
+   "sha256": "005a0063c62dc8442a74e11e5c39f91da1e919603963f6dea6e8afa47426705a"
+  },
+  {
+   "file": "/workspace/blender/star_rai/reference/bikini/bikini_34_front.jpg",
+   "width": 1008,
+   "height": 1792,
+   "bytes": 262904,
+   "sha256": "4e2b9e079dc11018f425f798fb31ffc9f09ba25769c0e2310fb0efb593554856"
+  },
+  {
+   "file": "/workspace/blender/star_rai/reference/bikini/bikini_back.jpg",
+   "width": 720,
+   "height": 1280,
+   "bytes": 177728,
+   "sha256": "255d0e1b7608a4e2121c31f5d458406f8449ac7622f69a32539c2ca333d39f04"
+  },
+  {
+   "file": "/workspace/blender/star_rai/reference/bikini/bikini_front.jpg",
+   "width": 1008,
+   "height": 1792,
+   "bytes": 315428,
+   "sha256": "3ce12b87f8ada80eb72edfb337fe8e443bc899ae43dbee5bf786d8a65055ad1f"
+  },
+  {
+   "file": "/workspace/blender/star_rai/reference/bikini/bikini_side.jpg",
+   "width": 1008,
+   "height": 1792,
+   "bytes": 200279,
+   "sha256": "916ce18fe7b6bd92cee5dba7bf0c33176c5c150fb5a7f1022ab9333ac1103ef0"
+  },
+  {
+   "file": "/workspace/star-rai-canon-refs/01-front-idle.png",
+   "width": 1008,
+   "height": 1792,
+   "bytes": 694171,
+   "sha256": "2ce3f3939f7a68e0157706665981b9005461b3a9835c220618752f9718f57ec6"
+  },
+  {
+   "file": "/workspace/star-rai-canon-refs/02-three-quarter.jpg",
+   "width": 1008,
+   "height": 1792,
+   "bytes": 249469,
+   "sha256": "e21a841cf627f0aa3baa1ed126d40ebd3c843768c1c599e7b267e53931d8dbbe"
+  },
+  {
+   "file": "/workspace/star-rai-canon-refs/03-side.jpg",
+   "width": 1008,
+   "height": 1792,
+   "bytes": 219291,
+   "sha256": "9a7cdefcd717c268889ac7e7a94ca603f61e73fee5452357a4e0e05f860f9ece"
+  },
+  {
+   "file": "/workspace/star-rai-canon-refs/04-back.jpg",
+   "width": 1008,
+   "height": 1792,
+   "bytes": 252915,
+   "sha256": "8b8d64a5d3804a9cbe83869ba7389bd4a3429c472df4809b155ac4948c1d9f1b"
+  },
+  {
+   "file": "/workspace/star-rai-canon-refs/05-face-closeup.jpg",
+   "width": 1264,
+   "height": 1568,
+   "bytes": 452306,
+   "sha256": "cbfe34b968beaf0f067b45d976823d6901abd45684a0290b8a579dbb6697a3f4"
+  }
+ ],
+ "readme_sha256": "a3a0c1a7a7ce1f79501525f284e7933147445a58786a853e40f8587f0927893e",
+ "manifest_sha256": "c972df6a995a8443038164c1304ba0e15931def5db5086def64f424d8be75fef"
+}
