@@ -1,0 +1,159 @@
+{
+ "baseline_vs_itself": {
+  "A": {
+   "value": false,
+   "kind": "A",
+   "components": [
+    {
+     "cond": "P",
+     "name": "front gap_z25_80 mean decrease (mm)",
+     "delta": 0.0
+    },
+    {
+     "cond": "P",
+     "name": "back gap_z25_80 mean decrease (mm)",
+     "delta": 0.0
+    },
+    {
+     "cond": "R",
+     "name": "front gap_z25_80 mean decrease (mm)",
+     "delta": 0.0
+    },
+    {
+     "cond": "R",
+     "name": "back gap_z25_80 mean decrease (mm)",
+     "delta": 0.0
+    }
+   ],
+   "reasons": [
+    "front gap_z25_80 mean decrease (mm): zero change (P +0.0000, R +0.0000) -> cannot agree",
+    "back gap_z25_80 mean decrease (mm): zero change (P +0.0000, R +0.0000) -> cannot agree"
+   ]
+  },
+  "B": {
+   "value": false,
+   "kind": "B",
+   "components": [
+    {
+     "cond": "P",
+     "name": "side foot_zlt-60 mean decrease (mm)",
+     "delta": 0.0
+    },
+    {
+     "cond": "P",
+     "name": "side sole_envelope mean_abs_dz decrease (mm)",
+     "delta": 0.0
+    },
+    {
+     "cond": "R",
+     "name": "side foot_zlt-60 mean decrease (mm)",
+     "delta": 0.0
+    },
+    {
+     "cond": "R",
+     "name": "side sole_envelope mean_abs_dz decrease (mm)",
+     "delta": 0.0
+    }
+   ],
+   "reasons": [
+    "side foot_zlt-60 mean decrease (mm): zero change (P +0.0000, R +0.0000) -> cannot agree",
+    "side sole_envelope mean_abs_dz decrease (mm): zero change (P +0.0000, R +0.0000) -> cannot agree"
+   ]
+  }
+ },
+ "note_retrospective": "Retrospective demonstration on the committed correction-study measurements (measure_run1.json, measure_b1_run1.json). It does not change any earlier verdict: A, B, B1 already FAIL on other clauses; no new candidate was built or measured.",
+ "retrospective_committed": {
+  "A": {
+   "value": false,
+   "kind": "A",
+   "components": [
+    {
+     "cond": "P",
+     "name": "front gap_z25_80 mean decrease (mm)",
+     "delta": -0.592714786529541
+    },
+    {
+     "cond": "P",
+     "name": "back gap_z25_80 mean decrease (mm)",
+     "delta": -1.0320895910263062
+    },
+    {
+     "cond": "R",
+     "name": "front gap_z25_80 mean decrease (mm)",
+     "delta": 0.6374646425247192
+    },
+    {
+     "cond": "R",
+     "name": "back gap_z25_80 mean decrease (mm)",
+     "delta": 0.34047210216522217
+    }
+   ],
+   "reasons": [
+    "front gap_z25_80 mean decrease (mm): sign differs (P -0.5927, R +0.6375)",
+    "back gap_z25_80 mean decrease (mm): sign differs (P -1.0321, R +0.3405)"
+   ]
+  },
+  "B": {
+   "value": true,
+   "kind": "B",
+   "components": [
+    {
+     "cond": "P",
+     "name": "side foot_zlt-60 mean decrease (mm)",
+     "delta": 0.6862468719482422
+    },
+    {
+     "cond": "P",
+     "name": "side sole_envelope mean_abs_dz decrease (mm)",
+     "delta": 2.5028954348956356
+    },
+    {
+     "cond": "R",
+     "name": "side foot_zlt-60 mean decrease (mm)",
+     "delta": 0.6919262409210205
+    },
+    {
+     "cond": "R",
+     "name": "side sole_envelope mean_abs_dz decrease (mm)",
+     "delta": 2.4633311222559056
+    }
+   ],
+   "reasons": [
+    "side foot_zlt-60 mean decrease (mm): same sign (P +0.6862, R +0.6919)",
+    "side sole_envelope mean_abs_dz decrease (mm): same sign (P +2.5029, R +2.4633)"
+   ]
+  },
+  "B1": {
+   "value": true,
+   "kind": "B1",
+   "components": [
+    {
+     "cond": "P",
+     "name": "side foot_zlt-60 mean decrease (mm)",
+     "delta": 0.10856270790100098
+    },
+    {
+     "cond": "P",
+     "name": "side sole_envelope mean_abs_dz decrease (mm)",
+     "delta": 3.9626893221704726
+    },
+    {
+     "cond": "R",
+     "name": "side foot_zlt-60 mean decrease (mm)",
+     "delta": 0.1746044158935547
+    },
+    {
+     "cond": "R",
+     "name": "side sole_envelope mean_abs_dz decrease (mm)",
+     "delta": 3.9286493541723617
+    }
+   ],
+   "reasons": [
+    "side foot_zlt-60 mean decrease (mm): same sign (P +0.1086, R +0.1746)",
+    "side sole_envelope mean_abs_dz decrease (mm): same sign (P +3.9627, R +3.9286)"
+   ]
+  }
+ },
+ "require_ready_on_retrospective": true,
+ "require_ready_rejects_null": true
+}

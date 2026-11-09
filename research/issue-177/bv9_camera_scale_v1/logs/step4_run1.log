@@ -1,0 +1,6 @@
+baseline vs itself A False ['front gap_z25_80 mean decrease (mm): zero change (P +0.0000, R +0.0000) -> cannot agree', 'back gap_z25_80 mean decrease (mm): zero change (P +0.0000, R +0.0000) -> cannot agree']
+baseline vs itself B False ['side foot_zlt-60 mean decrease (mm): zero change (P +0.0000, R +0.0000) -> cannot agree', 'side sole_envelope mean_abs_dz decrease (mm): zero change (P +0.0000, R +0.0000) -> cannot agree']
+retrospective A False ['front gap_z25_80 mean decrease (mm): sign differs (P -0.5927, R +0.6375)', 'back gap_z25_80 mean decrease (mm): sign differs (P -1.0321, R +0.3405)']
+retrospective B True ['side foot_zlt-60 mean decrease (mm): same sign (P +0.6862, R +0.6919)', 'side sole_envelope mean_abs_dz decrease (mm): same sign (P +2.5029, R +2.4633)']
+retrospective B1 True ['side foot_zlt-60 mean decrease (mm): same sign (P +0.1086, R +0.1746)', 'side sole_envelope mean_abs_dz decrease (mm): same sign (P +3.9627, R +3.9286)']
+require_ready rejects null: True

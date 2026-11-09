@@ -1,0 +1,16 @@
+{
+ "run1_vs_run2": {
+  "n_keys": 12741,
+  "missing": 0,
+  "n_unequal": 0,
+  "max_abs_diff": 0.0,
+  "examples": []
+ },
+ "run1_vs_committed_measure_run1": {
+  "n_keys": 12741,
+  "missing": 0,
+  "n_unequal": 0,
+  "max_abs_diff": 0.0,
+  "examples": []
+ }
+}

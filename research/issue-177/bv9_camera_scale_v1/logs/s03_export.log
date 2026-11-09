@@ -1,0 +1,7 @@
+INFO:scenario:Scenario for Blender registered
+00:03.380  blend            | Read blend: "/workspace/blendbro/out/bv9_camera_scale_v1/work/bv9_copy.blend"
+EXPORT_OK {'pose_bones_non_identity': [], 'armature_pose_position': 'POSE', 'armature_modifier_max_displacement_m': 1.4901161193847656e-08, 'n_verts_no_outline': 30007, 'n_tris_no_outline': 59730, 'n_verts_with_outline': 60014, 'n_tris_with_outline': 119460, 'outline_modifier': {'Armature': {'type': 'ARMATURE'}, 'FaceNormals': {'type': 'NORMAL_EDIT'}, 'Outline': {'type': 'SOLIDIFY'}}, 'outline_params': {'thickness': 0.0003000000142492354, 'offset': 1.0, 'use_flip_normals': True, 'use_rim': False}, 'materials': ['Rai_body_toon', 'Rai_hair_cap_toon', 'Rai_skin_base_toon', 'Rai_outline'], 'bbox_min': [-0.03519732132554054, -0.016124943271279335, -0.08799999952316284], 'bbox_max': [0.03564731031656265, 0.022507382556796074, 0.15682914853096008]}
+INFO:scenario:Scenario for Blender unregistered
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:34:58)
+
+Blender quit

@@ -1,0 +1,10 @@
+protected files hashed: 8024 (sha256, size, path) with scripts/snapshot_protected.sh (same file set definition as the correction study; this study folder excluded)
+before list sha256 ec493e51c73a64a80cb3e2a4c960ce076ea926f7b418f105ad3c882deb315efc (2026-11-09 16:56 CST)
+after  list sha256 ec493e51c73a64a80cb3e2a4c960ce076ea926f7b418f105ad3c882deb315efc (2026-11-09 17:06 CST)
+differences before vs after: 0 lines
+(the full path lists are kept locally, not committed; the earlier local study folders under /workspace/blendbro/out no longer exist on this box, hence 8024 vs 9079 in the correction study)
+d72cedc1fbe6aaa14bebddbe052af97321816f88e8c3065a920165cbcf6d9689  /workspace/blender/star_rai/star_rai_base_body_bv9.blend
+d480fddfb8372be00954157f8ebc6d4975879be28730a82026784f498b71e610  /workspace/blender/star_rai/star_rai_base_body_v8.blend
+1c5ce67fd68256fbcf19970385deaa71088f64c4c1d2469c5205f487f92527e9  /workspace/blender/star_rai/star_rai_base_body_v8s.blend
+57d998ccadeccbb2e3c6a2f7245c19d693f5f5eabc27c90af1eb1047b92292ba  /workspace/blender/star_rai/star_rai_base_body_v8i.blend
+f459ea1f14ca09d59b2cf7e227182b74d65ecfbb0271d1189045d1b5a8f0514f  /workspace/blender/star_rai/star_rai_armature_final_v10.blend
