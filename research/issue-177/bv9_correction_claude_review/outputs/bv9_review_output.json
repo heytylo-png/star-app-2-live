@@ -1,0 +1,265 @@
+{
+ "manifest": {
+  "entries": 73,
+  "match": 73,
+  "mismatches": [],
+  "manifest_sha256": "a067439b0ec553aa84161f401e30920d901a27e397b74f84ca8ee92c14eb3b88",
+  "files_in_folder": 74
+ },
+ "reproducibility": {
+  "data/measure_run1.json": {
+   "numbers": 38023,
+   "same_keys": true,
+   "max_abs_diff": 0.0
+  },
+  "data/measure_b1_run1.json": {
+   "numbers": 12685,
+   "same_keys": true,
+   "max_abs_diff": 0.0
+  }
+ },
+ "verdicts": {
+  "A": {
+   "I_F": false,
+   "I_L": true,
+   "intended_F": {
+    "front": -0.593,
+    "back": -1.032
+   },
+   "intended_L": {
+    "front": 0.912,
+    "back": 0.812
+   },
+   "R_F": [
+    "front p95",
+    "front %<=1mm",
+    "back mean",
+    "back %<=1mm",
+    "front arm outer edge",
+    "back arm outer edge",
+    "back hand zone"
+   ],
+   "R_L": [],
+   "new_bvh_pairs": 110,
+   "min_z_mm": -87.99999952316284,
+   "verdict": "FAIL",
+   "matches_committed_flags": true,
+   "committed_recal_modeF_agrees_sign": null,
+   "verdict_if_intersections_ignored": "NOT VERIFIABLE"
+  },
+  "B": {
+   "I_F": false,
+   "I_L": false,
+   "intended_F": {
+    "foot_zone_decrease": 0.686,
+    "sole_env_decrease": 2.503
+   },
+   "intended_L": {
+    "foot_zone_decrease": 0.703,
+    "sole_env_decrease": 2.44
+   },
+   "R_F": [],
+   "R_L": [
+    "front %<=1mm",
+    "side %<=1mm"
+   ],
+   "new_bvh_pairs": 0,
+   "min_z_mm": -87.99999952316284,
+   "verdict": "FAIL",
+   "matches_committed_flags": true,
+   "committed_recal_modeF_agrees_sign": null
+  },
+  "B1": {
+   "I_F": false,
+   "I_L": false,
+   "intended_F": {
+    "foot_zone_decrease": 0.109,
+    "sole_env_decrease": 3.963
+   },
+   "intended_L": {
+    "foot_zone_decrease": 0.14,
+    "sole_env_decrease": 4.223
+   },
+   "R_F": [
+    "side ankle zone"
+   ],
+   "R_L": [
+    "front %<=1mm",
+    "side %<=1mm",
+    "side ankle zone"
+   ],
+   "new_bvh_pairs": 0,
+   "min_z_mm": -87.99999952316284,
+   "verdict": "FAIL",
+   "matches_committed_flags": true,
+   "committed_recal_modeF_agrees_sign": null
+  }
+ },
+ "report_table_check": {
+  "cells_checked": 90,
+  "mismatches": []
+ },
+ "candidate_A_intersections": {
+  "new_pairs": 110,
+  "baseline_pairs": 974,
+  "by_groups": {
+   "lower_arm_left|pelvis": 70,
+   "lower_arm_right|pelvis": 40
+  },
+  "z_range_mm": [
+   40.7599983215332,
+   48.130001068115234
+  ],
+  "max_depth_mm": {
+   "right": 0.117,
+   "left": 0.817
+  },
+  "n_inside": {
+   "right": 12,
+   "left": 43
+  },
+  "baseline_clearance_mm": {
+   "right": 3.195,
+   "left": 2.468
+  },
+  "moved_by_dominant_group": {
+   "lower_arm_right": 1177,
+   "hand_left": 2259,
+   "upper_arm_right": 758,
+   "upper_arm_left": 759,
+   "waist": 63,
+   "hand_right": 2259,
+   "lower_arm_left": 1177
+  }
+ },
+ "camera_scale_px_per_mm": {
+  "modeF": {
+   "per_view": {
+    "front": 5.6943,
+    "side": 5.98,
+    "back": 5.7367
+   },
+   "spread_pct": 5.02
+  },
+  "modeL": {
+   "per_view": {
+    "front": 6.0005,
+    "side": 6.0339,
+    "back": 5.9671
+   },
+   "spread_pct": 1.12
+  },
+  "modeL_landmark_rows": {
+   "front": {
+    "sole_row": 1521.0,
+    "top_row": 0.0
+   },
+   "side": {
+    "sole_row": 1487.0,
+    "top_row": 41.0
+   },
+   "back": {
+    "sole_row": 1471.0,
+    "top_row": 41.0
+   }
+  },
+  "F_over_L": {
+   "front": 0.949,
+   "side": 0.9911,
+   "back": 0.9614
+  }
+ },
+ "foot_edit_method": {
+  "method": "p' = p + w*(R(p-Pv)+Pv-p), then z += dz*w; B1 adds y += dy*w (scripts/cs_edits.py edit_B/edit_B1)",
+  "radial_scale_factor_at_partial_weight": {
+   "0.25": 0.9776,
+   "0.5": 0.9701,
+   "0.75": 0.9776
+  },
+  "note": "factor <1 = vertices with partial foot weight are pulled toward the pivot (linear blend of a 28.1 deg rotation)",
+  "dz_mm": -9.678,
+  "dy_mm_B1": -8.591,
+  "max_disp_mm": {
+   "B": 13.68,
+   "B1": 14.47
+  },
+  "translation_gradient_note": "the uniform dz (and B1 dy) is scaled by foot weight, so the full ~9.7 mm drop (and 8.6 mm shift) is absorbed across the ankle weight transition"
+ },
+ "foot_length_check": {
+  "model_3d_mm": 34.8,
+  "reference_y_extent_mm": 34.3,
+  "source": "reports/REPORT_candidate_B.md L20 inputs (envelope Y range, pitch 28.1 deg)"
+ },
+ "A_sweep_gap_mean_mm": {
+  "0": {
+   "front": {
+    "modeF": 2.286,
+    "modeL": 2.582
+   },
+   "back": {
+    "modeF": 1.398,
+    "modeL": 1.943
+   }
+  },
+  "1": {
+   "front": {
+    "modeF": 2.157,
+    "modeL": 2.306
+   },
+   "back": {
+    "modeF": 1.438,
+    "modeL": 1.614
+   }
+  },
+  "2": {
+   "front": {
+    "modeF": 2.336,
+    "modeL": 1.968
+   },
+   "back": {
+    "modeF": 1.734,
+    "modeL": 1.229
+   }
+  },
+  "2.5": {
+   "front": {
+    "modeF": 2.505,
+    "modeL": 1.794
+   },
+   "back": {
+    "modeF": 1.942,
+    "modeL": 1.109
+   }
+  },
+  "3.5": {
+   "front": {
+    "modeF": 2.878,
+    "modeL": 1.67
+   },
+   "back": {
+    "modeF": 2.43,
+    "modeL": 1.131
+   }
+  },
+  "5": {
+   "front": {
+    "modeF": 3.265,
+    "modeL": 2.101
+   },
+   "back": {
+    "modeF": 3.039,
+    "modeL": 1.82
+   }
+  },
+  "7": {
+   "front": {
+    "modeF": 3.59,
+    "modeL": 2.441
+   },
+   "back": {
+    "modeF": 3.214,
+    "modeL": 2.632
+   }
+  }
+ }
+}

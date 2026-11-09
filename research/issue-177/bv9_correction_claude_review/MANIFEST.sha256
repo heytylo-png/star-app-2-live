@@ -1,0 +1,8 @@
+# MANIFEST.sha256 — Claude independent review of bv9 correction study v1 (Issue #177). Paths relative to this folder. Format: sha256  bytes  path
+# Reviewed: research/bv9-correction-study-v1 @ 5a75023d974d1741fbdff3f9ef41f5cc5f707c43 (study MANIFEST_sha256.txt sha256 a067439b0ec553aa84161f401e30920d901a27e397b74f84ca8ee92c14eb3b88)
+## INCLUDED
+e983b67a16dd5c00e1413d41e86a455de25170880ea76fc2124d1d1e489236e5  12456  REVIEW.md
+fb6fa87837dc02a039a8fa350b7fdab86f73c98f0c1b5b91d17e41d8ff545cb9  10669  scripts/reproduce_bv9_review.py
+1bae48172189950ab38541033681b187b815c37f903a8cd8ccb839c9db15e8de  4990  outputs/bv9_review_output.json
+## UNAVAILABLE (not committed by design)
+# bv9 and candidate .blend files, mesh exports, vertex weights, official reference images
