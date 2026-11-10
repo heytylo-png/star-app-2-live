@@ -7,7 +7,6 @@ import { composeAct } from "./brain.ts";
 import { composeGrokSystem, formatMemoryFacts, extractSlotsFromUserText, applySlotPatch } from "./memory-slots.ts";
 import { LIFE_V1_SOURCE, RAI_SYSTEM } from "./generated/star-rai-artifacts.ts";
 import {
-  LIFE_TINT_POSES,
   PLAYLIST_MAX,
   PLAYLIST_MIN,
   actForLifeTurn,

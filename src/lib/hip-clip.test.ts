@@ -4,7 +4,6 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
-  HIP_CLIP_CROP,
   HIP_CLIP_FRAMES,
   HIP_CLIP_LAST,
   HIP_CLIP_MAX_ATTEMPTS,
@@ -20,7 +19,7 @@ import {
   type ClipHost,
   type ClipView,
 } from "./hip-clip.ts";
-import { SPRITES, deferredSpriteUrls, stagePreloadOrder } from "./rai.ts";
+import { deferredSpriteUrls, stagePreloadOrder } from "./rai.ts";
 import { bridgeFiles } from "./pose-bridge.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
