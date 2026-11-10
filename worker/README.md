@@ -29,4 +29,6 @@ Chart / sky facts are computed **in the browser** (`astronomy-engine`). Do not a
 
 ## Security note
 
-The Worker is a CORS bypass, not a secret vault. Anyone who can call your Worker URL can spend **their own** key (or a stolen one). Restrict with Cloudflare Access / allowed origins if you need tighter control.
+The Worker is a CORS bypass, not a secret vault. It only forwards requests whose `Origin` header is on the allowlist in `wrangler.toml` (`ALLOWED_ORIGINS`: the Pages site and local Vite by default); anything else gets `403`. An `Origin` header can be forged outside a browser, so this stops other websites using your Worker, not a determined script. Callers always spend **their own** key. Add Cloudflare Access or rate limiting if you need tighter control.
+
+If you serve the app from another origin, add it to `ALLOWED_ORIGINS` and run `npx wrangler deploy` again.
