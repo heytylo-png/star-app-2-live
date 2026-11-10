@@ -1,0 +1,1 @@
+{'welded_verts': 45000, 'triangles': 89660, 'components': 12, 'largest': [44737, 108, 42, 36, 30, 17, 10, 5], 'boundary_edges': 478, 'nonmanifold': 23}

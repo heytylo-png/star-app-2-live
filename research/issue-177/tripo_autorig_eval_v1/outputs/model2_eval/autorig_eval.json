@@ -1,0 +1,3221 @@
+{
+ "animation": {
+  "frames": [
+   {
+    "max_nonhead_depth_pctH": 5.382779,
+    "new_headhair": 61,
+    "new_nonhead": 3176,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.941409,
+      "n": 116
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 4.852692,
+      "n": 219
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.390596,
+      "n": 347
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 2.049194,
+      "n": 584
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.165168,
+      "n": 483
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.877688,
+      "n": 655
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.382779,
+      "n": 217
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.853071,
+      "n": 244
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 1.000628,
+      "n": 158
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.877378,
+      "n": 153
+     }
+    },
+    "t": 0.041667
+   },
+   {
+    "max_nonhead_depth_pctH": 5.387587,
+    "new_headhair": 59,
+    "new_nonhead": 3147,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.896962,
+      "n": 105
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 4.856395,
+      "n": 211
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.359193,
+      "n": 353
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 2.018289,
+      "n": 578
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.159348,
+      "n": 479
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.851703,
+      "n": 656
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.387587,
+      "n": 213
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.853959,
+      "n": 242
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 0.977898,
+      "n": 158
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.877582,
+      "n": 152
+     }
+    },
+    "t": 0.160461
+   },
+   {
+    "max_nonhead_depth_pctH": 5.06284,
+    "new_headhair": 56,
+    "new_nonhead": 3120,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.848741,
+      "n": 82
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 4.86278,
+      "n": 199
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.304823,
+      "n": 357
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 2.034859,
+      "n": 579
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.181618,
+      "n": 470
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.816959,
+      "n": 670
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.06284,
+      "n": 217
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.868856,
+      "n": 243
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 0.962907,
+      "n": 156
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.877331,
+      "n": 147
+     }
+    },
+    "t": 0.279255
+   },
+   {
+    "max_nonhead_depth_pctH": 5.077148,
+    "new_headhair": 48,
+    "new_nonhead": 3107,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.760868,
+      "n": 52
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 4.864747,
+      "n": 186
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.269497,
+      "n": 363
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 2.098303,
+      "n": 573
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.433494,
+      "n": 460
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.730801,
+      "n": 733
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.077148,
+      "n": 229
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.896135,
+      "n": 232
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 0.891275,
+      "n": 137
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.878349,
+      "n": 142
+     }
+    },
+    "t": 0.39805
+   },
+   {
+    "max_nonhead_depth_pctH": 5.094524,
+    "new_headhair": 42,
+    "new_nonhead": 3026,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.729087,
+      "n": 37
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 4.86447,
+      "n": 183
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.161578,
+      "n": 376
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 2.18675,
+      "n": 580
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.412493,
+      "n": 444
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.656901,
+      "n": 698
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.094524,
+      "n": 226
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.910645,
+      "n": 210
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 0.835951,
+      "n": 128
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.874823,
+      "n": 144
+     }
+    },
+    "t": 0.516844
+   },
+   {
+    "max_nonhead_depth_pctH": 5.435979,
+    "new_headhair": 33,
+    "new_nonhead": 2908,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.643282,
+      "n": 28
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 4.854906,
+      "n": 176
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 2.927548,
+      "n": 397
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 2.306239,
+      "n": 605
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.552789,
+      "n": 418
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.571022,
+      "n": 594
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.435979,
+      "n": 222
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.936406,
+      "n": 202
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 0.849552,
+      "n": 124
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.866385,
+      "n": 142
+     }
+    },
+    "t": 0.635638
+   },
+   {
+    "max_nonhead_depth_pctH": 5.142626,
+    "new_headhair": 34,
+    "new_nonhead": 2762,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.433296,
+      "n": 2
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 4.889175,
+      "n": 159
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.065095,
+      "n": 398
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 2.211546,
+      "n": 581
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.527193,
+      "n": 386
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.583826,
+      "n": 553
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.142626,
+      "n": 224
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.966815,
+      "n": 179
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 0.94004,
+      "n": 137
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.861329,
+      "n": 143
+     }
+    },
+    "t": 0.754433
+   },
+   {
+    "max_nonhead_depth_pctH": 5.117239,
+    "new_headhair": 31,
+    "new_nonhead": 2698,
+    "nonhead_pairs": {
+     "L_arm|torso": {
+      "max_depth_pctH": 4.914674,
+      "n": 145
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.005567,
+      "n": 397
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 2.040415,
+      "n": 566
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 2.138846,
+      "n": 351
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.56749,
+      "n": 532
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.117239,
+      "n": 226
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.991431,
+      "n": 176
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 1.005957,
+      "n": 160
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.860313,
+      "n": 145
+     }
+    },
+    "t": 0.873227
+   },
+   {
+    "max_nonhead_depth_pctH": 5.138633,
+    "new_headhair": 29,
+    "new_nonhead": 2661,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.448515,
+      "n": 9
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 4.942584,
+      "n": 132
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.010277,
+      "n": 394
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 1.853622,
+      "n": 588
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 2.119229,
+      "n": 327
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.552888,
+      "n": 518
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.138633,
+      "n": 228
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.937432,
+      "n": 160
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 1.055611,
+      "n": 167
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.864545,
+      "n": 138
+     }
+    },
+    "t": 0.992021
+   },
+   {
+    "max_nonhead_depth_pctH": 5.162957,
+    "new_headhair": 28,
+    "new_nonhead": 2625,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.547593,
+      "n": 23
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 4.967666,
+      "n": 122
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.042752,
+      "n": 393
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 1.722263,
+      "n": 561
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 2.110778,
+      "n": 323
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.538095,
+      "n": 515
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.162957,
+      "n": 224
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.599298,
+      "n": 160
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 1.105592,
+      "n": 166
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.875258,
+      "n": 138
+     }
+    },
+    "t": 1.110816
+   },
+   {
+    "max_nonhead_depth_pctH": 5.187218,
+    "new_headhair": 29,
+    "new_nonhead": 2772,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.631745,
+      "n": 42
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 4.986587,
+      "n": 112
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.056606,
+      "n": 392
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 1.720427,
+      "n": 674
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 2.113868,
+      "n": 309
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.492399,
+      "n": 547
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.187218,
+      "n": 226
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.581084,
+      "n": 161
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 1.132121,
+      "n": 174
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.889417,
+      "n": 135
+     }
+    },
+    "t": 1.22961
+   },
+   {
+    "max_nonhead_depth_pctH": 5.208095,
+    "new_headhair": 26,
+    "new_nonhead": 3019,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.700869,
+      "n": 60
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.005748,
+      "n": 102
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.0367,
+      "n": 397
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 1.775891,
+      "n": 786
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 2.12259,
+      "n": 304
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.397906,
+      "n": 687
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.208095,
+      "n": 226
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.558456,
+      "n": 171
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 1.046949,
+      "n": 161
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.899536,
+      "n": 125
+     }
+    },
+    "t": 1.348404
+   },
+   {
+    "max_nonhead_depth_pctH": 5.126314,
+    "new_headhair": 24,
+    "new_nonhead": 3540,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.69875,
+      "n": 64
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.029221,
+      "n": 111
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.001215,
+      "n": 402
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 1.89487,
+      "n": 861
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 2.135057,
+      "n": 295
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.368894,
+      "n": 1146
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.126314,
+      "n": 237
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.558188,
+      "n": 187
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 0.84916,
+      "n": 117
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.907396,
+      "n": 120
+     }
+    },
+    "t": 1.467199
+   },
+   {
+    "max_nonhead_depth_pctH": 5.143487,
+    "new_headhair": 19,
+    "new_nonhead": 3596,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.563591,
+      "n": 29
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.053747,
+      "n": 110
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 2.980971,
+      "n": 411
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 1.917612,
+      "n": 802
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 2.147882,
+      "n": 293
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.382332,
+      "n": 1354
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.143487,
+      "n": 237
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.519562,
+      "n": 193
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 0.661131,
+      "n": 49
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 3.01676,
+      "n": 118
+     }
+    },
+    "t": 1.585993
+   },
+   {
+    "max_nonhead_depth_pctH": 5.157754,
+    "new_headhair": 20,
+    "new_nonhead": 3645,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.469369,
+      "n": 5
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.069398,
+      "n": 124
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 2.994481,
+      "n": 409
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 1.915894,
+      "n": 699
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 2.164344,
+      "n": 284
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.388103,
+      "n": 1500
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.157754,
+      "n": 240
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.790372,
+      "n": 216
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 0.903343,
+      "n": 59
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 3.016039,
+      "n": 109
+     }
+    },
+    "t": 1.704787
+   },
+   {
+    "max_nonhead_depth_pctH": 5.094048,
+    "new_headhair": 21,
+    "new_nonhead": 3696,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.545766,
+      "n": 14
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.094048,
+      "n": 133
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.002895,
+      "n": 409
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 1.916988,
+      "n": 700
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.552076,
+      "n": 283
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.456539,
+      "n": 1541
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.07689,
+      "n": 249
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.754236,
+      "n": 248
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 0.598188,
+      "n": 13
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 3.015487,
+      "n": 106
+     }
+    },
+    "t": 1.823582
+   },
+   {
+    "max_nonhead_depth_pctH": 5.120721,
+    "new_headhair": 23,
+    "new_nonhead": 3834,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.667595,
+      "n": 26
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.120721,
+      "n": 130
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.019011,
+      "n": 410
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 1.954634,
+      "n": 783
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.566739,
+      "n": 274
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.407239,
+      "n": 1598
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.041126,
+      "n": 250
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.767739,
+      "n": 257
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 3.015762,
+      "n": 106
+     }
+    },
+    "t": 1.942376
+   },
+   {
+    "max_nonhead_depth_pctH": 5.141912,
+    "new_headhair": 25,
+    "new_nonhead": 4167,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.884107,
+      "n": 67
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.141912,
+      "n": 146
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.041086,
+      "n": 412
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 2.071028,
+      "n": 1039
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.576662,
+      "n": 255
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.334946,
+      "n": 1623
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.040051,
+      "n": 252
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.755051,
+      "n": 258
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 0.642923,
+      "n": 12
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 3.010778,
+      "n": 103
+     }
+    },
+    "t": 2.06117
+   },
+   {
+    "max_nonhead_depth_pctH": 5.159686,
+    "new_headhair": 29,
+    "new_nonhead": 4477,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 1.112075,
+      "n": 163
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.159686,
+      "n": 160
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.083249,
+      "n": 410
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 2.187075,
+      "n": 1269
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.587107,
+      "n": 248
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.257987,
+      "n": 1601
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.079587,
+      "n": 246
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.387685,
+      "n": 277
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 2.994695,
+      "n": 103
+     }
+    },
+    "t": 2.179965
+   },
+   {
+    "max_nonhead_depth_pctH": 5.179055,
+    "new_headhair": 25,
+    "new_nonhead": 4563,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 1.090328,
+      "n": 236
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.179055,
+      "n": 172
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.129537,
+      "n": 404
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 2.158951,
+      "n": 1291
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.5985,
+      "n": 236
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.189455,
+      "n": 1565
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.148033,
+      "n": 245
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.684844,
+      "n": 310
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 0.412576,
+      "n": 3
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 2.971168,
+      "n": 101
+     }
+    },
+    "t": 2.298759
+   },
+   {
+    "max_nonhead_depth_pctH": 5.202503,
+    "new_headhair": 32,
+    "new_nonhead": 4495,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 1.059088,
+      "n": 258
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.202503,
+      "n": 190
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.17102,
+      "n": 394
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 2.074603,
+      "n": 1207
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.611197,
+      "n": 215
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.124875,
+      "n": 1532
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.198965,
+      "n": 240
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.677426,
+      "n": 355
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 2.951621,
+      "n": 104
+     }
+    },
+    "t": 2.417553
+   },
+   {
+    "max_nonhead_depth_pctH": 5.224284,
+    "new_headhair": 35,
+    "new_nonhead": 4068,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.986202,
+      "n": 208
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.224284,
+      "n": 209
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.203607,
+      "n": 385
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 1.912264,
+      "n": 1030
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.6207,
+      "n": 186
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 0.403931,
+      "n": 2
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.082678,
+      "n": 1334
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.198343,
+      "n": 232
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.657658,
+      "n": 380
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 2.943224,
+      "n": 102
+     }
+    },
+    "t": 2.536348
+   },
+   {
+    "max_nonhead_depth_pctH": 8.371351,
+    "new_headhair": 32,
+    "new_nonhead": 1695,
+    "nonhead_pairs": {
+     "L_arm|torso": {
+      "max_depth_pctH": 5.314989,
+      "n": 173
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.103146,
+      "n": 338
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 2.17261,
+      "n": 153
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.309716,
+      "n": 112
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.456002,
+      "n": 200
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.757154,
+      "n": 375
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 8.371351,
+      "n": 344
+     }
+    },
+    "t": 2.655142
+   },
+   {
+    "max_nonhead_depth_pctH": 8.713458,
+    "new_headhair": 22,
+    "new_nonhead": 2113,
+    "nonhead_pairs": {
+     "L_arm|L_hand": {
+      "max_depth_pctH": 1.294461,
+      "n": 52
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.562329,
+      "n": 141
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.331322,
+      "n": 175
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 3.168276,
+      "n": 142
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.741389,
+      "n": 252
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 6.245538,
+      "n": 288
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.574348,
+      "n": 287
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 8.713458,
+      "n": 776
+     }
+    },
+    "t": 2.773936
+   },
+   {
+    "max_nonhead_depth_pctH": 10.018008,
+    "new_headhair": 14,
+    "new_nonhead": 3048,
+    "nonhead_pairs": {
+     "L_arm|L_hand": {
+      "max_depth_pctH": 1.398779,
+      "n": 73
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.253333,
+      "n": 262
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.175801,
+      "n": 129
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 10.018008,
+      "n": 259
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.619983,
+      "n": 514
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.691558,
+      "n": 803
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.27106,
+      "n": 230
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 8.341833,
+      "n": 778
+     }
+    },
+    "t": 2.89273
+   },
+   {
+    "max_nonhead_depth_pctH": 10.153624,
+    "new_headhair": 7,
+    "new_nonhead": 3424,
+    "nonhead_pairs": {
+     "L_arm|L_hand": {
+      "max_depth_pctH": 1.313436,
+      "n": 46
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 3.47151,
+      "n": 330
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.27291,
+      "n": 118
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 10.153624,
+      "n": 302
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.694143,
+      "n": 758
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 3.792987,
+      "n": 924
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 2.951665,
+      "n": 243
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 8.457574,
+      "n": 703
+     }
+    },
+    "t": 3.011525
+   },
+   {
+    "max_nonhead_depth_pctH": 10.155574,
+    "new_headhair": 6,
+    "new_nonhead": 3252,
+    "nonhead_pairs": {
+     "L_arm|L_hand": {
+      "max_depth_pctH": 1.264044,
+      "n": 59
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 3.516785,
+      "n": 327
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.24733,
+      "n": 128
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 10.155574,
+      "n": 302
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.720765,
+      "n": 599
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 3.833179,
+      "n": 928
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.31901,
+      "n": 249
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 8.446206,
+      "n": 660
+     }
+    },
+    "t": 3.130319
+   },
+   {
+    "max_nonhead_depth_pctH": 10.061622,
+    "new_headhair": 0,
+    "new_nonhead": 2893,
+    "nonhead_pairs": {
+     "L_arm|L_hand": {
+      "max_depth_pctH": 1.207506,
+      "n": 64
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.356297,
+      "n": 291
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.274612,
+      "n": 103
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 10.061622,
+      "n": 280
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.223549,
+      "n": 277
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 4.036075,
+      "n": 948
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.378261,
+      "n": 264
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 8.418144,
+      "n": 666
+     }
+    },
+    "t": 3.249113
+   },
+   {
+    "max_nonhead_depth_pctH": 9.919692,
+    "new_headhair": 0,
+    "new_nonhead": 2905,
+    "nonhead_pairs": {
+     "L_arm|L_hand": {
+      "max_depth_pctH": 1.421573,
+      "n": 79
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.315217,
+      "n": 226
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 2.520533,
+      "n": 77
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 9.919692,
+      "n": 246
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.444144,
+      "n": 333
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 4.892444,
+      "n": 1022
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.127731,
+      "n": 256
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 9.114018,
+      "n": 666
+     }
+    },
+    "t": 3.367908
+   },
+   {
+    "max_nonhead_depth_pctH": 9.56129,
+    "new_headhair": 0,
+    "new_nonhead": 2823,
+    "nonhead_pairs": {
+     "L_arm|L_hand": {
+      "max_depth_pctH": 1.41408,
+      "n": 56
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.751219,
+      "n": 108
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 2.510727,
+      "n": 32
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 9.56129,
+      "n": 179
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.139694,
+      "n": 362
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.306932,
+      "n": 1097
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.235274,
+      "n": 291
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 8.943625,
+      "n": 698
+     }
+    },
+    "t": 3.486702
+   },
+   {
+    "max_nonhead_depth_pctH": 9.038922,
+    "new_headhair": 6,
+    "new_nonhead": 2626,
+    "nonhead_pairs": {
+     "L_arm|L_hand": {
+      "max_depth_pctH": 0.405697,
+      "n": 1
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.648068,
+      "n": 72
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 2.418838,
+      "n": 30
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 5.530054,
+      "n": 109
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.254104,
+      "n": 220
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 4.780776,
+      "n": 1009
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.455856,
+      "n": 401
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 9.038922,
+      "n": 784
+     }
+    },
+    "t": 3.605496
+   },
+   {
+    "max_nonhead_depth_pctH": 9.143853,
+    "new_headhair": 6,
+    "new_nonhead": 3268,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 1.29439,
+      "n": 196
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.54644,
+      "n": 84
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 2.339602,
+      "n": 40
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 0.425518,
+      "n": 1
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.556259,
+      "n": 129
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.505684,
+      "n": 549
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 3.925674,
+      "n": 922
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.169648,
+      "n": 492
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 9.143853,
+      "n": 855
+     }
+    },
+    "t": 3.724291
+   },
+   {
+    "max_nonhead_depth_pctH": 8.515114,
+    "new_headhair": 6,
+    "new_nonhead": 2528,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.78126,
+      "n": 60
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.537625,
+      "n": 100
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 1.925617,
+      "n": 47
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.240672,
+      "n": 138
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.255255,
+      "n": 383
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 3.804556,
+      "n": 608
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 2.932878,
+      "n": 324
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 8.515114,
+      "n": 868
+     }
+    },
+    "t": 3.843085
+   },
+   {
+    "max_nonhead_depth_pctH": 8.623219,
+    "new_headhair": 14,
+    "new_nonhead": 2252,
+    "nonhead_pairs": {
+     "L_arm|L_hand": {
+      "max_depth_pctH": 0.537221,
+      "n": 7
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.517171,
+      "n": 118
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 1.937686,
+      "n": 50
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 5.360691,
+      "n": 146
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.12149,
+      "n": 230
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 4.023054,
+      "n": 621
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 2.917033,
+      "n": 268
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 8.623219,
+      "n": 812
+     }
+    },
+    "t": 3.961879
+   },
+   {
+    "max_nonhead_depth_pctH": 9.234206,
+    "new_headhair": 15,
+    "new_nonhead": 2097,
+    "nonhead_pairs": {
+     "L_arm|L_hand": {
+      "max_depth_pctH": 0.697437,
+      "n": 14
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.501865,
+      "n": 113
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 1.918566,
+      "n": 50
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 5.8317,
+      "n": 163
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.063805,
+      "n": 111
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.481929,
+      "n": 559
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 2.821362,
+      "n": 303
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 9.234206,
+      "n": 784
+     }
+    },
+    "t": 4.080674
+   },
+   {
+    "max_nonhead_depth_pctH": 9.029265,
+    "new_headhair": 16,
+    "new_nonhead": 1781,
+    "nonhead_pairs": {
+     "L_arm|L_hand": {
+      "max_depth_pctH": 0.656159,
+      "n": 12
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.454618,
+      "n": 99
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 1.879657,
+      "n": 75
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.355298,
+      "n": 128
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.429107,
+      "n": 254
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 6.138364,
+      "n": 110
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.157141,
+      "n": 352
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 9.029265,
+      "n": 751
+     }
+    },
+    "t": 4.199468
+   },
+   {
+    "max_nonhead_depth_pctH": 8.982365,
+    "new_headhair": 17,
+    "new_nonhead": 1446,
+    "nonhead_pairs": {
+     "L_arm|L_hand": {
+      "max_depth_pctH": 0.425257,
+      "n": 3
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.37455,
+      "n": 99
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 1.840122,
+      "n": 73
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.664832,
+      "n": 90
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.423336,
+      "n": 285
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.720907,
+      "n": 112
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.206584,
+      "n": 293
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 8.982365,
+      "n": 491
+     }
+    },
+    "t": 4.318262
+   },
+   {
+    "max_nonhead_depth_pctH": 5.502346,
+    "new_headhair": 19,
+    "new_nonhead": 718,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.416175,
+      "n": 3
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.309189,
+      "n": 107
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 1.808546,
+      "n": 88
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.63644,
+      "n": 64
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.347726,
+      "n": 77
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.502346,
+      "n": 125
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 2.804728,
+      "n": 179
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 2.789473,
+      "n": 75
+     }
+    },
+    "t": 4.437057
+   },
+   {
+    "max_nonhead_depth_pctH": 5.569445,
+    "new_headhair": 17,
+    "new_nonhead": 930,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.938575,
+      "n": 188
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.240324,
+      "n": 144
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 2.407374,
+      "n": 124
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 0.677939,
+      "n": 53
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.139962,
+      "n": 62
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.362931,
+      "n": 50
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.569445,
+      "n": 131
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 2.851819,
+      "n": 103
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.483766,
+      "n": 75
+     }
+    },
+    "t": 4.555851
+   },
+   {
+    "max_nonhead_depth_pctH": 6.535364,
+    "new_headhair": 17,
+    "new_nonhead": 973,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.945065,
+      "n": 199
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.175303,
+      "n": 160
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.146225,
+      "n": 137
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 0.867948,
+      "n": 138
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.579083,
+      "n": 52
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.35008,
+      "n": 63
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 6.535364,
+      "n": 137
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 2.90517,
+      "n": 21
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.578982,
+      "n": 66
+     }
+    },
+    "t": 4.674645
+   },
+   {
+    "max_nonhead_depth_pctH": 5.656934,
+    "new_headhair": 19,
+    "new_nonhead": 788,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.686246,
+      "n": 114
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.162065,
+      "n": 164
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.303812,
+      "n": 180
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 0.563207,
+      "n": 13
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.559484,
+      "n": 61
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.360323,
+      "n": 48
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.656934,
+      "n": 143
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.085211,
+      "n": 16
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.515058,
+      "n": 49
+     }
+    },
+    "t": 4.79344
+   },
+   {
+    "max_nonhead_depth_pctH": 5.524174,
+    "new_headhair": 24,
+    "new_nonhead": 895,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.837919,
+      "n": 106
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.161647,
+      "n": 191
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.213226,
+      "n": 207
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.551985,
+      "n": 70
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 1.121799,
+      "n": 17
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 0.494123,
+      "n": 17
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.524174,
+      "n": 150
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.82848,
+      "n": 50
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.696692,
+      "n": 87
+     }
+    },
+    "t": 4.912234
+   },
+   {
+    "max_nonhead_depth_pctH": 5.332034,
+    "new_headhair": 25,
+    "new_nonhead": 1344,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 1.243763,
+      "n": 172
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.148129,
+      "n": 213
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.151303,
+      "n": 230
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.531285,
+      "n": 58
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 0.857487,
+      "n": 3
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 1.446412,
+      "n": 349
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.332034,
+      "n": 158
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.986911,
+      "n": 69
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.671118,
+      "n": 92
+     }
+    },
+    "t": 5.031028
+   },
+   {
+    "max_nonhead_depth_pctH": 5.241968,
+    "new_headhair": 32,
+    "new_nonhead": 1634,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 1.147943,
+      "n": 152
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.106018,
+      "n": 234
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.191222,
+      "n": 227
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 2.960122,
+      "n": 54
+     },
+     "R_arm|R_hand": {
+      "max_depth_pctH": 0.456231,
+      "n": 1
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 1.598323,
+      "n": 603
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.241968,
+      "n": 165
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.821355,
+      "n": 84
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.662608,
+      "n": 114
+     }
+    },
+    "t": 5.149823
+   },
+   {
+    "max_nonhead_depth_pctH": 5.172617,
+    "new_headhair": 37,
+    "new_nonhead": 1672,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.498405,
+      "n": 28
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 5.034989,
+      "n": 241
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.108846,
+      "n": 175
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 0.69313,
+      "n": 51
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.991045,
+      "n": 77
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 1.981241,
+      "n": 642
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.172617,
+      "n": 179
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.754858,
+      "n": 124
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 0.53166,
+      "n": 23
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.724813,
+      "n": 132
+     }
+    },
+    "t": 5.268617
+   },
+   {
+    "max_nonhead_depth_pctH": 5.06704,
+    "new_headhair": 50,
+    "new_nonhead": 2213,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.858539,
+      "n": 133
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 4.958633,
+      "n": 240
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.166304,
+      "n": 141
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 1.433105,
+      "n": 336
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.582072,
+      "n": 246
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.168978,
+      "n": 573
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.06704,
+      "n": 189
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 4.016411,
+      "n": 163
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 0.612743,
+      "n": 37
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.838701,
+      "n": 155
+     }
+    },
+    "t": 5.387411
+   },
+   {
+    "max_nonhead_depth_pctH": 5.373029,
+    "new_headhair": 59,
+    "new_nonhead": 2702,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.96673,
+      "n": 133
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 4.896663,
+      "n": 228
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.197664,
+      "n": 247
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 1.782431,
+      "n": 505
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.216725,
+      "n": 399
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.417562,
+      "n": 545
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.373029,
+      "n": 202
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.927684,
+      "n": 200
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 0.735387,
+      "n": 89
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.885455,
+      "n": 154
+     }
+    },
+    "t": 5.506206
+   },
+   {
+    "max_nonhead_depth_pctH": 5.377443,
+    "new_headhair": 60,
+    "new_nonhead": 3043,
+    "nonhead_pairs": {
+     "L_arm|L_leg": {
+      "max_depth_pctH": 0.935947,
+      "n": 119
+     },
+     "L_arm|torso": {
+      "max_depth_pctH": 4.861147,
+      "n": 225
+     },
+     "L_foot|L_leg": {
+      "max_depth_pctH": 3.122975,
+      "n": 335
+     },
+     "L_hand|L_leg": {
+      "max_depth_pctH": 1.964364,
+      "n": 570
+     },
+     "L_leg|torso": {
+      "max_depth_pctH": 1.157448,
+      "n": 476
+     },
+     "R_arm|R_leg": {
+      "max_depth_pctH": 2.726158,
+      "n": 577
+     },
+     "R_arm|torso": {
+      "max_depth_pctH": 5.377443,
+      "n": 207
+     },
+     "R_foot|R_leg": {
+      "max_depth_pctH": 3.891167,
+      "n": 234
+     },
+     "R_hand|R_leg": {
+      "max_depth_pctH": 0.897253,
+      "n": 146
+     },
+     "R_leg|torso": {
+      "max_depth_pctH": 1.885271,
+      "n": 154
+     }
+    },
+    "t": 5.625
+   }
+  ],
+  "n_frames": 48,
+  "name": "greet_02.001",
+  "t_range": [
+   0.041667,
+   5.625
+  ],
+  "worst_frame": {
+   "max_nonhead_depth_pctH": 5.179055,
+   "new_headhair": 25,
+   "new_nonhead": 4563,
+   "nonhead_pairs": {
+    "L_arm|L_leg": {
+     "max_depth_pctH": 1.090328,
+     "n": 236
+    },
+    "L_arm|torso": {
+     "max_depth_pctH": 5.179055,
+     "n": 172
+    },
+    "L_foot|L_leg": {
+     "max_depth_pctH": 3.129537,
+     "n": 404
+    },
+    "L_hand|L_leg": {
+     "max_depth_pctH": 2.158951,
+     "n": 1291
+    },
+    "L_leg|torso": {
+     "max_depth_pctH": 1.5985,
+     "n": 236
+    },
+    "R_arm|R_leg": {
+     "max_depth_pctH": 2.189455,
+     "n": 1565
+    },
+    "R_arm|torso": {
+     "max_depth_pctH": 5.148033,
+     "n": 245
+    },
+    "R_foot|R_leg": {
+     "max_depth_pctH": 3.684844,
+     "n": 310
+    },
+    "R_hand|R_leg": {
+     "max_depth_pctH": 0.412576,
+     "n": 3
+    },
+    "R_leg|torso": {
+     "max_depth_pctH": 2.971168,
+     "n": 101
+    }
+   },
+   "t": 2.298759
+  }
+ },
+ "drivers": {
+  "hair_beside_neck": {
+   "all_verts_in_slab_bones": {
+    "L_Clavicle": 528,
+    "L_Upperarm": 106,
+    "R_Clavicle": 456,
+    "R_Upperarm": 159,
+    "Spine02": 9
+   },
+   "bones": {},
+   "n": 0
+  },
+  "heel_spike_L": {
+   "L_Foot": 129
+  },
+  "heel_spike_R": {
+   "R_Foot": 133
+  }
+ },
+ "group_vertex_counts": {
+  "L_arm": 5011,
+  "L_foot": 3604,
+  "L_hand": 2962,
+  "L_leg": 10245,
+  "R_arm": 4840,
+  "R_foot": 3645,
+  "R_hand": 2571,
+  "R_leg": 10125,
+  "head": 4593,
+  "torso": 12579
+ },
+ "input": {
+  "H": 0.979576,
+  "T": 0.003918,
+  "joints": 78,
+  "triangles": 89660,
+  "vertices": 60175
+ },
+ "poses": {
+  "P1": {
+   "cross_section_shoulder": {
+    "L": {
+     "mean_change_pct": -2.166192,
+     "n": 1137,
+     "p5_change_pct": 4.241865
+    },
+    "R": {
+     "mean_change_pct": -2.540057,
+     "n": 1315,
+     "p5_change_pct": -0.991648
+    }
+   },
+   "headhair_pairs": {},
+   "new_headhair": 0,
+   "new_nonhead": 2729,
+   "new_penetrating": 2729,
+   "nonhead_pairs": {
+    "L_arm|L_hand": {
+     "max_depth_pctH": 1.03978,
+     "n": 15
+    },
+    "L_arm|torso": {
+     "max_depth_pctH": 4.66231,
+     "n": 919
+    },
+    "L_leg|torso": {
+     "max_depth_pctH": 10.18407,
+     "n": 310
+    },
+    "R_arm|R_hand": {
+     "max_depth_pctH": 0.967019,
+     "n": 14
+    },
+    "R_arm|torso": {
+     "max_depth_pctH": 4.674711,
+     "n": 893
+    },
+    "R_leg|torso": {
+     "max_depth_pctH": 8.69559,
+     "n": 578
+    }
+   },
+   "shoulder_slump": {
+    "L": {
+     "max_pctH": 1.702916,
+     "mean_pctH": -1.102648,
+     "n": 2010
+    },
+    "R": {
+     "max_pctH": 1.830102,
+     "mean_pctH": -1.246436,
+     "n": 2067
+    }
+   },
+   "volume_change_pct": 1.779603
+  },
+  "P2": {
+   "headhair_pairs": {},
+   "new_headhair": 0,
+   "new_nonhead": 1623,
+   "new_penetrating": 1623,
+   "nonhead_pairs": {
+    "L_arm|torso": {
+     "max_depth_pctH": 2.904883,
+     "n": 291
+    },
+    "L_leg|torso": {
+     "max_depth_pctH": 10.18407,
+     "n": 310
+    },
+    "R_arm|R_hand": {
+     "max_depth_pctH": 0.424498,
+     "n": 1
+    },
+    "R_arm|torso": {
+     "max_depth_pctH": 4.541497,
+     "n": 443
+    },
+    "R_leg|torso": {
+     "max_depth_pctH": 8.69559,
+     "n": 578
+    }
+   },
+   "volume_change_pct": -2.942214
+  },
+  "P3": {
+   "cross_section_elbow": {
+    "L": {
+     "mean_change_pct": -7.3176,
+     "n": 655,
+     "p5_change_pct": -18.212498
+    },
+    "R": {
+     "mean_change_pct": -7.291543,
+     "n": 604,
+     "p5_change_pct": -25.043153
+    }
+   },
+   "headhair_pairs": {},
+   "new_headhair": 0,
+   "new_nonhead": 970,
+   "new_penetrating": 970,
+   "nonhead_pairs": {
+    "L_arm|torso": {
+     "max_depth_pctH": 7.019991,
+     "n": 81
+    },
+    "L_leg|torso": {
+     "max_depth_pctH": 10.18407,
+     "n": 310
+    },
+    "R_arm|R_hand": {
+     "max_depth_pctH": 0.424499,
+     "n": 1
+    },
+    "R_leg|torso": {
+     "max_depth_pctH": 8.69559,
+     "n": 578
+    }
+   },
+   "volume_change_pct": -0.134774
+  },
+  "P4": {
+   "cross_section_forearm_mid": {
+    "L": {
+     "mean_change_pct": -0.032101,
+     "n": 630,
+     "p5_change_pct": -0.012291
+    },
+    "R": {
+     "mean_change_pct": 0.0,
+     "n": 572,
+     "p5_change_pct": 0.0
+    }
+   },
+   "headhair_pairs": {},
+   "new_headhair": 0,
+   "new_nonhead": 270,
+   "new_penetrating": 270,
+   "nonhead_pairs": {
+    "L_leg|torso": {
+     "max_depth_pctH": 9.733403,
+     "n": 54
+    },
+    "R_arm|R_hand": {
+     "max_depth_pctH": 1.115224,
+     "n": 180
+    },
+    "R_leg|torso": {
+     "max_depth_pctH": 7.037234,
+     "n": 36
+    }
+   },
+   "volume_change_pct": -0.116881
+  },
+  "P5": {
+   "headhair_pairs": {},
+   "new_headhair": 0,
+   "new_nonhead": 1122,
+   "new_penetrating": 1122,
+   "nonhead_pairs": {
+    "L_arm|torso": {
+     "max_depth_pctH": 2.196345,
+     "n": 17
+    },
+    "L_leg|torso": {
+     "max_depth_pctH": 7.982478,
+     "n": 501
+    },
+    "R_arm|torso": {
+     "max_depth_pctH": 2.98985,
+     "n": 70
+    },
+    "R_leg|torso": {
+     "max_depth_pctH": 6.7622,
+     "n": 534
+    }
+   },
+   "volume_change_pct": -2.851544
+  },
+  "P6": {
+   "cross_section_knee": {
+    "L": {
+     "mean_change_pct": -9.856819,
+     "n": 990,
+     "p5_change_pct": -25.076926
+    },
+    "R": {
+     "mean_change_pct": -9.804789,
+     "n": 908,
+     "p5_change_pct": -23.389496
+    }
+   },
+   "headhair_pairs": {},
+   "new_headhair": 0,
+   "new_nonhead": 6,
+   "new_penetrating": 6,
+   "nonhead_pairs": {
+    "L_foot|L_leg": {
+     "max_depth_pctH": 0.419149,
+     "n": 2
+    },
+    "R_foot|R_leg": {
+     "max_depth_pctH": 3.180626,
+     "n": 4
+    }
+   },
+   "volume_change_pct": -1.055548
+  },
+  "P7": {
+   "headhair_pairs": {
+    "head|torso": {
+     "max_depth_pctH": 1.957456,
+     "n": 15
+    }
+   },
+   "new_headhair": 15,
+   "new_nonhead": 77,
+   "new_penetrating": 92,
+   "nonhead_pairs": {
+    "L_arm|torso": {
+     "max_depth_pctH": 3.211679,
+     "n": 45
+    },
+    "R_arm|torso": {
+     "max_depth_pctH": 2.948387,
+     "n": 32
+    }
+   },
+   "volume_change_pct": -0.111001
+  },
+  "P8": {
+   "headhair_pairs": {},
+   "new_headhair": 0,
+   "new_nonhead": 651,
+   "new_penetrating": 651,
+   "nonhead_pairs": {
+    "L_arm|torso": {
+     "max_depth_pctH": 2.045417,
+     "n": 13
+    },
+    "L_leg|torso": {
+     "max_depth_pctH": 9.733403,
+     "n": 137
+    },
+    "R_arm|R_hand": {
+     "max_depth_pctH": 0.424501,
+     "n": 1
+    },
+    "R_arm|torso": {
+     "max_depth_pctH": 1.840001,
+     "n": 25
+    },
+    "R_leg|torso": {
+     "max_depth_pctH": 7.553546,
+     "n": 475
+    }
+   },
+   "volume_change_pct": -0.417562
+  }
+ },
+ "rest": {
+  "pairs": {
+   "L_arm|torso": {
+    "max_depth_pctH": 8.038973,
+    "n": 1466
+   },
+   "L_foot|L_leg": {
+    "max_depth_pctH": 3.124441,
+    "n": 235
+   },
+   "L_leg|torso": {
+    "max_depth_pctH": 5.773352,
+    "n": 719
+   },
+   "R_arm|R_hand": {
+    "max_depth_pctH": 1.303865,
+    "n": 155
+   },
+   "R_arm|torso": {
+    "max_depth_pctH": 9.446953,
+    "n": 1917
+   },
+   "R_foot|R_leg": {
+    "max_depth_pctH": 3.968893,
+    "n": 668
+   },
+   "R_leg|torso": {
+    "max_depth_pctH": 5.047243,
+    "n": 1085
+   },
+   "head|torso": {
+    "max_depth_pctH": 2.105931,
+    "n": 43
+   }
+  },
+  "penetrating": 6288,
+  "volume": 0.011246
+ },
+ "skeleton": {
+  "bind_positions": {
+   "BoneRoot": [
+    0.00574,
+    0.560578,
+    0.001913
+   ],
+   "FacialBone": [
+    0.0,
+    0.90496,
+    0.028699
+   ],
+   "Head": [
+    0.00574,
+    0.866695,
+    -0.009566
+   ],
+   "Hip": [
+    0.006029,
+    0.559018,
+    0.000294
+   ],
+   "L_Calf": [
+    0.07079,
+    0.311857,
+    0.00574
+   ],
+   "L_CalfTwist01": [
+    0.082269,
+    0.18941,
+    -0.00574
+   ],
+   "L_CalfTwist02": [
+    0.093748,
+    0.066963,
+    -0.017219
+   ],
+   "L_Clavicle": [
+    0.024872,
+    0.797819,
+    -0.013393
+   ],
+   "L_ElbowShareBone": [
+    0.128179,
+    0.657128,
+    -0.02884
+   ],
+   "L_Eye": [
+    0.021046,
+    0.90496,
+    0.028699
+   ],
+   "L_Foot": [
+    0.093748,
+    0.066963,
+    -0.017219
+   ],
+   "L_Forearm": [
+    0.128187,
+    0.656239,
+    -0.028699
+   ],
+   "L_ForearmTwist01": [
+    0.159298,
+    0.596591,
+    -0.023927
+   ],
+   "L_ForearmTwist02": [
+    0.190409,
+    0.536942,
+    -0.019155
+   ],
+   "L_Hand": [
+    0.190409,
+    0.536942,
+    -0.019155
+   ],
+   "L_Index1": [
+    0.210723,
+    0.481077,
+    -0.007869
+   ],
+   "L_Index2": [
+    0.218059,
+    0.465277,
+    -0.008434
+   ],
+   "L_Index3": [
+    0.221445,
+    0.452298,
+    -0.009562
+   ],
+   "L_KneeShareBone": [
+    0.070411,
+    0.312397,
+    0.004703
+   ],
+   "L_Mid1": [
+    0.215802,
+    0.479948,
+    -0.01972
+   ],
+   "L_Mid2": [
+    0.222573,
+    0.460198,
+    -0.024798
+   ],
+   "L_Mid3": [
+    0.223702,
+    0.445526,
+    -0.028748
+   ],
+   "L_Pinky1": [
+    0.210723,
+    0.486155,
+    -0.040034
+   ],
+   "L_Pinky2": [
+    0.214109,
+    0.475998,
+    -0.04737
+   ],
+   "L_Pinky3": [
+    0.216366,
+    0.466969,
+    -0.054142
+   ],
+   "L_Ring1": [
+    0.214673,
+    0.482205,
+    -0.031006
+   ],
+   "L_Ring2": [
+    0.219752,
+    0.467534,
+    -0.037777
+   ],
+   "L_Ring3": [
+    0.222009,
+    0.455119,
+    -0.042856
+   ],
+   "L_Thigh": [
+    0.05931,
+    0.537619,
+    -0.001913
+   ],
+   "L_ThighTwist01": [
+    0.06505,
+    0.424738,
+    0.001913
+   ],
+   "L_ThighTwist02": [
+    0.07079,
+    0.311857,
+    0.00574
+   ],
+   "L_Thumb1": [
+    0.190408,
+    0.505342,
+    -0.001098
+   ],
+   "L_Thumb2": [
+    0.190409,
+    0.488977,
+    0.001724
+   ],
+   "L_Thumb3": [
+    0.191537,
+    0.476562,
+    0.002852
+   ],
+   "L_ToeBase": [
+    0.112881,
+    0.021045,
+    0.044004
+   ],
+   "L_Upperarm": [
+    0.078443,
+    0.778687,
+    -0.028699
+   ],
+   "L_UpperarmTwist01": [
+    0.103315,
+    0.717463,
+    -0.028699
+   ],
+   "L_UpperarmTwist02": [
+    0.128187,
+    0.65624,
+    -0.028699
+   ],
+   "NeckTwist01": [
+    0.00574,
+    0.828431,
+    -0.024872
+   ],
+   "NeckTwist02": [
+    0.00574,
+    0.847563,
+    -0.017219
+   ],
+   "Pelvis": [
+    0.00574,
+    0.574736,
+    0.002679
+   ],
+   "R_Calf": [
+    -0.063137,
+    0.311857,
+    0.00574
+   ],
+   "R_CalfTwist01": [
+    -0.074616,
+    0.18941,
+    -0.00574
+   ],
+   "R_CalfTwist02": [
+    -0.086096,
+    0.066963,
+    -0.017219
+   ],
+   "R_Clavicle": [
+    -0.017219,
+    0.797819,
+    -0.013393
+   ],
+   "R_ElbowShareBone": [
+    -0.122147,
+    0.656877,
+    -0.027702
+   ],
+   "R_Eye": [
+    -0.021046,
+    0.90496,
+    0.028699
+   ],
+   "R_Foot": [
+    -0.086096,
+    0.066963,
+    -0.017219
+   ],
+   "R_Forearm": [
+    -0.120534,
+    0.656239,
+    -0.028699
+   ],
+   "R_ForearmTwist01": [
+    -0.153933,
+    0.594648,
+    -0.023426
+   ],
+   "R_ForearmTwist02": [
+    -0.187333,
+    0.533057,
+    -0.018153
+   ],
+   "R_Hand": [
+    -0.187333,
+    0.533056,
+    -0.018153
+   ],
+   "R_Index1": [
+    -0.208579,
+    0.479941,
+    -0.008089
+   ],
+   "R_Index2": [
+    -0.215848,
+    0.461491,
+    -0.009208
+   ],
+   "R_Index3": [
+    -0.219202,
+    0.44919,
+    -0.009767
+   ],
+   "R_KneeShareBone": [
+    -0.063953,
+    0.311993,
+    0.006024
+   ],
+   "R_Mid1": [
+    -0.212493,
+    0.479941,
+    -0.02039
+   ],
+   "R_Mid2": [
+    -0.219202,
+    0.458695,
+    -0.024863
+   ],
+   "R_Mid3": [
+    -0.221998,
+    0.445277,
+    -0.027658
+   ],
+   "R_Pinky1": [
+    -0.205784,
+    0.486651,
+    -0.040518
+   ],
+   "R_Pinky2": [
+    -0.210816,
+    0.474909,
+    -0.048904
+   ],
+   "R_Pinky3": [
+    -0.212493,
+    0.465964,
+    -0.055054
+   ],
+   "R_Ring1": [
+    -0.210257,
+    0.482178,
+    -0.032131
+   ],
+   "R_Ring2": [
+    -0.216966,
+    0.465405,
+    -0.039399
+   ],
+   "R_Ring3": [
+    -0.218643,
+    0.453663,
+    -0.044431
+   ],
+   "R_Thigh": [
+    -0.051657,
+    0.537619,
+    -0.001913
+   ],
+   "R_ThighTwist01": [
+    -0.057397,
+    0.424738,
+    0.001913
+   ],
+   "R_ThighTwist02": [
+    -0.063137,
+    0.311857,
+    0.00574
+   ],
+   "R_Thumb1": [
+    -0.187333,
+    0.507897,
+    -0.008089
+   ],
+   "R_Thumb2": [
+    -0.187333,
+    0.490564,
+    0.000297
+   ],
+   "R_Thumb3": [
+    -0.187892,
+    0.472114,
+    0.003093
+   ],
+   "R_ToeBase": [
+    -0.101402,
+    0.021046,
+    0.044004
+   ],
+   "R_Upperarm": [
+    -0.07079,
+    0.778687,
+    -0.028699
+   ],
+   "R_UpperarmTwist01": [
+    -0.095662,
+    0.717463,
+    -0.028699
+   ],
+   "R_UpperarmTwist02": [
+    -0.120534,
+    0.65624,
+    -0.028699
+   ],
+   "Spine01": [
+    0.00574,
+    0.637107,
+    0.009566
+   ],
+   "Spine02": [
+    0.00574,
+    0.702157,
+    0.009566
+   ],
+   "Waist": [
+    0.00574,
+    0.595016,
+    0.00574
+   ]
+  },
+  "has_hair_bones": false,
+  "has_jaw": false,
+  "names": [
+   "BoneRoot",
+   "Hip",
+   "Pelvis",
+   "L_Thigh",
+   "L_Calf",
+   "L_Foot",
+   "L_ToeBase",
+   "L_CalfTwist01",
+   "L_CalfTwist02",
+   "L_KneeShareBone",
+   "L_ThighTwist01",
+   "L_ThighTwist02",
+   "R_Thigh",
+   "R_Calf",
+   "R_KneeShareBone",
+   "R_Foot",
+   "R_ToeBase",
+   "R_CalfTwist01",
+   "R_CalfTwist02",
+   "R_ThighTwist01",
+   "R_ThighTwist02",
+   "Waist",
+   "Spine01",
+   "Spine02",
+   "NeckTwist01",
+   "NeckTwist02",
+   "Head",
+   "FacialBone",
+   "R_Eye",
+   "L_Eye",
+   "L_Clavicle",
+   "L_Upperarm",
+   "L_Forearm",
+   "L_ForearmTwist01",
+   "L_ForearmTwist02",
+   "L_ElbowShareBone",
+   "L_Hand",
+   "L_Pinky1",
+   "L_Pinky2",
+   "L_Pinky3",
+   "L_Ring1",
+   "L_Ring2",
+   "L_Ring3",
+   "L_Mid1",
+   "L_Mid2",
+   "L_Mid3",
+   "L_Index1",
+   "L_Index2",
+   "L_Index3",
+   "L_Thumb1",
+   "L_Thumb2",
+   "L_Thumb3",
+   "L_UpperarmTwist01",
+   "L_UpperarmTwist02",
+   "R_Clavicle",
+   "R_Upperarm",
+   "R_Forearm",
+   "R_ElbowShareBone",
+   "R_ForearmTwist01",
+   "R_ForearmTwist02",
+   "R_Hand",
+   "R_Ring1",
+   "R_Ring2",
+   "R_Ring3",
+   "R_Mid1",
+   "R_Mid2",
+   "R_Mid3",
+   "R_Thumb1",
+   "R_Thumb2",
+   "R_Thumb3",
+   "R_Index1",
+   "R_Index2",
+   "R_Index3",
+   "R_Pinky1",
+   "R_Pinky2",
+   "R_Pinky3",
+   "R_UpperarmTwist01",
+   "R_UpperarmTwist02"
+  ],
+  "parents": {
+   "BoneRoot": null,
+   "FacialBone": "Head",
+   "Head": "NeckTwist02",
+   "Hip": "BoneRoot",
+   "L_Calf": "L_Thigh",
+   "L_CalfTwist01": "L_Calf",
+   "L_CalfTwist02": "L_CalfTwist01",
+   "L_Clavicle": "Spine02",
+   "L_ElbowShareBone": "L_Forearm",
+   "L_Eye": "FacialBone",
+   "L_Foot": "L_Calf",
+   "L_Forearm": "L_Upperarm",
+   "L_ForearmTwist01": "L_Forearm",
+   "L_ForearmTwist02": "L_ForearmTwist01",
+   "L_Hand": "L_Forearm",
+   "L_Index1": "L_Hand",
+   "L_Index2": "L_Index1",
+   "L_Index3": "L_Index2",
+   "L_KneeShareBone": "L_Calf",
+   "L_Mid1": "L_Hand",
+   "L_Mid2": "L_Mid1",
+   "L_Mid3": "L_Mid2",
+   "L_Pinky1": "L_Hand",
+   "L_Pinky2": "L_Pinky1",
+   "L_Pinky3": "L_Pinky2",
+   "L_Ring1": "L_Hand",
+   "L_Ring2": "L_Ring1",
+   "L_Ring3": "L_Ring2",
+   "L_Thigh": "Pelvis",
+   "L_ThighTwist01": "L_Thigh",
+   "L_ThighTwist02": "L_ThighTwist01",
+   "L_Thumb1": "L_Hand",
+   "L_Thumb2": "L_Thumb1",
+   "L_Thumb3": "L_Thumb2",
+   "L_ToeBase": "L_Foot",
+   "L_Upperarm": "L_Clavicle",
+   "L_UpperarmTwist01": "L_Upperarm",
+   "L_UpperarmTwist02": "L_UpperarmTwist01",
+   "NeckTwist01": "Spine02",
+   "NeckTwist02": "NeckTwist01",
+   "Pelvis": "Hip",
+   "R_Calf": "R_Thigh",
+   "R_CalfTwist01": "R_Calf",
+   "R_CalfTwist02": "R_CalfTwist01",
+   "R_Clavicle": "Spine02",
+   "R_ElbowShareBone": "R_Forearm",
+   "R_Eye": "FacialBone",
+   "R_Foot": "R_Calf",
+   "R_Forearm": "R_Upperarm",
+   "R_ForearmTwist01": "R_Forearm",
+   "R_ForearmTwist02": "R_ForearmTwist01",
+   "R_Hand": "R_Forearm",
+   "R_Index1": "R_Hand",
+   "R_Index2": "R_Index1",
+   "R_Index3": "R_Index2",
+   "R_KneeShareBone": "R_Calf",
+   "R_Mid1": "R_Hand",
+   "R_Mid2": "R_Mid1",
+   "R_Mid3": "R_Mid2",
+   "R_Pinky1": "R_Hand",
+   "R_Pinky2": "R_Pinky1",
+   "R_Pinky3": "R_Pinky2",
+   "R_Ring1": "R_Hand",
+   "R_Ring2": "R_Ring1",
+   "R_Ring3": "R_Ring2",
+   "R_Thigh": "Pelvis",
+   "R_ThighTwist01": "R_Thigh",
+   "R_ThighTwist02": "R_ThighTwist01",
+   "R_Thumb1": "R_Hand",
+   "R_Thumb2": "R_Thumb1",
+   "R_Thumb3": "R_Thumb2",
+   "R_ToeBase": "R_Foot",
+   "R_Upperarm": "R_Clavicle",
+   "R_UpperarmTwist01": "R_Upperarm",
+   "R_UpperarmTwist02": "R_UpperarmTwist01",
+   "Spine01": "Waist",
+   "Spine02": "Spine01",
+   "Waist": "Hip"
+  }
+ },
+ "v83_standin_joint_offsets": {
+  "note": "informational only; v10 NOT VERIFIABLE",
+  "offsets": {
+   "Head": {
+    "dist_pctS": 1.716659,
+    "dx_pctS": 0.232006,
+    "dy_pctS": 0.83683,
+    "dz_pctS": -1.480813
+   },
+   "L_Calf": {
+    "dist_pctS": 2.21948,
+    "dx_pctS": 1.719872,
+    "dy_pctS": -0.31746,
+    "dz_pctS": 1.366511
+   },
+   "L_Foot": {
+    "dist_pctS": 4.834627,
+    "dx_pctS": 4.619616,
+    "dy_pctS": 0.655973,
+    "dz_pctS": -1.265887
+   },
+   "L_Forearm": {
+    "dist_pctS": 14.856366,
+    "dx_pctS": -7.836011,
+    "dy_pctS": 0.521634,
+    "dz_pctS": -12.610965
+   },
+   "L_Hand": {
+    "dist_pctS": 29.706456,
+    "dx_pctS": -17.989464,
+    "dy_pctS": 0.22177,
+    "dz_pctS": -23.639025
+   },
+   "L_Thigh": {
+    "dist_pctS": 1.11882,
+    "dx_pctS": 1.117371,
+    "dy_pctS": 0.031579,
+    "dz_pctS": -0.047373
+   },
+   "L_Upperarm": {
+    "dist_pctS": 1.972221,
+    "dx_pctS": 0.658391,
+    "dy_pctS": 1.858476,
+    "dz_pctS": -0.047373
+   },
+   "NeckTwist01": {
+    "dist_pctS": 2.889999,
+    "dx_pctS": 0.231996,
+    "dy_pctS": 2.868168,
+    "dz_pctS": -0.268111
+   },
+   "R_Calf": {
+    "dist_pctS": 2.23851,
+    "dx_pctS": -1.783038,
+    "dy_pctS": -0.222722,
+    "dz_pctS": 1.334953
+   },
+   "R_Foot": {
+    "dist_pctS": 4.730789,
+    "dx_pctS": -4.524893,
+    "dy_pctS": 0.550709,
+    "dz_pctS": -1.265867
+   },
+   "R_Forearm": {
+    "dist_pctS": 14.811609,
+    "dx_pctS": 7.993905,
+    "dy_pctS": 0.374263,
+    "dz_pctS": -12.463594
+   },
+   "R_Hand": {
+    "dist_pctS": 29.865662,
+    "dx_pctS": 17.726706,
+    "dy_pctS": 0.198751,
+    "dz_pctS": -24.035019
+   },
+   "R_Thigh": {
+    "dist_pctS": 1.11882,
+    "dx_pctS": -1.117371,
+    "dy_pctS": -0.031579,
+    "dz_pctS": 0.047373
+   },
+   "R_Upperarm": {
+    "dist_pctS": 1.922677,
+    "dx_pctS": -0.542593,
+    "dy_pctS": 1.816371,
+    "dz_pctS": -0.321055
+   }
+  },
+  "scale": 0.916754
+ },
+ "verdict": {
+  "G1": true,
+  "G2": {
+   "P1": false,
+   "P2": false,
+   "P3": false,
+   "P4": false,
+   "P6": true,
+   "P7": false,
+   "P8": false
+  },
+  "G3": {
+   "P1_slump": true,
+   "P3_elbow": true,
+   "P4_forearm": true,
+   "P6_knee": true
+  },
+  "failures": [
+   "P1",
+   "P2",
+   "P3",
+   "P4",
+   "P7",
+   "P8"
+  ],
+  "verdict": "NOT USABLE"
+ },
+ "weights": {
+  "G1": true,
+  "influences_hist": [
+   0,
+   10255,
+   17022,
+   13974,
+   18924
+  ],
+  "max_abs_sum_minus_1": 0.0,
+  "negative": 0,
+  "unweighted": 0
+ }
+}

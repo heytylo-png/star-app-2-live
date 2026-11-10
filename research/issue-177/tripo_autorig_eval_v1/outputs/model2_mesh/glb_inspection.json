@@ -1,0 +1,238 @@
+{
+ "counts": {
+  "vertices": 60175,
+  "triangles": 89660
+ },
+ "bbox": {
+  "min": [
+   -0.228427,
+   0.0,
+   -0.090848
+  ],
+  "max": [
+   0.228427,
+   0.979576,
+   0.090848
+  ],
+  "size": [
+   0.456855,
+   0.979576,
+   0.181697
+  ]
+ },
+ "components": {
+  "count": 1073,
+  "largest": [
+   {
+    "vertices": 2550,
+    "bbox_min": [
+     0.0163,
+     0.004,
+     -0.0362
+    ],
+    "bbox_max": [
+     0.1439,
+     0.6939,
+     0.0685
+    ]
+   },
+   {
+    "vertices": 2091,
+    "bbox_min": [
+     -0.2147,
+     0.4564,
+     -0.0746
+    ],
+    "bbox_max": [
+     0.2187,
+     0.8398,
+     -0.0317
+    ]
+   },
+   {
+    "vertices": 2014,
+    "bbox_min": [
+     -0.1398,
+     0.0074,
+     -0.0812
+    ],
+    "bbox_max": [
+     -0.0356,
+     0.6546,
+     0.0494
+    ]
+   },
+   {
+    "vertices": 1890,
+    "bbox_min": [
+     -0.1189,
+     0.0303,
+     -0.0238
+    ],
+    "bbox_max": [
+     -0.0132,
+     0.5825,
+     0.0634
+    ]
+   },
+   {
+    "vertices": 1867,
+    "bbox_min": [
+     0.0234,
+     0.0026,
+     -0.0901
+    ],
+    "bbox_max": [
+     0.1439,
+     0.5882,
+     0.0509
+    ]
+   },
+   {
+    "vertices": 1817,
+    "bbox_min": [
+     -0.0942,
+     0.6618,
+     -0.0428
+    ],
+    "bbox_max": [
+     0.0934,
+     0.834,
+     0.0908
+    ]
+   },
+   {
+    "vertices": 1431,
+    "bbox_min": [
+     -0.0863,
+     0.0075,
+     -0.0565
+    ],
+    "bbox_max": [
+     -0.0064,
+     0.4812,
+     0.0182
+    ]
+   },
+   {
+    "vertices": 1043,
+    "bbox_min": [
+     0.0861,
+     0.4304,
+     -0.0489
+    ],
+    "bbox_max": [
+     0.2284,
+     0.8127,
+     0.0088
+    ]
+   },
+   {
+    "vertices": 1004,
+    "bbox_min": [
+     -0.2284,
+     0.433,
+     -0.0309
+    ],
+    "bbox_max": [
+     -0.0543,
+     0.809,
+     0.0441
+    ]
+   },
+   {
+    "vertices": 932,
+    "bbox_min": [
+     0.0496,
+     0.0037,
+     -0.0322
+    ],
+    "bbox_max": [
+     0.102,
+     0.2719,
+     0.0869
+    ]
+   },
+   {
+    "vertices": 927,
+    "bbox_min": [
+     0.038,
+     0.0092,
+     -0.06
+    ],
+    "bbox_max": [
+     0.1039,
+     0.4718,
+     -0.0247
+    ]
+   },
+   {
+    "vertices": 874,
+    "bbox_min": [
+     -0.0931,
+     0.0936,
+     -0.023
+    ],
+    "bbox_max": [
+     -0.0295,
+     0.4729,
+     0.0617
+    ]
+   }
+  ],
+  "n_tiny_le_10_verts": 544
+ },
+ "edges": {
+  "unique": 148816,
+  "boundary": 28652,
+  "nonmanifold_gt2": 0
+ },
+ "mirror_symmetry_x": {
+  "sampled": 20000,
+  "median_dist_over_height": 0.0027692800472342476,
+  "p95_over_height": 0.004526071327270895
+ },
+ "silhouettes": {
+  "front": {
+   "image": "silhouette_front_+Z_view.png",
+   "size_px": [
+    672,
+    1420
+   ],
+   "px_per_unit": 1429.1894362624328,
+   "top_row": 10,
+   "bottom_row": 1410,
+   "height_px": 1401
+  },
+  "back": {
+   "image": "silhouette_back_-Z_view.png",
+   "size_px": [
+    672,
+    1420
+   ],
+   "px_per_unit": 1429.1894362624328,
+   "top_row": 10,
+   "bottom_row": 1410,
+   "height_px": 1401
+  },
+  "side": {
+   "image": "silhouette_side_+X_view.png",
+   "size_px": [
+    279,
+    1420
+   ],
+   "px_per_unit": 1429.1894362624328,
+   "top_row": 10,
+   "bottom_row": 1410,
+   "height_px": 1401
+  },
+  "front_back_mirror_pixel_agreement": 0.9940832494969819
+ },
+ "facing_check": {
+  "foot_z_mean": 0.04184040465986991,
+  "foot_z_min": -0.05391997471451759,
+  "foot_z_max": 0.08740442246198654,
+  "note": "toes extend toward +Z if the model faces +Z (glTF convention)"
+ },
+ "front_width_profile_rows": 1401
+}

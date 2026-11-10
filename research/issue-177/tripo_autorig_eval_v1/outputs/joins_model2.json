@@ -1,0 +1,76 @@
+{
+ "H": 0.979576,
+ "joins": {
+  "L_arm|L_hand": {
+   "edges": 75,
+   "y_pctH": [
+    55.34,
+    56.86
+   ]
+  },
+  "L_arm|torso": {
+   "edges": 262,
+   "y_pctH": [
+    72.38,
+    84.93
+   ]
+  },
+  "L_foot|L_leg": {
+   "edges": 127,
+   "y_pctH": [
+    9.23,
+    10.69
+   ]
+  },
+  "L_leg|torso": {
+   "edges": 251,
+   "y_pctH": [
+    48.67,
+    62.23
+   ]
+  },
+  "R_arm|R_hand": {
+   "edges": 73,
+   "y_pctH": [
+    54.93,
+    56.76
+   ]
+  },
+  "R_arm|torso": {
+   "edges": 308,
+   "y_pctH": [
+    71.92,
+    85.24
+   ]
+  },
+  "R_foot|R_leg": {
+   "edges": 128,
+   "y_pctH": [
+    9.11,
+    11.06
+   ]
+  },
+  "R_leg|torso": {
+   "edges": 236,
+   "y_pctH": [
+    48.86,
+    62.77
+   ]
+  },
+  "head|torso": {
+   "edges": 134,
+   "y_pctH": [
+    84.66,
+    86.16
+   ]
+  }
+ },
+ "joint_heights_pctH": {
+  "Head": 88.48,
+  "L_Forearm": 66.99,
+  "L_Hand": 54.81,
+  "L_Thigh": 54.88,
+  "L_Upperarm": 79.49
+ },
+ "unique_edges": 148816
+}

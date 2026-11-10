@@ -1,0 +1,3272 @@
+{
+ "H": 0.978211,
+ "animation": {
+  "frames": [
+   {
+    "area_ratio": 1.0152,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 66,
+      "gt4x": 13,
+      "max_ratio": 5.225
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.654
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.915
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.976
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.961
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.798
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.637
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.487
+     },
+     "bridge_triangle_area_ratio": 1.0152
+    },
+    "gt2x": 66,
+    "gt4x": 13,
+    "max_ratio": 5.225,
+    "t": 0.0
+   },
+   {
+    "area_ratio": 1.0134,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 65,
+      "gt4x": 12,
+      "max_ratio": 5.153
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.643
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.915
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.971
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.959
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.785
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.643
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.471
+     },
+     "bridge_triangle_area_ratio": 1.0134
+    },
+    "gt2x": 65,
+    "gt4x": 12,
+    "max_ratio": 5.153,
+    "t": 0.118794
+   },
+   {
+    "area_ratio": 1.0066,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 64,
+      "gt4x": 8,
+      "max_ratio": 4.919
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.649
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.906
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.997
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.957
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.753
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.676
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.433
+     },
+     "bridge_triangle_area_ratio": 1.0066
+    },
+    "gt2x": 64,
+    "gt4x": 8,
+    "max_ratio": 4.919,
+    "t": 0.237589
+   },
+   {
+    "area_ratio": 0.9998,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 65,
+      "gt4x": 7,
+      "max_ratio": 4.833
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.664
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.887
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 2,
+      "gt4x": 0,
+      "max_ratio": 2.048
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.03
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.723
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.705
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.389
+     },
+     "bridge_triangle_area_ratio": 0.9998
+    },
+    "gt2x": 68,
+    "gt4x": 7,
+    "max_ratio": 4.833,
+    "t": 0.356383
+   },
+   {
+    "area_ratio": 0.9982,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 67,
+      "gt4x": 10,
+      "max_ratio": 5.102
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.622
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.853
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 2,
+      "gt4x": 0,
+      "max_ratio": 2.051
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.17
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.659
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.72
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.351
+     },
+     "bridge_triangle_area_ratio": 0.9982
+    },
+    "gt2x": 70,
+    "gt4x": 10,
+    "max_ratio": 5.102,
+    "t": 0.475177
+   },
+   {
+    "area_ratio": 0.9984,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 70,
+      "gt4x": 15,
+      "max_ratio": 5.691
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.479
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.821
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.952
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.318
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.604
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.698
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.319
+     },
+     "bridge_triangle_area_ratio": 0.9984
+    },
+    "gt2x": 71,
+    "gt4x": 15,
+    "max_ratio": 5.691,
+    "t": 0.593972
+   },
+   {
+    "area_ratio": 1.0008,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 71,
+      "gt4x": 15,
+      "max_ratio": 6.064
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.335
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.784
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.806
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.45
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.577
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.765
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.291
+     },
+     "bridge_triangle_area_ratio": 1.0008
+    },
+    "gt2x": 72,
+    "gt4x": 15,
+    "max_ratio": 6.064,
+    "t": 0.712766
+   },
+   {
+    "area_ratio": 1.0039,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 72,
+      "gt4x": 19,
+      "max_ratio": 6.311
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.506
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.762
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.689
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.501
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.549
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.819
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.275
+     },
+     "bridge_triangle_area_ratio": 1.0039
+    },
+    "gt2x": 73,
+    "gt4x": 19,
+    "max_ratio": 6.311,
+    "t": 0.83156
+   },
+   {
+    "area_ratio": 1.008,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 72,
+      "gt4x": 20,
+      "max_ratio": 6.597
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.658
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.746
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.607
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.527
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.516
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.882
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.256
+     },
+     "bridge_triangle_area_ratio": 1.008
+    },
+    "gt2x": 73,
+    "gt4x": 20,
+    "max_ratio": 6.597,
+    "t": 0.950355
+   },
+   {
+    "area_ratio": 1.0126,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 72,
+      "gt4x": 22,
+      "max_ratio": 6.937
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.782
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.743
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.556
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.557
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.477
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.958
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.229
+     },
+     "bridge_triangle_area_ratio": 1.0126
+    },
+    "gt2x": 73,
+    "gt4x": 22,
+    "max_ratio": 6.937,
+    "t": 1.069149
+   },
+   {
+    "area_ratio": 1.0166,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 75,
+      "gt4x": 25,
+      "max_ratio": 7.247
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.853
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.756
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.561
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.6
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.443
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.047
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.208
+     },
+     "bridge_triangle_area_ratio": 1.0166
+    },
+    "gt2x": 77,
+    "gt4x": 25,
+    "max_ratio": 7.247,
+    "t": 1.187943
+   },
+   {
+    "area_ratio": 1.019,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 72,
+      "gt4x": 22,
+      "max_ratio": 7.187
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.855
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.777
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.577
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.573
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.449
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.148
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.24
+     },
+     "bridge_triangle_area_ratio": 1.019
+    },
+    "gt2x": 74,
+    "gt4x": 22,
+    "max_ratio": 7.187,
+    "t": 1.306738
+   },
+   {
+    "area_ratio": 1.0178,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 63,
+      "gt4x": 16,
+      "max_ratio": 6.503
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.791
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.802
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.597
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.373
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.595
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.263
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.335
+     },
+     "bridge_triangle_area_ratio": 1.0178
+    },
+    "gt2x": 65,
+    "gt4x": 16,
+    "max_ratio": 6.503,
+    "t": 1.425532
+   },
+   {
+    "area_ratio": 1.0127,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 47,
+      "gt4x": 3,
+      "max_ratio": 5.099
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.711
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.84
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.644
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.957
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.853
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.412
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.462
+     },
+     "bridge_triangle_area_ratio": 1.0127
+    },
+    "gt2x": 48,
+    "gt4x": 3,
+    "max_ratio": 5.099,
+    "t": 1.544326
+   },
+   {
+    "area_ratio": 1.0051,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 16,
+      "gt4x": 0,
+      "max_ratio": 3.158
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.624
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.881
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.698
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.374
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 2,
+      "gt4x": 0,
+      "max_ratio": 2.109
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.554
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.591
+     },
+     "bridge_triangle_area_ratio": 1.0051
+    },
+    "gt2x": 19,
+    "gt4x": 0,
+    "max_ratio": 3.158,
+    "t": 1.663121
+   },
+   {
+    "area_ratio": 1.0056,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 3,
+      "gt4x": 0,
+      "max_ratio": 2.608
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.563
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.906
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.728
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.309
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 9,
+      "gt4x": 0,
+      "max_ratio": 2.318
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.694
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.699
+     },
+     "bridge_triangle_area_ratio": 1.0056
+    },
+    "gt2x": 13,
+    "gt4x": 0,
+    "max_ratio": 2.694,
+    "t": 1.781915
+   },
+   {
+    "area_ratio": 1.0222,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 25,
+      "gt4x": 0,
+      "max_ratio": 3.659
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.523
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.919
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.712
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.315
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 15,
+      "gt4x": 0,
+      "max_ratio": 2.442
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.797
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.762
+     },
+     "bridge_triangle_area_ratio": 1.0222
+    },
+    "gt2x": 41,
+    "gt4x": 0,
+    "max_ratio": 3.659,
+    "t": 1.900709
+   },
+   {
+    "area_ratio": 1.0469,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 49,
+      "gt4x": 10,
+      "max_ratio": 5.063
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.499
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.929
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.666
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.45
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 22,
+      "gt4x": 0,
+      "max_ratio": 2.495
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.838
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.786
+     },
+     "bridge_triangle_area_ratio": 1.0469
+    },
+    "gt2x": 72,
+    "gt4x": 10,
+    "max_ratio": 5.063,
+    "t": 2.019504
+   },
+   {
+    "area_ratio": 1.0688,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 59,
+      "gt4x": 24,
+      "max_ratio": 6.226
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.503
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.947
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.602
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.917
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 25,
+      "gt4x": 0,
+      "max_ratio": 2.502
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.834
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.774
+     },
+     "bridge_triangle_area_ratio": 1.0688
+    },
+    "gt2x": 85,
+    "gt4x": 24,
+    "max_ratio": 6.226,
+    "t": 2.138298
+   },
+   {
+    "area_ratio": 1.0859,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 67,
+      "gt4x": 34,
+      "max_ratio": 7.138
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.521
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.964
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.535
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.22
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 27,
+      "gt4x": 0,
+      "max_ratio": 2.508
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.811
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.765
+     },
+     "bridge_triangle_area_ratio": 1.0859
+    },
+    "gt2x": 96,
+    "gt4x": 34,
+    "max_ratio": 7.138,
+    "t": 2.257092
+   },
+   {
+    "area_ratio": 1.0983,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 73,
+      "gt4x": 39,
+      "max_ratio": 7.928
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.536
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.977
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.484
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.398
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 28,
+      "gt4x": 0,
+      "max_ratio": 2.528
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.804
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.767
+     },
+     "bridge_triangle_area_ratio": 1.0983
+    },
+    "gt2x": 103,
+    "gt4x": 39,
+    "max_ratio": 7.928,
+    "t": 2.375887
+   },
+   {
+    "area_ratio": 1.1097,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 77,
+      "gt4x": 42,
+      "max_ratio": 8.468
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.547
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.004
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.436
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 2,
+      "gt4x": 0,
+      "max_ratio": 2.463
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 56,
+      "gt4x": 0,
+      "max_ratio": 2.724
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.817
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.853
+     },
+     "bridge_triangle_area_ratio": 1.1097
+    },
+    "gt2x": 137,
+    "gt4x": 42,
+    "max_ratio": 8.468,
+    "t": 2.494681
+   },
+   {
+    "area_ratio": 1.2295,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 74,
+      "gt4x": 39,
+      "max_ratio": 8.071
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.785
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.014
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.506
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.274
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 233,
+      "gt4x": 15,
+      "max_ratio": 5.239
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.251
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 45,
+      "gt4x": 0,
+      "max_ratio": 3.044
+     },
+     "bridge_triangle_area_ratio": 1.2295
+    },
+    "gt2x": 355,
+    "gt4x": 54,
+    "max_ratio": 8.071,
+    "t": 2.613475
+   },
+   {
+    "area_ratio": 1.7105,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 62,
+      "gt4x": 35,
+      "max_ratio": 7.082
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 48,
+      "gt4x": 0,
+      "max_ratio": 2.523
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.046
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 60,
+      "gt4x": 0,
+      "max_ratio": 2.622
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.225
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 421,
+      "gt4x": 232,
+      "max_ratio": 10.853
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 30,
+      "gt4x": 0,
+      "max_ratio": 3.603
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 142,
+      "gt4x": 75,
+      "max_ratio": 7.239
+     },
+     "bridge_triangle_area_ratio": 1.7105
+    },
+    "gt2x": 765,
+    "gt4x": 342,
+    "max_ratio": 10.853,
+    "t": 2.73227
+   },
+   {
+    "area_ratio": 1.9052,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 60,
+      "gt4x": 39,
+      "max_ratio": 8.075
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 248,
+      "gt4x": 1,
+      "max_ratio": 4.064
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 3,
+      "gt4x": 0,
+      "max_ratio": 2.665
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 189,
+      "gt4x": 17,
+      "max_ratio": 4.549
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 4,
+      "gt4x": 0,
+      "max_ratio": 2.964
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 448,
+      "gt4x": 375,
+      "max_ratio": 16.075
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 133,
+      "gt4x": 3,
+      "max_ratio": 7.823
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 152,
+      "gt4x": 134,
+      "max_ratio": 11.251
+     },
+     "bridge_triangle_area_ratio": 1.9052
+    },
+    "gt2x": 1237,
+    "gt4x": 569,
+    "max_ratio": 16.075,
+    "t": 2.851064
+   },
+   {
+    "area_ratio": 1.9244,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 60,
+      "gt4x": 40,
+      "max_ratio": 8.956
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 323,
+      "gt4x": 21,
+      "max_ratio": 4.94
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 3,
+      "gt4x": 0,
+      "max_ratio": 3.13
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 201,
+      "gt4x": 84,
+      "max_ratio": 5.713
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 3,
+      "gt4x": 0,
+      "max_ratio": 3.534
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 451,
+      "gt4x": 392,
+      "max_ratio": 18.014
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 197,
+      "gt4x": 6,
+      "max_ratio": 10.119
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 152,
+      "gt4x": 137,
+      "max_ratio": 12.229
+     },
+     "bridge_triangle_area_ratio": 1.9244
+    },
+    "gt2x": 1390,
+    "gt4x": 680,
+    "max_ratio": 18.014,
+    "t": 2.969858
+   },
+   {
+    "area_ratio": 1.8946,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 58,
+      "gt4x": 39,
+      "max_ratio": 8.251
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 319,
+      "gt4x": 20,
+      "max_ratio": 4.952
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 3,
+      "gt4x": 0,
+      "max_ratio": 3.026
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 201,
+      "gt4x": 84,
+      "max_ratio": 5.692
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 3,
+      "gt4x": 0,
+      "max_ratio": 3.487
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 453,
+      "gt4x": 393,
+      "max_ratio": 18.141
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 199,
+      "gt4x": 6,
+      "max_ratio": 10.248
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 152,
+      "gt4x": 137,
+      "max_ratio": 12.311
+     },
+     "bridge_triangle_area_ratio": 1.8946
+    },
+    "gt2x": 1388,
+    "gt4x": 679,
+    "max_ratio": 18.141,
+    "t": 3.088653
+   },
+   {
+    "area_ratio": 1.8176,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 56,
+      "gt4x": 33,
+      "max_ratio": 7.084
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 292,
+      "gt4x": 4,
+      "max_ratio": 4.52
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 3,
+      "gt4x": 0,
+      "max_ratio": 2.816
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 195,
+      "gt4x": 56,
+      "max_ratio": 5.201
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 3,
+      "gt4x": 0,
+      "max_ratio": 3.53
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 453,
+      "gt4x": 395,
+      "max_ratio": 18.351
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 204,
+      "gt4x": 6,
+      "max_ratio": 10.334
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 152,
+      "gt4x": 137,
+      "max_ratio": 12.479
+     },
+     "bridge_triangle_area_ratio": 1.8176
+    },
+    "gt2x": 1358,
+    "gt4x": 631,
+    "max_ratio": 18.351,
+    "t": 3.207447
+   },
+   {
+    "area_ratio": 1.731,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 44,
+      "gt4x": 15,
+      "max_ratio": 5.449
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 220,
+      "gt4x": 0,
+      "max_ratio": 3.939
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 3,
+      "gt4x": 0,
+      "max_ratio": 2.516
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 187,
+      "gt4x": 13,
+      "max_ratio": 4.535
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 4,
+      "gt4x": 0,
+      "max_ratio": 3.662
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 452,
+      "gt4x": 394,
+      "max_ratio": 18.537
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 220,
+      "gt4x": 9,
+      "max_ratio": 10.609
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 153,
+      "gt4x": 135,
+      "max_ratio": 12.243
+     },
+     "bridge_triangle_area_ratio": 1.731
+    },
+    "gt2x": 1283,
+    "gt4x": 566,
+    "max_ratio": 18.537,
+    "t": 3.326241
+   },
+   {
+    "area_ratio": 1.7178,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 27,
+      "gt4x": 0,
+      "max_ratio": 3.544
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 133,
+      "gt4x": 0,
+      "max_ratio": 3.154
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 2,
+      "gt4x": 0,
+      "max_ratio": 2.126
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 149,
+      "gt4x": 0,
+      "max_ratio": 3.63
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 3,
+      "gt4x": 0,
+      "max_ratio": 3.553
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 453,
+      "gt4x": 401,
+      "max_ratio": 18.994
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 229,
+      "gt4x": 13,
+      "max_ratio": 10.713
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 153,
+      "gt4x": 135,
+      "max_ratio": 12.307
+     },
+     "bridge_triangle_area_ratio": 1.7178
+    },
+    "gt2x": 1149,
+    "gt4x": 549,
+    "max_ratio": 18.994,
+    "t": 3.445036
+   },
+   {
+    "area_ratio": 1.5205,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 27,
+      "gt4x": 0,
+      "max_ratio": 3.621
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 57,
+      "gt4x": 0,
+      "max_ratio": 2.753
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.162
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 60,
+      "gt4x": 0,
+      "max_ratio": 2.76
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 3,
+      "gt4x": 0,
+      "max_ratio": 3.092
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 454,
+      "gt4x": 400,
+      "max_ratio": 18.689
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 222,
+      "gt4x": 10,
+      "max_ratio": 10.513
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 153,
+      "gt4x": 137,
+      "max_ratio": 12.828
+     },
+     "bridge_triangle_area_ratio": 1.5205
+    },
+    "gt2x": 977,
+    "gt4x": 547,
+    "max_ratio": 18.689,
+    "t": 3.56383
+   },
+   {
+    "area_ratio": 1.4874,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 52,
+      "gt4x": 6,
+      "max_ratio": 4.757
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 25,
+      "gt4x": 0,
+      "max_ratio": 2.495
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.207
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 2,
+      "gt4x": 0,
+      "max_ratio": 2.218
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 3,
+      "gt4x": 0,
+      "max_ratio": 2.79
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 453,
+      "gt4x": 392,
+      "max_ratio": 17.939
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 210,
+      "gt4x": 6,
+      "max_ratio": 10.063
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 153,
+      "gt4x": 136,
+      "max_ratio": 12.178
+     },
+     "bridge_triangle_area_ratio": 1.4874
+    },
+    "gt2x": 899,
+    "gt4x": 540,
+    "max_ratio": 17.939,
+    "t": 3.682624
+   },
+   {
+    "area_ratio": 1.3839,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 62,
+      "gt4x": 21,
+      "max_ratio": 5.733
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 10,
+      "gt4x": 0,
+      "max_ratio": 2.324
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.284
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 2,
+      "gt4x": 0,
+      "max_ratio": 2.142
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 2,
+      "gt4x": 0,
+      "max_ratio": 2.538
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 450,
+      "gt4x": 388,
+      "max_ratio": 17.111
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 183,
+      "gt4x": 6,
+      "max_ratio": 9.62
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 152,
+      "gt4x": 137,
+      "max_ratio": 12.077
+     },
+     "bridge_triangle_area_ratio": 1.3839
+    },
+    "gt2x": 862,
+    "gt4x": 552,
+    "max_ratio": 17.111,
+    "t": 3.801419
+   },
+   {
+    "area_ratio": 1.5521,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 62,
+      "gt4x": 23,
+      "max_ratio": 6.031
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 3,
+      "gt4x": 0,
+      "max_ratio": 2.207
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 2,
+      "gt4x": 0,
+      "max_ratio": 2.325
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 19,
+      "gt4x": 0,
+      "max_ratio": 2.238
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.217
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 446,
+      "gt4x": 369,
+      "max_ratio": 15.725
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 143,
+      "gt4x": 3,
+      "max_ratio": 8.345
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 152,
+      "gt4x": 132,
+      "max_ratio": 11.186
+     },
+     "bridge_triangle_area_ratio": 1.5521
+    },
+    "gt2x": 828,
+    "gt4x": 527,
+    "max_ratio": 15.725,
+    "t": 3.920213
+   },
+   {
+    "area_ratio": 1.6286,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 60,
+      "gt4x": 23,
+      "max_ratio": 5.948
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 5,
+      "gt4x": 0,
+      "max_ratio": 2.301
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 2,
+      "gt4x": 0,
+      "max_ratio": 2.355
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 40,
+      "gt4x": 0,
+      "max_ratio": 2.373
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.858
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 434,
+      "gt4x": 305,
+      "max_ratio": 13.049
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 84,
+      "gt4x": 3,
+      "max_ratio": 6.049
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 150,
+      "gt4x": 124,
+      "max_ratio": 9.724
+     },
+     "bridge_triangle_area_ratio": 1.6286
+    },
+    "gt2x": 775,
+    "gt4x": 455,
+    "max_ratio": 13.049,
+    "t": 4.039007
+   },
+   {
+    "area_ratio": 1.5533,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 60,
+      "gt4x": 22,
+      "max_ratio": 5.99
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 14,
+      "gt4x": 0,
+      "max_ratio": 2.414
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 2,
+      "gt4x": 0,
+      "max_ratio": 2.334
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 12,
+      "gt4x": 0,
+      "max_ratio": 2.254
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.728
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 383,
+      "gt4x": 161,
+      "max_ratio": 8.74
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 7,
+      "gt4x": 0,
+      "max_ratio": 3.208
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 141,
+      "gt4x": 75,
+      "max_ratio": 6.949
+     },
+     "bridge_triangle_area_ratio": 1.5533
+    },
+    "gt2x": 619,
+    "gt4x": 258,
+    "max_ratio": 8.74,
+    "t": 4.157802
+   },
+   {
+    "area_ratio": 1.2953,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 61,
+      "gt4x": 23,
+      "max_ratio": 6.015
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 13,
+      "gt4x": 0,
+      "max_ratio": 2.37
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 2,
+      "gt4x": 0,
+      "max_ratio": 2.274
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.01
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.894
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 232,
+      "gt4x": 9,
+      "max_ratio": 4.775
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.062
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 99,
+      "gt4x": 0,
+      "max_ratio": 3.86
+     },
+     "bridge_triangle_area_ratio": 1.2953
+    },
+    "gt2x": 409,
+    "gt4x": 32,
+    "max_ratio": 6.015,
+    "t": 4.276596
+   },
+   {
+    "area_ratio": 1.1004,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 64,
+      "gt4x": 21,
+      "max_ratio": 6.063
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.178
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.184
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.686
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.942
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 54,
+      "gt4x": 0,
+      "max_ratio": 2.505
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.532
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.768
+     },
+     "bridge_triangle_area_ratio": 1.1004
+    },
+    "gt2x": 120,
+    "gt4x": 21,
+    "max_ratio": 6.063,
+    "t": 4.39539
+   },
+   {
+    "area_ratio": 1.0486,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 73,
+      "gt4x": 27,
+      "max_ratio": 6.659
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.956
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.091
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.5
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.142
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.582
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.161
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.288
+     },
+     "bridge_triangle_area_ratio": 1.0486
+    },
+    "gt2x": 75,
+    "gt4x": 27,
+    "max_ratio": 6.659,
+    "t": 4.514185
+   },
+   {
+    "area_ratio": 1.0643,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 78,
+      "gt4x": 39,
+      "max_ratio": 7.584
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.631
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.024
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.335
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.321
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.597
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.142
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.451
+     },
+     "bridge_triangle_area_ratio": 1.0643
+    },
+    "gt2x": 80,
+    "gt4x": 39,
+    "max_ratio": 7.584,
+    "t": 4.632979
+   },
+   {
+    "area_ratio": 1.0732,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 80,
+      "gt4x": 48,
+      "max_ratio": 8.373
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.326
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.964
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.436
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.336
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.414
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.122
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.179
+     },
+     "bridge_triangle_area_ratio": 1.0732
+    },
+    "gt2x": 81,
+    "gt4x": 48,
+    "max_ratio": 8.373,
+    "t": 4.751773
+   },
+   {
+    "area_ratio": 1.0816,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 84,
+      "gt4x": 51,
+      "max_ratio": 9.274
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.548
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.961
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.72
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.278
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.455
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.12
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.326
+     },
+     "bridge_triangle_area_ratio": 1.0816
+    },
+    "gt2x": 85,
+    "gt4x": 51,
+    "max_ratio": 9.274,
+    "t": 4.870568
+   },
+   {
+    "area_ratio": 1.0822,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 84,
+      "gt4x": 52,
+      "max_ratio": 9.564
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.773
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.967
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.839
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.129
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.597
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.261
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.468
+     },
+     "bridge_triangle_area_ratio": 1.0822
+    },
+    "gt2x": 85,
+    "gt4x": 52,
+    "max_ratio": 9.564,
+    "t": 4.989362
+   },
+   {
+    "area_ratio": 1.0648,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 80,
+      "gt4x": 48,
+      "max_ratio": 8.672
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.622
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.948
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.616
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.69
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.666
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.43
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.463
+     },
+     "bridge_triangle_area_ratio": 1.0648
+    },
+    "gt2x": 80,
+    "gt4x": 48,
+    "max_ratio": 8.672,
+    "t": 5.108156
+   },
+   {
+    "area_ratio": 1.0413,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 78,
+      "gt4x": 36,
+      "max_ratio": 7.15
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.358
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.923
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.288
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.392
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.641
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.495
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.439
+     },
+     "bridge_triangle_area_ratio": 1.0413
+    },
+    "gt2x": 78,
+    "gt4x": 36,
+    "max_ratio": 7.15,
+    "t": 5.226951
+   },
+   {
+    "area_ratio": 1.0218,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 72,
+      "gt4x": 23,
+      "max_ratio": 6.128
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.351
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.904
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.6
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.393
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.651
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.468
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.418
+     },
+     "bridge_triangle_area_ratio": 1.0218
+    },
+    "gt2x": 72,
+    "gt4x": 23,
+    "max_ratio": 6.128,
+    "t": 5.345745
+   },
+   {
+    "area_ratio": 1.0126,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 68,
+      "gt4x": 17,
+      "max_ratio": 5.493
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.615
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.903
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.917
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.699
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.697
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.503
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.424
+     },
+     "bridge_triangle_area_ratio": 1.0126
+    },
+    "gt2x": 68,
+    "gt4x": 17,
+    "max_ratio": 5.493,
+    "t": 5.464539
+   },
+   {
+    "area_ratio": 1.0127,
+    "detail": {
+     "L_arm-head": {
+      "edges": 443,
+      "gt2x": 67,
+      "gt4x": 13,
+      "max_ratio": 5.249
+     },
+     "L_arm-leg": {
+      "edges": 473,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.674
+     },
+     "L_arm-torso_below72pctH": {
+      "edges": 397,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.912
+     },
+     "L_hand-leg": {
+      "edges": 233,
+      "gt2x": 1,
+      "gt4x": 0,
+      "max_ratio": 2.001
+     },
+     "R_arm-head": {
+      "edges": 536,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.893
+     },
+     "R_arm-leg": {
+      "edges": 470,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.742
+     },
+     "R_arm-torso_below72pctH": {
+      "edges": 428,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.584
+     },
+     "R_hand-leg": {
+      "edges": 159,
+      "gt2x": 0,
+      "gt4x": 0,
+      "max_ratio": 1.457
+     },
+     "bridge_triangle_area_ratio": 1.0127
+    },
+    "gt2x": 68,
+    "gt4x": 13,
+    "max_ratio": 5.249,
+    "t": 5.583333
+   }
+  ],
+  "worst": {
+   "area_ratio": 1.9244,
+   "detail": {
+    "L_arm-head": {
+     "edges": 443,
+     "gt2x": 60,
+     "gt4x": 40,
+     "max_ratio": 8.956
+    },
+    "L_arm-leg": {
+     "edges": 473,
+     "gt2x": 323,
+     "gt4x": 21,
+     "max_ratio": 4.94
+    },
+    "L_arm-torso_below72pctH": {
+     "edges": 397,
+     "gt2x": 3,
+     "gt4x": 0,
+     "max_ratio": 3.13
+    },
+    "L_hand-leg": {
+     "edges": 233,
+     "gt2x": 201,
+     "gt4x": 84,
+     "max_ratio": 5.713
+    },
+    "R_arm-head": {
+     "edges": 536,
+     "gt2x": 3,
+     "gt4x": 0,
+     "max_ratio": 3.534
+    },
+    "R_arm-leg": {
+     "edges": 470,
+     "gt2x": 451,
+     "gt4x": 392,
+     "max_ratio": 18.014
+    },
+    "R_arm-torso_below72pctH": {
+     "edges": 428,
+     "gt2x": 197,
+     "gt4x": 6,
+     "max_ratio": 10.119
+    },
+    "R_hand-leg": {
+     "edges": 159,
+     "gt2x": 152,
+     "gt4x": 137,
+     "max_ratio": 12.229
+    },
+    "bridge_triangle_area_ratio": 1.9244
+   },
+   "gt2x": 1390,
+   "gt4x": 680,
+   "max_ratio": 18.014,
+   "t": 2.969858
+  }
+ },
+ "bridge_triangles": 3101,
+ "categories": {
+  "L_arm-head": 443,
+  "L_arm-leg": 473,
+  "L_arm-torso_below72pctH": 397,
+  "L_hand-leg": 233,
+  "R_arm-head": 536,
+  "R_arm-leg": 470,
+  "R_arm-torso_below72pctH": 428,
+  "R_hand-leg": 159
+ },
+ "note": "POST-HOC supplementary metric; not part of the frozen method",
+ "poses": {
+  "P1": {
+   "L_arm-head": {
+    "edges": 443,
+    "gt2x": 16,
+    "gt4x": 0,
+    "max_ratio": 2.782
+   },
+   "L_arm-leg": {
+    "edges": 473,
+    "gt2x": 452,
+    "gt4x": 379,
+    "max_ratio": 11.965
+   },
+   "L_arm-torso_below72pctH": {
+    "edges": 397,
+    "gt2x": 125,
+    "gt4x": 5,
+    "max_ratio": 8.663
+   },
+   "L_hand-leg": {
+    "edges": 233,
+    "gt2x": 225,
+    "gt4x": 195,
+    "max_ratio": 10.875
+   },
+   "R_arm-head": {
+    "edges": 536,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.576
+   },
+   "R_arm-leg": {
+    "edges": 470,
+    "gt2x": 446,
+    "gt4x": 363,
+    "max_ratio": 13.873
+   },
+   "R_arm-torso_below72pctH": {
+    "edges": 428,
+    "gt2x": 140,
+    "gt4x": 3,
+    "max_ratio": 6.938
+   },
+   "R_hand-leg": {
+    "edges": 159,
+    "gt2x": 149,
+    "gt4x": 121,
+    "max_ratio": 9.514
+   },
+   "bridge_triangle_area_ratio": 3.4009
+  },
+  "P2": {
+   "L_arm-head": {
+    "edges": 443,
+    "gt2x": 31,
+    "gt4x": 0,
+    "max_ratio": 3.646
+   },
+   "L_arm-leg": {
+    "edges": 473,
+    "gt2x": 450,
+    "gt4x": 367,
+    "max_ratio": 12.775
+   },
+   "L_arm-torso_below72pctH": {
+    "edges": 397,
+    "gt2x": 127,
+    "gt4x": 12,
+    "max_ratio": 9.67
+   },
+   "L_hand-leg": {
+    "edges": 233,
+    "gt2x": 226,
+    "gt4x": 202,
+    "max_ratio": 11.172
+   },
+   "R_arm-head": {
+    "edges": 536,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.815
+   },
+   "R_arm-leg": {
+    "edges": 470,
+    "gt2x": 451,
+    "gt4x": 367,
+    "max_ratio": 15.33
+   },
+   "R_arm-torso_below72pctH": {
+    "edges": 428,
+    "gt2x": 114,
+    "gt4x": 3,
+    "max_ratio": 9.133
+   },
+   "R_hand-leg": {
+    "edges": 159,
+    "gt2x": 151,
+    "gt4x": 125,
+    "max_ratio": 10.196
+   },
+   "bridge_triangle_area_ratio": 2.283
+  },
+  "P3": {
+   "L_arm-head": {
+    "edges": 443,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "L_arm-leg": {
+    "edges": 473,
+    "gt2x": 275,
+    "gt4x": 61,
+    "max_ratio": 6.053
+   },
+   "L_arm-torso_below72pctH": {
+    "edges": 397,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "L_hand-leg": {
+    "edges": 233,
+    "gt2x": 215,
+    "gt4x": 139,
+    "max_ratio": 6.911
+   },
+   "R_arm-head": {
+    "edges": 536,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "R_arm-leg": {
+    "edges": 470,
+    "gt2x": 274,
+    "gt4x": 41,
+    "max_ratio": 7.197
+   },
+   "R_arm-torso_below72pctH": {
+    "edges": 428,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "R_hand-leg": {
+    "edges": 159,
+    "gt2x": 137,
+    "gt4x": 51,
+    "max_ratio": 6.397
+   },
+   "bridge_triangle_area_ratio": 1.3578
+  },
+  "P4": {
+   "L_arm-head": {
+    "edges": 443,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "L_arm-leg": {
+    "edges": 473,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.079
+   },
+   "L_arm-torso_below72pctH": {
+    "edges": 397,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "L_hand-leg": {
+    "edges": 233,
+    "gt2x": 1,
+    "gt4x": 0,
+    "max_ratio": 2.043
+   },
+   "R_arm-head": {
+    "edges": 536,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "R_arm-leg": {
+    "edges": 470,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.148
+   },
+   "R_arm-torso_below72pctH": {
+    "edges": 428,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "R_hand-leg": {
+    "edges": 159,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.958
+   },
+   "bridge_triangle_area_ratio": 0.9928
+  },
+  "P5": {
+   "L_arm-head": {
+    "edges": 443,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "L_arm-leg": {
+    "edges": 473,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.976
+   },
+   "L_arm-torso_below72pctH": {
+    "edges": 397,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "L_hand-leg": {
+    "edges": 233,
+    "gt2x": 98,
+    "gt4x": 0,
+    "max_ratio": 3.222
+   },
+   "R_arm-head": {
+    "edges": 536,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "R_arm-leg": {
+    "edges": 470,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.865
+   },
+   "R_arm-torso_below72pctH": {
+    "edges": 428,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "R_hand-leg": {
+    "edges": 159,
+    "gt2x": 41,
+    "gt4x": 0,
+    "max_ratio": 2.904
+   },
+   "bridge_triangle_area_ratio": 0.9646
+  },
+  "P6": {
+   "L_arm-head": {
+    "edges": 443,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "L_arm-leg": {
+    "edges": 473,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "L_arm-torso_below72pctH": {
+    "edges": 397,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "L_hand-leg": {
+    "edges": 233,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "R_arm-head": {
+    "edges": 536,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "R_arm-leg": {
+    "edges": 470,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "R_arm-torso_below72pctH": {
+    "edges": 428,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "R_hand-leg": {
+    "edges": 159,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "bridge_triangle_area_ratio": 1.0
+  },
+  "P7": {
+   "L_arm-head": {
+    "edges": 443,
+    "gt2x": 84,
+    "gt4x": 54,
+    "max_ratio": 11.444
+   },
+   "L_arm-leg": {
+    "edges": 473,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "L_arm-torso_below72pctH": {
+    "edges": 397,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "L_hand-leg": {
+    "edges": 233,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "R_arm-head": {
+    "edges": 536,
+    "gt2x": 8,
+    "gt4x": 0,
+    "max_ratio": 3.859
+   },
+   "R_arm-leg": {
+    "edges": 470,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "R_arm-torso_below72pctH": {
+    "edges": 428,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "R_hand-leg": {
+    "edges": 159,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "bridge_triangle_area_ratio": 1.096
+  },
+  "P8": {
+   "L_arm-head": {
+    "edges": 443,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "L_arm-leg": {
+    "edges": 473,
+    "gt2x": 6,
+    "gt4x": 0,
+    "max_ratio": 2.284
+   },
+   "L_arm-torso_below72pctH": {
+    "edges": 397,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.109
+   },
+   "L_hand-leg": {
+    "edges": 233,
+    "gt2x": 48,
+    "gt4x": 0,
+    "max_ratio": 2.709
+   },
+   "R_arm-head": {
+    "edges": 536,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.0
+   },
+   "R_arm-leg": {
+    "edges": 470,
+    "gt2x": 7,
+    "gt4x": 0,
+    "max_ratio": 2.303
+   },
+   "R_arm-torso_below72pctH": {
+    "edges": 428,
+    "gt2x": 0,
+    "gt4x": 0,
+    "max_ratio": 1.143
+   },
+   "R_hand-leg": {
+    "edges": 159,
+    "gt2x": 15,
+    "gt4x": 0,
+    "max_ratio": 2.366
+   },
+   "bridge_triangle_area_ratio": 0.9981
+  }
+ },
+ "rest_bridge_area": 0.00103901
+}

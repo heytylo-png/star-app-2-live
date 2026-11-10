@@ -1,0 +1,4 @@
+model1 rigged (7b709d8b...) vs unrigged (b4511e3f...)
+vertices 981702 vs 981701; max nearest-vertex distance 5.385589709431291e-08 both ways
+welded triangle sets (1e-7 weld, mapped by nearest original vertex): rigged 1888611, orig 1888611, only-rigged 0, only-orig 0
+model1 re-export (0a6e3480...): POSITION/NORMAL/TEXCOORD_0/indices byte-identical to b4511e3f...; no skin
