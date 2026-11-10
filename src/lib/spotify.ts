@@ -450,7 +450,7 @@ export async function consumeSpotifyRedirect(opts: {
   if (!pending || !clientId || !parsed.code) {
     return { consumed: true, ok: false, error: "Spotify login expired. Try Connect again." };
   }
-  if (parsed.state && parsed.state !== pending.state) {
+  if (parsed.state !== pending.state) {
     return { consumed: true, ok: false, error: "Spotify login state mismatch. Try Connect again." };
   }
 

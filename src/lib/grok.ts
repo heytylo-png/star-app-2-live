@@ -199,13 +199,15 @@ function classifyGrokCatch(err: unknown, user?: AbortSignal, timeout?: AbortSign
     (e as Error & { cause?: unknown }).cause = err;
     throw e;
   }
-  if (err instanceof Error && err.message.startsWith("XAI_AUTH")) throw err;
-  if (err instanceof Error && err.message === "XAI_TIMEOUT") throw err;
+  // Terminal for every model: bad key, rate limit, timeout — do not keep retrying.
+  if (err instanceof Error && /^XAI_(AUTH|RATE|TIMEOUT)/.test(err.message)) throw err;
 }
 
 /**
  * Call xAI chat completions. Streams SSE when possible; otherwise one-shot + chunked onDelta.
  * Throws on user abort. Throws tagged Error on CORS / timeout / network so callers can fall back.
+ * `onReset` fires when deltas already emitted must be discarded (a stream died mid-reply
+ * and the reply is being fetched again) — callers must clear what they accumulated.
  */
 export async function streamGrok(
   input: {
@@ -214,6 +216,7 @@ export async function streamGrok(
   },
   onDelta: (text: string) => void,
   signal?: AbortSignal,
+  onReset?: () => void,
 ): Promise<void> {
   const apiKey = getStoredXaiKey();
   if (!apiKey) throw new Error("NO_KEY");
@@ -221,6 +224,18 @@ export async function streamGrok(
   const messages = buildMessages(input.messages, input.systemExtra);
   let lastErr: unknown = null;
   const { signal: combined, timeout } = combineSignals(signal);
+
+  // Track partial output so a retry never appends a full reply to half of one.
+  let emitted = false;
+  const emit = (text: string) => {
+    emitted = true;
+    onDelta(text);
+  };
+  const discardPartial = () => {
+    if (!emitted) return;
+    emitted = false;
+    onReset?.();
+  };
 
   for (const model of MODEL_CANDIDATES) {
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
@@ -236,16 +251,17 @@ export async function streamGrok(
       }
       if (!res.ok) {
         const body = await res.text().catch(() => "");
-        // Auth / rate — don't spin through every model endlessly for same key error
+        // Auth / rate — the same key fails on every model, so stop here
         if (res.status === 401 || res.status === 403) {
           throw new Error(`XAI_AUTH:${res.status}`);
         }
+        if (res.status === 429) throw new Error("XAI_RATE:429");
         lastErr = describeGrokFailure(res.status, body, apiKey);
         continue;
       }
 
       if (res.body) {
-        const got = await readSseStream(res.body, onDelta, combined, apiKey);
+        const got = await readSseStream(res.body, emit, combined, apiKey);
         if (got) return;
       }
 
@@ -256,7 +272,8 @@ export async function streamGrok(
       // try next model / one-shot
     }
 
-    // One-shot fallback for this model
+    // One-shot fallback for this model — drop anything a broken stream already sent
+    discardPartial();
     try {
       const res = await postChat(model, messages, apiKey, false, combined);
       if (res.status === 404 || res.status === 400) {
@@ -267,6 +284,7 @@ export async function streamGrok(
         if (res.status === 401 || res.status === 403) {
           throw new Error(`XAI_AUTH:${res.status}`);
         }
+        if (res.status === 429) throw new Error("XAI_RATE:429");
         const body = await res.text().catch(() => "");
         lastErr = describeGrokFailure(res.status, body, apiKey);
         continue;
@@ -278,7 +296,7 @@ export async function streamGrok(
         lastErr = new Error("empty completion");
         continue;
       }
-      await feedChunks(content, onDelta, combined);
+      await feedChunks(content, emit, combined);
       return;
     } catch (err) {
       classifyGrokCatch(err, signal, timeout);
