@@ -1,0 +1,8 @@
+rest {'neck': 0.433, 'spine_hip_lower_waist': 1.347, 'spine_lower_waist_waist': 1.347, 'spine_waist_mid_chest': 1.347, 'spine_mid_upper_chest': 1.347, 'hip_left': 1.75, 'elbow_left': 0.152, 'wrist_left': 0.152, 'knee_left': 0.151, 'ankle_left': 0.15, 'hip_right': 1.75, 'elbow_right': 0.152, 'wrist_right': 0.152, 'knee_right': 0.151, 'ankle_right': 0.15} 
+control {'s_star': 0.2451, 'result': 'PASS'}
+neck {"verdict": "LIMITED", "keys_limited": 62, "max_demanded": 36.82, "max_swing": 28.14, "max_twist": 30.72, "worst": {"t": 3.041667, "demanded": 36.73, "swing": 28.14, "twist": 23.85, "s": 0.3564, "allowed": 13.09, "shortfall": 23.64}, "min_allowed_when_limited": 10.11}
+spine_hip_lower_waist {"verdict": "FOLLOWS", "keys_limited": 0, "max_demanded": 10.75, "max_swing": 5.61, "max_twist": 9.91, "worst": null, "min_allowed_when_limited": null}
+spine_lower_waist_waist {"verdict": "FOLLOWS", "keys_limited": 0, "max_demanded": 8.96, "max_swing": 6.41, "max_twist": 7.22, "worst": null, "min_allowed_when_limited": null}
+spine_waist_mid_chest {"verdict": "LIMITED", "keys_limited": 13, "max_demanded": 8.42, "max_swing": 7.38, "max_twist": 6.21, "worst": {"t": 4.125, "demanded": 8.0, "swing": 7.33, "twist": 3.2, "s": 0.915, "allowed": 7.32, "shortfall": 0.68}, "min_allowed_when_limited": 7.08}
+spine_mid_upper_chest {"verdict": "FOLLOWS", "keys_limited": 0, "max_demanded": 0.0, "max_swing": 0.0, "max_twist": 0.0, "worst": null, "min_allowed_when_limited": null}
+hip_left {"verdict": "LIMITED", "keys_limited": 78, "max_demanded": 41.04, "max_swing": 29.35, "max_twist": 32.23, "worst": {"t": 1.208333, "demanded": 36.16, "swing": 29.35, "twist": 21.36, "s": 0.585, "allowed": 21.15, "shortfall": 15.01}, "min_allowed_when_limited": 21.06}
