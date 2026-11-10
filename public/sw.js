@@ -1,11 +1,17 @@
 /* Star Rai — minimal app-shell service worker.
  * Caches same-origin static assets for offline shell.
- * Does not intercept cross-origin (Grok / fonts) or mutate localStorage. */
-const CACHE = "star-rai-shell-v1";
+ * Does not intercept cross-origin (Grok / fonts) or mutate localStorage.
+ *
+ * Two caches:
+ *   SHELL  — index.html + hashed /assets/ bundles. Named per build (the build
+ *            stamps __BUILD_ID__), so a deploy drops the previous build's bundles.
+ *   ASSETS — puppet art, icons and other unhashed files. Kept across deploys so
+ *            the art is not re-downloaded every release. */
+const SHELL = "star-rai-shell-__BUILD_ID__";
+const ASSETS = "star-rai-assets-v1";
 const BASE = "/star-app-2-live/";
-const PRECACHE = [
-  BASE,
-  BASE + "index.html",
+const PRECACHE_SHELL = [BASE, BASE + "index.html"];
+const PRECACHE_ASSETS = [
   BASE + "manifest.webmanifest",
   BASE + "icon-192.png",
   BASE + "icon-512.png",
@@ -17,9 +23,10 @@ const PRECACHE = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE)
-      .then((cache) => cache.addAll(PRECACHE))
+    Promise.all([
+      caches.open(SHELL).then((cache) => cache.addAll(PRECACHE_SHELL)),
+      caches.open(ASSETS).then((cache) => cache.addAll(PRECACHE_ASSETS)),
+    ])
       .then(() => self.skipWaiting())
       .catch(() => self.skipWaiting()),
   );
@@ -30,7 +37,9 @@ self.addEventListener("activate", (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))),
+        Promise.all(
+          keys.filter((k) => k !== SHELL && k !== ASSETS).map((k) => caches.delete(k)),
+        ),
       )
       .then(() => self.clients.claim()),
   );
@@ -54,7 +63,7 @@ self.addEventListener("fetch", (event) => {
       fetch(req)
         .then((res) => {
           const copy = res.clone();
-          void caches.open(CACHE).then((c) => c.put(BASE + "index.html", copy));
+          void caches.open(SHELL).then((c) => c.put(BASE + "index.html", copy));
           return res;
         })
         .catch(() =>
@@ -65,13 +74,14 @@ self.addEventListener("fetch", (event) => {
   }
 
   // Same-origin static → cache-first, then network + warm cache
+  const cacheName = url.pathname.startsWith(BASE + "assets/") ? SHELL : ASSETS;
   event.respondWith(
     caches.match(req).then((cached) => {
       const network = fetch(req)
         .then((res) => {
           if (res && res.ok) {
             const copy = res.clone();
-            void caches.open(CACHE).then((c) => c.put(req, copy));
+            void caches.open(cacheName).then((c) => c.put(req, copy));
           }
           return res;
         })
