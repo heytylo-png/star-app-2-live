@@ -9,14 +9,33 @@ export interface Env {
   ALLOWED_ORIGINS?: string;
 }
 
+/** Origins allowed when ALLOWED_ORIGINS is unset: the live site and local Vite. */
+const DEFAULT_ALLOWED_ORIGINS = [
+  "https://heytylo-png.github.io",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+];
+
+/** Returns null for "any origin" (ALLOWED_ORIGINS = "*"), else the allowlist. */
+function allowedOrigins(env: Env): string[] | null {
+  const raw = env.ALLOWED_ORIGINS?.trim();
+  if (raw === "*") return null;
+  if (!raw) return DEFAULT_ALLOWED_ORIGINS;
+  return raw
+    .split(",")
+    .map((s) => s.trim().replace(/\/$/, ""))
+    .filter(Boolean);
+}
+
+function originAllowed(origin: string | null, env: Env): boolean {
+  const list = allowedOrigins(env);
+  if (!list) return true;
+  return Boolean(origin && list.includes(origin));
+}
+
 function corsHeaders(origin: string | null, env: Env): HeadersInit {
-  const allow = env.ALLOWED_ORIGINS?.trim() || "*";
-  const allowed =
-    allow === "*"
-      ? "*"
-      : origin && allow.split(",").map((s) => s.trim()).includes(origin)
-        ? origin
-        : allow.split(",")[0]?.trim() || "*";
+  const list = allowedOrigins(env);
+  const allowed = !list ? "*" : origin && list.includes(origin) ? origin : (list[0] ?? "null");
 
   return {
     "Access-Control-Allow-Origin": allowed,
@@ -72,6 +91,14 @@ export default {
           headers: { "Content-Type": "application/json", ...cors },
         });
       }
+    }
+
+    // CORS headers only stop browsers reading the reply — refuse the forward itself.
+    if (!originAllowed(origin, env)) {
+      return new Response(JSON.stringify({ error: "Origin not allowed" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json", ...cors },
+      });
     }
 
     const key = extractKey(request);
