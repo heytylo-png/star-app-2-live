@@ -1,0 +1,4 @@
+source {'hand_speed_max': 1.69, 'elbow_speed_max': 0.8, 'arm_ang_speed_max': 285.307, 'arm_ang_speed_t': 2.817, 'hand_accel_max': 24.871, 'arm_ang_accel_max': 5642.178, 'arm_ang_accel_t': 3.833}
+fade {'hand_speed_max': 1.635, 'elbow_speed_max': 0.704, 'arm_ang_speed_max': 326.073, 'arm_ang_speed_t': 2.817, 'hand_accel_max': 24.17, 'arm_ang_accel_max': 5642.174, 'arm_ang_accel_t': 3.833}
+2.6-3.1s arm deg/s  source max 285  fade max 326  ratio 1.14
+3.85-4.3s arm deg/s  source max 269  fade max 303  ratio 1.12

@@ -50,3 +50,17 @@ Reproduce:
 python3 -I <arm_fade_v1>/scripts/apply_arm_fade.py starmodelrigpose.glb <glbio dir> fade.glb 20
 python3 -I scripts/indep_check.py starmodelrigpose.glb fade.glb <collide_v2 dir> <glbio dir> 3 outputs/indep_check.json
 ```
+
+## 6. Addendum: smoothness of the fade transitions (MEASURED, post-hoc, not gated)
+
+Added after the user's playback (which appears to have blended both clips, so it could not isolate the wave). `scripts/smoothness.py` samples `greet_02` at 60 fps from 2.4 to 4.4 s, source vs faded:
+
+| | Source | Faded |
+|---|---|---|
+| Peak upper-arm angular speed, rise (2.6–3.1 s) | 285 °/s | 326 °/s (×1.14) |
+| Peak upper-arm angular speed, drop (3.85–4.3 s) | 269 °/s | 303 °/s (×1.12) |
+| Peak hand speed | 1.69 H/s | 1.64 H/s |
+| Peak elbow speed | 0.80 H/s | 0.70 H/s |
+| Peak upper-arm angular acceleration | 5,642 °/s² at 3.833 s | 5,642 °/s² at 3.833 s (same) |
+
+The fade adds at most 14 % to the shoulder's speed during a motion that is already fast, the hand and elbow move no faster, and the peak acceleration is the source animation's own. **No snap is measurable.** The open item in §3 is closed by measurement; a clean single-clip playback by the user is still welcome but not required.
