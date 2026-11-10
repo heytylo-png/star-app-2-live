@@ -1,0 +1,170 @@
+{
+ "manifest": {
+  "entries": 35,
+  "match": 35,
+  "mismatches": [],
+  "manifest_sha256": "45ea9af0e34df955362ef5429901e9c74bcbd67c99ee0b6d059ed7195f8a4ea6",
+  "frozen_method_sha256": "c714596611ebef477ed14eded3307348b453ff4d02f4fd806687273d6ae55f9c"
+ },
+ "reproducibility": {
+  "step12": true,
+  "step4_recal_sign": true,
+  "exploratory_width": true,
+  "c09_measure_baseline": true
+ },
+ "step1": {
+  "sole_to_crown_mm": 239.64747834205627,
+  "H_px": {
+   "front": 1521,
+   "side": 1446,
+   "back": 1430
+  },
+  "px_per_mm": {
+   "side": 6.0339,
+   "back": 5.9671,
+   "front_via_D3": 5.9343
+  },
+  "modeL_front_equals_mean_side_back": true,
+  "side_back_spread_pct": 1.113,
+  "three_view_spread_pct": 1.666,
+  "u_rel_pct": 0.207,
+  "not_shared_threshold_pct": 1.415,
+  "D3_r_fb": 0.9945,
+  "D3_cost_px": 17.13,
+  "D3_cost_at_1": 17.34,
+  "D3_grid_min": [
+   0.995,
+   17.134580097087383
+  ],
+  "D4_r_crotch": 1.1782,
+  "gates": {
+   "spread_le_1pct": false,
+   "D3_D4_agree_1pct": false,
+   "D3_cost_le_2px": false
+  },
+  "verdict_recomputed": "NOT VERIFIABLE (inconclusive)",
+  "verdict_committed": "NOT VERIFIABLE (inconclusive)"
+ },
+ "reviewer_ratio_test": {
+  "reference_height_ratio_side_over_back": 1.0112,
+  "modeF_scale_ratio_side_over_back": 1.0424,
+  "modeL_scale_ratio_side_over_back": 1.0112,
+  "modeF_minus_reference_pct": 3.09,
+  "detection_uncertainty_ratio_pct": 0.347,
+  "modeF_implied_figure_height_px": {
+   "side": 1433.1,
+   "back": 1374.8
+  },
+  "reference_measured_height_px": {
+   "side": 1446,
+   "back": 1430
+  },
+  "modeF_front_over_back": 0.9926,
+  "D3_r_fb": 0.9945
+ },
+ "step2": {
+  "front_class": "CROPPED",
+  "contour_px_on_top_edge": 20,
+  "rule_cropped": true,
+  "side_back_top_rows": [
+   41,
+   41
+  ],
+  "implemented_modeL_bias_pct": 0.0,
+  "crown_based_front_scale": 6.3468,
+  "bias_vs_mean_side_back_pct": 5.77,
+  "bias_vs_D3_front_pct": 6.95,
+  "predicted_skull_row_recomputed": 98.9,
+  "predicted_skull_row_committed": 98.86500000000001,
+  "note": "prediction uses r_fb from the failed D3 estimator -> INFERRED only"
+ },
+ "step4": {
+  "baseline_vs_itself": {
+   "A": false,
+   "B": false
+  },
+  "retrospective": {
+   "A": {
+    "value": false,
+    "deltas": [
+     [
+      "P",
+      "front gap_z25_80 mean decrease (mm)",
+      -0.5927
+     ],
+     [
+      "P",
+      "back gap_z25_80 mean decrease (mm)",
+      -1.0321
+     ],
+     [
+      "R",
+      "front gap_z25_80 mean decrease (mm)",
+      0.6375
+     ],
+     [
+      "R",
+      "back gap_z25_80 mean decrease (mm)",
+      0.3405
+     ]
+    ]
+   },
+   "B": {
+    "value": true,
+    "deltas": [
+     [
+      "P",
+      "side foot_zlt-60 mean decrease (mm)",
+      0.6862
+     ],
+     [
+      "P",
+      "side sole_envelope mean_abs_dz decrease (mm)",
+      2.5029
+     ],
+     [
+      "R",
+      "side foot_zlt-60 mean decrease (mm)",
+      0.6919
+     ],
+     [
+      "R",
+      "side sole_envelope mean_abs_dz decrease (mm)",
+      2.4633
+     ]
+    ]
+   },
+   "B1": {
+    "value": true,
+    "deltas": [
+     [
+      "P",
+      "side foot_zlt-60 mean decrease (mm)",
+      0.1086
+     ],
+     [
+      "P",
+      "side sole_envelope mean_abs_dz decrease (mm)",
+      3.9627
+     ],
+     [
+      "R",
+      "side foot_zlt-60 mean decrease (mm)",
+      0.1746
+     ],
+     [
+      "R",
+      "side sole_envelope mean_abs_dz decrease (mm)",
+      3.9286
+     ]
+    ]
+   }
+  },
+  "value_consistent_with_frozen_definition": {
+   "A": true,
+   "B": true,
+   "B1": true
+  }
+ },
+ "c09_fresh_vs_committed_baseline": {}
+}

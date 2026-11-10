@@ -1,0 +1,8 @@
+# MANIFEST.sha256 — Claude independent review of bv9 camera-scale verification v1 (Issue #177). Paths relative to this folder. Format: sha256  bytes  path
+# Reviewed: research/issue-177-camera-scale-v1 @ 9939d1829b9d2c0ce9e21f73110d8b401bb1ad23 (study MANIFEST_sha256.txt sha256 45ea9af0e34df955362ef5429901e9c74bcbd67c99ee0b6d059ed7195f8a4ea6)
+## INCLUDED
+1dae4c37693a2823a3b267988097f2dbf8116204f71c000997f90dfaf3e9d186  9695  REVIEW.md
+013fc666e4cc093beb265e6c1bb7522ecd0d5663af85bec8054865deb0f6e50c  7107  scripts/reproduce_camera_scale_review.py
+495d0105d71a262fbe225b4f907a9d108782971626e6ca25b096a0bb3a96bad7  3510  outputs/camera_scale_review_output.json
+## UNAVAILABLE (not committed by design)
+# reference pixels/masks, bv9 geometry
