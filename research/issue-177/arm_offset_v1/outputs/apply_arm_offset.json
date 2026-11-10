@@ -1,0 +1,52 @@
+{
+ "angle_deg": 20.0,
+ "animations": [
+  {
+   "bones": {
+    "L_Upperarm": {
+     "bytes": 6768,
+     "file_offset": 5295460,
+     "keys": 423,
+     "node": 47,
+     "output_accessor": 102,
+     "parent_world_non_rotation_max": 5.07e-07
+    },
+    "R_Upperarm": {
+     "bytes": 6768,
+     "file_offset": 5425364,
+     "keys": 423,
+     "node": 71,
+     "output_accessor": 174,
+     "parent_world_non_rotation_max": 4.08e-07
+    }
+   },
+   "name": "standing_relax.001"
+  },
+  {
+   "bones": {
+    "L_Upperarm": {
+     "bytes": 2160,
+     "file_offset": 5580364,
+     "keys": 135,
+     "node": 47,
+     "output_accessor": 337,
+     "parent_world_non_rotation_max": 2.82e-07
+    },
+    "R_Upperarm": {
+     "bytes": 2160,
+     "file_offset": 5622716,
+     "keys": 135,
+     "node": 71,
+     "output_accessor": 409,
+     "parent_world_non_rotation_max": 3.84e-07
+    }
+   },
+   "name": "greet_02.001"
+  }
+ ],
+ "axis": "world +Z (glTF)",
+ "sign": {
+  "L_Upperarm": 1,
+  "R_Upperarm": -1
+ }
+}

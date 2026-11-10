@@ -1,0 +1,21 @@
+{
+ "H": 0.979576,
+ "animation": "greet_02.001",
+ "hands": {
+  "L": {
+   "frames_hand_centroid_in_front_of_head": 0,
+   "frames_sampled": 45,
+   "min_dist": 0.323193,
+   "min_dist_pctH": 32.993,
+   "t_at_min": 4.0417
+  },
+  "R": {
+   "frames_hand_centroid_in_front_of_head": 6,
+   "frames_sampled": 45,
+   "min_dist": 0.093287,
+   "min_dist_pctH": 9.523,
+   "t_at_min": 3.7917
+  }
+ },
+ "note": "EXPLORATORY; not a frozen test"
+}

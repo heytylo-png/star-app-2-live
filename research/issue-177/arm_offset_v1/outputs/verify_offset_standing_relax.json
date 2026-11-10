@@ -1,0 +1,66 @@
+{
+ "angle_deg": 20.0,
+ "animations": [
+  {
+   "dense_screen": {
+    "frames": 423,
+    "frames_with_new_adjacent_far": 0,
+    "frames_with_new_non_adjacent": 0,
+    "max_new_adjacent_far": 0,
+    "max_new_non_adjacent": 0
+   },
+   "equivalence": {
+    "max_vertex_dist_at_keys": 7.22e-08,
+    "max_vertex_dist_at_midpoints": 3.159e-06,
+    "pct_H_at_keys": 7.37e-06,
+    "pct_H_at_midpoints": 0.0003225
+   },
+   "name": "standing_relax.001",
+   "rotation_keys": 423,
+   "t_range": [
+    0.041667,
+    17.625
+   ]
+  }
+ ],
+ "byte_diff": {
+  "allowed_bytes": 17856,
+  "allowed_ranges": [
+   [
+    5295460,
+    5302228
+   ],
+   [
+    5425364,
+    5432132
+   ],
+   [
+    5580364,
+    5582524
+   ],
+   [
+    5622716,
+    5624876
+   ]
+  ],
+  "differing_bytes": 14187,
+  "differing_bytes_outside_allowed": 0,
+  "length": 5662836,
+  "same_length": true
+ },
+ "note": "EXPLORATORY verification; not a frozen test",
+ "output_sha256": "72e56941cdaf453fbe5a9434847a31181d4c8b0a91ecce48ae329085dc7c4a1b",
+ "source_sha256": "57cb05de332adaae6271d5ba5852d5b268dab20abfd3bf4c53f92f58536229c7",
+ "static_data": {
+  "JOINTS_0_identical": true,
+  "NORMAL_identical": true,
+  "POSITION_identical": true,
+  "TEXCOORD_0_identical": true,
+  "WEIGHTS_0_identical": true,
+  "indices_identical": true,
+  "inverseBindMatrices_identical": true,
+  "joints": 78,
+  "json_chunk_identical": true,
+  "nodes": 80
+ }
+}
