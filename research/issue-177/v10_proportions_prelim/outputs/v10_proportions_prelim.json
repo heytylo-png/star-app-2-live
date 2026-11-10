@@ -1,0 +1,48 @@
+{
+ "head": {
+  "tripo_shoulder_to_head_joint_mm": 20.0,
+  "tripo_shoulder_to_neck_joint_mm": 11.3,
+  "v10_shoulder_to_head_start_mm": 16.0
+ },
+ "lengths": {
+  "forearm": {
+   "diff_pct": 4.5,
+   "tripo_ratio": 0.1935,
+   "tripo_scaled_mm": 31.34,
+   "v10_mm": 30.0,
+   "v10_ratio": 0.1852
+  },
+  "shank": {
+   "diff_pct": 2.2,
+   "tripo_ratio": 0.3471,
+   "tripo_scaled_mm": 56.23,
+   "v10_mm": 55.0,
+   "v10_ratio": 0.3395
+  },
+  "shoulder_to_knee": {
+   "diff_pct": -0.7,
+   "tripo_ratio": 0.6559,
+   "tripo_scaled_mm": 106.26,
+   "v10_mm": 107.0,
+   "v10_ratio": 0.6605
+  },
+  "shoulder_width": {
+   "diff_pct": -17.3,
+   "tripo_ratio": 0.2097,
+   "tripo_scaled_mm": 33.97,
+   "v10_mm": 41.05,
+   "v10_ratio": 0.2534
+  },
+  "upper_arm": {
+   "diff_pct": 0.3,
+   "tripo_ratio": 0.1857,
+   "tripo_scaled_mm": 30.08,
+   "v10_mm": 30.0,
+   "v10_ratio": 0.1852
+  }
+ },
+ "note": "PRELIMINARY; v10 values are user-stated, not read from the v10 file",
+ "scale_mm_per_unit": 227.62,
+ "tripo_total_height_scaled_mm": 223.0,
+ "v10_total_height_stated_mm": "~210-216"
+}
