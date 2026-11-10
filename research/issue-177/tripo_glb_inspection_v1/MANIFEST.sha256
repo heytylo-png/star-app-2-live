@@ -1,0 +1,11 @@
+# MANIFEST.sha256 — Tripo GLB inspection (Issue #177). Paths relative to this folder. Format: sha256  bytes  path
+# Input (NOT committed): bikini_3d_model.glb sha256 b4511e3f0d6f11e21b26c7ee12fd3ad1fed06cda4783741f1b54e095f1707c02, 62502928 bytes
+## INCLUDED
+8e36c57526379553abb5e78dfa3532b665ada4350be1cbc468e0dc4d9b85a7de  5040  REPORT.md
+fa71f26ad10fe76f109089e4d6306e3e26a2b7649a42cbdbfd9a82216b38c5e6  1612  scripts/foot_check.py
+bbbe0e52bf88a616f236dd09368234ba75039a240538921374cadd430315cd55  5305  scripts/inspect_glb.py
+677bfa7da31c627a8616d1f36fa25b8f546498d692af148843fbefe59de27f2a  1303  scripts/weld_check.py
+32d0b4daebd9354a57ebdbaaef2770f7db01ccbcda2169ce04bc3e5b991ecd27  3137  outputs/foot_check.json
+81ab581d094a84566403800b68164fef410e81ee6800635cb5d45e492e1006f7  3391  outputs/glb_inspection.json
+60b40574f42b3da44a579edf70c496231c1a3ad43da8102d6e5e9fa67e263f01  16901  outputs/silhouettes_front_side_back.png
+205b25b91a00f2e97c225d396828ca80a52e6fb3bf675fd19468274ba438b1f9  348  outputs/weld_check.txt

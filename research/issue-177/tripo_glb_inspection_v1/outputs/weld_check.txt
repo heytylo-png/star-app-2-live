@@ -1,0 +1,3 @@
+{'tol': 1e-07, 'welded_verts': 944200, 'components': 1, 'largest': [944200], 'boundary_edges': 5, 'nonmanifold': 7}
+{'tol': 1e-06, 'welded_verts': 944200, 'components': 1, 'largest': [944200], 'boundary_edges': 5, 'nonmanifold': 7}
+{'tol': 1e-05, 'welded_verts': 944200, 'components': 1, 'largest': [944200], 'boundary_edges': 5, 'nonmanifold': 7}
