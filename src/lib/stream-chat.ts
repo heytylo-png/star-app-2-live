@@ -146,6 +146,10 @@ export async function streamChat(
           onDelta(delta);
         },
         signal,
+        () => {
+          grokRaw = "";
+          onDelta("", { reset: true });
+        },
       );
       if (isValidActJson(grokRaw)) return grokRaw;
     } catch (err) {

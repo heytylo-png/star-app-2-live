@@ -85,6 +85,9 @@ export async function requestLifeSuggestions(opts: {
           raw += delta;
         },
         opts.signal,
+        () => {
+          raw = "";
+        },
       );
       const next = applySuggestionGrokRaw(raw, local);
       useHerMusicStore.getState().saveSuggestions(opts.today, next);

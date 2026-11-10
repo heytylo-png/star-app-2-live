@@ -41,6 +41,9 @@ export async function requestHerDayCopy(opts: {
           raw += delta;
         },
         opts.signal,
+        () => {
+          raw = "";
+        },
       );
       return applyHerDayGrokRaw(raw, local, opts.sky);
     } catch {
