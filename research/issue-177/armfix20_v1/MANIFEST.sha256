@@ -1,0 +1,10 @@
+# MANIFEST.sha256 — arm-offset fix v1 (Issue #177). Format: sha256  bytes  path
+# Input NOT committed: starmodelrigpose.glb 57cb05de332adaae6271d5ba5852d5b268dab20abfd3bf4c53f92f58536229c7
+# Output NOT committed: starmodel_armfix20.glb 95616b21da8638f0d0e4cea316c90194f901bf590a64136a7c6b1a8b4c20786d (5681264 bytes)
+## INCLUDED
+92891329ee533f545c6d4efdf24ba79dfddb8b9f623922aa6f4759283cfce8b0  2805  REPORT.md
+032f87ecf89a5177c2b0d5c88a1a2ff1175f764a95b0e31055de58908ce6435d  14017  outputs/armfix20_before_after.png
+f2ee4453d7947f28cc16c72ce6029d493d27f614a8e451b76de1a6a3867c3004  576  outputs/edit_report.json
+6eaaa67102f0006149ffb09c92f09f48cc72ecced346bc2e18a7a39052f6a128  5109  outputs/screen20.json
+07a06f6aecb7d28bb279bd5446afff4d951849e7de1f2fb5b8f0321267cb3a2f  5740  scripts/apply_arm_offset.py
+54c4de04c7e6455335aa9f031c647e778bef48c54d1f58b07d0c5531aaaab500  4967  scripts/verify_and_screen.py
