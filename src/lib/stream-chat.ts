@@ -55,14 +55,21 @@ function isAbort(err: unknown): boolean {
   );
 }
 
-/** Optional legacy Pages /api/chat probe (kept for future backends). */
+function apiBase(): string | null {
+  const raw = (import.meta.env.VITE_API_BASE as string | undefined)?.trim();
+  return raw ? raw.replace(/\/$/, "") : null;
+}
+
+/** Optional /api/chat backend — only when VITE_API_BASE is set at build time. */
 async function tryLocalApi(
   input: StreamChatInput,
   onDelta: (text: string, meta?: StreamDeltaMeta) => void,
   signal?: AbortSignal,
 ): Promise<string | null> {
+  const base = apiBase();
+  if (!base) return null;
   try {
-    const res = await fetch(`${import.meta.env.BASE_URL}api/chat`, {
+    const res = await fetch(`${base}/api/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
@@ -147,7 +154,7 @@ export async function streamChat(
     }
   }
 
-  // 2) Optional future /api/chat backend
+  // 2) Optional /api/chat backend (skipped unless VITE_API_BASE is set)
   try {
     const used = await tryLocalApi(input, onDelta, signal);
     if (used && isValidActJson(used)) return used;

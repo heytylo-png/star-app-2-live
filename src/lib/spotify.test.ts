@@ -152,6 +152,33 @@ describe("Spotify callback + tokens", () => {
     assert.equal(session.getItem("star-rai-spotify-pkce"), null);
   });
 
+  it("rejects a callback whose state is missing or does not match", async () => {
+    for (const search of ["?code=from-spotify", "?code=from-spotify&state=other"]) {
+      const local = memoryStore();
+      const session = memoryStore({
+        "star-rai-spotify-pkce": JSON.stringify({
+          verifier: "verifier",
+          state: "st",
+          redirectUri: SPOTIFY_PAGES_REDIRECT,
+        }),
+      });
+      const fetchImpl = (async () => {
+        assert.fail("token exchange must not run on a state mismatch");
+      }) as unknown as typeof fetch;
+      const result = await consumeSpotifyRedirect({
+        search,
+        href: `/star-app-2-live/${search}`,
+        env: { VITE_SPOTIFY_CLIENT_ID: "abc123" },
+        local,
+        session,
+        fetchImpl,
+      });
+      assert.equal(result.consumed, true);
+      assert.equal(result.consumed && result.ok, false);
+      assert.equal(local.getItem(SPOTIFY_TOKEN_STORAGE), null);
+    }
+  });
+
   it("refreshes when the access token is near expiry", () => {
     assert.equal(tokensNeedRefresh({ access_token: "x", expires_at: Date.now() + 5_000 }), true);
     assert.equal(tokensNeedRefresh({ access_token: "x", expires_at: Date.now() + 10 * 60_000 }), false);

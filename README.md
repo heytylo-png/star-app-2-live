@@ -208,7 +208,7 @@ There is **no** server API on Pages (unless you deploy the optional Worker). Cli
 - `/star-app-2-live/api/chat`
 - `/star-app-2-live/api/tts`
 
-Future env: `VITE_API_BASE` — leave unset for pure Pages. `VITE_GROK_PROXY_URL` — optional CORS proxy base URL. `VITE_SPOTIFY_CLIENT_ID` — optional Spotify app Client ID (PKCE; no secret).
+`VITE_API_BASE` — optional backend base URL for `/api/chat` and `/api/tts`; leave unset for pure Pages (no backend requests are made). `VITE_GROK_PROXY_URL` — optional CORS proxy base URL. `VITE_SPOTIFY_CLIENT_ID` — optional Spotify app Client ID (PKCE; no secret).
 
 ## Persist keys (stable)
 
