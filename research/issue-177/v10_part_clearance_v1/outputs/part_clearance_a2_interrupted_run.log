@@ -1,0 +1,2 @@
+C0 PASS C0b {'min_body_clearance': -0.247, 'pair': 'hand_right|thigh_right', 'result': 'PASS'}
+variant_B {"keys": 135, "keys_below_1mm": 0, "min": [1.434, "seg_mid_chest|upper_arm_left", 5.458333], "result": "PASS", "first_violations": []} | joint overlaps: 18
