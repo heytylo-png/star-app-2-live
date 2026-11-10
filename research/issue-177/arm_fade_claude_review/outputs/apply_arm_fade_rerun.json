@@ -1,0 +1,77 @@
+{
+ "angle_deg": 20.0,
+ "animations": [
+  {
+   "bones": {
+    "L_Upperarm": {
+     "bytes": 6768,
+     "file_offset": 5295460,
+     "keys": 423,
+     "keys_partial": 0,
+     "keys_w0": 0,
+     "node": 47,
+     "output_accessor": 102,
+     "parent_world_non_rotation_max": 5.07e-07,
+     "theta_max": 19.982,
+     "theta_min": 9.344,
+     "w_max": 1.0,
+     "w_min": 1.0
+    },
+    "R_Upperarm": {
+     "bytes": 6768,
+     "file_offset": 5425364,
+     "keys": 423,
+     "keys_partial": 0,
+     "keys_w0": 0,
+     "node": 71,
+     "output_accessor": 174,
+     "parent_world_non_rotation_max": 4.08e-07,
+     "theta_max": 19.99,
+     "theta_min": 8.185,
+     "w_max": 1.0,
+     "w_min": 1.0
+    }
+   },
+   "name": "standing_relax.001"
+  },
+  {
+   "bones": {
+    "L_Upperarm": {
+     "bytes": 2160,
+     "file_offset": 5580364,
+     "keys": 135,
+     "keys_partial": 6,
+     "keys_w0": 0,
+     "node": 47,
+     "output_accessor": 337,
+     "parent_world_non_rotation_max": 2.82e-07,
+     "theta_max": 47.829,
+     "theta_min": 5.86,
+     "w_max": 1.0,
+     "w_min": 0.988642
+    },
+    "R_Upperarm": {
+     "bytes": 2160,
+     "file_offset": 5622716,
+     "keys": 135,
+     "keys_partial": 12,
+     "keys_w0": 22,
+     "node": 71,
+     "output_accessor": 409,
+     "parent_world_non_rotation_max": 3.84e-07,
+     "theta_max": 111.859,
+     "theta_min": 11.2,
+     "w_max": 1.0,
+     "w_min": 0.0
+    }
+   },
+   "name": "greet_02.001"
+  }
+ ],
+ "axis": "world +Z (glTF)",
+ "fade": "w=1 for theta<=45, 0 for theta>=90, smoothstep between; theta from world -Y, source pose",
+ "sign": {
+  "L_Upperarm": 1,
+  "R_Upperarm": -1
+ }
+}
