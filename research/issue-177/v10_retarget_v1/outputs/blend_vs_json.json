@@ -1,0 +1,23 @@
+{
+ "actions_in_blend": 0,
+ "armature_object_scale": [
+  1.0,
+  1.0,
+  1.0
+ ],
+ "attachment_tail_offset_mm_in_blend": [
+  2.0
+ ],
+ "blender_used": "4.5.3 LTS",
+ "bones_blend": 31,
+ "bones_json": 31,
+ "file_saved_with": [
+  5,
+  2,
+  45
+ ],
+ "max_head_diff_mm": 3.338e-06,
+ "max_tail_diff_mm_19_bones": 7.415e-06,
+ "parents_match": true,
+ "same_names": true
+}
