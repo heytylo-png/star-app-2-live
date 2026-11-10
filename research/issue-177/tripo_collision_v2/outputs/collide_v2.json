@@ -1,0 +1,333 @@
+{
+ "adjacency": [
+  "L_arm|L_hand",
+  "L_leg|L_foot",
+  "R_arm|R_hand",
+  "R_leg|R_foot",
+  "head|torso",
+  "torso|L_arm",
+  "torso|L_leg",
+  "torso|R_arm",
+  "torso|R_leg"
+ ],
+ "animation": {
+  "n_frames": 48,
+  "name": "greet_02.001",
+  "per_frame_adjacent_far": [
+   24,
+   25,
+   24,
+   29,
+   35,
+   28,
+   28,
+   31,
+   33,
+   36,
+   38,
+   42,
+   45,
+   48,
+   54,
+   61,
+   65,
+   63,
+   65,
+   65,
+   66,
+   59,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   2,
+   9,
+   20
+  ],
+  "per_frame_non_adjacent": [
+   938,
+   909,
+   909,
+   907,
+   870,
+   941,
+   939,
+   955,
+   1002,
+   991,
+   1033,
+   1088,
+   969,
+   1077,
+   1081,
+   1038,
+   1120,
+   1178,
+   1226,
+   1221,
+   1189,
+   1099,
+   75,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   222,
+   157,
+   0,
+   0,
+   0,
+   0,
+   154,
+   323,
+   326,
+   277,
+   346,
+   449,
+   779,
+   938,
+   931,
+   853,
+   916
+  ],
+  "worst_non_adjacent": {
+   "adjacent-far": {
+    "by_group_pair": {
+     "torso|R_arm": 65
+    },
+    "distinct_triangles": 66,
+    "new_pairs": 65,
+    "y_pctH": [
+     61.55,
+     65.48
+    ]
+   },
+   "non-adjacent": {
+    "by_group_pair": {
+     "L_arm|L_leg": 241,
+     "L_hand|L_leg": 478,
+     "R_arm|R_leg": 421,
+     "R_hand|R_leg": 86
+    },
+    "distinct_triangles": 1205,
+    "new_pairs": 1226,
+    "y_pctH": [
+     41.45,
+     64.09
+    ]
+   },
+   "t": 2.179965
+  }
+ },
+ "far_threshold": 0.048979,
+ "input": {
+  "H": 0.979576,
+  "triangles": 89660,
+  "vertices": 60175,
+  "welded": 45000
+ },
+ "poses": {
+  "P1": {
+   "adjacent-far": {
+    "by_group_pair": {},
+    "distinct_triangles": 0,
+    "new_pairs": 0,
+    "y_pctH": null
+   },
+   "candidates_tested": 0,
+   "non-adjacent": {
+    "by_group_pair": {},
+    "distinct_triangles": 0,
+    "new_pairs": 0,
+    "y_pctH": null
+   }
+  },
+  "P2": {
+   "adjacent-far": {
+    "by_group_pair": {},
+    "distinct_triangles": 0,
+    "new_pairs": 0,
+    "y_pctH": null
+   },
+   "candidates_tested": 0,
+   "non-adjacent": {
+    "by_group_pair": {},
+    "distinct_triangles": 0,
+    "new_pairs": 0,
+    "y_pctH": null
+   }
+  },
+  "P3": {
+   "adjacent-far": {
+    "by_group_pair": {},
+    "distinct_triangles": 0,
+    "new_pairs": 0,
+    "y_pctH": null
+   },
+   "candidates_tested": 0,
+   "non-adjacent": {
+    "by_group_pair": {},
+    "distinct_triangles": 0,
+    "new_pairs": 0,
+    "y_pctH": null
+   }
+  },
+  "P4": {
+   "adjacent-far": {
+    "by_group_pair": {},
+    "distinct_triangles": 0,
+    "new_pairs": 0,
+    "y_pctH": null
+   },
+   "candidates_tested": 0,
+   "non-adjacent": {
+    "by_group_pair": {},
+    "distinct_triangles": 0,
+    "new_pairs": 0,
+    "y_pctH": null
+   }
+  },
+  "P5": {
+   "adjacent-far": {
+    "by_group_pair": {},
+    "distinct_triangles": 0,
+    "new_pairs": 0,
+    "y_pctH": null
+   },
+   "candidates_tested": 0,
+   "non-adjacent": {
+    "by_group_pair": {},
+    "distinct_triangles": 0,
+    "new_pairs": 0,
+    "y_pctH": null
+   }
+  },
+  "P6": {
+   "adjacent-far": {
+    "by_group_pair": {},
+    "distinct_triangles": 0,
+    "new_pairs": 0,
+    "y_pctH": null
+   },
+   "candidates_tested": 0,
+   "non-adjacent": {
+    "by_group_pair": {},
+    "distinct_triangles": 0,
+    "new_pairs": 0,
+    "y_pctH": null
+   }
+  },
+  "P7": {
+   "adjacent-far": {
+    "by_group_pair": {},
+    "distinct_triangles": 0,
+    "new_pairs": 0,
+    "y_pctH": null
+   },
+   "candidates_tested": 0,
+   "non-adjacent": {
+    "by_group_pair": {},
+    "distinct_triangles": 0,
+    "new_pairs": 0,
+    "y_pctH": null
+   }
+  },
+  "P8": {
+   "adjacent-far": {
+    "by_group_pair": {},
+    "distinct_triangles": 0,
+    "new_pairs": 0,
+    "y_pctH": null
+   },
+   "candidates_tested": 0,
+   "non-adjacent": {
+    "by_group_pair": {},
+    "distinct_triangles": 0,
+    "new_pairs": 0,
+    "y_pctH": null
+   }
+  },
+  "PC": {
+   "adjacent-far": {
+    "by_group_pair": {
+     "torso|L_arm": 76,
+     "torso|R_arm": 63
+    },
+    "distinct_triangles": 139,
+    "new_pairs": 139,
+    "y_pctH": [
+     61.25,
+     64.69
+    ]
+   },
+   "candidates_tested": 15260,
+   "non-adjacent": {
+    "by_group_pair": {
+     "L_arm|L_leg": 131,
+     "L_hand|L_leg": 121,
+     "R_arm|R_leg": 134,
+     "R_hand|R_leg": 118
+    },
+    "distinct_triangles": 504,
+    "new_pairs": 504,
+    "y_pctH": [
+     41.69,
+     63.92
+    ]
+   }
+  }
+ },
+ "rest": {
+  "by_group_pair": {},
+  "candidates_tested": 0,
+  "intersecting": {
+   "adjacent-far": 0,
+   "non-adjacent": 0
+  }
+ },
+ "verdict": {
+  "gate_A": {
+   "P1": true,
+   "P2": true,
+   "P3": true,
+   "P4": true,
+   "P6": true,
+   "P7": true,
+   "P8": true
+  },
+  "gate_B": {
+   "P1": true,
+   "P2": true,
+   "P3": true,
+   "P4": true,
+   "P6": true,
+   "P7": true,
+   "P8": true
+  },
+  "positive_control_detected": true,
+  "verdict": "USABLE"
+ }
+}

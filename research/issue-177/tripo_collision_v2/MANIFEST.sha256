@@ -1,0 +1,8 @@
+# MANIFEST.sha256 — Tripo auto-rig collision test v2, model 2 (Issue #177). Format: sha256  bytes  path
+# Input NOT committed: starmodelmeshrig.glb f688ab28c9640c5f6c6e5038715fc26f8652759cd151bdc79e2c324de7c03f08
+## INCLUDED
+ea25ab7be423517da6f82dc8ab89f17bd7e6264437f53a86f526fafbf9952f43  4052  METHOD_AND_CRITERIA_V2_FROZEN.md
+969af5d422a9cd09032642a992e74e88db6f63dc856cff87b38409e9a8ff054c  4801  REPORT.md
+723e3def0808680c6d7c91c6c72dc349086f09b85146f80ba8786f091306e797  4813  outputs/collide_v2.json
+6a2a3ff5aa7f2209f3dcf2f4011dd3f80ede21fe34427e54f43817769c671f2c  12734  scripts/collide_v2.py
+b0ccd7135f73a6843009e60da62967dba63333d42fe26fdc96ccb1d8d2ffd29a  2850  scripts/glbio.py
