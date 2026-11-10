@@ -1,0 +1,8 @@
+# MANIFEST.sha256 — animation screening v1 (Issue #177). Format: sha256  bytes  path
+# Inputs NOT committed: starmodelrigpose.glb 57cb05de332adaae6271d5ba5852d5b268dab20abfd3bf4c53f92f58536229c7; starmodelmeshrig.glb f688ab28c9640c5f6c6e5038715fc26f8652759cd151bdc79e2c324de7c03f08
+## INCLUDED
+0f6855b13bfe30512df15d666ba15cefb4856461c39d13d8497422f09d6d63a6  3223  REPORT.md
+964b8bdc83fc45a23f760ff6ad48884fe902bc1044ebd86cbc0e80f10b517162  4854  outputs/collide_v2_standing_relax.json
+b22ceba4d170f15771499292ad4a5e56a0096613d13eab0ea469cefb55c486c7  2051  outputs/sweep_greet_02.json
+f15810a3bd2d2e987a467a23115c4ff8f867e39afe6670375f7aa89e2285eccb  2084  outputs/sweep_standing_relax.json
+81df5f46d58aca6c4c570c4a61ce80cd1bd12a774df8316e9d9b24073ff55541  2470  scripts/offset_sweep.py
