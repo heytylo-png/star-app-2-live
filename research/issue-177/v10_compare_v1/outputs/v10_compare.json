@@ -1,0 +1,509 @@
+{
+ "scale_mm_per_tripo_unit": 227.616,
+ "heights": {
+  "v10_ankle_to_head_tail": 211.65,
+  "tripo_ankle_to_mesh_top": 207.73,
+  "tripo_ankle_to_head_joint": 182.03,
+  "tripo_ankle_above_floor": 15.24,
+  "v10_ankle_above_toe_tail": 26.0
+ },
+ "joints": [
+  {
+   "joint": "hip_joint_left",
+   "tripo": "L_Thigh",
+   "v10": [
+    -10.0,
+    0.0,
+    40.0
+   ],
+   "tripo_mm": [
+    -12.63,
+    3.48,
+    45.13
+   ],
+   "dx": -2.63,
+   "dy": 3.48,
+   "dz": 5.13,
+   "dist": 6.73
+  },
+  {
+   "joint": "knee_left",
+   "tripo": "L_Calf",
+   "v10": [
+    -10.0,
+    0.0,
+    -7.0
+   ],
+   "tripo_mm": [
+    -15.24,
+    5.23,
+    -6.26
+   ],
+   "dx": -5.24,
+   "dy": 5.23,
+   "dz": 0.74,
+   "dist": 7.44
+  },
+  {
+   "joint": "ankle_left",
+   "tripo": "L_Foot",
+   "v10": [
+    -10.0,
+    0.0,
+    -62.0
+   ],
+   "tripo_mm": [
+    -20.47,
+    -0.0,
+    -62.0
+   ],
+   "dx": -10.47,
+   "dy": -0.0,
+   "dz": -0.0,
+   "dist": 10.47
+  },
+  {
+   "joint": "toe_left",
+   "tripo": "L_ToeBase",
+   "v10": [
+    -10.0,
+    26.0,
+    -88.0
+   ],
+   "tripo_mm": [
+    -24.82,
+    13.94,
+    -72.45
+   ],
+   "dx": -14.82,
+   "dy": -12.06,
+   "dz": 15.55,
+   "dist": 24.64
+  },
+  {
+   "joint": "shoulder_left",
+   "tripo": "L_Upperarm",
+   "v10": [
+    -20.3,
+    0.0,
+    100.0
+   ],
+   "tripo_mm": [
+    -16.98,
+    -2.61,
+    100.0
+   ],
+   "dx": 3.32,
+   "dy": -2.61,
+   "dz": -0.0,
+   "dist": 4.22
+  },
+  {
+   "joint": "elbow_left",
+   "tripo": "L_Forearm",
+   "v10": [
+    -26.26,
+    0.0,
+    70.19
+   ],
+   "tripo_mm": [
+    -28.31,
+    -2.61,
+    72.13
+   ],
+   "dx": -2.04,
+   "dy": -2.61,
+   "dz": 1.94,
+   "dist": 3.84
+  },
+  {
+   "joint": "wrist_left",
+   "tripo": "L_Hand",
+   "v10": [
+    -32.22,
+    0.0,
+    40.38
+   ],
+   "tripo_mm": [
+    -42.47,
+    -0.44,
+    44.97
+   ],
+   "dx": -10.25,
+   "dy": -0.44,
+   "dz": 4.6,
+   "dist": 11.24
+  },
+  {
+   "joint": "hand_tip_left",
+   "tripo": "L_Mid3",
+   "v10": [
+    -34.69,
+    0.0,
+    28.06
+   ],
+   "tripo_mm": [
+    -50.05,
+    -2.62,
+    24.17
+   ],
+   "dx": -15.36,
+   "dy": -2.62,
+   "dz": -3.89,
+   "dist": 16.06
+  },
+  {
+   "joint": "hip_joint_right",
+   "tripo": "R_Thigh",
+   "v10": [
+    10.0,
+    0.0,
+    40.0
+   ],
+   "tripo_mm": [
+    12.63,
+    3.48,
+    45.13
+   ],
+   "dx": 2.63,
+   "dy": 3.48,
+   "dz": 5.13,
+   "dist": 6.73
+  },
+  {
+   "joint": "knee_right",
+   "tripo": "R_Calf",
+   "v10": [
+    10.0,
+    0.0,
+    -7.0
+   ],
+   "tripo_mm": [
+    15.24,
+    5.23,
+    -6.26
+   ],
+   "dx": 5.24,
+   "dy": 5.23,
+   "dz": 0.74,
+   "dist": 7.44
+  },
+  {
+   "joint": "ankle_right",
+   "tripo": "R_Foot",
+   "v10": [
+    10.0,
+    0.0,
+    -62.0
+   ],
+   "tripo_mm": [
+    20.47,
+    0.0,
+    -62.0
+   ],
+   "dx": 10.47,
+   "dy": 0.0,
+   "dz": 0.0,
+   "dist": 10.47
+  },
+  {
+   "joint": "toe_right",
+   "tripo": "R_ToeBase",
+   "v10": [
+    10.0,
+    26.0,
+    -88.0
+   ],
+   "tripo_mm": [
+    23.95,
+    13.94,
+    -72.45
+   ],
+   "dx": 13.95,
+   "dy": -12.06,
+   "dz": 15.55,
+   "dist": 24.12
+  },
+  {
+   "joint": "shoulder_right",
+   "tripo": "R_Upperarm",
+   "v10": [
+    20.75,
+    0.0,
+    100.0
+   ],
+   "tripo_mm": [
+    16.98,
+    -2.61,
+    100.0
+   ],
+   "dx": -3.77,
+   "dy": -2.61,
+   "dz": 0.0,
+   "dist": 4.58
+  },
+  {
+   "joint": "elbow_right",
+   "tripo": "R_Forearm",
+   "v10": [
+    26.71,
+    0.0,
+    70.19
+   ],
+   "tripo_mm": [
+    28.31,
+    -2.61,
+    72.13
+   ],
+   "dx": 1.59,
+   "dy": -2.61,
+   "dz": 1.94,
+   "dist": 3.62
+  },
+  {
+   "joint": "wrist_right",
+   "tripo": "R_Hand",
+   "v10": [
+    32.67,
+    0.0,
+    40.38
+   ],
+   "tripo_mm": [
+    43.51,
+    -0.21,
+    44.09
+   ],
+   "dx": 10.84,
+   "dy": -0.21,
+   "dz": 3.71,
+   "dist": 11.46
+  },
+  {
+   "joint": "hand_tip_right",
+   "tripo": "R_Mid3",
+   "v10": [
+    35.14,
+    0.0,
+    28.06
+   ],
+   "tripo_mm": [
+    51.4,
+    -2.38,
+    24.11
+   ],
+   "dx": 16.26,
+   "dy": -2.38,
+   "dz": -3.95,
+   "dist": 16.9
+  },
+  {
+   "joint": "pelvis",
+   "tripo": "Hip",
+   "v10": [
+    0.0,
+    0.0,
+    50.0
+   ],
+   "tripo_mm": [
+    -0.5,
+    3.99,
+    50.0
+   ],
+   "dx": -0.5,
+   "dy": 3.99,
+   "dz": -0.0,
+   "dist": 4.02
+  },
+  {
+   "joint": "lower_waist",
+   "tripo": "Waist",
+   "v10": [
+    0.0,
+    1.5,
+    62.24
+   ],
+   "tripo_mm": [
+    -0.44,
+    5.23,
+    58.19
+   ],
+   "dx": -0.44,
+   "dy": 3.73,
+   "dz": -4.05,
+   "dist": 5.52
+  },
+  {
+   "joint": "waist",
+   "tripo": "Spine01",
+   "v10": [
+    0.0,
+    1.5,
+    76.61
+   ],
+   "tripo_mm": [
+    -0.44,
+    6.1,
+    67.77
+   ],
+   "dx": -0.44,
+   "dy": 4.6,
+   "dz": -8.84,
+   "dist": 9.97
+  },
+  {
+   "joint": "mid_chest",
+   "tripo": "Spine02",
+   "v10": [
+    0.0,
+    -1.5,
+    88.86
+   ],
+   "tripo_mm": [
+    -0.44,
+    6.1,
+    82.58
+   ],
+   "dx": -0.44,
+   "dy": 7.6,
+   "dz": -6.27,
+   "dist": 9.86
+  },
+  {
+   "joint": "neck",
+   "tripo": "NeckTwist01",
+   "v10": [
+    0.0,
+    0.0,
+    116.0
+   ],
+   "tripo_mm": [
+    -0.44,
+    -1.74,
+    111.32
+   ],
+   "dx": -0.44,
+   "dy": -1.74,
+   "dz": -4.68,
+   "dist": 5.01
+  },
+  {
+   "joint": "head_joint",
+   "tripo": "Head",
+   "v10": [
+    0.0,
+    0.0,
+    116.0
+   ],
+   "tripo_mm": [
+    -0.44,
+    1.74,
+    120.03
+   ],
+   "dx": -0.44,
+   "dy": 1.74,
+   "dz": 4.03,
+   "dist": 4.41
+  }
+ ],
+ "segments": {
+  "upper_arm_left": {
+   "v10": 30.4,
+   "tripo": 30.08,
+   "diff_pct": -1.0
+  },
+  "forearm_left": {
+   "v10": 30.4,
+   "tripo": 30.7,
+   "diff_pct": 1.0
+  },
+  "hand_left": {
+   "v10": 12.57,
+   "tripo": 22.25,
+   "diff_pct": 77.1
+  },
+  "thigh_left": {
+   "v10": 47.0,
+   "tripo": 51.48,
+   "diff_pct": 9.5
+  },
+  "shin_left": {
+   "v10": 55.0,
+   "tripo": 56.23,
+   "diff_pct": 2.2
+  },
+  "foot_left": {
+   "v10": 36.77,
+   "tripo": 17.96,
+   "diff_pct": -51.2
+  },
+  "upper_arm_right": {
+   "v10": 30.4,
+   "tripo": 30.08,
+   "diff_pct": -1.0
+  },
+  "forearm_right": {
+   "v10": 30.4,
+   "tripo": 31.99,
+   "diff_pct": 5.2
+  },
+  "hand_right": {
+   "v10": 12.57,
+   "tripo": 21.59,
+   "diff_pct": 71.8
+  },
+  "thigh_right": {
+   "v10": 47.0,
+   "tripo": 51.48,
+   "diff_pct": 9.5
+  },
+  "shin_right": {
+   "v10": 55.0,
+   "tripo": 56.23,
+   "diff_pct": 2.2
+  },
+  "foot_right": {
+   "v10": 36.77,
+   "tripo": 17.76,
+   "diff_pct": -51.7
+  }
+ },
+ "widths": {
+  "shoulders": {
+   "v10": 41.05,
+   "tripo": 33.97,
+   "diff_pct": -17.3
+  },
+  "hips": {
+   "v10": 20.0,
+   "tripo": 25.26,
+   "diff_pct": 26.3
+  },
+  "knees": {
+   "v10": 20.0,
+   "tripo": 30.48,
+   "diff_pct": 52.4
+  },
+  "ankles": {
+   "v10": 20.0,
+   "tripo": 40.94,
+   "diff_pct": 104.7
+  },
+  "elbows": {
+   "v10": 52.97,
+   "tripo": 56.61,
+   "diff_pct": 6.9
+  },
+  "wrists": {
+   "v10": 64.9,
+   "tripo": 85.98,
+   "diff_pct": 32.5
+  }
+ },
+ "hierarchy": {
+  "v10_entries": 31,
+  "v10_bones": 19,
+  "v10_attachments": 12,
+  "tripo_joints": 78,
+  "v10_missing_vs_tripo": "fingers, clavicles, twist bones, eyes/face, toes as separate bone, 3rd spine bone"
+ }
+}
