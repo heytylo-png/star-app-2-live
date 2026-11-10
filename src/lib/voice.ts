@@ -192,9 +192,16 @@ export async function speak(
   stopVoice();
   ensureVoices();
 
+  // No TTS backend configured (GitHub Pages) → browser speech, no network probe.
+  const apiBase = (import.meta.env.VITE_API_BASE as string | undefined)?.trim().replace(/\/$/, "");
+  if (!apiBase) {
+    await speakBrowser(text, onAmp, signal);
+    return;
+  }
+
   try {
     const audioCtx = ensureContext();
-    const res = await fetch(`${import.meta.env.BASE_URL}api/tts`, {
+    const res = await fetch(`${apiBase}/api/tts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text }),
