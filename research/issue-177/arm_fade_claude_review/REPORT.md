@@ -13,7 +13,7 @@ Reviewed:
 | Manifests | arm_offset_v1 15/15 OK; arm_fade_v1 12/12 OK |
 | Freeze order | frozen doc committed 16:11:09Z, results 16:31:58Z; `git diff 5ab465b f2e3a43` on the frozen doc is empty |
 | Script matches frozen definition | yes (θ from world −Y, source pose; smoothstep 45°→90°; `P⁻¹·Rz(±w·20°)·P·q`; in-place keyframe overwrite) |
-| Reproduction | re-ran `apply_arm_fade.py` twice: output SHA-256 `bc6111e7…3bdd…fc3fc` both times = their report; report JSON byte-identical to `outputs/apply_arm_fade.json` |
+| Reproduction | re-ran `apply_arm_fade.py` twice: output SHA-256 `bc6111e72051f15b15457b259090e15a3bdd6af51adffadcb7bb2317d7bfc3fc` both times = their report; report JSON byte-identical to `outputs/apply_arm_fade.json` |
 | C1 (independent, every 3rd key) | 0 new non-adjacent and 0 adjacent-far pairs: `standing_relax` 141/423 keys, `greet_02` 45/135 keys. Agrees with their 0 at every key. |
 | C2 original window 2.6–4.2 s (independent) | 8 of 38 keys over 0.5 % H, max 8.595 % H at 2.625 s. **Agrees: FAIL.** |
 | **Amendment A1** (`AMENDMENT_C2_RAISED_WINDOW_FROZEN.md`, frozen at `56c62f7` before these numbers) | source right arm θ ≥ 90° at 22 keys, 3.042–3.917 s; max `R_Hand` deviation **0.000 % H**. **C2-A1 holds; C1 holds → A1 verdict PASS.** |
