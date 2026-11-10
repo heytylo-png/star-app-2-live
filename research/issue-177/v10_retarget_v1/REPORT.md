@@ -17,8 +17,8 @@ The criteria pass, but the pose is not a faithful copy of the Tripo wave and C3 
 ## 2. What the pass does and does not show
 
 - **The v10 arms sit lower and closer to the body than Tripo's.** The arms use the plain rest-relative transfer, as specified. The two rest poses differ, so every v10 arm bone is turned from the Tripo direction by a constant angle: upper arm 10.8°, forearm 16.7° (left) and 17.7° (right), hand 12.7° and 14.2°.
-  - In the wave the v10 right wrist peaks at 118.0 mm; the Tripo wrist, at the same scale, is at about 131 mm at t = 3.417 s. The wrist alone reaches 116 mm at only 7 of the 22 raised keys; C2 passes mainly on the hand tip.
-  - With arms down, the v10 wrists hang about 15–17 mm from the midline, against about 25 mm on Tripo.
+  - In the wave the v10 right wrist peaks at 118.0 mm; the Tripo wrist, at the same scale, peaks at 135.5 mm at the same key (t = 3.625 s; Addendum A). The wrist alone reaches 116 mm at only 7 of the 22 raised keys; C2 passes mainly on the hand tip.
+  - With arms down, the v10 wrists hang about 17 mm to the side of the pelvis on average, against 25–27 mm on Tripo (Addendum A).
 - **C3 passes narrowly and only for a 1.2 mm skeleton.** The right forearm comes within 5.02 mm (axis to axis) of the right thigh. 74 of 135 keys are within 3 mm of the limit. A real body is far thicker than 1.2 mm, so on a body the forearms and hands would be inside the hips and thighs in the arms-down frames. The Tripo source already has that problem (`tripo_collision_v2`), and the plain transfer makes it worse.
 - **Legs follow Tripo exactly in direction** (0.0° difference for thighs and shins at every key), which is what the stance correction does.
 - **Variant B (not gated)** applies the same direction correction to the arms. The arm bones then match Tripo's directions exactly; C1, C2 and C3 all pass; the hand tip reaches 141.4 mm (wrist 129.8 mm, at all 22 raised keys); the smallest arm-to-leg axis distance is 17.9 mm instead of 5.0 mm. This variant was pre-registered as information only.
@@ -69,7 +69,7 @@ Bone direction differences are constant over the animation: thigh and shin 0.0°
 
 **C2 detail.** The raised part is 22 keys, t = 3.042–3.917 s. The `head` bone's head moves between 111.8 and 116.2 mm over the animation because the body dips and leans. The lowest "highest hand point" in the raised part is 114.5 mm.
 
-**Feet.** Ankles range from −61.7 to −50.6 mm (rest −62.0); foot tails from −90.1 to −83.7 mm (rest −88.0). The foot tails go up to 2.1 mm below their rest height. At the two keys checked by hand (0.042 s and 3.417 s) the v10 ankle heights are within 1 mm of the scaled Tripo ankles, so the 11 mm ankle lift is the animation's own leg movement (post-hoc check, two keys only).
+**Feet.** Ankles range from −61.7 to −50.6 mm (rest −62.0); foot tails from −90.1 to −83.7 mm (rest −88.0). The foot tails go up to 2.1 mm below their rest height. At every key the v10 ankle heights are within 1.1 mm of the scaled Tripo ankles, so the 11 mm ankle lift is the animation's own leg movement (post-hoc; Addendum A).
 
 **Blender cross-check of C1** (`outputs/blender_check.json`, Blender 4.5.3 LTS): the pose was keyframed onto a skeleton rebuilt from the JSON. Blender's evaluated positions differ from the forward kinematics by at most 0.0005 mm (heads) and 0.0006 mm (tails); the largest bone length error is 0.0003 mm.
 
@@ -109,12 +109,25 @@ Bone direction differences are constant over the animation: thigh and shin 0.0°
 - Whether arms should also get the rest correction (variant B). It follows the Tripo wave more closely and keeps the arms much further from the legs. It needs its own frozen amendment to count as a result.
 - Whether C3 should be repeated with body-sized radii. That needs agreed radii per segment, since v10 has no body mesh in these files.
 
+## Addendum A (post-hoc, added after the audit of 2026-11-10)
+
+Three statements in §2 and §4 of the first version of this report (results commit `798db9f`) came from a one-off check and had no committed evidence. `scripts/tripo_reference_check.py` now computes them at all 135 keys; output `outputs/tripo_reference_check.json` (run twice, byte-identical). It is not part of the frozen method and changes no criterion or verdict. Tripo positions are converted as in `v10_compare.py` @ `5b1265b`.
+
+| Statement in `798db9f` | Measured over all keys | Change |
+|---|---|---|
+| Tripo wrist "about 131 mm at t = 3.417 s" | 130.6 mm at that key; the Tripo wrist peaks at **135.5 mm** at 3.625 s, the key where v10 peaks at 118.0 mm. Largest gap 20.2 mm | text now gives the peak |
+| v10 wrists "about 15–17 mm from the midline, against about 25 mm" (one key) | over the 101 arms-down keys: v10 mean 17.2 mm (left) and 17.5 mm (right), range 14.4–25.6; Tripo mean 25.3 and 27.1 mm, range 23.0–34.0. Measured sideways from the pelvis | text now gives the means |
+| ankles "within 1 mm" (two keys) | largest difference 0.75 mm (left) and **1.06 mm** (right) | text now says 1.1 mm |
+
+The first version of the report is preserved in commit `798db9f`.
+
 ## 8. Reproduce
 
 ```
 python3 -I scripts/retarget_v10.py star_rai_locked_final_v10_blender_bones.json starmodelrigpose.glb <glbio dir> outputs/retarget_result.json v10_greet02_pose.json
 blender -b --python scripts/blender_check_render.py -- star_rai_locked_final_v10_blender_bones.json v10_greet02_pose.json outputs/blender_check.json <render prefix> 0.041667,2.208333,3.0,3.416667,3.791667,5.0 [new.blend]
 blender -b <COPY of v10 .blend> --python scripts/blend_vs_json.py -- star_rai_locked_final_v10_blender_bones.json outputs/blend_vs_json.json
+python3 -I scripts/tripo_reference_check.py star_rai_locked_final_v10_blender_bones.json starmodelrigpose.glb <glbio dir> v10_greet02_pose.json outputs/tripo_reference_check.json
 ```
 
 `glbio.py`: `research/issue-177/tripo_collision_v2/scripts/` @ `19d405f`. Python 3.13, numpy 2.5.3; Blender 4.5.3 LTS.
