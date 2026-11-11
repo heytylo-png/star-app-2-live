@@ -120,6 +120,8 @@ export function SpineStage({ pose, emotion, talking, amplitude, className, targe
 
   useEffect(() => {
     let cancelled = false;
+    // A new rig target restarts loading: clear the previous rig's flags before the async boot.
+    // oxlint-disable-next-line react/set-state-in-effect
     setReady(false);
     setFailed(false);
     playerRef.current = null;

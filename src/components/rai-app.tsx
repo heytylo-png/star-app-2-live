@@ -695,16 +695,18 @@ function RaiReady() {
     void send(prompt);
   };
 
+  const { justConnected: spotifyJustConnected, clearJustConnected: clearSpotifyJustConnected } =
+    spotify;
   useEffect(() => {
-    if (!spotify.justConnected) return;
+    if (!spotifyJustConnected) return;
     const reduced = reduceLifeMenu(
       { tab: tabRef.current, open: false, callActive: callActiveRef.current },
       { type: "select-tab", tab: "life" },
     );
     setTab(reduced.tab);
     setLifeMenuOpen(reduced.open);
-    spotify.clearJustConnected();
-  }, [spotify.justConnected, spotify.clearJustConnected]);
+    clearSpotifyJustConnected();
+  }, [spotifyJustConnected, clearSpotifyJustConnected]);
 
   useEffect(() => {
     useAffectionStore.getState().touchDecay();
@@ -886,6 +888,9 @@ function RaiReady() {
     };
     if (useMemoryStore.persist.hasHydrated()) postCheckIn();
     return useMemoryStore.persist.onFinishHydration(postCheckIn);
+  // One shot when the chrome is ready. Setup / notice / call state is read once here on
+  // purpose; later changes are read through refs inside postCheckIn.
+  // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [chromeReady]);
 
   // Stale-build guard: a resumed PWA keeps running the build it first loaded (no navigation),
@@ -1012,6 +1017,8 @@ function RaiReady() {
     }
     if (callListening || chewBlocksReturn) return;
     if (holding) {
+      // Emotion follows composer state (holding / typing) once nothing is in flight.
+      // oxlint-disable-next-line react/set-state-in-effect
       setEmotion("glance");
       return;
     }
@@ -2025,6 +2032,8 @@ function RaiReady() {
       setEmotion(DEFAULT_EMOTION);
       setLifeIdleSnap(stageAt === "life");
     } else if (playing) {
+      // Stage place / playback changed: fold the idle-snap flag in the same pass as the pose.
+      // oxlint-disable-next-line react/set-state-in-effect
       setLifeIdleSnap(false);
     } else if (stageAt !== "life") {
       setLifeIdleSnap(false);
