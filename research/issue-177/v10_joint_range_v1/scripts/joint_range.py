@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """v10 joint bend range vs retargeted greet_02 (Issue #177). Implements research/issue-177/v10_joint_range_v1/METHOD_AND_CRITERIA_FROZEN.md @a6c29b2.
-Reuses part_clearance_a2.py definitions (mapping, sampling, FK). Usage: python3 -I joint_range.py PRINT.stl V10.json POSE.json SCRIPTS_DIR OUT.json"""
+Reuses part_clearance_a2.py definitions (mapping, sampling, FK). Usage: python3 -I joint_range.py PRINT.stl V10.json POSE.json SCRIPTS_DIR OUT.json [CHECKPOINT_DIR]"""
 import json, math, sys
 import numpy as np
 from scipy.spatial import cKDTree
 from scipy.spatial.transform import Rotation as Rot
-stl, v10p, posep, sdir, outj = sys.argv[1:6]
+stl, v10p, posep, sdir, outj = sys.argv[1:6]; CACHE = sys.argv[6] if len(sys.argv) > 6 else None  # per-joint checkpoints (resume after restart; results unchanged)
+import os
 src = open(f"{sdir}/part_clearance_a2.py").read().split("TREES = [cKDTree")[0]
 sys.argv = ["pc", stl, v10p, posep, sdir, "/dev/null"]; ns = {"__name__": "pc"}; exec(compile(src, "pc", "exec"), ns)
 SAMP, PART, B, H0, T0, fk, H = ns["SAMP"], ns["PART"], ns["B"], ns["H0"], ns["T0"], ns["fk"], ns["H"]
@@ -67,6 +68,9 @@ out["control_knee_right_90deg"] = dict(s_star=round(ctrl, 4), result="PASS" if c
 print("rest", rest, "\ncontrol", out["control_knee_right_90deg"], flush=True)
 P = json.load(open(posep))["variant_B"]
 for j, st in setup.items():
+    cf = f"{CACHE}/{j}.json" if CACHE else None
+    if cf and os.path.exists(cf):
+        out["joints"][j] = json.load(open(cf)); print(j, "(checkpoint)", flush=True); continue
     if rest[j] <= 0: out["joints"][j] = dict(verdict="NOT VERIFIABLE", rest_clearance=rest[j]); continue
     rows = []
     for fr in P:
@@ -79,5 +83,7 @@ for j, st in setup.items():
                             max_swing=max(r["swing"] for r in rows), max_twist=max(r["twist"] for r in rows),
                             worst=None if worst is None else dict(worst, shortfall=round(worst["demanded"] - worst["allowed"], 2)),
                             min_allowed_when_limited=None if not lim else min(r["allowed"] for r in lim), rows=rows)
+    if cf:
+        json.dump(out["joints"][j], open(cf + ".tmp", "w"), sort_keys=True); os.replace(cf + ".tmp", cf)
     print(j, json.dumps({k: v for k, v in out["joints"][j].items() if k != "rows"}), flush=True)
 json.dump(out, open(outj, "w"), indent=1, sort_keys=True)
