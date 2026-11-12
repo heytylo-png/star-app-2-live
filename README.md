@@ -189,7 +189,7 @@ Pages rebuild:
 
 ```bash
 VITE_SPOTIFY_CLIENT_ID=your_spotify_client_id npm run build
-# push main, then force-push dist/ to gh-pages with .nojekyll
+# push main: the deploy workflow publishes it (set the Client ID as a repository variable for Pages)
 ```
 
 Tokens (`access_token` / `refresh_token`) stay in `localStorage` (`star-rai-spotify`) and the PKCE verifier in `sessionStorage` (`star-rai-spotify-pkce`). Never commit them.
@@ -250,11 +250,19 @@ npm run dev
 
 ## Build / deploy
 
+Every push to `main` deploys itself: `.github/workflows/deploy.yml` runs lint and tests, builds, stamps the build with its commit, and commits the result on top of `gh-pages` (which GitHub Pages serves). It can also be run by hand from the Actions tab. If `gh-pages` already serves that commit it does nothing.
+
+Optional build settings come from repository variables (Settings → Secrets and variables → Actions → Variables): `VITE_SPOTIFY_CLIENT_ID`, `VITE_GROK_PROXY_URL`. Unset leaves the feature off.
+
+To publish by hand instead:
+
 ```bash
-npm run build
-# base is /star-app-2-live/ (see vite.config.ts)
-# push main, then force-push dist/ to gh-pages with .nojekyll
+npm run build                      # base is /star-app-2-live/ (see vite.config.ts)
+node scripts/stamp-build.mjs "$(git rev-parse --short=7 HEAD)"
+# copy dist/ over a checkout of gh-pages, commit, push
 ```
+
+The stamp (`<meta name="star-rai-build">`, `?v=` on the bundles, the manifest `start_url`, the service-worker cache name) is what lets an open app notice a new deploy; an unstamped build will not update installed PWAs.
 
 ## Repo
 

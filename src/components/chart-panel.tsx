@@ -31,14 +31,14 @@ export function ChartMenu({ open, userSun, birthDate, onAsk, onClose, anchorRef 
   const [clock, setClock] = useState(() => new Date());
   const dateKey = localDateKey(clock);
   const cachedNote = useChartStore((s) => s.skyNoteByDay[dateKey]);
-  const sky = computeSkyFacts(clock);
+  const sky = useMemo(() => computeSkyFacts(clock), [clock]);
   const freshNote = useMemo(
     () =>
       composeChartAstronomyReading({
         dateKey,
         sky,
       }),
-    [dateKey, sky?.sunSignToday, sky?.moonSignToday, sky?.moonPhase, sky?.notableAspect],
+    [dateKey, sky],
   );
   const liveSun = sky?.sunSignToday;
   const reading = shownChartReading(cachedNote, freshNote, liveSun);
@@ -55,6 +55,8 @@ export function ChartMenu({ open, userSun, birthDate, onAsk, onClose, anchorRef 
   }, [dateKey, freshNote, liveSun]);
 
   useEffect(() => {
+    // Opening the menu re-reads the wall clock; there is no event to subscribe to.
+    // oxlint-disable-next-line react/set-state-in-effect
     if (open) setClock(new Date());
   }, [open]);
 
@@ -62,6 +64,8 @@ export function ChartMenu({ open, userSun, birthDate, onAsk, onClose, anchorRef 
     if (!open) return;
     const now = new Date();
     if (localDateKey(now) !== localDateKey(clock)) {
+      // The local date rolled over while the menu stayed open: catch up once.
+      // oxlint-disable-next-line react/set-state-in-effect
       setClock(now);
       return;
     }

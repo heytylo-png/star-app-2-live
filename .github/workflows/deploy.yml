@@ -1,0 +1,59 @@
+name: Deploy to GitHub Pages
+
+# Builds main, stamps the build with its commit, and publishes it to the
+# gh-pages branch (which GitHub Pages serves). Replaces the manual
+# "npm run build, stamp, push dist to gh-pages" steps.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - name: Build
+        run: npm run build
+        env:
+          # Optional repository variables (Settings → Secrets and variables → Actions → Variables).
+          # Unset means the feature stays off, as in a plain `npm run build`.
+          VITE_SPOTIFY_CLIENT_ID: ${{ vars.VITE_SPOTIFY_CLIENT_ID }}
+          VITE_GROK_PROXY_URL: ${{ vars.VITE_GROK_PROXY_URL }}
+      - name: Stamp build
+        run: node scripts/stamp-build.mjs "$(git rev-parse --short=7 HEAD)"
+      - name: Publish to gh-pages
+        env:
+          SUBJECT: ${{ github.event.head_commit.message }}
+        run: |
+          sha="$(git rev-parse --short=7 HEAD)"
+          git fetch --depth 1 origin gh-pages
+          git worktree add --detach ../gh-pages FETCH_HEAD
+          if grep -q "name=\"star-rai-build\" content=\"$sha\"" ../gh-pages/index.html; then
+            echo "gh-pages already serves $sha; nothing to publish."
+            exit 0
+          fi
+          # Copy over the top: earlier bundles stay so pages still open on the previous build keep working.
+          cp -a dist/. ../gh-pages/
+          cd ../gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          title="$(printf '%s' "${SUBJECT:-Manual deploy}" | head -n 1)"
+          git commit -m "$title on $sha"
+          git push origin HEAD:gh-pages
