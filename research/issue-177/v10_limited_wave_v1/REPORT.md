@@ -4,6 +4,59 @@ Evaluator: Claude. Date: 2026-11-12. **Research only**, rig side: no part geomet
 
 Frozen method: `METHOD_AND_CRITERIA_FROZEN.md` (SHA-256 `6ddaa9fffd2be1f7d9863af68bda7e939e78bc613c7ad1d019ea336adcea1727`), committed and pushed as `9e053aa422e6b664a4ad2bebedffc92462da678e` before any limited pose was computed. Unchanged since.
 
+## Amendment A1 results: feet re-planted; part clearance of the limited pose (2026-11-13)
+
+Frozen: `AMENDMENT_A1_FEET_AND_PART_CLEARANCE_FROZEN.md` (SHA-256 `7f39e162e82c6a4c2d74e28ce904da9b573be95132673694b073361456c77bd9`), committed and pushed as `1d6914a8f597fc73359c888447d97a34a03a0a62` before the STL was loaded or any A1 result computed. Unchanged since. Sections 1–8 below are the v1 report as published at `9bb9c3f`.
+
+### A1.1 Summary
+
+**The limited wave does not work from the waist down.** Holding the knees and hips to their limits straightens the left leg, and that leg's foot then runs into the right foot. Re-planting by shifting the whole figure removes the floor penetration but leaves the weight-bearing right foot in the air. The upper body is clear, and the joint limits themselves are confirmed.
+
+| Rule | Result | Measured |
+|---|---|---|
+| **F1** lowest foot point on the floor | PASS | error 0.0 mm at every key |
+| **F2** right ankle does not slide | PASS | 2e-15 mm |
+| **F3** no rotation changed | PASS | rotations copied unchanged |
+| **F4** hand reach (v1 L3 rule) | PASS | 17 of 22 raised keys; highest point 138.8 mm |
+| **P0** calibration of the part-clearance script here | PASS | C0 22/22 within 0.006 mm; C0b detects the control contact |
+| **P1** published result reproduced on the input pose | PASS | 0 keys below 1 mm; minimum 1.434 mm, `seg_mid_chest\|upper_arm_left`, 5.458 s; 18 overlapping joint pairs. All as published at `9247164` |
+| **P2** body pairs ≥ 1 mm in the limited pose | **FAIL** | 39 of 135 keys below 1 mm, all `foot_left\|foot_right`; 26 of them in contact or overlap |
+| **P3** the 15 limited joints stay clear | PASS | all 25 listed part pairs > 0 at every key; lowest 0.002 mm (`head\|seg_upper_chest`, 1.417 s) |
+
+### A1.2 Feet (MEASURED)
+
+- **Before the shift** the left foot solid is up to 9.30 mm below the floor and the right up to 2.84 mm (input pose: 2.26 mm and 0.42 mm).
+- **After the shift** nothing is below the floor, but the two feet cannot both touch:
+  - the **right** foot, which carries the weight in the source animation, is more than 0.5 mm above the floor at 81 of 135 keys, by up to **9.32 mm**;
+  - the left foot is above the floor at 29 keys, by up to 2.66 mm;
+  - both feet touch the floor together at only 1 key.
+- **Size of the shift:** up to 9.30 mm upward and up to 24.98 mm sideways. Largest key-to-key change 1.24 mm vertically and 3.20 mm horizontally.
+- With the knees at their 22° limit the legs cannot shorten, so no rigid shift can put both feet down. See `outputs/replanted_front_side.png`.
+
+### A1.3 Part clearance (MEASURED; `part_clearance_a2.py` @ `9247164`, unchanged, two runs byte-identical)
+
+- **Feet collide.** `foot_left|foot_right` is below 1 mm at 39 keys: every key from 0.042 s to 1.583 s (38 keys) and the last key, 5.625 s. At 26 keys the solids touch or overlap (the method cannot measure depth).
+- **Everything else is clear.** The next closest body pairs are the upper arms against the chest segments, 1.434 mm and above, the same values as in the input pose. The forward-reaching arm does not come near the head or torso solids.
+- **The joint limits hold with the whole figure posed.** Overlapping joint pairs drop from 18 in the input pose to 7. None of the 7 belongs to a limited joint: they are `pelvis|seg_hip`, both shoulder markers against the upper arms, and four segment-against-spine-marker pairs. All seven are among the pairs the joint-range check did not assess (the README's intended contacts).
+- **Margins are thin by construction.** The limited joints sit right at their limit; the smallest clearance among them is 0.002 mm.
+
+### A1.4 Decision recorded: the arm
+
+Kept as limited, as stated in the frozen amendment. A new gesture would rest on the shoulders, whose range is not measured.
+
+### A1.5 Files not committed (delivered to the user)
+
+| File | SHA-256 | Bytes |
+|---|---|---|
+| `v10_greet02_limited_replanted_pose.json` | `998c2aaf4da23829be4319d4ca36135566cc09fbb288aa97344e29afef81e630` | 1,536,679 |
+| `v10_greet02_limited_replanted_TEST.blend` (new scene, not the v10 file) | `79abb6a784a7e1623c5c38b3df06b1d8c0e5d8db59d4ad55436f3636f839dd0c` | 1,694,656 |
+
+Inputs: CAD export zip `c67d9f1f…b45b`, print STL `42010637…9a13`; not committed.
+
+### A1.6 Proposal (nothing done; the user decides)
+
+Clamping the legs gives a stance the printed figure cannot stand in. A cleaner rig-side choice is to **stop taking the legs from the wave**: keep the hips, knees and ankles in v10's own rest stance, keep the pelvis level and at rest height, and take only the spine, neck and arms from the limited wave. Both feet then stay flat on the floor by construction and the feet cannot collide. This would be amendment A2, frozen before running, with the same part-clearance and floor checks.
+
 ## 1. Result per criterion
 
 | Criterion | Result | Measured |
