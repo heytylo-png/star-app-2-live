@@ -4,6 +4,68 @@ Evaluator: Claude. Date: 2026-11-12. **Research only**, rig side: no part geomet
 
 Frozen method: `METHOD_AND_CRITERIA_FROZEN.md` (SHA-256 `6ddaa9fffd2be1f7d9863af68bda7e939e78bc613c7ad1d019ea336adcea1727`), committed and pushed as `9e053aa422e6b664a4ad2bebedffc92462da678e` before any limited pose was computed. Unchanged since.
 
+## Amendment A2 results: legs in the v10 rest stance (2026-11-13)
+
+Frozen: `AMENDMENT_A2_LEGS_AT_REST_FROZEN.md` (SHA-256 `e55204cb288c6b6bb50fa106d8915a7bd87a18a7b573fb078d79eb7bbc3bcfc2`), committed and pushed as `818896a` before any A2 pose or clearance was computed. Unchanged since. The A1 section and sections 1–8 below are unchanged.
+
+### A2.1 Summary
+
+**With the legs left in v10's own stance, the limited wave passes every frozen check.** Both feet stay flat on the floor, no two parts come closer than 1.43 mm, the limited joints stay clear, and the hand still reaches head height. The cost: the body no longer sways or turns, and the arm still reaches forward as in v1.
+
+| Rule | Result | Measured |
+|---|---|---|
+| **G1** bone lengths | PASS | largest error 2e-13 mm |
+| **G2** lower body at rest, both feet on the floor | PASS | position error 0.0 mm; foot-to-floor error 0.0 mm at every key |
+| **G3** upper-body joints unchanged | PASS | largest difference 9.8e-15° (see A2.2) |
+| **G4** hand reach (v1 L3 rule) | PASS | 22 of 22 raised keys; highest hand point 141.6 mm |
+| **G5a** calibration (C0, C0b) | PASS | C0 22/22 within 0.006 mm; C0b detects the control contact |
+| **G5b** published result reproduced on the input pose | PASS | 0 keys below 1 mm; minimum 1.434 mm; 18 overlapping joint pairs |
+| **G5c** body pairs ≥ 1 mm in the A2 pose | PASS | 0 of 135 keys below 1 mm; minimum 1.434 mm, `seg_mid_chest\|upper_arm_left`, 5.458 s |
+| **G5d** the 15 limited joints stay clear | PASS | all 25 listed part pairs > 0; lowest 0.002 mm |
+
+### A2.2 Disclosure: the G3 check was corrected after a first FAIL
+
+- The first run of `legs_at_rest.py` reported G3 **FAIL**: 1.323e-05° against the 1e-6° rule.
+- Cause: the check computed the angle as acos of the matrix trace, which cannot resolve angles below about 1e-5° in double precision. It was a fault of the measuring formula, not of the pose.
+- The check now uses an atan2 form, which gives 9.761e-15°. The frozen rule and its 1e-6° tolerance were not changed.
+- The pose file is byte-identical before and after this fix (SHA-256 `25b7c486…db9c`). Both values are in `outputs/legs_at_rest_result.json` (`first_implementation_acos_form_deg`, and per key).
+- A reviewer should judge whether this counts as a measurement fix, as claimed here, or as a change after a result.
+
+### A2.3 Pre-registered results (MEASURED)
+
+- **Removed pelvis motion:** up to 22.5° of rotation (1.167 s) and up to 28.1 mm of translation (3.958 s).
+- **Right hand, raised part:** highest hand point 141.6 mm (v1: 136.9 mm); highest wrist 131.3 mm; wrist at or above 116 mm at 20 of 22 keys.
+- **Distance from the v1 limited positions:** right wrist up to 34.2 mm (4.042 s); right hand tip up to 35.4 mm (4.083 s).
+- **Head direction:** changes by up to 13.4° from v1 (1.125 s).
+- **Closest body pairs:** `seg_mid_chest|upper_arm_left` 1.434 mm; `seg_mid_chest|upper_arm_right` 1.924 mm; `seg_upper_chest|upper_arm_right` 2.776 mm; `seg_upper_chest|upper_arm_left` 3.674 mm; `seg_mid_chest|shoulder_marker_left` 4.771 mm. Every other body pair is at the method's 5 mm search bound or beyond.
+- **Arms against legs and pelvis:** no pair is closer than 5 mm at any key.
+- **Joint pairs with clearance ≤ 0:** 7, the same seven as in A1 (`pelvis|seg_hip`, both shoulder markers against the upper arms, four segment-against-spine-marker pairs). All are README intended contacts.
+- **Thin margins by construction:** five limited-joint pairs sit at 0.002–0.003 mm (`forearm|hand` both sides, `head|seg_upper_chest`, `seg_mid_chest|seg_waist`, `forearm_right|upper_arm_right`).
+- **Blender cross-check** (`blender_check_render.py`, unchanged): bone heads within 0.0006 mm of the JSON pose over 135 keys.
+- **Determinism:** `legs_at_rest.py` and the part-clearance run were each run twice; outputs byte-identical.
+- Render: `outputs/legs_at_rest_front_side.png`.
+
+### A2.4 Files not committed (delivered to the user)
+
+| File | SHA-256 | Bytes |
+|---|---|---|
+| `v10_greet02_limited_legsrest_pose.json` | `25b7c48678f72b028bf742331ba13c9a2813059105f2f417602fe7f4d319db9c` | 1,192,886 |
+| `v10_greet02_limited_legsrest_TEST.blend` (new scene, not the v10 file) | `b777b6ce8d660915f1eac4f4dbf6d9da8cd9939f1cf70476d7d3938a78018b36` | 1,694,656 |
+
+### A2.5 Limits
+
+- Passing these checks does not make the wave look right. With still legs, no sway and a forward-reaching arm it may read as stiff; that is a visual judgment for the user.
+- Shoulder range is not covered here (`v10_shoulder_range_v1`, in progress).
+- Not tested: balance of the printed figure, clearance between keys, contact depth. The neck's larger key-to-key step is unchanged from v1.
+- Not independently reviewed.
+
+### A2.6 Reproduce
+
+```
+python3 -I scripts/legs_at_rest.py PRINT.stl V10_BONES.json LIMITED_POSE.json STLPARTS_DIR RESULT.json A2_POSE_OUT.json
+python3 -I part_clearance_a2.py ...   # @ 9247164, on a pose file with variant_B = input pose, main = A2 pose
+```
+
 ## Amendment A1 results: feet re-planted; part clearance of the limited pose (2026-11-13)
 
 Frozen: `AMENDMENT_A1_FEET_AND_PART_CLEARANCE_FROZEN.md` (SHA-256 `7f39e162e82c6a4c2d74e28ce904da9b573be95132673694b073361456c77bd9`), committed and pushed as `1d6914a8f597fc73359c888447d97a34a03a0a62` before the STL was loaded or any A1 result computed. Unchanged since. Sections 1–8 below are the v1 report as published at `9bb9c3f`.

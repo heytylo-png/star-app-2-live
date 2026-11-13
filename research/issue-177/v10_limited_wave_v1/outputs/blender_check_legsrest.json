@@ -1,0 +1,9 @@
+{
+ "blender": "4.5.3 LTS",
+ "bones": 31,
+ "frame_rounding": "key times are exact multiples of 1/24 s",
+ "keys": 135,
+ "max_bone_length_error_mm_19_bones": 0.0002796,
+ "max_head_diff_mm": 0.0006193,
+ "max_tail_diff_mm_19_bones": 0.0006567
+}
