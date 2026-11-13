@@ -1,0 +1,10 @@
+# MANIFEST.sha256 — v10 shoulder range v1 (Issue #177). Format: sha256  bytes  path
+# NOT committed (inputs): star_rai_locked_final_v10_print.stl 42010637c9d80705355a79a621d0e44546fb4250951ab8040503ee3d1bc99a13; star_rai_locked_final_v10_blender_bones.json eab1839c7eb4d05b6e7c8a98527d40a6a88e5679c12b249e87aff65bdb686c05; v10_greet02_limited_pose.json b5276ff932efbcdab1136d0ab02ae5a0925e6494732491034d32dbcf12391ed2; part_clearance_a2.py and stlparts.py are committed at 9247164
+## INCLUDED
+d2e9a1d3de6ed723f76b93f2cff30d1588bb6350a07668e2630e357dfffcbed6  5288  METHOD_AND_CRITERIA_FROZEN.md
+1a59f059dba6481aa4f5bc3ae03adf905577087d14941bc3cf70d44a4b2871c9  8394  REPORT.md
+13fcb93616855ea1cc347a55da43bb87a3395cd39eec6d6190668e35f665e87c  4689  outputs/run1.log
+7839c43601aac07a193d0ec2f628a00a563115d17774588d8e4aa51b296057a0  245  outputs/run1_aborted_slow.log
+13fcb93616855ea1cc347a55da43bb87a3395cd39eec6d6190668e35f665e87c  4689  outputs/run2.log
+12d4624f3b771e656d23d5fdc23e3736313e1972dc623ffed2dde8450cc1b64c  57218  outputs/shoulder_range.json
+39e8e411090fcf668b304387faf55609adfd5af51bb874adb2ddac8935da374f  6038  scripts/shoulder_range.py

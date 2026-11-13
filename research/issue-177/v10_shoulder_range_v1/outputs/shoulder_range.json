@@ -1,0 +1,2660 @@
+{
+ "S0": {
+  "result": "FAIL",
+  "rows": {
+   "left": {
+    "arm_only_d_s": 0.402,
+    "clear_at_rest": true,
+    "nearest": "forearm_left",
+    "ok": false,
+    "readme": 1.75
+   },
+   "right": {
+    "arm_only_d_s": 0.402,
+    "clear_at_rest": true,
+    "nearest": "forearm_right",
+    "ok": false,
+    "readme": 2.199
+   }
+  }
+ },
+ "S1": {
+  "adduction_first_contact_deg": {
+   "left": 15.0,
+   "right": 15.0
+  },
+  "result": "FAIL"
+ },
+ "directions": 24,
+ "h": 0.25,
+ "inputs": {
+  "pose_sha256": "b5276ff932efbcdab1136d0ab02ae5a0925e6494732491034d32dbcf12391ed2",
+  "stl_sha256": "42010637c9d80705355a79a621d0e44546fb4250951ab8040503ee3d1bc99a13",
+  "v10_json_sha256": "eab1839c7eb4d05b6e7c8a98527d40a6a88e5679c12b249e87aff65bdb686c05"
+ },
+ "limited_wave_shoulders": {
+  "left": {
+   "keys_beyond": 0,
+   "keys_within_5deg_or_beyond": 0,
+   "max_swing_deg": 22.82,
+   "min_margin_deg": 12.2,
+   "per_key": [
+    {
+     "arm_only_limit_deg": 36.28,
+     "margin_deg": 28.0,
+     "phi_deg": 213.7,
+     "swing_deg": 8.28,
+     "t": 0.041667
+    },
+    {
+     "arm_only_limit_deg": 36.56,
+     "margin_deg": 28.32,
+     "phi_deg": 213.4,
+     "swing_deg": 8.24,
+     "t": 0.083333
+    },
+    {
+     "arm_only_limit_deg": 36.89,
+     "margin_deg": 28.68,
+     "phi_deg": 213.1,
+     "swing_deg": 8.2,
+     "t": 0.125
+    },
+    {
+     "arm_only_limit_deg": 37.42,
+     "margin_deg": 29.25,
+     "phi_deg": 212.6,
+     "swing_deg": 8.17,
+     "t": 0.166667
+    },
+    {
+     "arm_only_limit_deg": 38.14,
+     "margin_deg": 30.01,
+     "phi_deg": 211.9,
+     "swing_deg": 8.13,
+     "t": 0.208333
+    },
+    {
+     "arm_only_limit_deg": 39.05,
+     "margin_deg": 30.97,
+     "phi_deg": 210.9,
+     "swing_deg": 8.09,
+     "t": 0.25
+    },
+    {
+     "arm_only_limit_deg": 41.08,
+     "margin_deg": 33.03,
+     "phi_deg": 209.7,
+     "swing_deg": 8.04,
+     "t": 0.291667
+    },
+    {
+     "arm_only_limit_deg": 46.33,
+     "margin_deg": 38.33,
+     "phi_deg": 208.5,
+     "swing_deg": 8.0,
+     "t": 0.333333
+    },
+    {
+     "arm_only_limit_deg": 51.16,
+     "margin_deg": 43.23,
+     "phi_deg": 207.3,
+     "swing_deg": 7.93,
+     "t": 0.375
+    },
+    {
+     "arm_only_limit_deg": 55.81,
+     "margin_deg": 47.96,
+     "phi_deg": 206.2,
+     "swing_deg": 7.85,
+     "t": 0.416667
+    },
+    {
+     "arm_only_limit_deg": 60.43,
+     "margin_deg": 52.7,
+     "phi_deg": 205.1,
+     "swing_deg": 7.73,
+     "t": 0.458333
+    },
+    {
+     "arm_only_limit_deg": 65.07,
+     "margin_deg": 57.51,
+     "phi_deg": 204.0,
+     "swing_deg": 7.56,
+     "t": 0.5
+    },
+    {
+     "arm_only_limit_deg": 69.75,
+     "margin_deg": 62.37,
+     "phi_deg": 202.9,
+     "swing_deg": 7.38,
+     "t": 0.541667
+    },
+    {
+     "arm_only_limit_deg": 71.04,
+     "margin_deg": 63.97,
+     "phi_deg": 202.5,
+     "swing_deg": 7.08,
+     "t": 0.583333
+    },
+    {
+     "arm_only_limit_deg": 72.47,
+     "margin_deg": 65.73,
+     "phi_deg": 202.2,
+     "swing_deg": 6.74,
+     "t": 0.625
+    },
+    {
+     "arm_only_limit_deg": 74.85,
+     "margin_deg": 68.52,
+     "phi_deg": 201.6,
+     "swing_deg": 6.34,
+     "t": 0.666667
+    },
+    {
+     "arm_only_limit_deg": 78.53,
+     "margin_deg": 72.67,
+     "phi_deg": 200.8,
+     "swing_deg": 5.86,
+     "t": 0.708333
+    },
+    {
+     "arm_only_limit_deg": 83.22,
+     "margin_deg": 77.84,
+     "phi_deg": 199.6,
+     "swing_deg": 5.38,
+     "t": 0.75
+    },
+    {
+     "arm_only_limit_deg": 89.2,
+     "margin_deg": 84.29,
+     "phi_deg": 198.2,
+     "swing_deg": 4.91,
+     "t": 0.791667
+    },
+    {
+     "arm_only_limit_deg": 96.44,
+     "margin_deg": 92.01,
+     "phi_deg": 196.5,
+     "swing_deg": 4.44,
+     "t": 0.833333
+    },
+    {
+     "arm_only_limit_deg": 104.51,
+     "margin_deg": 100.54,
+     "phi_deg": 194.4,
+     "swing_deg": 3.98,
+     "t": 0.875
+    },
+    {
+     "arm_only_limit_deg": 112.75,
+     "margin_deg": 109.23,
+     "phi_deg": 191.8,
+     "swing_deg": 3.52,
+     "t": 0.916667
+    },
+    {
+     "arm_only_limit_deg": 123.66,
+     "margin_deg": 120.58,
+     "phi_deg": 188.3,
+     "swing_deg": 3.08,
+     "t": 0.958333
+    },
+    {
+     "arm_only_limit_deg": 138.52,
+     "margin_deg": 135.87,
+     "phi_deg": 183.6,
+     "swing_deg": 2.65,
+     "t": 1.0
+    },
+    {
+     "arm_only_limit_deg": 151.84,
+     "margin_deg": 149.6,
+     "phi_deg": 177.2,
+     "swing_deg": 2.24,
+     "t": 1.041667
+    },
+    {
+     "arm_only_limit_deg": 157.6,
+     "margin_deg": 155.76,
+     "phi_deg": 168.6,
+     "swing_deg": 1.83,
+     "t": 1.083333
+    },
+    {
+     "arm_only_limit_deg": 164.6,
+     "margin_deg": 163.13,
+     "phi_deg": 155.8,
+     "swing_deg": 1.47,
+     "t": 1.125
+    },
+    {
+     "arm_only_limit_deg": 169.72,
+     "margin_deg": 168.53,
+     "phi_deg": 136.7,
+     "swing_deg": 1.19,
+     "t": 1.166667
+    },
+    {
+     "arm_only_limit_deg": 171.66,
+     "margin_deg": 170.61,
+     "phi_deg": 110.0,
+     "swing_deg": 1.06,
+     "t": 1.208333
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 171.35,
+     "phi_deg": 85.0,
+     "swing_deg": 1.15,
+     "t": 1.25
+    },
+    {
+     "arm_only_limit_deg": 171.47,
+     "margin_deg": 170.12,
+     "phi_deg": 68.8,
+     "swing_deg": 1.35,
+     "t": 1.291667
+    },
+    {
+     "arm_only_limit_deg": 170.0,
+     "margin_deg": 168.41,
+     "phi_deg": 58.2,
+     "swing_deg": 1.59,
+     "t": 1.333333
+    },
+    {
+     "arm_only_limit_deg": 170.0,
+     "margin_deg": 168.24,
+     "phi_deg": 53.2,
+     "swing_deg": 1.76,
+     "t": 1.375
+    },
+    {
+     "arm_only_limit_deg": 170.0,
+     "margin_deg": 168.12,
+     "phi_deg": 49.9,
+     "swing_deg": 1.88,
+     "t": 1.416667
+    },
+    {
+     "arm_only_limit_deg": 170.0,
+     "margin_deg": 168.0,
+     "phi_deg": 47.4,
+     "swing_deg": 2.0,
+     "t": 1.458333
+    },
+    {
+     "arm_only_limit_deg": 170.0,
+     "margin_deg": 167.9,
+     "phi_deg": 45.5,
+     "swing_deg": 2.1,
+     "t": 1.5
+    },
+    {
+     "arm_only_limit_deg": 169.81,
+     "margin_deg": 167.61,
+     "phi_deg": 43.8,
+     "swing_deg": 2.2,
+     "t": 1.541667
+    },
+    {
+     "arm_only_limit_deg": 169.56,
+     "margin_deg": 167.27,
+     "phi_deg": 42.3,
+     "swing_deg": 2.29,
+     "t": 1.583333
+    },
+    {
+     "arm_only_limit_deg": 169.31,
+     "margin_deg": 166.94,
+     "phi_deg": 40.9,
+     "swing_deg": 2.37,
+     "t": 1.625
+    },
+    {
+     "arm_only_limit_deg": 169.02,
+     "margin_deg": 166.58,
+     "phi_deg": 39.1,
+     "swing_deg": 2.45,
+     "t": 1.666667
+    },
+    {
+     "arm_only_limit_deg": 168.68,
+     "margin_deg": 166.17,
+     "phi_deg": 37.1,
+     "swing_deg": 2.51,
+     "t": 1.708333
+    },
+    {
+     "arm_only_limit_deg": 168.23,
+     "margin_deg": 165.61,
+     "phi_deg": 34.4,
+     "swing_deg": 2.62,
+     "t": 1.75
+    },
+    {
+     "arm_only_limit_deg": 167.65,
+     "margin_deg": 164.84,
+     "phi_deg": 30.9,
+     "swing_deg": 2.81,
+     "t": 1.791667
+    },
+    {
+     "arm_only_limit_deg": 166.24,
+     "margin_deg": 163.2,
+     "phi_deg": 27.5,
+     "swing_deg": 3.03,
+     "t": 1.833333
+    },
+    {
+     "arm_only_limit_deg": 164.31,
+     "margin_deg": 161.03,
+     "phi_deg": 23.6,
+     "swing_deg": 3.28,
+     "t": 1.875
+    },
+    {
+     "arm_only_limit_deg": 162.48,
+     "margin_deg": 158.94,
+     "phi_deg": 20.0,
+     "swing_deg": 3.54,
+     "t": 1.916667
+    },
+    {
+     "arm_only_limit_deg": 160.67,
+     "margin_deg": 156.85,
+     "phi_deg": 16.3,
+     "swing_deg": 3.82,
+     "t": 1.958333
+    },
+    {
+     "arm_only_limit_deg": 158.47,
+     "margin_deg": 154.35,
+     "phi_deg": 12.7,
+     "swing_deg": 4.12,
+     "t": 2.0
+    },
+    {
+     "arm_only_limit_deg": 156.26,
+     "margin_deg": 151.81,
+     "phi_deg": 9.4,
+     "swing_deg": 4.45,
+     "t": 2.041667
+    },
+    {
+     "arm_only_limit_deg": 154.16,
+     "margin_deg": 149.33,
+     "phi_deg": 6.2,
+     "swing_deg": 4.83,
+     "t": 2.083333
+    },
+    {
+     "arm_only_limit_deg": 152.37,
+     "margin_deg": 147.15,
+     "phi_deg": 3.6,
+     "swing_deg": 5.22,
+     "t": 2.125
+    },
+    {
+     "arm_only_limit_deg": 151.06,
+     "margin_deg": 145.46,
+     "phi_deg": 1.6,
+     "swing_deg": 5.6,
+     "t": 2.166667
+    },
+    {
+     "arm_only_limit_deg": 150.17,
+     "margin_deg": 144.21,
+     "phi_deg": 0.2,
+     "swing_deg": 5.96,
+     "t": 2.208333
+    },
+    {
+     "arm_only_limit_deg": 147.99,
+     "margin_deg": 141.73,
+     "phi_deg": 359.2,
+     "swing_deg": 6.26,
+     "t": 2.25
+    },
+    {
+     "arm_only_limit_deg": 146.15,
+     "margin_deg": 139.66,
+     "phi_deg": 358.5,
+     "swing_deg": 6.49,
+     "t": 2.291667
+    },
+    {
+     "arm_only_limit_deg": 144.61,
+     "margin_deg": 137.93,
+     "phi_deg": 357.8,
+     "swing_deg": 6.68,
+     "t": 2.333333
+    },
+    {
+     "arm_only_limit_deg": 144.27,
+     "margin_deg": 137.44,
+     "phi_deg": 357.7,
+     "swing_deg": 6.84,
+     "t": 2.375
+    },
+    {
+     "arm_only_limit_deg": 144.24,
+     "margin_deg": 137.26,
+     "phi_deg": 357.7,
+     "swing_deg": 6.98,
+     "t": 2.416667
+    },
+    {
+     "arm_only_limit_deg": 144.52,
+     "margin_deg": 137.39,
+     "phi_deg": 357.8,
+     "swing_deg": 7.12,
+     "t": 2.458333
+    },
+    {
+     "arm_only_limit_deg": 145.16,
+     "margin_deg": 137.9,
+     "phi_deg": 358.1,
+     "swing_deg": 7.26,
+     "t": 2.5
+    },
+    {
+     "arm_only_limit_deg": 148.07,
+     "margin_deg": 140.63,
+     "phi_deg": 359.2,
+     "swing_deg": 7.43,
+     "t": 2.541667
+    },
+    {
+     "arm_only_limit_deg": 153.12,
+     "margin_deg": 145.29,
+     "phi_deg": 4.7,
+     "swing_deg": 7.83,
+     "t": 2.583333
+    },
+    {
+     "arm_only_limit_deg": 158.0,
+     "margin_deg": 149.69,
+     "phi_deg": 12.0,
+     "swing_deg": 8.31,
+     "t": 2.625
+    },
+    {
+     "arm_only_limit_deg": 165.31,
+     "margin_deg": 156.39,
+     "phi_deg": 25.6,
+     "swing_deg": 8.92,
+     "t": 2.666667
+    },
+    {
+     "arm_only_limit_deg": 169.85,
+     "margin_deg": 159.52,
+     "phi_deg": 44.1,
+     "swing_deg": 10.34,
+     "t": 2.708333
+    },
+    {
+     "arm_only_limit_deg": 170.0,
+     "margin_deg": 157.5,
+     "phi_deg": 58.3,
+     "swing_deg": 12.5,
+     "t": 2.75
+    },
+    {
+     "arm_only_limit_deg": 171.58,
+     "margin_deg": 156.39,
+     "phi_deg": 69.5,
+     "swing_deg": 15.19,
+     "t": 2.791667
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 154.29,
+     "phi_deg": 77.9,
+     "swing_deg": 18.21,
+     "t": 2.833333
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 152.43,
+     "phi_deg": 83.3,
+     "swing_deg": 20.07,
+     "t": 2.875
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 150.84,
+     "phi_deg": 87.7,
+     "swing_deg": 21.66,
+     "t": 2.916667
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 149.82,
+     "phi_deg": 90.9,
+     "swing_deg": 22.68,
+     "t": 2.958333
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 149.68,
+     "phi_deg": 92.9,
+     "swing_deg": 22.82,
+     "t": 3.0
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 149.78,
+     "phi_deg": 94.4,
+     "swing_deg": 22.72,
+     "t": 3.041667
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 150.33,
+     "phi_deg": 94.3,
+     "swing_deg": 22.17,
+     "t": 3.083333
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 150.97,
+     "phi_deg": 93.8,
+     "swing_deg": 21.53,
+     "t": 3.125
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 151.52,
+     "phi_deg": 93.1,
+     "swing_deg": 20.98,
+     "t": 3.166667
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 152.0,
+     "phi_deg": 92.2,
+     "swing_deg": 20.5,
+     "t": 3.208333
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 152.54,
+     "phi_deg": 91.2,
+     "swing_deg": 19.96,
+     "t": 3.25
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 153.2,
+     "phi_deg": 90.2,
+     "swing_deg": 19.3,
+     "t": 3.291667
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 153.9,
+     "phi_deg": 89.2,
+     "swing_deg": 18.6,
+     "t": 3.333333
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 155.17,
+     "phi_deg": 88.3,
+     "swing_deg": 17.33,
+     "t": 3.375
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 156.56,
+     "phi_deg": 87.1,
+     "swing_deg": 15.94,
+     "t": 3.416667
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 158.05,
+     "phi_deg": 85.7,
+     "swing_deg": 14.45,
+     "t": 3.458333
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 159.67,
+     "phi_deg": 83.8,
+     "swing_deg": 12.83,
+     "t": 3.5
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 161.28,
+     "phi_deg": 81.0,
+     "swing_deg": 11.22,
+     "t": 3.541667
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 162.84,
+     "phi_deg": 75.9,
+     "swing_deg": 9.66,
+     "t": 3.583333
+    },
+    {
+     "arm_only_limit_deg": 171.48,
+     "margin_deg": 163.2,
+     "phi_deg": 68.9,
+     "swing_deg": 8.28,
+     "t": 3.625
+    },
+    {
+     "arm_only_limit_deg": 170.33,
+     "margin_deg": 162.85,
+     "phi_deg": 62.0,
+     "swing_deg": 7.48,
+     "t": 3.666667
+    },
+    {
+     "arm_only_limit_deg": 170.0,
+     "margin_deg": 162.8,
+     "phi_deg": 56.5,
+     "swing_deg": 7.2,
+     "t": 3.708333
+    },
+    {
+     "arm_only_limit_deg": 170.0,
+     "margin_deg": 162.52,
+     "phi_deg": 52.5,
+     "swing_deg": 7.48,
+     "t": 3.75
+    },
+    {
+     "arm_only_limit_deg": 170.0,
+     "margin_deg": 161.37,
+     "phi_deg": 51.6,
+     "swing_deg": 8.63,
+     "t": 3.791667
+    },
+    {
+     "arm_only_limit_deg": 170.0,
+     "margin_deg": 159.97,
+     "phi_deg": 51.7,
+     "swing_deg": 10.03,
+     "t": 3.833333
+    },
+    {
+     "arm_only_limit_deg": 170.0,
+     "margin_deg": 158.8,
+     "phi_deg": 53.2,
+     "swing_deg": 11.2,
+     "t": 3.875
+    },
+    {
+     "arm_only_limit_deg": 170.0,
+     "margin_deg": 157.69,
+     "phi_deg": 54.8,
+     "swing_deg": 12.31,
+     "t": 3.916667
+    },
+    {
+     "arm_only_limit_deg": 170.0,
+     "margin_deg": 156.67,
+     "phi_deg": 56.2,
+     "swing_deg": 13.33,
+     "t": 3.958333
+    },
+    {
+     "arm_only_limit_deg": 170.0,
+     "margin_deg": 155.79,
+     "phi_deg": 57.7,
+     "swing_deg": 14.21,
+     "t": 4.0
+    },
+    {
+     "arm_only_limit_deg": 170.0,
+     "margin_deg": 155.15,
+     "phi_deg": 59.2,
+     "swing_deg": 14.85,
+     "t": 4.041667
+    },
+    {
+     "arm_only_limit_deg": 170.19,
+     "margin_deg": 155.46,
+     "phi_deg": 61.1,
+     "swing_deg": 14.73,
+     "t": 4.083333
+    },
+    {
+     "arm_only_limit_deg": 170.53,
+     "margin_deg": 156.19,
+     "phi_deg": 63.2,
+     "swing_deg": 14.34,
+     "t": 4.125
+    },
+    {
+     "arm_only_limit_deg": 170.87,
+     "margin_deg": 157.37,
+     "phi_deg": 65.2,
+     "swing_deg": 13.49,
+     "t": 4.166667
+    },
+    {
+     "arm_only_limit_deg": 171.22,
+     "margin_deg": 158.92,
+     "phi_deg": 67.3,
+     "swing_deg": 12.3,
+     "t": 4.208333
+    },
+    {
+     "arm_only_limit_deg": 171.62,
+     "margin_deg": 160.57,
+     "phi_deg": 69.7,
+     "swing_deg": 11.04,
+     "t": 4.25
+    },
+    {
+     "arm_only_limit_deg": 172.05,
+     "margin_deg": 162.34,
+     "phi_deg": 72.3,
+     "swing_deg": 9.71,
+     "t": 4.291667
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 164.14,
+     "phi_deg": 75.6,
+     "swing_deg": 8.36,
+     "t": 4.333333
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 165.56,
+     "phi_deg": 78.8,
+     "swing_deg": 6.94,
+     "t": 4.375
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 166.96,
+     "phi_deg": 83.5,
+     "swing_deg": 5.54,
+     "t": 4.416667
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 168.21,
+     "phi_deg": 91.1,
+     "swing_deg": 4.29,
+     "t": 4.458333
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 169.13,
+     "phi_deg": 103.6,
+     "swing_deg": 3.37,
+     "t": 4.5
+    },
+    {
+     "arm_only_limit_deg": 170.0,
+     "margin_deg": 167.27,
+     "phi_deg": 120.7,
+     "swing_deg": 2.73,
+     "t": 4.541667
+    },
+    {
+     "arm_only_limit_deg": 170.0,
+     "margin_deg": 167.66,
+     "phi_deg": 134.6,
+     "swing_deg": 2.34,
+     "t": 4.583333
+    },
+    {
+     "arm_only_limit_deg": 167.69,
+     "margin_deg": 165.61,
+     "phi_deg": 148.9,
+     "swing_deg": 2.07,
+     "t": 4.625
+    },
+    {
+     "arm_only_limit_deg": 161.61,
+     "margin_deg": 159.77,
+     "phi_deg": 161.8,
+     "swing_deg": 1.84,
+     "t": 4.666667
+    },
+    {
+     "arm_only_limit_deg": 153.47,
+     "margin_deg": 151.86,
+     "phi_deg": 174.8,
+     "swing_deg": 1.61,
+     "t": 4.708333
+    },
+    {
+     "arm_only_limit_deg": 120.35,
+     "margin_deg": 118.94,
+     "phi_deg": 189.4,
+     "swing_deg": 1.41,
+     "t": 4.75
+    },
+    {
+     "arm_only_limit_deg": 60.34,
+     "margin_deg": 59.14,
+     "phi_deg": 205.1,
+     "swing_deg": 1.2,
+     "t": 4.791667
+    },
+    {
+     "arm_only_limit_deg": 24.71,
+     "margin_deg": 23.66,
+     "phi_deg": 225.9,
+     "swing_deg": 1.05,
+     "t": 4.833333
+    },
+    {
+     "arm_only_limit_deg": 17.66,
+     "margin_deg": 16.66,
+     "phi_deg": 254.0,
+     "swing_deg": 1.0,
+     "t": 4.875
+    },
+    {
+     "arm_only_limit_deg": 15.0,
+     "margin_deg": 13.82,
+     "phi_deg": 279.4,
+     "swing_deg": 1.18,
+     "t": 4.916667
+    },
+    {
+     "arm_only_limit_deg": 16.19,
+     "margin_deg": 14.66,
+     "phi_deg": 292.1,
+     "swing_deg": 1.52,
+     "t": 4.958333
+    },
+    {
+     "arm_only_limit_deg": 16.36,
+     "margin_deg": 14.43,
+     "phi_deg": 293.1,
+     "swing_deg": 1.93,
+     "t": 5.0
+    },
+    {
+     "arm_only_limit_deg": 15.9,
+     "margin_deg": 13.61,
+     "phi_deg": 290.4,
+     "swing_deg": 2.29,
+     "t": 5.041667
+    },
+    {
+     "arm_only_limit_deg": 15.0,
+     "margin_deg": 12.39,
+     "phi_deg": 279.6,
+     "swing_deg": 2.61,
+     "t": 5.083333
+    },
+    {
+     "arm_only_limit_deg": 15.22,
+     "margin_deg": 12.2,
+     "phi_deg": 268.7,
+     "swing_deg": 3.02,
+     "t": 5.125
+    },
+    {
+     "arm_only_limit_deg": 17.3,
+     "margin_deg": 13.78,
+     "phi_deg": 256.2,
+     "swing_deg": 3.52,
+     "t": 5.166667
+    },
+    {
+     "arm_only_limit_deg": 19.14,
+     "margin_deg": 14.98,
+     "phi_deg": 245.2,
+     "swing_deg": 4.16,
+     "t": 5.208333
+    },
+    {
+     "arm_only_limit_deg": 21.04,
+     "margin_deg": 16.12,
+     "phi_deg": 236.9,
+     "swing_deg": 4.92,
+     "t": 5.25
+    },
+    {
+     "arm_only_limit_deg": 23.11,
+     "margin_deg": 17.35,
+     "phi_deg": 230.7,
+     "swing_deg": 5.77,
+     "t": 5.291667
+    },
+    {
+     "arm_only_limit_deg": 24.65,
+     "margin_deg": 18.02,
+     "phi_deg": 226.1,
+     "swing_deg": 6.63,
+     "t": 5.333333
+    },
+    {
+     "arm_only_limit_deg": 26.98,
+     "margin_deg": 19.59,
+     "phi_deg": 223.0,
+     "swing_deg": 7.39,
+     "t": 5.375
+    },
+    {
+     "arm_only_limit_deg": 29.3,
+     "margin_deg": 21.24,
+     "phi_deg": 220.7,
+     "swing_deg": 8.06,
+     "t": 5.416667
+    },
+    {
+     "arm_only_limit_deg": 31.15,
+     "margin_deg": 22.6,
+     "phi_deg": 218.8,
+     "swing_deg": 8.55,
+     "t": 5.458333
+    },
+    {
+     "arm_only_limit_deg": 32.54,
+     "margin_deg": 23.9,
+     "phi_deg": 217.5,
+     "swing_deg": 8.64,
+     "t": 5.5
+    },
+    {
+     "arm_only_limit_deg": 33.81,
+     "margin_deg": 25.13,
+     "phi_deg": 216.2,
+     "swing_deg": 8.69,
+     "t": 5.541667
+    },
+    {
+     "arm_only_limit_deg": 34.78,
+     "margin_deg": 26.15,
+     "phi_deg": 215.2,
+     "swing_deg": 8.64,
+     "t": 5.583333
+    },
+    {
+     "arm_only_limit_deg": 35.66,
+     "margin_deg": 27.11,
+     "phi_deg": 214.3,
+     "swing_deg": 8.55,
+     "t": 5.625
+    }
+   ]
+  },
+  "right": {
+   "keys_beyond": 0,
+   "keys_within_5deg_or_beyond": 0,
+   "max_swing_deg": 111.46,
+   "min_margin_deg": 58.72,
+   "per_key": [
+    {
+     "arm_only_limit_deg": 167.54,
+     "margin_deg": 166.24,
+     "phi_deg": 149.8,
+     "swing_deg": 1.3,
+     "t": 0.041667
+    },
+    {
+     "arm_only_limit_deg": 167.58,
+     "margin_deg": 166.29,
+     "phi_deg": 149.5,
+     "swing_deg": 1.29,
+     "t": 0.083333
+    },
+    {
+     "arm_only_limit_deg": 167.61,
+     "margin_deg": 166.33,
+     "phi_deg": 149.3,
+     "swing_deg": 1.28,
+     "t": 0.125
+    },
+    {
+     "arm_only_limit_deg": 167.6,
+     "margin_deg": 166.35,
+     "phi_deg": 149.4,
+     "swing_deg": 1.25,
+     "t": 0.166667
+    },
+    {
+     "arm_only_limit_deg": 167.53,
+     "margin_deg": 166.34,
+     "phi_deg": 149.8,
+     "swing_deg": 1.19,
+     "t": 0.208333
+    },
+    {
+     "arm_only_limit_deg": 167.59,
+     "margin_deg": 166.51,
+     "phi_deg": 149.4,
+     "swing_deg": 1.08,
+     "t": 0.25
+    },
+    {
+     "arm_only_limit_deg": 167.97,
+     "margin_deg": 167.08,
+     "phi_deg": 147.2,
+     "swing_deg": 0.89,
+     "t": 0.291667
+    },
+    {
+     "arm_only_limit_deg": 168.71,
+     "margin_deg": 168.04,
+     "phi_deg": 142.8,
+     "swing_deg": 0.67,
+     "t": 0.333333
+    },
+    {
+     "arm_only_limit_deg": 170.56,
+     "margin_deg": 170.11,
+     "phi_deg": 131.7,
+     "swing_deg": 0.45,
+     "t": 0.375
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 172.23,
+     "phi_deg": 101.7,
+     "swing_deg": 0.27,
+     "t": 0.416667
+    },
+    {
+     "arm_only_limit_deg": 171.29,
+     "margin_deg": 171.03,
+     "phi_deg": 52.7,
+     "swing_deg": 0.26,
+     "t": 0.458333
+    },
+    {
+     "arm_only_limit_deg": 165.61,
+     "margin_deg": 165.25,
+     "phi_deg": 24.3,
+     "swing_deg": 0.36,
+     "t": 0.5
+    },
+    {
+     "arm_only_limit_deg": 159.92,
+     "margin_deg": 159.42,
+     "phi_deg": 11.1,
+     "swing_deg": 0.5,
+     "t": 0.541667
+    },
+    {
+     "arm_only_limit_deg": 157.84,
+     "margin_deg": 157.23,
+     "phi_deg": 8.0,
+     "swing_deg": 0.61,
+     "t": 0.583333
+    },
+    {
+     "arm_only_limit_deg": 156.32,
+     "margin_deg": 155.6,
+     "phi_deg": 5.7,
+     "swing_deg": 0.73,
+     "t": 0.625
+    },
+    {
+     "arm_only_limit_deg": 154.64,
+     "margin_deg": 153.81,
+     "phi_deg": 3.2,
+     "swing_deg": 0.83,
+     "t": 0.666667
+    },
+    {
+     "arm_only_limit_deg": 152.75,
+     "margin_deg": 151.82,
+     "phi_deg": 0.4,
+     "swing_deg": 0.93,
+     "t": 0.708333
+    },
+    {
+     "arm_only_limit_deg": 147.29,
+     "margin_deg": 146.25,
+     "phi_deg": 357.2,
+     "swing_deg": 1.04,
+     "t": 0.75
+    },
+    {
+     "arm_only_limit_deg": 140.41,
+     "margin_deg": 139.23,
+     "phi_deg": 353.4,
+     "swing_deg": 1.18,
+     "t": 0.791667
+    },
+    {
+     "arm_only_limit_deg": 134.33,
+     "margin_deg": 133.02,
+     "phi_deg": 350.1,
+     "swing_deg": 1.32,
+     "t": 0.833333
+    },
+    {
+     "arm_only_limit_deg": 128.88,
+     "margin_deg": 127.43,
+     "phi_deg": 347.1,
+     "swing_deg": 1.45,
+     "t": 0.875
+    },
+    {
+     "arm_only_limit_deg": 123.35,
+     "margin_deg": 121.78,
+     "phi_deg": 344.4,
+     "swing_deg": 1.57,
+     "t": 0.916667
+    },
+    {
+     "arm_only_limit_deg": 116.01,
+     "margin_deg": 114.33,
+     "phi_deg": 341.8,
+     "swing_deg": 1.68,
+     "t": 0.958333
+    },
+    {
+     "arm_only_limit_deg": 108.73,
+     "margin_deg": 106.95,
+     "phi_deg": 339.3,
+     "swing_deg": 1.78,
+     "t": 1.0
+    },
+    {
+     "arm_only_limit_deg": 101.92,
+     "margin_deg": 100.04,
+     "phi_deg": 336.9,
+     "swing_deg": 1.88,
+     "t": 1.041667
+    },
+    {
+     "arm_only_limit_deg": 95.98,
+     "margin_deg": 94.02,
+     "phi_deg": 334.8,
+     "swing_deg": 1.96,
+     "t": 1.083333
+    },
+    {
+     "arm_only_limit_deg": 90.91,
+     "margin_deg": 88.86,
+     "phi_deg": 333.0,
+     "swing_deg": 2.05,
+     "t": 1.125
+    },
+    {
+     "arm_only_limit_deg": 87.86,
+     "margin_deg": 85.7,
+     "phi_deg": 331.9,
+     "swing_deg": 2.17,
+     "t": 1.166667
+    },
+    {
+     "arm_only_limit_deg": 86.79,
+     "margin_deg": 84.48,
+     "phi_deg": 331.5,
+     "swing_deg": 2.31,
+     "t": 1.208333
+    },
+    {
+     "arm_only_limit_deg": 87.74,
+     "margin_deg": 85.25,
+     "phi_deg": 331.9,
+     "swing_deg": 2.5,
+     "t": 1.25
+    },
+    {
+     "arm_only_limit_deg": 91.17,
+     "margin_deg": 88.42,
+     "phi_deg": 333.1,
+     "swing_deg": 2.75,
+     "t": 1.291667
+    },
+    {
+     "arm_only_limit_deg": 94.71,
+     "margin_deg": 91.69,
+     "phi_deg": 334.3,
+     "swing_deg": 3.02,
+     "t": 1.333333
+    },
+    {
+     "arm_only_limit_deg": 99.25,
+     "margin_deg": 95.91,
+     "phi_deg": 335.9,
+     "swing_deg": 3.34,
+     "t": 1.375
+    },
+    {
+     "arm_only_limit_deg": 103.46,
+     "margin_deg": 99.77,
+     "phi_deg": 337.4,
+     "swing_deg": 3.69,
+     "t": 1.416667
+    },
+    {
+     "arm_only_limit_deg": 107.32,
+     "margin_deg": 103.27,
+     "phi_deg": 338.8,
+     "swing_deg": 4.05,
+     "t": 1.458333
+    },
+    {
+     "arm_only_limit_deg": 110.92,
+     "margin_deg": 106.49,
+     "phi_deg": 340.0,
+     "swing_deg": 4.44,
+     "t": 1.5
+    },
+    {
+     "arm_only_limit_deg": 113.86,
+     "margin_deg": 109.03,
+     "phi_deg": 341.1,
+     "swing_deg": 4.84,
+     "t": 1.541667
+    },
+    {
+     "arm_only_limit_deg": 116.18,
+     "margin_deg": 110.91,
+     "phi_deg": 341.9,
+     "swing_deg": 5.27,
+     "t": 1.583333
+    },
+    {
+     "arm_only_limit_deg": 117.79,
+     "margin_deg": 112.08,
+     "phi_deg": 342.5,
+     "swing_deg": 5.71,
+     "t": 1.625
+    },
+    {
+     "arm_only_limit_deg": 118.47,
+     "margin_deg": 112.35,
+     "phi_deg": 342.7,
+     "swing_deg": 6.12,
+     "t": 1.666667
+    },
+    {
+     "arm_only_limit_deg": 118.37,
+     "margin_deg": 111.87,
+     "phi_deg": 342.7,
+     "swing_deg": 6.51,
+     "t": 1.708333
+    },
+    {
+     "arm_only_limit_deg": 117.98,
+     "margin_deg": 111.1,
+     "phi_deg": 342.5,
+     "swing_deg": 6.89,
+     "t": 1.75
+    },
+    {
+     "arm_only_limit_deg": 117.3,
+     "margin_deg": 110.04,
+     "phi_deg": 342.3,
+     "swing_deg": 7.25,
+     "t": 1.791667
+    },
+    {
+     "arm_only_limit_deg": 116.57,
+     "margin_deg": 108.96,
+     "phi_deg": 342.0,
+     "swing_deg": 7.61,
+     "t": 1.833333
+    },
+    {
+     "arm_only_limit_deg": 116.78,
+     "margin_deg": 108.98,
+     "phi_deg": 342.1,
+     "swing_deg": 7.8,
+     "t": 1.875
+    },
+    {
+     "arm_only_limit_deg": 117.23,
+     "margin_deg": 109.3,
+     "phi_deg": 342.3,
+     "swing_deg": 7.93,
+     "t": 1.916667
+    },
+    {
+     "arm_only_limit_deg": 117.73,
+     "margin_deg": 109.72,
+     "phi_deg": 342.4,
+     "swing_deg": 8.02,
+     "t": 1.958333
+    },
+    {
+     "arm_only_limit_deg": 118.29,
+     "margin_deg": 110.25,
+     "phi_deg": 342.6,
+     "swing_deg": 8.04,
+     "t": 2.0
+    },
+    {
+     "arm_only_limit_deg": 118.86,
+     "margin_deg": 110.81,
+     "phi_deg": 342.8,
+     "swing_deg": 8.05,
+     "t": 2.041667
+    },
+    {
+     "arm_only_limit_deg": 119.39,
+     "margin_deg": 111.37,
+     "phi_deg": 343.0,
+     "swing_deg": 8.02,
+     "t": 2.083333
+    },
+    {
+     "arm_only_limit_deg": 119.77,
+     "margin_deg": 111.79,
+     "phi_deg": 343.2,
+     "swing_deg": 7.98,
+     "t": 2.125
+    },
+    {
+     "arm_only_limit_deg": 119.57,
+     "margin_deg": 111.65,
+     "phi_deg": 343.1,
+     "swing_deg": 7.93,
+     "t": 2.166667
+    },
+    {
+     "arm_only_limit_deg": 118.69,
+     "margin_deg": 110.82,
+     "phi_deg": 342.8,
+     "swing_deg": 7.86,
+     "t": 2.208333
+    },
+    {
+     "arm_only_limit_deg": 117.58,
+     "margin_deg": 109.81,
+     "phi_deg": 342.4,
+     "swing_deg": 7.77,
+     "t": 2.25
+    },
+    {
+     "arm_only_limit_deg": 116.14,
+     "margin_deg": 108.51,
+     "phi_deg": 341.9,
+     "swing_deg": 7.64,
+     "t": 2.291667
+    },
+    {
+     "arm_only_limit_deg": 114.56,
+     "margin_deg": 107.07,
+     "phi_deg": 341.3,
+     "swing_deg": 7.49,
+     "t": 2.333333
+    },
+    {
+     "arm_only_limit_deg": 113.31,
+     "margin_deg": 105.93,
+     "phi_deg": 340.9,
+     "swing_deg": 7.38,
+     "t": 2.375
+    },
+    {
+     "arm_only_limit_deg": 112.75,
+     "margin_deg": 105.44,
+     "phi_deg": 340.7,
+     "swing_deg": 7.31,
+     "t": 2.416667
+    },
+    {
+     "arm_only_limit_deg": 114.84,
+     "margin_deg": 107.48,
+     "phi_deg": 341.4,
+     "swing_deg": 7.37,
+     "t": 2.458333
+    },
+    {
+     "arm_only_limit_deg": 120.41,
+     "margin_deg": 112.8,
+     "phi_deg": 343.4,
+     "swing_deg": 7.61,
+     "t": 2.5
+    },
+    {
+     "arm_only_limit_deg": 131.3,
+     "margin_deg": 123.01,
+     "phi_deg": 348.4,
+     "swing_deg": 8.29,
+     "t": 2.541667
+    },
+    {
+     "arm_only_limit_deg": 154.21,
+     "margin_deg": 142.74,
+     "phi_deg": 2.6,
+     "swing_deg": 11.47,
+     "t": 2.583333
+    },
+    {
+     "arm_only_limit_deg": 160.49,
+     "margin_deg": 144.44,
+     "phi_deg": 12.0,
+     "swing_deg": 16.05,
+     "t": 2.625
+    },
+    {
+     "arm_only_limit_deg": 164.3,
+     "margin_deg": 141.29,
+     "phi_deg": 20.4,
+     "swing_deg": 23.01,
+     "t": 2.666667
+    },
+    {
+     "arm_only_limit_deg": 166.7,
+     "margin_deg": 133.75,
+     "phi_deg": 27.6,
+     "swing_deg": 32.95,
+     "t": 2.708333
+    },
+    {
+     "arm_only_limit_deg": 167.79,
+     "margin_deg": 123.93,
+     "phi_deg": 31.7,
+     "swing_deg": 43.86,
+     "t": 2.75
+    },
+    {
+     "arm_only_limit_deg": 168.38,
+     "margin_deg": 112.18,
+     "phi_deg": 35.3,
+     "swing_deg": 56.2,
+     "t": 2.791667
+    },
+    {
+     "arm_only_limit_deg": 169.08,
+     "margin_deg": 100.17,
+     "phi_deg": 39.5,
+     "swing_deg": 68.91,
+     "t": 2.833333
+    },
+    {
+     "arm_only_limit_deg": 169.44,
+     "margin_deg": 90.37,
+     "phi_deg": 41.7,
+     "swing_deg": 79.08,
+     "t": 2.875
+    },
+    {
+     "arm_only_limit_deg": 169.72,
+     "margin_deg": 81.34,
+     "phi_deg": 43.3,
+     "swing_deg": 88.38,
+     "t": 2.916667
+    },
+    {
+     "arm_only_limit_deg": 169.87,
+     "margin_deg": 74.57,
+     "phi_deg": 44.2,
+     "swing_deg": 95.3,
+     "t": 2.958333
+    },
+    {
+     "arm_only_limit_deg": 169.86,
+     "margin_deg": 71.1,
+     "phi_deg": 44.2,
+     "swing_deg": 98.76,
+     "t": 3.0
+    },
+    {
+     "arm_only_limit_deg": 169.83,
+     "margin_deg": 68.77,
+     "phi_deg": 44.0,
+     "swing_deg": 101.06,
+     "t": 3.041667
+    },
+    {
+     "arm_only_limit_deg": 169.84,
+     "margin_deg": 68.97,
+     "phi_deg": 44.1,
+     "swing_deg": 100.88,
+     "t": 3.083333
+    },
+    {
+     "arm_only_limit_deg": 169.85,
+     "margin_deg": 69.58,
+     "phi_deg": 44.1,
+     "swing_deg": 100.28,
+     "t": 3.125
+    },
+    {
+     "arm_only_limit_deg": 169.8,
+     "margin_deg": 69.33,
+     "phi_deg": 43.8,
+     "swing_deg": 100.47,
+     "t": 3.166667
+    },
+    {
+     "arm_only_limit_deg": 169.69,
+     "margin_deg": 68.18,
+     "phi_deg": 43.1,
+     "swing_deg": 101.51,
+     "t": 3.208333
+    },
+    {
+     "arm_only_limit_deg": 169.64,
+     "margin_deg": 66.94,
+     "phi_deg": 42.8,
+     "swing_deg": 102.7,
+     "t": 3.25
+    },
+    {
+     "arm_only_limit_deg": 169.7,
+     "margin_deg": 65.5,
+     "phi_deg": 43.2,
+     "swing_deg": 104.2,
+     "t": 3.291667
+    },
+    {
+     "arm_only_limit_deg": 169.79,
+     "margin_deg": 63.94,
+     "phi_deg": 43.7,
+     "swing_deg": 105.85,
+     "t": 3.333333
+    },
+    {
+     "arm_only_limit_deg": 169.99,
+     "margin_deg": 61.87,
+     "phi_deg": 44.9,
+     "swing_deg": 108.12,
+     "t": 3.375
+    },
+    {
+     "arm_only_limit_deg": 170.15,
+     "margin_deg": 59.79,
+     "phi_deg": 45.9,
+     "swing_deg": 110.37,
+     "t": 3.416667
+    },
+    {
+     "arm_only_limit_deg": 170.18,
+     "margin_deg": 58.72,
+     "phi_deg": 46.1,
+     "swing_deg": 111.46,
+     "t": 3.458333
+    },
+    {
+     "arm_only_limit_deg": 170.01,
+     "margin_deg": 59.58,
+     "phi_deg": 45.1,
+     "swing_deg": 110.43,
+     "t": 3.5
+    },
+    {
+     "arm_only_limit_deg": 169.86,
+     "margin_deg": 60.91,
+     "phi_deg": 44.2,
+     "swing_deg": 108.96,
+     "t": 3.541667
+    },
+    {
+     "arm_only_limit_deg": 169.92,
+     "margin_deg": 63.12,
+     "phi_deg": 44.5,
+     "swing_deg": 106.8,
+     "t": 3.583333
+    },
+    {
+     "arm_only_limit_deg": 169.98,
+     "margin_deg": 65.55,
+     "phi_deg": 44.9,
+     "swing_deg": 104.43,
+     "t": 3.625
+    },
+    {
+     "arm_only_limit_deg": 169.86,
+     "margin_deg": 67.64,
+     "phi_deg": 44.1,
+     "swing_deg": 102.22,
+     "t": 3.666667
+    },
+    {
+     "arm_only_limit_deg": 169.58,
+     "margin_deg": 69.41,
+     "phi_deg": 42.5,
+     "swing_deg": 100.17,
+     "t": 3.708333
+    },
+    {
+     "arm_only_limit_deg": 169.25,
+     "margin_deg": 71.51,
+     "phi_deg": 40.5,
+     "swing_deg": 97.75,
+     "t": 3.75
+    },
+    {
+     "arm_only_limit_deg": 168.83,
+     "margin_deg": 74.09,
+     "phi_deg": 38.0,
+     "swing_deg": 94.74,
+     "t": 3.791667
+    },
+    {
+     "arm_only_limit_deg": 168.37,
+     "margin_deg": 76.51,
+     "phi_deg": 35.2,
+     "swing_deg": 91.86,
+     "t": 3.833333
+    },
+    {
+     "arm_only_limit_deg": 168.46,
+     "margin_deg": 80.17,
+     "phi_deg": 35.7,
+     "swing_deg": 88.28,
+     "t": 3.875
+    },
+    {
+     "arm_only_limit_deg": 168.65,
+     "margin_deg": 84.46,
+     "phi_deg": 36.9,
+     "swing_deg": 84.19,
+     "t": 3.916667
+    },
+    {
+     "arm_only_limit_deg": 168.85,
+     "margin_deg": 89.72,
+     "phi_deg": 38.1,
+     "swing_deg": 79.13,
+     "t": 3.958333
+    },
+    {
+     "arm_only_limit_deg": 169.09,
+     "margin_deg": 96.54,
+     "phi_deg": 39.5,
+     "swing_deg": 72.55,
+     "t": 4.0
+    },
+    {
+     "arm_only_limit_deg": 169.31,
+     "margin_deg": 103.97,
+     "phi_deg": 40.9,
+     "swing_deg": 65.34,
+     "t": 4.041667
+    },
+    {
+     "arm_only_limit_deg": 169.27,
+     "margin_deg": 113.1,
+     "phi_deg": 40.6,
+     "swing_deg": 56.17,
+     "t": 4.083333
+    },
+    {
+     "arm_only_limit_deg": 169.18,
+     "margin_deg": 122.62,
+     "phi_deg": 40.1,
+     "swing_deg": 46.56,
+     "t": 4.125
+    },
+    {
+     "arm_only_limit_deg": 168.96,
+     "margin_deg": 130.73,
+     "phi_deg": 38.8,
+     "swing_deg": 38.23,
+     "t": 4.166667
+    },
+    {
+     "arm_only_limit_deg": 168.55,
+     "margin_deg": 137.59,
+     "phi_deg": 36.3,
+     "swing_deg": 30.96,
+     "t": 4.208333
+    },
+    {
+     "arm_only_limit_deg": 167.99,
+     "margin_deg": 143.18,
+     "phi_deg": 33.0,
+     "swing_deg": 24.81,
+     "t": 4.25
+    },
+    {
+     "arm_only_limit_deg": 166.96,
+     "margin_deg": 146.29,
+     "phi_deg": 28.4,
+     "swing_deg": 20.67,
+     "t": 4.291667
+    },
+    {
+     "arm_only_limit_deg": 165.12,
+     "margin_deg": 147.92,
+     "phi_deg": 22.9,
+     "swing_deg": 17.2,
+     "t": 4.333333
+    },
+    {
+     "arm_only_limit_deg": 164.29,
+     "margin_deg": 150.38,
+     "phi_deg": 20.4,
+     "swing_deg": 13.9,
+     "t": 4.375
+    },
+    {
+     "arm_only_limit_deg": 163.86,
+     "margin_deg": 153.3,
+     "phi_deg": 19.1,
+     "swing_deg": 10.56,
+     "t": 4.416667
+    },
+    {
+     "arm_only_limit_deg": 164.94,
+     "margin_deg": 158.04,
+     "phi_deg": 22.3,
+     "swing_deg": 6.9,
+     "t": 4.458333
+    },
+    {
+     "arm_only_limit_deg": 171.98,
+     "margin_deg": 168.73,
+     "phi_deg": 56.9,
+     "swing_deg": 3.25,
+     "t": 4.5
+    },
+    {
+     "arm_only_limit_deg": 170.84,
+     "margin_deg": 167.09,
+     "phi_deg": 130.0,
+     "swing_deg": 3.75,
+     "t": 4.541667
+    },
+    {
+     "arm_only_limit_deg": 168.23,
+     "margin_deg": 162.25,
+     "phi_deg": 145.6,
+     "swing_deg": 5.98,
+     "t": 4.583333
+    },
+    {
+     "arm_only_limit_deg": 167.39,
+     "margin_deg": 159.45,
+     "phi_deg": 150.3,
+     "swing_deg": 7.94,
+     "t": 4.625
+    },
+    {
+     "arm_only_limit_deg": 167.09,
+     "margin_deg": 158.23,
+     "phi_deg": 151.2,
+     "swing_deg": 8.86,
+     "t": 4.666667
+    },
+    {
+     "arm_only_limit_deg": 167.35,
+     "margin_deg": 158.26,
+     "phi_deg": 150.4,
+     "swing_deg": 9.09,
+     "t": 4.708333
+    },
+    {
+     "arm_only_limit_deg": 167.67,
+     "margin_deg": 158.72,
+     "phi_deg": 149.0,
+     "swing_deg": 8.95,
+     "t": 4.75
+    },
+    {
+     "arm_only_limit_deg": 168.15,
+     "margin_deg": 159.97,
+     "phi_deg": 146.1,
+     "swing_deg": 8.18,
+     "t": 4.791667
+    },
+    {
+     "arm_only_limit_deg": 168.78,
+     "margin_deg": 161.53,
+     "phi_deg": 142.3,
+     "swing_deg": 7.25,
+     "t": 4.833333
+    },
+    {
+     "arm_only_limit_deg": 169.41,
+     "margin_deg": 163.23,
+     "phi_deg": 138.5,
+     "swing_deg": 6.18,
+     "t": 4.875
+    },
+    {
+     "arm_only_limit_deg": 170.17,
+     "margin_deg": 165.08,
+     "phi_deg": 134.0,
+     "swing_deg": 5.08,
+     "t": 4.916667
+    },
+    {
+     "arm_only_limit_deg": 171.04,
+     "margin_deg": 166.97,
+     "phi_deg": 128.8,
+     "swing_deg": 4.07,
+     "t": 4.958333
+    },
+    {
+     "arm_only_limit_deg": 171.75,
+     "margin_deg": 168.54,
+     "phi_deg": 124.5,
+     "swing_deg": 3.21,
+     "t": 5.0
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 170.04,
+     "phi_deg": 119.7,
+     "swing_deg": 2.46,
+     "t": 5.041667
+    },
+    {
+     "arm_only_limit_deg": 172.5,
+     "margin_deg": 170.5,
+     "phi_deg": 119.5,
+     "swing_deg": 2.0,
+     "t": 5.083333
+    },
+    {
+     "arm_only_limit_deg": 172.12,
+     "margin_deg": 170.47,
+     "phi_deg": 122.3,
+     "swing_deg": 1.65,
+     "t": 5.125
+    },
+    {
+     "arm_only_limit_deg": 171.42,
+     "margin_deg": 169.86,
+     "phi_deg": 126.5,
+     "swing_deg": 1.56,
+     "t": 5.166667
+    },
+    {
+     "arm_only_limit_deg": 170.74,
+     "margin_deg": 169.11,
+     "phi_deg": 130.6,
+     "swing_deg": 1.63,
+     "t": 5.208333
+    },
+    {
+     "arm_only_limit_deg": 170.25,
+     "margin_deg": 168.5,
+     "phi_deg": 133.5,
+     "swing_deg": 1.75,
+     "t": 5.25
+    },
+    {
+     "arm_only_limit_deg": 170.07,
+     "margin_deg": 168.14,
+     "phi_deg": 134.6,
+     "swing_deg": 1.93,
+     "t": 5.291667
+    },
+    {
+     "arm_only_limit_deg": 169.97,
+     "margin_deg": 167.84,
+     "phi_deg": 135.2,
+     "swing_deg": 2.13,
+     "t": 5.333333
+    },
+    {
+     "arm_only_limit_deg": 169.88,
+     "margin_deg": 167.58,
+     "phi_deg": 135.7,
+     "swing_deg": 2.3,
+     "t": 5.375
+    },
+    {
+     "arm_only_limit_deg": 169.78,
+     "margin_deg": 167.33,
+     "phi_deg": 136.3,
+     "swing_deg": 2.45,
+     "t": 5.416667
+    },
+    {
+     "arm_only_limit_deg": 169.64,
+     "margin_deg": 167.1,
+     "phi_deg": 137.2,
+     "swing_deg": 2.54,
+     "t": 5.458333
+    },
+    {
+     "arm_only_limit_deg": 169.39,
+     "margin_deg": 166.9,
+     "phi_deg": 138.7,
+     "swing_deg": 2.49,
+     "t": 5.5
+    },
+    {
+     "arm_only_limit_deg": 169.11,
+     "margin_deg": 166.71,
+     "phi_deg": 140.3,
+     "swing_deg": 2.4,
+     "t": 5.541667
+    },
+    {
+     "arm_only_limit_deg": 168.71,
+     "margin_deg": 166.54,
+     "phi_deg": 142.7,
+     "swing_deg": 2.17,
+     "t": 5.583333
+    },
+    {
+     "arm_only_limit_deg": 168.17,
+     "margin_deg": 166.27,
+     "phi_deg": 146.0,
+     "swing_deg": 1.9,
+     "t": 5.625
+    }
+   ]
+  }
+ },
+ "method_sha256": "d2e9a1d3de6ed723f76b93f2cff30d1588bb6350a07668e2630e357dfffcbed6",
+ "samples_total": 7523306,
+ "sides": {
+  "left": {
+   "arm_only": {
+    "directions": [
+     {
+      "first_contact_deg": 150.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.078,
+      "phi": 0.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 160.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 15.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 167.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.005,
+      "phi": 30.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 170.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.076,
+      "phi": 45.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 170.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 60.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 172.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.021,
+      "phi": 75.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 172.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.082,
+      "phi": 90.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 172.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.024,
+      "phi": 105.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 170.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 120.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 170.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.076,
+      "phi": 135.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 167.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.003,
+      "phi": 150.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 160.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 165.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 150.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.078,
+      "phi": 180.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 102.5,
+      "limiting_part": "seg_mid_chest",
+      "min_clearance_in_clear_range_mm": 0.017,
+      "phi": 195.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 40.0,
+      "limiting_part": "seg_mid_chest",
+      "min_clearance_in_clear_range_mm": 0.09,
+      "phi": 210.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 25.0,
+      "limiting_part": "seg_mid_chest",
+      "min_clearance_in_clear_range_mm": 0.086,
+      "phi": 225.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 20.0,
+      "limiting_part": "seg_mid_chest",
+      "min_clearance_in_clear_range_mm": 0.125,
+      "phi": 240.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 17.5,
+      "limiting_part": "seg_lower_waist",
+      "min_clearance_in_clear_range_mm": 0.101,
+      "phi": 255.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 15.0,
+      "limiting_part": "seg_lower_waist",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 270.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 15.0,
+      "limiting_part": "seg_lower_waist",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 285.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 17.5,
+      "limiting_part": "seg_lower_waist",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 300.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 27.5,
+      "limiting_part": "seg_lower_waist",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 315.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 67.5,
+      "limiting_part": "seg_mid_chest",
+      "min_clearance_in_clear_range_mm": 0.049,
+      "phi": 330.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 112.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.09,
+      "phi": 345.0,
+      "reaches_180": false
+     }
+    ],
+    "fixed_samples": 7229484,
+    "moving_samples": 289820,
+    "rest_clearance_mm": 0.152,
+    "rest_d_s_mm": 0.402,
+    "rest_nearest_part": "forearm_left"
+   },
+   "straight_arm": {
+    "directions": [
+     {
+      "first_contact_deg": 150.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.078,
+      "phi": 0.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 160.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.326,
+      "phi": 15.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 167.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.005,
+      "phi": 30.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 170.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.076,
+      "phi": 45.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 170.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.467,
+      "phi": 60.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 172.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.021,
+      "phi": 75.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 172.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.082,
+      "phi": 90.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 172.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.024,
+      "phi": 105.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 170.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.467,
+      "phi": 120.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 170.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.076,
+      "phi": 135.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 167.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.003,
+      "phi": 150.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 160.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.325,
+      "phi": 165.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 150.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.078,
+      "phi": 180.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 102.5,
+      "limiting_part": "seg_mid_chest",
+      "min_clearance_in_clear_range_mm": 0.017,
+      "phi": 195.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 40.0,
+      "limiting_part": "seg_mid_chest",
+      "min_clearance_in_clear_range_mm": 0.09,
+      "phi": 210.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 25.0,
+      "limiting_part": "seg_mid_chest",
+      "min_clearance_in_clear_range_mm": 0.086,
+      "phi": 225.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 15.0,
+      "limiting_part": "pelvis",
+      "min_clearance_in_clear_range_mm": 1.008,
+      "phi": 240.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 12.5,
+      "limiting_part": "thigh_left",
+      "min_clearance_in_clear_range_mm": 0.914,
+      "phi": 255.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 10.0,
+      "limiting_part": "thigh_left",
+      "min_clearance_in_clear_range_mm": 1.414,
+      "phi": 270.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 12.5,
+      "limiting_part": "thigh_left",
+      "min_clearance_in_clear_range_mm": 0.914,
+      "phi": 285.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 15.0,
+      "limiting_part": "pelvis",
+      "min_clearance_in_clear_range_mm": 1.008,
+      "phi": 300.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 27.5,
+      "limiting_part": "seg_lower_waist",
+      "min_clearance_in_clear_range_mm": 0.17,
+      "phi": 315.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 67.5,
+      "limiting_part": "seg_mid_chest",
+      "min_clearance_in_clear_range_mm": 0.049,
+      "phi": 330.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 112.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.09,
+      "phi": 345.0,
+      "reaches_180": false
+     }
+    ],
+    "fixed_samples": 6847993,
+    "moving_samples": 671311,
+    "rest_clearance_mm": 1.506,
+    "rest_d_s_mm": 1.756,
+    "rest_nearest_part": "seg_mid_chest"
+   }
+  },
+  "right": {
+   "arm_only": {
+    "directions": [
+     {
+      "first_contact_deg": 152.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 0.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 162.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 15.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 167.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 30.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 170.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 45.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 172.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 60.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 172.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 75.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 172.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 90.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 172.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 105.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 172.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 120.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 170.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 135.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 167.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 150.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 162.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 165.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 152.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 180.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 125.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.088,
+      "phi": 195.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 47.5,
+      "limiting_part": "seg_mid_chest",
+      "min_clearance_in_clear_range_mm": 0.078,
+      "phi": 210.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 27.5,
+      "limiting_part": "seg_mid_chest",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 225.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 22.5,
+      "limiting_part": "seg_lower_waist",
+      "min_clearance_in_clear_range_mm": 0.118,
+      "phi": 240.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 17.5,
+      "limiting_part": "seg_lower_waist",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 255.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 15.0,
+      "limiting_part": "seg_lower_waist",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 270.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 17.5,
+      "limiting_part": "seg_lower_waist",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 285.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 20.0,
+      "limiting_part": "seg_lower_waist",
+      "min_clearance_in_clear_range_mm": 0.152,
+      "phi": 300.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 30.0,
+      "limiting_part": "seg_lower_waist",
+      "min_clearance_in_clear_range_mm": 0.144,
+      "phi": 315.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 82.5,
+      "limiting_part": "seg_mid_chest",
+      "min_clearance_in_clear_range_mm": 0.047,
+      "phi": 330.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 125.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.088,
+      "phi": 345.0,
+      "reaches_180": false
+     }
+    ],
+    "fixed_samples": 7229484,
+    "moving_samples": 289820,
+    "rest_clearance_mm": 0.152,
+    "rest_d_s_mm": 0.402,
+    "rest_nearest_part": "forearm_right"
+   },
+   "straight_arm": {
+    "directions": [
+     {
+      "first_contact_deg": 152.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.27,
+      "phi": 0.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 162.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.358,
+      "phi": 15.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 167.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.447,
+      "phi": 30.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 170.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.516,
+      "phi": 45.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 172.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.269,
+      "phi": 60.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 172.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.47,
+      "phi": 75.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 172.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.529,
+      "phi": 90.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 172.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.47,
+      "phi": 105.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 172.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.269,
+      "phi": 120.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 170.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.516,
+      "phi": 135.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 167.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.447,
+      "phi": 150.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 162.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.358,
+      "phi": 165.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 152.5,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.27,
+      "phi": 180.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 125.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.088,
+      "phi": 195.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 47.5,
+      "limiting_part": "seg_mid_chest",
+      "min_clearance_in_clear_range_mm": 0.078,
+      "phi": 210.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 27.5,
+      "limiting_part": "seg_mid_chest",
+      "min_clearance_in_clear_range_mm": 0.178,
+      "phi": 225.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 17.5,
+      "limiting_part": "pelvis",
+      "min_clearance_in_clear_range_mm": 0.026,
+      "phi": 240.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 12.5,
+      "limiting_part": "thigh_right",
+      "min_clearance_in_clear_range_mm": 1.355,
+      "phi": 255.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 12.5,
+      "limiting_part": "pelvis",
+      "min_clearance_in_clear_range_mm": 0.281,
+      "phi": 270.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 12.5,
+      "limiting_part": "thigh_right",
+      "min_clearance_in_clear_range_mm": 1.355,
+      "phi": 285.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 17.5,
+      "limiting_part": "pelvis",
+      "min_clearance_in_clear_range_mm": 0.026,
+      "phi": 300.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 30.0,
+      "limiting_part": "seg_lower_waist",
+      "min_clearance_in_clear_range_mm": 0.144,
+      "phi": 315.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 82.5,
+      "limiting_part": "seg_mid_chest",
+      "min_clearance_in_clear_range_mm": 0.047,
+      "phi": 330.0,
+      "reaches_180": false
+     },
+     {
+      "first_contact_deg": 125.0,
+      "limiting_part": "seg_upper_chest",
+      "min_clearance_in_clear_range_mm": 0.088,
+      "phi": 345.0,
+      "reaches_180": false
+     }
+    ],
+    "fixed_samples": 6847354,
+    "moving_samples": 671950,
+    "rest_clearance_mm": 1.954,
+    "rest_d_s_mm": 2.204,
+    "rest_nearest_part": "seg_mid_chest"
+   }
+  }
+ },
+ "step_deg": 2.5
+}
