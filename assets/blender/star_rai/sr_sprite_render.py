@@ -12,6 +12,10 @@ sc.render.engine = "CYCLES"; sc.cycles.device = "CPU"; sc.cycles.samples = spp; 
 sc.render.resolution_x, sc.render.resolution_y = width, int(width * 1.5); sc.render.film_transparent = True
 sc.view_settings.view_transform = "Standard"; sc.view_settings.look = "None"
 sc.cycles.max_bounces = 4
+if sc.render.use_freestyle and "sprite_line_px_at_1152" in sc:                       # keep line weight per canvas
+    sc.render.line_thickness = 1.0
+    for ls in bpy.context.view_layer.freestyle_settings.linesets:
+        ls.linestyle.thickness = sc["sprite_line_px_at_1152"] * width / 1152
 w = sc.world or bpy.data.worlds.new("SpriteWorld"); sc.world = w
 bg = next(n for n in w.node_tree.nodes if n.type == "BACKGROUND")
 bg.inputs[0].default_value = (1, 1, 1, 1); bg.inputs[1].default_value = 0.9          # even ambient fill
@@ -36,5 +40,10 @@ for v in views:
     cam.rotation_euler = (centre - cam.location).to_track_quat("-Z", "Y").to_euler()
     kd = (d + Vector((0, 0, 0.6))).normalized()                                       # key from camera side, above
     key.rotation_euler = (-kd).to_track_quat("-Z", "Y").to_euler()
+    npr = bpy.data.objects.get("NPR_Key")                                             # toon key follows the camera:
+    if npr:                                                                           # front-above, a little from camera-left
+        side = d.cross(Vector((0, 0, 1))).normalized()
+        nd = (d + Vector((0, 0, 0.75)) + side * 0.35).normalized()
+        npr.rotation_euler = (-nd).to_track_quat("-Z", "Y").to_euler()
     sc.render.filepath = os.path.join(out, f"{prefix}_{v}.png")
     bpy.ops.render.render(write_still=True)
