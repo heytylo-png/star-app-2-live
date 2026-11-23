@@ -30,6 +30,8 @@ $R --blend "$D/sr_09_game.blend" "$K/blender-animation/scripts/bake_action.py" -
    --target GAME_RIG_StarRai --actions Idle Wave Peace Point --save "$D/sr_09_game.blend"
 B "$D/sr_09_game.blend" sr_rename_clips.py Idle,Wave,Peace,Point
 cp "$D/sr_09_game.blend" "$D/sr_10_final.blend"; B "$D/sr_10_final.blend" sr_merge.py
+# flat base colour for toon sprites / engine toon shaders (needs the region attributes on the merged mesh)
+B "$D/sr_10_final.blend" sr_flat_texture.py "$H/../../../public/star-rai/angles/front.png" "$D/star_rai_basecolor_flat.png" 10
 $R --blend "$D/sr_10_final.blend" "$K/blender-asset-qa/scripts/qa_check.py" -- --objects StarRai --profile game
 $R --blend "$D/sr_10_final.blend" "$CR/rig_check.py" -- --armature GAME_RIG_StarRai --profile unity
 $R --blend "$D/sr_10_final.blend" "$K/blender-export-pipelines/scripts/export_asset.py" -- --preset gltf \
