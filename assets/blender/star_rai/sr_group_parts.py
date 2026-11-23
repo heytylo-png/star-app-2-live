@@ -14,6 +14,8 @@ for name, members in GROUPS.items():
         src = bpy.data.objects[m].data
         if "part" not in src.attributes: src.attributes.new("part", "INT", "FACE")
         src.attributes["part"].data.foreach_set("value", [int(m[1:])] * len(src.polygons))
+        if "finger" not in src.attributes:
+            src.attributes.new("finger", "INT", "FACE")       # 0 = not a finger (hands carry 1..5)
         n0 = len(bm.faces); bm.from_mesh(src)          # appends; UV layers match by name
         assert len(bm.faces) > n0, m
     me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()

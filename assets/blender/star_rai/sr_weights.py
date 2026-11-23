@@ -57,7 +57,64 @@ for v in bme.vertices:
         for n, x in w.items():
             k = mirror(n) if n.endswith(other) else n; nw[k] = nw.get(k, 0) + x
         W[v.index] = nw
-set_weights(body, W); rep["Body"] = {"filled_unweighted": filled, "opposite_side_weight_mirrored": moved_lr}
+# ---- hands: geometric finger weights (the voxel proxy fuses fingers) ----
+from mathutils import Vector
+from mathutils.geometry import intersect_point_line
+WRIST_X, KNUCKLE_X = 0.575, 0.656
+PALM_Y = {"01": -.002, "02": .019, "03": .041, "04": .058}
+CHAINS = {2: ("f_index", "01", [(.656, -.002, 1.203), (.683, -.002, 1.2015), (.701, -.002, 1.2015), (.715, -.002, 1.2005)]),
+          3: ("f_middle", "02", [(.656, .019, 1.203), (.686, .019, 1.2015), (.706, .019, 1.2015), (.722, .019, 1.2005)]),
+          4: ("f_ring", "03", [(.656, .041, 1.203), (.683, .041, 1.2015), (.701, .041, 1.2015), (.714, .041, 1.2005)]),
+          5: ("f_pinky", "04", [(.652, .058, 1.201), (.671, .058, 1.2015), (.683, .058, 1.2015), (.694, .058, 1.2005)]),
+          1: ("thumb", "01", [(.587, -.004, 1.193), (.618, -.018, 1.184), (.642, -.026, 1.178), (.661, -.035, 1.175)])}
+BLEND = 0.25          # fraction of a phalanx over which neighbouring bones blend
+fpart = [d.value for d in bme.attributes["part"].data]; flab = [d.value for d in bme.attributes["finger"].data]
+vlabels = {}
+for poly in bme.polygons:
+    if fpart[poly.index] in (9, 10):
+        for i in poly.vertices: vlabels.setdefault(i, set()).add(flab[poly.index])
+
+def chain_weights(p, side, fid):
+    name, palm, pts = CHAINS[fid]; sg = 1 if side == "L" else -1
+    P = [Vector((sg * x, y, z)) for x, y, z in pts]
+    best = None
+    for i in range(3):
+        q, t = intersect_point_line(p, P[i], P[i + 1]); t = min(1.0, max(0.0, t))
+        d = (p - P[i].lerp(P[i + 1], t)).length
+        if best is None or d < best[0]: best = (d, i, t)
+    _, i, t = best; bone = lambda k: f"DEF-{name}.0{k + 1}.{side}"
+    prev = (f"DEF-palm.{palm}.{side}" if fid != 1 else f"DEF-hand.{side}") if i == 0 else bone(i - 1)
+    w = {bone(i): 1.0}
+    if t < BLEND:
+        a = 0.5 * (1 - t / BLEND); w = {bone(i): 1 - a, prev: a}
+    elif t > 1 - BLEND and i < 2:
+        a = 0.5 * (1 - (1 - t) / BLEND); w = {bone(i): 1 - a, bone(i + 1): a}
+    return w
+
+def palm_weights(p, side):
+    ax = abs(p.x); s = min(1.0, max(0.0, (ax - WRIST_X) / (KNUCKLE_X - WRIST_X)))
+    keys = sorted(PALM_Y, key=lambda k: PALM_Y[k]); ys = [PALM_Y[k] for k in keys]
+    y = min(ys[-1], max(ys[0], p.y))
+    j = max(i for i in range(len(ys)) if ys[i] <= y) if y > ys[0] else 0
+    j = min(j, len(ys) - 2); f = (y - ys[j]) / (ys[j + 1] - ys[j])
+    share = 0.7 * s
+    return {f"DEF-hand.{side}": 1 - share, f"DEF-palm.{keys[j]}.{side}": share * (1 - f),
+            f"DEF-palm.{keys[j + 1]}.{side}": share * f}
+
+hand_set = 0
+for i, labs in vlabels.items():
+    p = bme.vertices[i].co
+    if abs(p.x) < WRIST_X: continue
+    side = "L" if p.x > 0 else "R"; fing = [l for l in labs if l >= 1]
+    if fing:
+        w = chain_weights(p, side, fing[0])
+        if 0 in labs:                               # knuckle seam: half palm
+            pw = palm_weights(p, side); w = {k: 0.5 * w.get(k, 0) + 0.5 * pw.get(k, 0) for k in set(w) | set(pw)}
+    else:
+        w = palm_weights(p, side)
+    W[i] = w; hand_set += 1
+set_weights(body, W); rep["Body"] = {"filled_unweighted": filled, "opposite_side_weight_mirrored": moved_lr,
+                                     "hand_verts_finger_weighted": hand_set}
 # Head: rigid
 head = bpy.data.objects["Head"]; set_weights(head, [{HEAD: 1.0}] * len(head.data.vertices)); skin(head)
 rep["Head"] = {"bone": HEAD}
