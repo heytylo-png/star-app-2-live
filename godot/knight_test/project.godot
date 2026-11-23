@@ -1,0 +1,11 @@
+; Minimal headless project used to test the exported knight (assets/blender/knight_tripo/knight_godot.glb).
+config_version=5
+
+[application]
+
+config/name="Knight GLB Test"
+config/features=PackedStringArray("4.5")
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
